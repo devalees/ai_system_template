@@ -1,0 +1,11 @@
+# Archivist Profile Configuration
+model:
+  provider: "auto"
+
+toolsets:
+  - "file_ops"
+  - "terminal"
+  - "web"
+
+runtime:
+  nofile_soft_limit: 4096

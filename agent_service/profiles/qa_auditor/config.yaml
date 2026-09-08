@@ -1,0 +1,11 @@
+# QA Auditor Profile Configuration
+model:
+  provider: "auto"
+
+toolsets:
+  - "kanban"
+  - "terminal"
+  - "file_ops"
+
+runtime:
+  nofile_soft_limit: 4096

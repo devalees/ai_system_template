@@ -1,0 +1,13 @@
+# Orchestrator Profile Configuration
+model:
+  provider: "auto"
+
+toolsets:
+  - "kanban"
+  - "delegate"
+  - "terminal"
+  - "file_ops"
+  - "clarify"
+
+runtime:
+  nofile_soft_limit: 4096

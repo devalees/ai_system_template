@@ -1,0 +1,10 @@
+# Communications Coordinator Profile Configuration
+model:
+  provider: "auto"
+
+toolsets:
+  - "file_ops"
+  - "terminal"
+
+runtime:
+  nofile_soft_limit: 4096
