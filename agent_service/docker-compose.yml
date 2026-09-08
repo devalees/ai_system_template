@@ -1,0 +1,22 @@
+services:
+  hermes:
+    image: ${HERMES_IMAGE:-hermes-agent:local}
+    container_name: hermes-template-agent
+    restart: unless-stopped
+    working_dir: /workspace
+    volumes:
+      - ./data:/root/.hermes
+      - .:/workspace
+    ports:
+      - "${HERMES_GATEWAY_PORT:-8643}:8642"
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["gateway"]
+    networks:
+      - hermes_isolated_network
+
+networks:
+  hermes_isolated_network:
+    driver: bridge

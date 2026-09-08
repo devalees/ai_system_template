@@ -1,76 +1,34 @@
-# System Architecture: AI System Template
+# System Architecture: Decoupled AI System Template
 
-## 1. Technical Stack
+## 1. Technical Stack & Security Isolation
 
-* **Backend Web Framework**: Django 5.x + Django REST Framework (Python 3.11/3.12)
-* **Agent Engine**: Hermes Agent (`hermes-agent:local` / `NousResearch/hermes-agent`)
-* **Primary Database**: PostgreSQL 16
+* **Backend Web Framework**: Django 5.x + Django REST Framework (Python 3.11)
+* **Agent Engine**: Hermes Agent (`hermes-agent:local` / Nous Research)
+* **Database**: PostgreSQL 16
 * **Cache & Broker**: Redis 7
-* **Container Orchestration**: Docker & Docker Compose
-* **API Paradigm**: REST + JSON Webhooks
+* **Container Architecture**: **Two Isolated Docker Projects**
+  1. `backend/docker-compose.yml`: Encapsulates Django, PostgreSQL, and Redis in an internal network (`backend_network`).
+  2. `agent_service/docker-compose.yml`: Encapsulates Hermes Agent in an isolated network (`hermes_isolated_network`).
+* **Inter-Service Communication**: Strictly over HTTP REST API (`http://host.docker.internal:8000/api`) with zero shared container networks, storage, or privileges.
 
 ---
 
-## 2. Container Network & Ports
+## 2. Port Allocation
 
-| Service | Internal Port | Host Port | Purpose |
-| :--- | :--- | :--- | :--- |
-| `postgres` | 5432 | 5432 (or configurable) | Relational data persistence for Django |
-| `redis` | 6379 | 6379 (or configurable) | Fast cache & event broker |
-| `backend` | 8000 | 8000 | Django REST API & Admin Portal |
-| `hermes` | 8642 | 8642 | Hermes Agent Gateway & API |
-| `hermes-dashboard` | 9119 | 9119 | Hermes Web UI / Inspection Dashboard |
-
----
-
-## 3. Communication Patterns
-
-### Django to Hermes (Orchestration & Triggers)
-* Django dispatches tasks or triggers to Hermes via Hermes's HTTP Gateway (`http://hermes:8642/...`).
-* Can pass execution context, parameters, and callback endpoints.
-
-### Hermes to Django (Handshake & Data Ingestion)
-* Hermes runs skills or Python scripts that call Django's REST endpoints (`http://backend:8000/api/...`).
-* Submits telemetry, status updates, agent run logs, or generated domain artifacts.
+| Service | Environment | Host Port | Internal Port | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `backend` | Django Project | 8000 | 8000 | Django REST API & Admin Portal |
+| `db` | Django Project | 5432 | 5432 | PostgreSQL 16 |
+| `redis` | Django Project | 6379 | 6379 | Redis 7 |
+| `hermes` | Hermes Project | 8643 | 8642 | Hermes Agent Gateway daemon |
 
 ---
 
-## 4. Directory Structure
+## 3. Communication Contract & Handshake
 
-```
-ai_system_template/
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
-├── docs/
-│   ├── ai_wiki/
-│   │   ├── index.md
-│   │   └── architecture.md
-│   └── plans/
-│       └── active_plan.md
-├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   ├── manage.py
-│   ├── core/
-│   │   ├── settings.py
-│   │   ├── urls.py
-│   │   └── wsgi.py
-│   └── apps/
-│       └── integration/
-│           ├── models.py
-│           ├── views.py
-│           ├── serializers.py
-│           ├── urls.py
-│           └── admin.py
-├── agent_service/
-│   ├── Dockerfile
-│   ├── config/
-│   │   └── config.yaml
-│   └── skills/
-│       └── handshake/
-│           ├── SKILL.md
-│           └── run.py
-└── scripts/
-    └── test_handshake.sh
-```
+### Agent to Django
+* `POST /api/handshake/`: Hermes transmits its agent ID, version, and metadata.
+* Django logs the payload in `HandshakeLog` in PostgreSQL and returns an acknowledgment containing a `log_id` and server timestamp.
+
+### Django to Agent
+* `GET /api/ping-hermes/`: Django verifies reverse reachability to Hermes Gateway daemon via `HERMES_GATEWAY_URL`.
