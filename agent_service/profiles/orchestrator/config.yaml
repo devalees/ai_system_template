@@ -1,6 +1,7 @@
 # Orchestrator Profile Configuration
 model:
-  provider: "auto"
+  default: "google/gemini-2.5-flash"
+  provider: "openrouter"
 
 toolsets:
   - "kanban"
