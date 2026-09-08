@@ -4,23 +4,25 @@ from django.conf import settings
 from django.db import connection
 from django.utils import timezone
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import HandshakeLog, AgentTask
+from .models import HandshakeLog, AgentProfile, SpendReport, AgentTask
 from .serializers import (
     HandshakeRequestSerializer,
     HandshakeLogSerializer,
+    AgentProfileSerializer,
+    SpendReportSerializer,
     AgentTaskSerializer,
+    TaskVerdictSerializer,
 )
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def health_check(request):
     """
-    Returns the operational health of the Django backend,
-    PostgreSQL database connection, and Redis cache.
+    Returns operational health of Django backend, PostgreSQL database, and Redis cache.
     """
     db_status = "ok"
     try:
@@ -47,6 +49,7 @@ def health_check(request):
         "redis": redis_status,
         "server_time": timezone.now().isoformat(),
         "hermes_gateway_target": settings.HERMES_GATEWAY_URL,
+        "active_profiles_count": AgentProfile.objects.filter(is_active=True).count(),
     })
 
 
@@ -55,8 +58,7 @@ def health_check(request):
 def agent_handshake(request):
     """
     Receives a handshake ping from an autonomous agent (Hermes),
-    persists the handshake payload to the database, and returns
-    an acknowledgment response.
+    persists the handshake payload to the database, and returns acknowledgment.
     """
     serializer = HandshakeRequestSerializer(data=request.data)
     if not serializer.is_valid():
@@ -100,8 +102,7 @@ def list_handshake_logs(request):
 @permission_classes([AllowAny])
 def ping_hermes_gateway(request):
     """
-    Reverse connectivity test: Django initiates an HTTP request
-    to the Hermes Agent Gateway to verify bidirectional network path.
+    Reverse connectivity test: Django initiates HTTP request to Hermes Gateway.
     """
     target_url = settings.HERMES_GATEWAY_URL.rstrip('/')
     headers = {}
@@ -109,7 +110,6 @@ def ping_hermes_gateway(request):
         headers["Authorization"] = f"Bearer {settings.HERMES_API_KEY}"
 
     try:
-        # Ping root or health endpoint of Hermes Gateway
         resp = requests.get(f"{target_url}/", headers=headers, timeout=5)
         return Response({
             "status": "connected",
@@ -125,10 +125,87 @@ def ping_hermes_gateway(request):
         }, status=status.HTTP_502_BAD_GATEWAY)
 
 
+class AgentProfileViewSet(viewsets.ModelViewSet):
+    """
+    CRUD API for Hermes Agent Profiles (digital employees).
+    """
+    queryset = AgentProfile.objects.all()
+    serializer_class = AgentProfileSerializer
+    permission_classes = [AllowAny]
+    lookup_field = 'name'
+
+
+class SpendReportViewSet(viewsets.ModelViewSet):
+    """
+    Ingestion and query API for LLM spend reports from cost_controller.
+    """
+    queryset = SpendReport.objects.all()
+    serializer_class = SpendReportSerializer
+    permission_classes = [AllowAny]
+
+
 class AgentTaskViewSet(viewsets.ModelViewSet):
     """
-    CRUD API for Agent Tasks.
+    CRUD API for Agent Tasks supporting the review pipeline.
     """
     queryset = AgentTask.objects.all()
     serializer_class = AgentTaskSerializer
     permission_classes = [AllowAny]
+
+    @action(detail=True, methods=['post'], url_path='submit-verdict')
+    def submit_verdict(self, request, pk=None):
+        """
+        Review gate endpoint: allows qa_auditor to submit 'approved' or 'changes_requested'.
+        """
+        task = self.get_object()
+        serializer = TaskVerdictSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        verdict = serializer.validated_data['verdict']
+        notes = serializer.validated_data.get('notes', '')
+
+        task.review_verdict = verdict
+        task.reviewer_notes = notes
+
+        if verdict == 'approved':
+            task.status = 'completed'
+            task.completed_at = timezone.now()
+        else:
+            task.status = 'pending'  # Returns to implementer for revisions
+
+        task.save()
+        return Response({
+            "status": "verdict_recorded",
+            "task_id": str(task.id),
+            "new_task_status": task.status,
+            "verdict": verdict,
+            "notes": notes,
+        })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_hermes_providers(request):
+    """
+    Returns list of canonical inference providers supported by Hermes Agent.
+    """
+    from .services import get_providers
+    return Response(get_providers())
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_hermes_models(request):
+    """
+    Returns available models for a given provider with context length and pricing.
+    """
+    from .services import get_models_for_provider
+    provider = request.query_params.get('provider', 'openrouter')
+    models_data = get_models_for_provider(provider)
+    return Response({
+        "provider": provider,
+        "count": len(models_data),
+        "models": models_data,
+    })
+

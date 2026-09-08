@@ -29,23 +29,97 @@ class HandshakeLog(models.Model):
         return f"{self.agent_id} ({self.status}) @ {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
+class AgentProfile(models.Model):
+    """
+    Registry of configured Hermes Agent Profiles (digital employees).
+    """
+    ROLE_CHOICES = [
+        ('orchestrator', 'Orchestrator / Chief of Staff'),
+        ('finance', 'Finance & Cost Control'),
+        ('quality_assurance', 'Quality Assurance & Audit'),
+        ('communications', 'Communications & Client Relations'),
+        ('knowledge_management', 'Knowledge Management & Documentation'),
+        ('general', 'General / Custom'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=64, unique=True, help_text="Hermes profile slug (e.g., cost_controller)")
+    display_name = models.CharField(max_length=120)
+    role = models.CharField(max_length=60, choices=ROLE_CHOICES, default='general')
+    description = models.TextField(blank=True)
+    model_name = models.CharField(max_length=120, default='google/gemini-2.5-flash')
+    provider = models.CharField(max_length=60, default='openrouter')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Agent Profile'
+        verbose_name_plural = 'Agent Profiles'
+
+    def __str__(self):
+        return f"{self.display_name} ({self.name})"
+
+
+class SpendReport(models.Model):
+    """
+    Records token consumption and expenditure reports pushed by the cost_controller profile.
+    """
+    STATUS_CHOICES = [
+        ('OK', 'Within Budget'),
+        ('WARNING', 'Approaching Limit'),
+        ('EXCEEDED', 'Budget Exceeded'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    profile = models.ForeignKey(AgentProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='spend_reports')
+    reported_by = models.CharField(max_length=64, default='cost_controller')
+    total_api_calls = models.PositiveIntegerField(default=0)
+    total_tokens = models.PositiveBigIntegerField(default=0)
+    total_cost_usd = models.DecimalField(max_digits=10, decimal_places=4, default=0.0)
+    daily_budget_usd = models.DecimalField(max_digits=10, decimal_places=2, default=10.0)
+    budget_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OK')
+    payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Spend Report'
+        verbose_name_plural = 'Spend Reports'
+
+    def __str__(self):
+        return f"Spend ${self.total_cost_usd} USD [{self.budget_status}] @ {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+
 class AgentTask(models.Model):
     """
-    Represents a task dispatched to or executed by an agent.
+    Represents a task dispatched to or executed by an agent profile.
+    Supports implementer -> reviewer verification lifecycle.
     """
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('running', 'Running'),
+        ('review', 'In Review'),
         ('completed', 'Completed'),
         ('failed', 'Failed'),
+    ]
+    VERDICT_CHOICES = [
+        ('approved', 'Approved'),
+        ('changes_requested', 'Changes Requested'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     agent_name = models.CharField(max_length=120, default='hermes-agent')
+    assigned_profile = models.ForeignKey(AgentProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
     task_name = models.CharField(max_length=200)
     input_payload = models.JSONField(default=dict, blank=True)
     output_result = models.JSONField(default=dict, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    review_verdict = models.CharField(max_length=30, choices=VERDICT_CHOICES, blank=True, default='')
+    reviewer_notes = models.TextField(blank=True, default='')
+    cost_usd = models.DecimalField(max_digits=8, decimal_places=4, default=0.0)
+    tokens_used = models.PositiveIntegerField(default=0)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,4 +131,5 @@ class AgentTask(models.Model):
         verbose_name_plural = 'Agent Tasks'
 
     def __str__(self):
-        return f"[{self.status.upper()}] {self.task_name} ({self.agent_name})"
+        profile_label = self.assigned_profile.name if self.assigned_profile else self.agent_name
+        return f"[{self.status.upper()}] {self.task_name} ({profile_label})"

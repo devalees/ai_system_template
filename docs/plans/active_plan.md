@@ -44,8 +44,8 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 - [x] **Sub-task 1: Git Branch Initialization (`feat/core-agent-profiles`)** - COMPLETED (Branch created)
 - [x] **Sub-task 2: Declarative Profile Definitions (`agent_service/profiles/`)** - COMPLETED (Commit: `0d219b6`)
 - [x] **Sub-task 3: Automated Profile Provisioning Script (`scripts/provision_profiles.py`)** - COMPLETED (Commit: `1f09b23`)
-- [x] **Sub-task 4: Foundation Skills for Specialist Profiles (`agent_service/skills/`)** - COMPLETED (Pending user commit approval)
-- [ ] **Sub-task 5: Django Backend Profile Integration & Task Registry (`backend/apps/integration/`)** - PENDING
+- [x] **Sub-task 4: Foundation Skills for Specialist Profiles (`agent_service/skills/`)** - COMPLETED (Commit: `83e6d73`)
+- [x] **Sub-task 5: Django Backend Profile Integration & Task Registry (`backend/apps/integration/`)** - COMPLETED (Pending user commit approval)
 - [ ] **Sub-task 6: End-to-End Verification & Documentation Synchronization** - PENDING
 
 ### 3. Key Decisions & Deviations (Phase 2)
@@ -54,7 +54,8 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 - *2026-09-08*: Formally clarified in global workflow rules that `active_plan.md` is cumulative and append-only across all project phases.
 - *2026-09-08*: Committed and pushed Sub-task 2 (Commit: `0d219b6`).
 - *2026-09-08*: Implemented `scripts/provision_profiles.py` with cross-environment execution support (host & container), successfully provisioned all 5 profiles into Hermes runtime, and empirically verified persona inference on OpenRouter with `google/gemini-2.5-flash` (Commit: `1f09b23`).
-- *2026-09-08*: Built and verified specialist foundation skills: `cost_monitor` (real-time token accounting & budget status across all profile SQLite databases) and `output_validator` (empirical syntax, hygiene, and security audit for the QA review gate).
+- *2026-09-08*: Built and verified specialist foundation skills: `cost_monitor` (real-time token accounting & budget status across all profile SQLite databases) and `output_validator` (empirical syntax, hygiene, and security audit for the QA review gate) (Commit: `83e6d73`).
+- *2026-09-08*: Implemented Django backend profile integration: added `AgentProfile`, `SpendReport`, and review pipeline on `AgentTask`. Applied migration `0002_agentprofile_agenttask_cost_usd_and_more`, added `seed_profiles` command, updated Django Admin and DRF ViewSets. In response to user direction, reordered `provider` before `model_name` as dependent dropdowns in Django Admin. Upgraded `hermes_catalog.py` to utilize the live multi-provider `models.dev` registry (identical to Hermes Agent CLI), unlocking all contemporary 2026 models for Anthropic (Claude Sonnet 4.6, Opus 5, Fable 5.1), OpenAI (GPT-5, GPT-5.6 Sol, GPT-6 Astra), Google Gemini (Gemini 3.8 Flash, 3.1 Pro), DeepSeek (V4 Pro, V4 Flash), xAI (Grok 4.6, 4.3), Groq, and Nous Portal with live context windows and token pricing. Verified with 7/7 passing unit tests.
 
 ### 4. Current Focus
-Awaiting user review and commit approval for Sub-task 4, then proceeding to Sub-task 5 (Django Backend Profile Integration).
+Awaiting user review and commit approval for Sub-task 5, then proceeding to Sub-task 6 (End-to-End Verification & Documentation Synchronization).
