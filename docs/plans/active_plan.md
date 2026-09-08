@@ -43,8 +43,8 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 ### 2. Task Checklist & Progress
 - [x] **Sub-task 1: Git Branch Initialization (`feat/core-agent-profiles`)** - COMPLETED (Branch created)
 - [x] **Sub-task 2: Declarative Profile Definitions (`agent_service/profiles/`)** - COMPLETED (Commit: `0d219b6`)
-- [x] **Sub-task 3: Automated Profile Provisioning Script (`scripts/provision_profiles.py`)** - COMPLETED (Pending user commit approval)
-- [ ] **Sub-task 4: Foundation Skills for Specialist Profiles (`agent_service/skills/`)** - PENDING
+- [x] **Sub-task 3: Automated Profile Provisioning Script (`scripts/provision_profiles.py`)** - COMPLETED (Commit: `1f09b23`)
+- [x] **Sub-task 4: Foundation Skills for Specialist Profiles (`agent_service/skills/`)** - COMPLETED (Pending user commit approval)
 - [ ] **Sub-task 5: Django Backend Profile Integration & Task Registry (`backend/apps/integration/`)** - PENDING
 - [ ] **Sub-task 6: End-to-End Verification & Documentation Synchronization** - PENDING
 
@@ -53,7 +53,8 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 - *2026-09-08*: Profiles defined declaratively in `agent_service/profiles/<name>/` with dedicated `SOUL.md`, `config.yaml`, and `profile.yaml` for each of the 5 roles (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `archivist`).
 - *2026-09-08*: Formally clarified in global workflow rules that `active_plan.md` is cumulative and append-only across all project phases.
 - *2026-09-08*: Committed and pushed Sub-task 2 (Commit: `0d219b6`).
-- *2026-09-08*: Implemented `scripts/provision_profiles.py` with cross-environment execution support (host & container), successfully provisioned all 5 profiles into Hermes runtime, and empirically verified persona inference on OpenRouter with `google/gemini-2.5-flash`.
+- *2026-09-08*: Implemented `scripts/provision_profiles.py` with cross-environment execution support (host & container), successfully provisioned all 5 profiles into Hermes runtime, and empirically verified persona inference on OpenRouter with `google/gemini-2.5-flash` (Commit: `1f09b23`).
+- *2026-09-08*: Built and verified specialist foundation skills: `cost_monitor` (real-time token accounting & budget status across all profile SQLite databases) and `output_validator` (empirical syntax, hygiene, and security audit for the QA review gate).
 
 ### 4. Current Focus
-Awaiting user review and commit approval for Sub-task 3, then proceeding to Sub-task 4 (Specialist Foundation Skills).
+Awaiting user review and commit approval for Sub-task 4, then proceeding to Sub-task 5 (Django Backend Profile Integration).

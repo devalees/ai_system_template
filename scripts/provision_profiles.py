@@ -80,13 +80,17 @@ def provision_all():
 
     # 1. Fetch currently registered profiles in Hermes
     list_res = run_cmd(["hermes", "profile", "list"])
-    existing_profiles = set()
+    existing_profiles = {"default"}
     if list_res.returncode == 0:
+        import re
         for line in list_res.stdout.splitlines():
-            line = line.strip()
-            if line and not line.startswith("Profile") and not line.startswith("─"):
-                parts = line.split()
-                if parts:
+            # Matches profile name in parentheses e.g. (orchestrator) or leading name
+            match = re.search(r'\(([a-z0-9_-]+)\)', line)
+            if match:
+                existing_profiles.add(match.group(1))
+            else:
+                parts = line.strip().split()
+                if parts and not line.startswith("Profile") and not line.startswith("─"):
                     existing_profiles.add(parts[0].lstrip("◆").strip())
 
     profiles_to_provision = [
@@ -144,6 +148,31 @@ for f in ['SOUL.md', 'config.yaml', 'profile.yaml']:
 
         success_count += 1
         print()
+
+    # Step D: Synchronize Custom Skills into Hermes Runtime
+    print(f"\n{BOLD}{BLUE}▶ Synchronizing custom skills into Hermes runtime...{RESET}")
+    skill_sync_script = """
+import os, shutil
+src_root = '/workspace/skills'
+dst_root = '/root/.hermes/skills/custom'
+os.makedirs(dst_root, exist_ok=True)
+count = 0
+if os.path.exists(src_root):
+    for skill in os.listdir(src_root):
+        s_path = os.path.join(src_root, skill)
+        if os.path.isdir(s_path):
+            d_path = os.path.join(dst_root, skill)
+            if os.path.exists(d_path):
+                shutil.rmtree(d_path)
+            shutil.copytree(s_path, d_path)
+            count += 1
+print(f"Synced {count} custom skills.")
+"""
+    sk_res = run_cmd(["python", "-c", skill_sync_script])
+    if sk_res.returncode == 0:
+        print(f"  {GREEN}✓ {sk_res.stdout.strip()}{RESET}")
+    else:
+        print(f"  {YELLOW}Warning syncing skills: {sk_res.stderr.strip()}{RESET}")
 
     # Summary table
     print(f"{BOLD}{GREEN}═══════════════════════════════════════════════════════════════════════{RESET}")
