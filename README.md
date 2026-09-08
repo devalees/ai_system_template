@@ -41,7 +41,22 @@ Neither container shares internal networks or storage; all communication flows s
 
 ## Quickstart Guide
 
-### 1. Start Django Backend (Environment 1)
+### One-Click Automated Setup (Recommended)
+Clone the repository and run the automated installer:
+```bash
+git clone https://github.com/devalees/ai_system_template.git
+cd ai_system_template
+
+chmod +x install.sh
+./install.sh
+```
+This script handles pre-flight diagnostics, environment bootstrapping, container orchestration for both isolated environments, and runs the bidirectional handshake test automatically.
+
+---
+
+### Manual Setup (Step-by-Step)
+
+#### 1. Start Django Backend (Environment 1)
 ```bash
 cd backend
 cp .env.example .env
