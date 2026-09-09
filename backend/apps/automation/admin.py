@@ -12,6 +12,21 @@ from .models import AutomationRule, AutomationLog
 from .forms import AutomationRuleAdminForm
 from .tasks import execute_automation_rule_task
 
+from django_celery_beat.models import (
+    ClockedSchedule,
+    CrontabSchedule,
+    IntervalSchedule,
+    PeriodicTask,
+    SolarSchedule,
+)
+
+# Unregister raw Celery Beat plumbing models to keep admin clean and focused
+for beat_model in (ClockedSchedule, CrontabSchedule, IntervalSchedule, SolarSchedule, PeriodicTask):
+    try:
+        admin.site.unregister(beat_model)
+    except admin.sites.NotRegistered:
+        pass
+
 
 class AutomationLogInline(admin.TabularInline):
     """Inline view of recent execution logs inside the AutomationRule change form."""
@@ -82,6 +97,15 @@ class AutomationRuleAdmin(admin.ModelAdmin):
                 "filter_conditions",
             )
         }),
+        ("Field Change & State Transition (Odoo-Style)", {
+            "description": "Configure fine-grained triggers when a specific field value changes (e.g. status transition from 'review' to 'completed').",
+            "fields": (
+                "trigger_field",
+                "previous_value",
+                "target_value",
+            ),
+            "classes": ("collapse",)
+        }),
         ("Time-Based Scheduling (Celery Beat)", {
             "description": "Configures periodic intervals or exact one-shot execution timestamps via Celery Beat.",
             "fields": (
@@ -124,7 +148,7 @@ class AutomationRuleAdmin(admin.ModelAdmin):
 
         # Dispatch via Celery worker
         async_res = execute_automation_rule_task.delay(rule.id, {"manual_trigger": True}, f"admin_run_now:{request.user.username}")
-        messages.success(request, f"▶ Automation Rule '{rule.name}' queued to Celery worker (Task ID: {async_res.id}).")
+        messages.success(request, f"▶ Automation Action '{rule.name}' queued to Celery worker (Task ID: {async_res.id}).")
         return HttpResponseRedirect(reverse('admin:automation_automationrule_change', args=[rule.id]))
 
     def run_now_action(self, obj):
@@ -150,7 +174,12 @@ class AutomationRuleAdmin(admin.ModelAdmin):
         }
         label = icons.get(obj.trigger_type, obj.trigger_type)
         if obj.trigger_type == 'model_event' and obj.target_model:
-            label = f"📦 {obj.target_model.split('.')[-1]} ({obj.event_type})"
+            model_short = obj.target_model.split('.')[-1]
+            if obj.trigger_field:
+                trans = f" ➔ {obj.target_value}" if obj.target_value else ""
+                label = f"📦 {model_short}.{obj.trigger_field}{trans}"
+            else:
+                label = f"📦 {model_short} ({obj.event_type})"
         return format_html('<code style="font-size:11px; padding:2px 6px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px;">{}</code>', label)
     trigger_badge.short_description = "Trigger"
 

@@ -4,19 +4,21 @@ Automated Unit Tests for apps.automation.
 
 import os
 import shutil
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.contrib import admin
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
+from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule, ClockedSchedule, SolarSchedule
 
 from apps.automation.models import AutomationRule, AutomationLog
 from apps.automation.registry import ServiceRegistry, register_action
 from apps.automation.engine import AutomationEngine
 from apps.automation.tasks import execute_automation_rule_task, scheduled_automation_task
 from apps.automation.actions import provision_hermes_profile_action
+from apps.integration.models import AgentTask, Profile
 
 
 class AutomationCoreTests(TestCase):
@@ -248,3 +250,72 @@ class AutomationCoreTests(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIn("services", resp.data)
         self.assertIn("available_models", resp.data)
+
+    def test_celery_beat_models_unregistered_from_admin(self):
+        """Verifies that confusing Celery Beat plumbing models are excluded from Django Admin."""
+        for beat_model in (ClockedSchedule, CrontabSchedule, IntervalSchedule, SolarSchedule, PeriodicTask):
+            self.assertNotIn(
+                beat_model,
+                admin.site._registry,
+                f"Model {beat_model.__name__} should be unregistered from Django Admin."
+            )
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    def test_odoo_style_state_transition_triggers(self):
+        """Tests that field_changed rules trigger only when the specific field transitions as configured."""
+        user = User.objects.create_user(username='task_owner_test', password='password123')
+        profile = user.profile
+        profile.display_name = "Test Task Profile"
+        profile.role = "general"
+        profile.is_agent = True
+        profile.save()
+
+        task = AgentTask.objects.create(
+            created_by=user,
+            task_name="Verify QA Pipeline",
+            assigned_profile=profile,
+            status="review"
+        )
+
+        # Create state transition rule: status must change from 'review' to 'completed'
+        rule = AutomationRule.objects.create(
+            name="QA Approval Notification",
+            trigger_type="model_event",
+            target_model="integration.AgentTask",
+            event_type="field_changed",
+            trigger_field="status",
+            previous_value="review",
+            target_value="completed",
+            action_category="internal_app",
+            action_type="test_math_action",
+            action_params={"x": 5},
+            is_active=True
+        )
+
+        # 1. Update unrelated field (cost_usd) -> Should NOT trigger
+        initial_log_count = AutomationLog.objects.count()
+        task.cost_usd = 1.25
+        task.save()
+        self.assertEqual(AutomationLog.objects.count(), initial_log_count)
+
+        # 2. Update status to wrong target ('failed') -> Should NOT trigger
+        task.status = "failed"
+        task.save()
+        self.assertEqual(AutomationLog.objects.count(), initial_log_count)
+
+        # 3. Transition status to 'review' again (reset)
+        task.status = "review"
+        task.save()
+        self.assertEqual(AutomationLog.objects.count(), initial_log_count)
+
+        # 4. Valid state transition: 'review' -> 'completed' -> MUST trigger!
+        task.status = "completed"
+        task.save()
+
+        # Check that AutomationLog was created and executed successfully
+        latest_log = AutomationLog.objects.filter(rule=rule).order_by('-executed_at').first()
+        self.assertIsNotNone(latest_log)
+        self.assertEqual(latest_log.status, "success")
+        self.assertEqual(latest_log.output_result.get("result"), 10)
+        self.assertIn("status", latest_log.input_context.get("changed_fields", []))
+

@@ -22,6 +22,7 @@ EXECUTION_MODE_CHOICES = [
 EVENT_TYPE_CHOICES = [
     ('created', 'Created (Insert)'),
     ('updated', 'Updated (Edit)'),
+    ('field_changed', 'Field Changed / State Transition'),
     ('deleted', 'Deleted'),
     ('any', 'Any Change'),
 ]
@@ -83,6 +84,23 @@ class AutomationRule(models.Model):
         default=dict,
         blank=True,
         help_text="JSON criteria required for trigger match, e.g. {'is_agent': true} or {'status': 'completed'}."
+    )
+
+    # State Transition & Field Change Configuration (Odoo-Style)
+    trigger_field = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Specific field to monitor for changes (e.g. 'status', 'review_verdict', 'cost_usd')."
+    )
+    previous_value = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Optional previous value before change (e.g. 'review' or 'draft')."
+    )
+    target_value = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Optional target value after change (e.g. 'completed' or 'approved')."
     )
 
     # Time-Based Scheduling Configuration (Celery Beat)
@@ -169,8 +187,8 @@ class AutomationRule(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = "Automation Rule"
-        verbose_name_plural = "Automation Rules"
+        verbose_name = "Automation Action"
+        verbose_name_plural = "Automation Actions"
 
     def __str__(self) -> str:
         status_icon = "🟢" if self.is_active else "⏸️"

@@ -8,11 +8,22 @@ avoiding global signal overhead and preventing migration interference.
 from typing import Type
 from django.apps import apps
 from django.db.models import Model
-from django.db.models.signals import post_save, post_delete, post_migrate
+from django.db.models.signals import pre_save, post_save, post_delete, post_migrate
 from django.dispatch import receiver
 
 
 _CONNECTED_MODELS = set()
+
+
+def automation_pre_save_handler(sender: Type[Model], instance: Model, raw: bool = False, **kwargs):
+    """Caches previous values before an update to allow state transition evaluations."""
+    if raw or not hasattr(instance, 'pk') or instance.pk is None:
+        return
+    try:
+        old_record = sender.objects.filter(pk=instance.pk).values().first()
+        instance._automation_old_values = old_record or {}
+    except Exception:
+        instance._automation_old_values = {}
 
 
 def automation_post_save_handler(sender: Type[Model], instance: Model, created: bool, raw: bool = False, **kwargs):
@@ -22,8 +33,9 @@ def automation_post_save_handler(sender: Type[Model], instance: Model, created: 
 
     from .engine import AutomationEngine
     event_type = 'created' if created else 'updated'
+    old_values = getattr(instance, '_automation_old_values', {})
     try:
-        AutomationEngine.dispatch_model_event(instance, event_type)
+        AutomationEngine.dispatch_model_event(instance, event_type, old_values=old_values)
     except Exception:
         pass
 
@@ -41,11 +53,12 @@ def automation_post_delete_handler(sender: Type[Model], instance: Model, **kwarg
 
 
 def connect_model_signals(model_class: Type[Model]):
-    """Connects post_save and post_delete to a specific model class idempotently."""
+    """Connects pre_save, post_save, and post_delete to a specific model class idempotently."""
     global _CONNECTED_MODELS
     if model_class in _CONNECTED_MODELS:
         return
 
+    pre_save.connect(automation_pre_save_handler, sender=model_class, weak=False)
     post_save.connect(automation_post_save_handler, sender=model_class, weak=False)
     post_delete.connect(automation_post_delete_handler, sender=model_class, weak=False)
     _CONNECTED_MODELS.add(model_class)

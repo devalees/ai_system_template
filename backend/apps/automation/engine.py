@@ -150,20 +150,25 @@ class AutomationEngine:
         }
 
     @classmethod
-    def dispatch_model_event(cls, instance: Any, event_type: str) -> int:
+    def dispatch_model_event(cls, instance: Any, event_type: str, old_values: Optional[Dict[str, Any]] = None) -> int:
         """
         Finds and dispatches matching model event rules for a model instance.
+        Supports creation, updates, deletions, and Odoo-style state transitions.
         Returns count of rules dispatched.
         """
         app_label = instance._meta.app_label
         model_name = instance._meta.model_name
         model_identifier = f"{app_label}.{instance.__class__.__name__}"
 
+        matching_event_types = [event_type, 'any']
+        if event_type == 'updated':
+            matching_event_types.append('field_changed')
+
         matching_rules = AutomationRule.objects.filter(
             is_active=True,
             trigger_type='model_event',
             target_model=model_identifier,
-            event_type__in=[event_type, 'any']
+            event_type__in=matching_event_types
         )
 
         if not matching_rules.exists():
@@ -175,6 +180,8 @@ class AutomationEngine:
             "pk": str(instance.pk),
             "event": event_type,
         }
+
+        changed_fields = []
         for field in instance._meta.concrete_fields:
             val = getattr(instance, field.attname, None)
             if isinstance(val, (str, int, float, bool)) or val is None:
@@ -183,6 +190,16 @@ class AutomationEngine:
                 context[field.name] = val.isoformat()
             else:
                 context[field.name] = str(val)
+
+            # Detect changed fields on update
+            if event_type == 'updated' and old_values:
+                old_val = old_values.get(field.name, old_values.get(field.attname))
+                if old_val != getattr(instance, field.attname, None):
+                    changed_fields.append(field.name)
+
+        context['changed_fields'] = changed_fields
+        if old_values:
+            context['previous_values'] = make_json_serializable(old_values)
 
         if hasattr(instance, 'username'):
             context['username'] = instance.username
@@ -207,11 +224,32 @@ class AutomationEngine:
         from .tasks import execute_automation_rule_task
 
         for rule in matching_rules:
-            # Check filter conditions pre-dispatch
+            # 1. State transition / Field change evaluation
+            if rule.event_type == 'field_changed' or rule.trigger_field:
+                if rule.trigger_field:
+                    if rule.trigger_field not in changed_fields:
+                        continue
+
+                    # Previous value check (before update)
+                    if rule.previous_value:
+                        prev_val = old_values.get(rule.trigger_field) if old_values else None
+                        if str(prev_val).lower() != str(rule.previous_value).lower():
+                            continue
+
+                    # Target value check (after update)
+                    if rule.target_value:
+                        new_val = context.get(rule.trigger_field)
+                        if str(new_val).lower() != str(rule.target_value).lower():
+                            continue
+
+            # 2. General filter conditions check
             if rule.filter_conditions and not cls.evaluate_conditions(context, rule.filter_conditions):
                 continue
 
             trigger_source = f"model_event:{model_identifier}#{instance.pk}:{event_type}"
+            if rule.trigger_field:
+                trigger_source += f":{rule.trigger_field}"
+
             execute_automation_rule_task.delay(rule.id, context, trigger_source)
             dispatched_count += 1
 
