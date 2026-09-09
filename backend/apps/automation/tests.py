@@ -319,3 +319,178 @@ class AutomationCoreTests(TestCase):
         self.assertEqual(latest_log.output_result.get("result"), 10)
         self.assertIn("status", latest_log.input_context.get("changed_fields", []))
 
+
+class NextGenAutomationActionTests(TestCase):
+    """Tests for Phase 6: Dynamic Introspection, Target CRUD, Condition Rules, and System Reification."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.admin_user = User.objects.create_superuser(
+            username='admin_phase6_test',
+            email='phase6@example.com',
+            password='password123'
+        )
+        self.client.force_authenticate(user=self.admin_user)
+
+    def test_introspection_api_success(self):
+        response = self.client.get('/api/automation/introspection/?model=integration.AgentTask')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data['model'], 'integration.AgentTask')
+        self.assertIn('fields', data)
+        self.assertIn('required_fields', data)
+        field_names = [f['name'] for f in data['fields']]
+        self.assertIn('task_name', field_names)
+        self.assertIn('status', field_names)
+
+    def test_introspection_api_catalog(self):
+        response = self.client.get('/api/automation/introspection/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn('available_models', data)
+        self.assertTrue(data['count'] > 0)
+
+    def test_introspection_api_errors(self):
+        # Invalid format (no dot)
+        res1 = self.client.get('/api/automation/introspection/?model=AgentTask')
+        self.assertEqual(res1.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Nonexistent model
+        res2 = self.client.get('/api/automation/introspection/?model=nonexistent.FakeModel')
+        self.assertEqual(res2.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_visual_condition_rules_evaluation(self):
+        ctx = {"status": "completed", "cost_usd": 12.50, "tags": "ai,llm,test", "notes": None}
+
+        # == operator
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "status", "operator": "==", "value": "completed"}]))
+        self.assertFalse(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "status", "operator": "==", "value": "pending"}]))
+
+        # > and <= operators
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "cost_usd", "operator": ">", "value": 10.0}]))
+        self.assertFalse(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "cost_usd", "operator": ">", "value": 20.0}]))
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "cost_usd", "operator": "<=", "value": 12.50}]))
+
+        # in and contains operators
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "tags", "operator": "contains", "value": "llm"}]))
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "status", "operator": "in", "value": "draft,pending,completed"}]))
+        self.assertFalse(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "status", "operator": "in", "value": "failed,cancelled"}]))
+
+        # is_empty and is_not_empty
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "notes", "operator": "is_empty", "value": ""}]))
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "status", "operator": "is_not_empty", "value": ""}]))
+
+    def test_target_crud_create(self):
+        rule = AutomationRule.objects.create(
+            name="Create Agent Task Action",
+            trigger_type="manual",
+            target_model="integration.AgentTask",
+            target_operation="create",
+            field_mappings={
+                "task_name": "Automated Review for {{username}}",
+                "created_by": "{{user_id}}",
+                "status": "pending"
+            },
+            is_active=True
+        )
+
+        res = AutomationEngine.execute_rule(
+            rule.id,
+            trigger_context={"username": self.admin_user.username, "user_id": self.admin_user.id}
+        )
+        self.assertEqual(res["status"], "success")
+        output = res["output"]
+        self.assertEqual(output["operation"], "create")
+        task_id = output["record_id"]
+
+        task = AgentTask.objects.get(pk=task_id)
+        self.assertEqual(task.task_name, f"Automated Review for {self.admin_user.username}")
+        self.assertEqual(task.created_by, self.admin_user)
+        self.assertEqual(task.status, "pending")
+
+    def test_target_crud_update(self):
+        task = AgentTask.objects.create(
+            task_name="Existing Task",
+            created_by=self.admin_user,
+            status="pending"
+        )
+
+        rule = AutomationRule.objects.create(
+            name="Update Task Status Action",
+            trigger_type="manual",
+            target_model="integration.AgentTask",
+            target_operation="update",
+            field_mappings={
+                "status": "completed",
+                "cost_usd": "3.75"
+            },
+            is_active=True
+        )
+
+        res = AutomationEngine.execute_rule(
+            rule.id,
+            trigger_context={"target_record_id": str(task.id)}
+        )
+        self.assertEqual(res["status"], "success")
+
+        task.refresh_from_db()
+        self.assertEqual(task.status, "completed")
+        self.assertEqual(float(task.cost_usd), 3.75)
+
+    def test_target_crud_delete(self):
+        task = AgentTask.objects.create(
+            task_name="Task to Delete",
+            created_by=self.admin_user
+        )
+
+        rule = AutomationRule.objects.create(
+            name="Delete Task Action",
+            trigger_type="manual",
+            target_model="integration.AgentTask",
+            target_operation="delete",
+            is_active=True
+        )
+
+        res = AutomationEngine.execute_rule(
+            rule.id,
+            trigger_context={"target_record_id": str(task.id)}
+        )
+        self.assertEqual(res["status"], "success")
+        self.assertFalse(AgentTask.objects.filter(pk=task.id).exists())
+
+    def test_system_rule_protection(self):
+        from django.core.exceptions import ValidationError
+
+        system_rule = AutomationRule.objects.create(
+            name="Protected System Routine",
+            trigger_type="manual",
+            action_type="test_math_action",
+            is_system=True,
+            is_active=True
+        )
+
+        # Attempt to delete must raise ValidationError
+        with self.assertRaises(ValidationError):
+            system_rule.delete()
+
+        # Rule must still exist in the database
+        self.assertTrue(AutomationRule.objects.filter(pk=system_rule.id).exists())
+
+    def test_seed_automations_command(self):
+        from django.core.management import call_command
+        call_command('seed_automations')
+
+        # Check that core rules are flagged is_system=True
+        provision_rule = AutomationRule.objects.filter(name="Auto-Provision Hermes Profile on Agent User Creation").first()
+        self.assertIsNotNone(provision_rule)
+        self.assertTrue(provision_rule.is_system)
+        self.assertEqual(provision_rule.trigger_model, "integration.Profile")
+
+        qa_rule = AutomationRule.objects.filter(name="QA Review Routing on Task Status Change").first()
+        self.assertIsNotNone(qa_rule)
+        self.assertTrue(qa_rule.is_system)
+        self.assertEqual(qa_rule.trigger_model, "integration.AgentTask")
+        self.assertEqual(qa_rule.trigger_field, "status")
+        self.assertEqual(qa_rule.target_value, "review")
+
+
