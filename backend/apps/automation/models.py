@@ -4,6 +4,7 @@ Data Models for Centralized Automation Engine.
 
 from django.db import models
 from django.utils import timezone
+from apps.core.models import AuditableModel
 from .registry import CATEGORY_CHOICES
 
 
@@ -51,7 +52,7 @@ TARGET_OPERATION_CHOICES = [
 ]
 
 
-class AutomationTrigger(models.Model):
+class AutomationTrigger(AuditableModel):
     """
     Defines WHEN an automation workflow fires (Model Events, Schedules, Webhooks, Manual).
     Serves as the root event for 1-to-N sequenced AutomationActions.
@@ -152,10 +153,6 @@ class AutomationTrigger(models.Model):
     last_triggered_at = models.DateTimeField(null=True, blank=True)
     trigger_count = models.PositiveIntegerField(default=0)
 
-    # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         # 1. Connect targeted model signals if model_event
@@ -197,7 +194,7 @@ class AutomationTrigger(models.Model):
         return f"{status_icon} {self.name} [{self.get_trigger_type_display()}]"
 
 
-class AutomationAction(models.Model):
+class AutomationAction(AuditableModel):
     """
     Executable action step attached to an AutomationTrigger.
     Multiple actions can be linked to a single trigger and execute in sequential order.
@@ -264,10 +261,6 @@ class AutomationAction(models.Model):
     # Metrics & State
     last_run_at = models.DateTimeField(null=True, blank=True)
     run_count = models.PositiveIntegerField(default=0)
-
-    # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def delete(self, *args, **kwargs):
         if self.is_system:

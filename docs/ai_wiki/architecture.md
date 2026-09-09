@@ -53,14 +53,24 @@ economy_editor/
 │   │   │   ├── scheduler.py         # django-celery-beat synchronization engine
 │   │   │   ├── tasks.py             # Celery asynchronous execution tasks
 │   │   │   └── views.py             # REST API endpoints (/api/automation/)
-│   │   └── integration/             # Integration App
-│   │       ├── admin.py             # Admin UI with custom media JS
-│   │       ├── forms.py             # Dependent select forms
-│   │       ├── models.py            # AgentProfile, AgentTask, SpendReport
-│   │       ├── services/
-│   │       │   └── hermes_catalog.py # models.dev dynamic registry client
-│   │       ├── static/admin/js/     # Dynamic dependent dropdowns & specs card
-│   │       └── views.py             # REST API endpoints & catalog views
+│   │   ├── core/                    # Core foundations, base models, settings hub & i18n
+│   │   ├── integration/             # Integration App & Hermes catalog
+│   │   └── meta_engine/             # Metadata Engine & Modular App Runtime
+│   │       ├── admin.py             # Admin App Store & Studio UI
+│   │       ├── app_installer.py     # Multi-pass declarative app installer
+│   │       ├── app_uninstaller.py   # Reverse dependency guard & safe uninstaller
+│   │       ├── dependency_resolver.py # DAG topological dependency sorter
+│   │       ├── manifest_reader.py   # Package scanner and manifest parser
+│   │       ├── model_factory.py     # Dynamic in-memory model compiler
+│   │       ├── models.py            # SystemModule & Meta catalog models
+│   │       ├── schema_engine.py     # Dynamic PostgreSQL DDL engine
+│   │       ├── serializers.py       # Dynamic DRF entity serializer factory
+│   │       ├── signals.py           # Database DDL synchronization signals
+│   │       ├── urls.py              # Entity gateway & App Store routes
+│   │       └── views.py             # Polymorphic CRUD & schema endpoints
+│   ├── modules/                     # Modular Application Packages
+│   │   ├── contacts/                # Reference Contacts & Address Book app
+│   │   └── crm/                     # Reference CRM & Sales Pipeline app
 │   ├── core/                        # Django Project Configuration & Celery Setup
 │   │   ├── celery.py                # Celery application initialization
 │   │   └── settings.py              # Celery & django-celery-beat broker settings
@@ -638,5 +648,105 @@ The filtering engine unifies trigger condition evaluation into a single authorit
 - Full BiDi / RTL support automatically formatting Arabic interface layouts.
 - User profile preference `Profile.preferred_language` on `apps.integration.models.Profile` exposed in Django Admin user forms.
 - DRF content negotiation dynamically resolves localized error messages and responses based on client `Accept-Language` headers.
+
+---
+
+## 17. Metadata Engine, Dynamic Schema & Modular App Runtime (`apps.meta_engine`)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│             METADATA-DRIVEN ARCHITECTURE & MODULAR RUNTIME ECOSYSTEM                   │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│  [Modular App Packages] (modules/<app_id>/manifest.json)                               │
+│       │                                                                                │
+│       ▼                                                                                │
+│  [AppManifestReader] ────► [DependencyResolver (DAG Topological Sort)]                 │
+│                                    │                                                   │
+│                                    ▼                                                   │
+│                       [Multi-Pass AppInstaller]                                       │
+│                       Pass 1: MetaModels & Scalar MetaFields                           │
+│                       Pass 2: Relational Foreign Key Links                             │
+│                       Pass 3: MetaViews (Forms, Lists, Kanbans)                        │
+│                       Pass 4: MetaActions & Hierarchical MetaMenus                     │
+│                       Pass 5: MetaReports (CSS Paged Media Templates)                  │
+│                                    │                                                   │
+│                 ┌──────────────────┴──────────────────┐                                │
+│                 ▼                                     ▼                                │
+│     [DynamicSchemaEngine]                 [DynamicModelFactory]                        │
+│     (Django SchemaEditor DDL)             (In-Memory Compilation)                      │
+│     • CREATE / DROP TABLE                 • Compiles (UUID, SoftDelete, Auditable)     │
+│     • ADD / DROP COLUMN                   • Registers into django.apps.apps            │
+│     • Physical PostgreSQL Tables          • Standard ORM CRUD (filter, save, join)     │
+│                 │                                     │                                │
+│                 └──────────────────┬──────────────────┘                                │
+│                                    ▼                                                   │
+│                     [Declarative REST API Gateway]                                     │
+│                     • /api/v1/entities/<slug>/ (Polymorphic CRUD)                      │
+│                     • /api/v1/entities/<slug>/schema/ (Introspection)                  │
+│                     • Row-Level MetaRule Security Evaluation                           │
+│                     • DynamicEntitySerializerFactory                                   │
+│                                    ▲                                                   │
+│                                    │                                                   │
+│                     [Odoo-Style Admin App Store]                                       │
+│                     • /admin/meta_engine/systemmodule/app-store/                       │
+│                     • 1-Click Install / Uninstall with 3 Data Policies                 │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 17.1 Metadata Catalog Architecture (`apps.meta_engine.models`)
+- **`SystemModule`**: Registry tracking discoverable and installed applications, metadata (name, version, category, icon, summary, author), status (`uninstalled`, `installed`, `error`, `to_upgrade`), and dependency graph.
+- **`MetaModel`**: Programmatic entity definition (`name`, `label`, `label_plural`, `app_label`, `table_name`, `is_system`, `is_auditable`, `is_soft_delete`, `ordering_field`, `module`).
+- **`MetaField`**: Column attributes supporting 12 data types (`char`, `text`, `integer`, `float`, `decimal`, `boolean`, `date`, `datetime`, `json`, `foreign_key`, `many_to_many`, `file`), validation constraints (`required`, `unique`, `index`), choices, default values, and system kernel reserved name protection (`id`, `pk`, `created_at`, `updated_at`, `created_by`, `updated_by`).
+- **`MetaView`**: Declarative layout specification storing coordinate and widget schema trees as JSON for forms, lists, kanbans, pivots, and trees.
+- **`MetaMenu`**: Hierarchical navigation tree with parent-child nesting, sequence ordering, icons, and action links.
+- **`MetaAction`**: Window view actions, server actions, report generation actions, and URL redirects.
+- **`MetaRule`**: Row-level access control evaluating `perm_read`, `perm_write`, `perm_create`, `perm_delete`, and dynamic JSON domain expressions (e.g. `{"created_by": "{{user.id}}"}`).
+- **`MetaReport`**: Declarative printable report definitions (PDF/HTML) using CSS Paged Media `@page` layout rules, orientation, paper standard (`A4`, `Letter`, `thermal_80mm`), and template interpolation tokens (`{{record.field}}`).
+
+### 17.2 Dynamic PostgreSQL Schema Engine (`apps.meta_engine.schema_engine`)
+- Translates `MetaModel` and `MetaField` instances directly into physical database schema modifications via Django's connection `schema_editor()`.
+- Direct DDL operations: `create_table()`, `drop_table()`, `add_column()`, `drop_column()`, `table_exists()`, and `column_exists()`.
+- Injects standard kernel audit columns (`id` UUID, `created_at`, `updated_at`, `created_by_id`, `updated_by_id`) automatically on table creation.
+- Seamless lifecycle signals in `signals.py` synchronize PostgreSQL tables and columns automatically when metadata records change.
+
+### 17.3 Dynamic In-Memory Model Factory (`apps.meta_engine.model_factory`)
+- Python metaclass compilation utilizing `type(class_name, bases, attrs)` to produce authentic, live Django Model classes in memory.
+- Inherits `(UUIDModel, SoftDeleteModel, AuditableModel)` with zero disk code generation.
+- Registered dynamically into `django.apps.apps` for transparent ORM compatibility (filtering, ordering, aggregations, foreign key joins).
+- Lazy model resolution on demand via `DynamicModelFactory.get_by_slug(slug)`.
+
+### 17.4 Modular App Lifecycle & DAG Dependency Management
+- **Manifest Format (`manifest.json`)**: Self-contained or modular declarations of dependencies, models, fields, views, menus, automations, and reports.
+- **Topological Dependency Resolver (`dependency_resolver.py`)**: Resolves dependency DAGs via Kahn's algorithm, calculating optimal installation sequences and blocking cyclic loops (`CyclicDependencyError`) or missing prerequisites (`MissingDependencyError`).
+- **Multi-Pass Ingestion (`app_installer.py`)**:
+  - Pass 1: Core models and scalar fields (creates tables and columns).
+  - Pass 2: Relational links and foreign keys (adds FK constraints across target tables).
+  - Pass 3: View layouts, navigation menus, actions, and printable reports.
+  - Pass 4: In-memory dynamic model compilation.
+- **Safe App Uninstaller & Data Retention Policies (`app_uninstaller.py`)**:
+  - Reverse Dependency Guard: Blocks uninstallation of modules if another active module depends on them.
+  - 3 Data Retention Policies:
+    1. `archive`: Conceals models, views, and menus while preserving physical tables and records.
+    2. `snapshot_backup_and_drop`: Serializes table records to JSON snapshot file in `media/module_backups/` before dropping DDL.
+    3. `cascade_drop`: Drops metadata assets and physical PostgreSQL tables immediately.
+
+### 17.5 Universal Declarative REST API Gateway (`apps.meta_engine.views`)
+- Single unified REST endpoint family mounted at `/api/v1/entities/<model_slug>/`:
+  - `GET /api/v1/entities/<model_slug>/`: List records with pagination, filtering, ordering, and full-text search.
+  - `POST /api/v1/entities/<model_slug>/`: Create record with automatic user audit attribution.
+  - `GET /api/v1/entities/<model_slug>/<id>/`: Retrieve single record.
+  - `PUT / PATCH /api/v1/entities/<model_slug>/<id>/`: Update record.
+  - `DELETE /api/v1/entities/<model_slug>/<id>/`: Delete record (or soft-delete if enabled).
+  - `GET /api/v1/entities/<model_slug>/schema/`: Full declarative introspection of fields, views, and printable reports.
+- Dynamic serializers via `DynamicEntitySerializerFactory`.
+- Row-level `MetaRule` enforcement evaluating user group permissions and interpolating dynamic domain filters (e.g. `{{user.id}}`).
+
+### 17.6 Odoo-Style Admin App Store Interface (`apps.meta_engine.admin`)
+- Accessible at `/admin/meta_engine/systemmodule/app-store/` with changelist toolbar button.
+- Card grid UI with icons, version badges, categories, summaries, dependencies, and 1-click install/uninstall actions.
+- Integrated disk synchronization ("🔄 Scan Disk for Modules").
+- Live PostgreSQL DDL status badges and direct REST API gateway links in `MetaModelAdmin`.
+
 
 

@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
 - **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `main`
-- **Last Updated**: 2026-09-09 16:55:00+03:00
+- **Active Branch**: `feat/meta-engine-modular-apps`
+- **Last Updated**: 2026-09-09 17:25:00+03:00
 
 ---
 
@@ -430,7 +430,59 @@ Establish foundational abstract models, a centralized Odoo-style modular applica
 
 ---
 
-## Phase 13: Multi-Tenancy, Organizations & Workspaces (`apps.tenants`) (PENDING)
+## Phase 13: Metadata Engine, Dynamic Schema & Modular App Runtime (`apps.meta_engine`) (COMPLETED)
+
+### 1. Objective & Scope
+Transform the platform into a high-performance **Metadata-Driven Architecture & Declarative Framework** (similar to Odoo `ir.model` and Frappe `DocType`). Provide an Odoo-style **Modular App System** with an App Registry, topological dependency installation, and safe uninstallation lifecycles:
+- **Unified Base Model Retrofit**:
+  - Unify `AuditableModel` to inherit `TimeStampedModel` in `apps.core.models`, bringing all 4 fields (`created_at`, `updated_at`, `created_by`, `updated_by`) to all existing and future models.
+  - Retrofit existing models in `apps.core`, `apps.automation`, and `apps.integration` to inherit `AuditableModel` with automatic actor resolution via `CurrentUserMiddleware`.
+- **System Metadata Catalog (`apps.meta_engine.models`)**:
+  - `MetaModel`: Dynamic entity definitions (`name`, `label`, `app_label`, `table_name`, `is_system`, `is_auditable`, `is_soft_delete`).
+  - `MetaField`: Dynamic field definitions (`model`, `name`, `field_type`, `label`, `required`, `unique`, `default`, `choices`, `fk_target`, `help_text`, `index`).
+  - `MetaView`: Declarative layout specifications (form, list/table, kanban, pivot, tree) stored as structured JSON schema trees.
+  - `MetaMenu`: Hierarchical navigation items with icons, sequences, parent-child trees, and action triggers.
+  - `MetaAction`: Declarative actions (window view actions, server actions, automation triggers).
+  - `MetaRule`: Row-level domain filters and field-level permissions.
+  - `MetaReport`: Declarative printable reports (`name`, `slug`, `model`, `report_type`: `pdf` | `html`, `template_dsl` / `layout_schema`, `paper_format`, `orientation`, `is_default`).
+- **Dynamic PostgreSQL Schema Synchronization (`DynamicSchemaEngine`)**:
+  - In-database DDL synchronization using Django's `SchemaEditor`: creates physical PostgreSQL tables, adds/alters columns, creates indexes, and links foreign keys dynamically without requiring manual migration files or server reboots.
+  - Python Dynamic Model Factory: compiles `MetaModel` into live in-memory Django models using `type(name, (AuditableModel,), attrs)` registered into `django.apps.apps`.
+- **Modular App System & Lifecycle (`AppRegistry`)**:
+  - `SystemModule` / `AppRegistry`: Manifest reader for declarative app packages (`app_id`, `name`, `version`, `depends`, `models`, `views`, `menus`, `automations`, `reports`).
+  - **Install Engine**: Topological dependency graph resolution (auto-installs prerequisites first), two-pass relational linking, and declarative asset registration (menus, views, automations, printable reports).
+  - **Uninstall Engine**: Reverse dependency validation guard, data archiving or automated snapshot backup before safe table drop.
+- **Universal Declarative REST API Gateway**:
+  - Polymorphic CRUD endpoints (`/api/v1/entities/<model_slug>/`) that dynamically validate, serialize, filter, and paginate records using metadata definitions.
+- **Admin App Store & Studio UI**:
+  - Visual App Store in Django Admin to 1-click install, upgrade, or uninstall modules.
+  - Interactive Metadata Inspector & Form Layout visualizer.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Base Model Retrofit (`AuditableModel` with 4 fields across existing models & migrations)** - COMPLETED (Commit: `7201b05`)
+- [x] **Sub-task 2: Metadata Catalog Data Models (`MetaModel`, `MetaField`, `MetaView`, `MetaMenu`, `MetaAction`, `MetaRule`, `MetaReport`)** - COMPLETED (Commit: `c15a627`)
+- [x] **Sub-task 3: Dynamic PostgreSQL Schema Engine (SchemaEditor DDL, Column Types & Foreign Key Linking)** - COMPLETED (Commit: `81430eb`)
+- [x] **Sub-task 4: Dynamic In-Memory Django Model Factory & Runtime App Registry Injection** - COMPLETED (Commit: `97d117d`)
+- [x] **Sub-task 5: Modular App Manifest & Registry Engine (`SystemModule`, Dependency Sorter & Declarative Ingestion [Models, Views, Menus, Automations, Reports])** - COMPLETED (Commit: `5c4874e`)
+- [x] **Sub-task 6: Safe App Uninstall & Data Policy Engine (Reverse Dependency Check, Snapshot Backup & Safe Purge)** - COMPLETED (Commit: `c88f594`)
+- [x] **Sub-task 7: Universal Declarative REST API Gateway (`/api/v1/entities/<slug>/`)** - COMPLETED (Commit: `9ace2c9`)
+- [x] **Sub-task 8: Odoo-Style Admin App Store & Metadata Studio Interface** - COMPLETED (Commit: `024563e`)
+- [x] **Sub-task 9: Comprehensive Automated Testing & End-to-End Verification** - COMPLETED (Commit: `d7e2ff3`)
+- [x] **Sub-task 10: LLM Wiki & Architecture Synchronization** - COMPLETED
+
+
+### 3. Key Decisions & Deviations (Phase 13)
+- *2026-09-09*: Pivoted platform architecture to a **Metadata-Driven Architecture & Declarative Framework** with an Odoo-style **Modular App Runtime**.
+- *2026-09-09*: Unified `AuditableModel` to inherit `TimeStampedModel`, guaranteeing that every dynamic and domain model automatically receives `id` (UUID), `created_at`, `updated_at`, `created_by`, and `updated_by`.
+- *2026-09-09*: Implemented `DynamicModelFactory` in `apps.meta_engine.model_factory` allowing dynamic models to be compiled in-memory as full-fledged Django models inheriting `(UUIDModel, SoftDeleteModel, AuditableModel)` and registered into `django.apps.apps`. Integrated lazy loading, soft deletion, and standard ORM CRUD (Commit: `97d117d`).
+- *2026-09-09*: Implemented Modular App Registry Engine with `SystemModule`, `AppManifestReader`, DAG `DependencyResolver`, and multi-pass `AppInstaller` handling models, foreign keys, views, menus, automations, and reports. Added reference demo apps `contacts` and `crm` (Commit: `5c4874e`).
+- *2026-09-09*: Implemented `AppUninstaller` in `apps.meta_engine.app_uninstaller` featuring reverse dependency validation guard (blocking uninstall of required modules) and 3 pluggable data retention policies: `archive` (soft-deactivation), `snapshot_backup_and_drop` (JSON record export before DDL drop), and `cascade_drop` (immediate purge) (Commit: `c88f594`).
+- *2026-09-09*: Implemented Universal Declarative REST API Gateway in `apps.meta_engine.views` exposing polymorphic CRUD operations (`/api/v1/entities/<model_slug>/`), declarative schema introspection (`/schema/`), dynamic serializers via `DynamicEntitySerializerFactory`, and row-level `MetaRule` security filtering (Commit: `9ace2c9`).
+- *2026-09-09*: Implemented Odoo-Style Admin App Store (`/admin/meta_engine/systemmodule/app-store/`) with visual module cards, 1-click install/uninstall buttons, data retention policy selectors, disk synchronization, and live PostgreSQL DDL status badges and API gateway links on `MetaModelAdmin` (Commit: `024563e`).
+
+---
+
+## Phase 14: Multi-Tenancy, Organizations & Workspaces (`apps.tenants`) (PENDING)
 
 ### 1. Objective & Scope
 Implement multi-tenant data isolation and workspace management to support B2B SaaS, multi-department enterprise portals, and client workspaces:
@@ -452,7 +504,7 @@ Implement multi-tenant data isolation and workspace management to support B2B Sa
 
 ---
 
-## Phase 14: Comprehensive Activity Audit Trail (`apps.audit`) (PENDING)
+## Phase 15: Comprehensive Activity Audit Trail (`apps.audit`) (PENDING)
 
 ### 1. Objective & Scope
 Build an enterprise-grade, immutable activity audit trail tracking human, bot service account, and system actions for compliance (SOC2, GDPR, ISO 27001):
@@ -472,7 +524,7 @@ Build an enterprise-grade, immutable activity audit trail tracking human, bot se
 
 ---
 
-## Phase 15: Universal Notifications Engine (`apps.notifications`) (PENDING)
+## Phase 16: Universal Notifications Engine (`apps.notifications`) (PENDING)
 
 ### 1. Objective & Scope
 Centralized notification dispatcher connecting human users, administrative teams, and autonomous AI agents:
@@ -494,7 +546,7 @@ Centralized notification dispatcher connecting human users, administrative teams
 
 ---
 
-## Phase 16: Universal Document & Media Management (`apps.media`) (PENDING)
+## Phase 17: Universal Document & Media Management (`apps.media`) (PENDING)
 
 ### 1. Objective & Scope
 Unified file, document, and media management handling user uploads, generated agent reports, exports, PDFs, and attachments:
@@ -515,7 +567,7 @@ Unified file, document, and media management handling user uploads, generated ag
 
 ---
 
-## Phase 17: Developer API Gateway, Scoped Keys & Inbound Webhooks (`apps.api_gateway`) (PENDING)
+## Phase 18: Developer API Gateway, Scoped Keys & Inbound Webhooks (`apps.api_gateway`) (PENDING)
 
 ### 1. Objective & Scope
 Expose secure, programmatic API access and inbound webhook ingestion for third-party SaaS interoperability:
@@ -537,7 +589,7 @@ Expose secure, programmatic API access and inbound webhook ingestion for third-p
 
 ---
 
-## Phase 18: Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`) (PENDING)
+## Phase 19: Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`) (PENDING)
 
 ### 1. Objective & Scope
 Implement an enterprise-grade, dynamic reporting engine in Django capable of rendering both interactive HTML views and pixel-perfect vector PDFs:
@@ -567,6 +619,7 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
 ---
 
 ### 4. Current Focus
-Phase 12 completed and verified (69/69 passing tests). Ready for Phase 13 (Multi-Tenancy, Organizations & Workspaces).
+Phase 13 (Metadata Engine, Dynamic Schema & Modular App Runtime) COMPLETED. Ready for Phase 14 (Multi-Tenancy, Organizations & Workspaces).
+
 
 

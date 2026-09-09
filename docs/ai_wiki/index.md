@@ -6,7 +6,8 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 12 Completed (Core Foundations, Abstract Models, Odoo-Style Modular App Settings Hub & Bilingual Multi-Language Engine)
+- **Status**: Phase 13 Completed (Metadata-Driven Architecture, Dynamic PostgreSQL Schema Engine, In-Memory Model Factory, Modular App Registry, Safe Uninstall Lifecycle & Declarative REST Gateway)
+
 
 ---
 
@@ -83,4 +84,28 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Bilingual Multi-Language Engine (English / Arabic)**:
   - Full i18n & l10n pipeline via `LocaleMiddleware`, compiled `.mo` catalogs, and native Arabic RTL typography.
   - User profile `preferred_language` on `Profile` model with dynamic admin language switcher.
+
+### 10. Metadata Engine, Dynamic Schema & Modular App Runtime (`apps.meta_engine`)
+- **Metadata Catalog Models**:
+  - `SystemModule`: Odoo-style app package registry tracking metadata, versions, dependencies, and installed status.
+  - `MetaModel` & `MetaField`: Declarative business entity catalog supporting 12 data types, relational links, and reserved keyword protection.
+  - `MetaView`, `MetaMenu`, `MetaAction`, `MetaRule`, `MetaReport`: Declarative form/list/kanban layout schemas, hierarchical menus, actions, row-level domain security rules, and printable CSS Paged Media reports.
+- **Dynamic PostgreSQL Schema Engine (`DynamicSchemaEngine`)**:
+  - Direct PostgreSQL DDL execution via Django's `SchemaEditor`: creates tables, adds/alters columns, creates indexes, and links foreign keys dynamically without manual migrations or server reboots.
+  - Database lifecycle signals in `signals.py` auto-sync physical schema on metadata changes.
+- **Dynamic In-Memory Model Factory (`DynamicModelFactory`)**:
+  - Compiles live, in-memory Django models inheriting `(UUIDModel, SoftDeleteModel, AuditableModel)` registered directly into `django.apps.apps`.
+  - Supports standard Django ORM operations (`filter`, `create`, `save`, `delete`, joins) and paranoid soft deletion.
+- **Modular App System & Lifecycle**:
+  - `AppManifestReader`: Discovers and parses `manifest.json` packages on disk and syncs them to the database.
+  - `DependencyResolver`: Directed acyclic graph (DAG) topological dependency resolution and cycle detection.
+  - `AppInstaller`: Multi-pass ingestion engine (Models -> Relational Links -> Views -> Menus -> Actions -> Reports).
+  - `AppUninstaller`: Safe uninstallation engine with reverse dependency validation guard and 3 data retention policies (`archive`, `snapshot_backup_and_drop`, `cascade_drop`).
+- **Universal Declarative REST API Gateway**:
+  - Polymorphic REST endpoints (`/api/v1/entities/<model_slug>/`) with dynamic serializers, filtering, pagination, search, and row-level `MetaRule` domain security.
+  - Declarative schema introspection endpoint (`/api/v1/entities/<model_slug>/schema/`).
+- **Odoo-Style Admin App Store & Studio UI**:
+  - Visual App Store dashboard (`/admin/meta_engine/systemmodule/app-store/`) with 1-click install, uninstall with data retention policies, and disk synchronization.
+  - Dynamic PostgreSQL DDL status badges and API gateway navigation directly in Django Admin.
+
 

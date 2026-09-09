@@ -1,0 +1,149 @@
+{
+  "app_id": "crm",
+  "name": "Customer Relationship Management",
+  "version": "1.0.0",
+  "category": "Sales",
+  "icon": "briefcase",
+  "summary": "Lead, Opportunity, and Sales Pipeline Management",
+  "description": "Streamline deal stages, track customer conversions, calculate weighted revenue, and monitor sales velocity.",
+  "author": "Antigravity Core",
+  "website": "https://github.com/devalees/ai_system_template",
+  "license": "MIT",
+  "depends": ["contacts"],
+  "models": [
+    {
+      "name": "crm_lead",
+      "label": "Lead & Opportunity",
+      "label_plural": "Leads & Opportunities",
+      "app_label": "crm",
+      "description": "Sales deal, prospect opportunity, or inbound client inquiry",
+      "is_auditable": true,
+      "is_soft_delete": true,
+      "ordering_field": "-created_at",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Opportunity Title",
+          "field_type": "char",
+          "max_length": 150,
+          "required": true,
+          "sequence": 1
+        },
+        {
+          "name": "partner_id",
+          "label": "Customer / Partner",
+          "field_type": "foreign_key",
+          "fk_target_model": "contacts_partner",
+          "on_delete": "SET_NULL",
+          "sequence": 2
+        },
+        {
+          "name": "expected_revenue",
+          "label": "Expected Revenue",
+          "field_type": "decimal",
+          "max_digits": 12,
+          "decimal_places": 2,
+          "default": "0.00",
+          "sequence": 3
+        },
+        {
+          "name": "probability",
+          "label": "Win Probability (%)",
+          "field_type": "integer",
+          "default": "20",
+          "sequence": 4
+        },
+        {
+          "name": "stage",
+          "label": "Pipeline Stage",
+          "field_type": "char",
+          "max_length": 50,
+          "default": "new",
+          "choices": [
+            {"value": "new", "label": "New"},
+            {"value": "qualified", "label": "Qualified"},
+            {"value": "proposition", "label": "Proposition"},
+            {"value": "won", "label": "Won"},
+            {"value": "lost", "label": "Lost"}
+          ],
+          "index": true,
+          "sequence": 5
+        },
+        {
+          "name": "notes",
+          "label": "Internal Notes",
+          "field_type": "text",
+          "sequence": 6
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "Leads List View",
+      "model": "crm_lead",
+      "view_type": "list",
+      "is_default": true,
+      "layout_schema": {
+        "columns": ["title", "partner_id", "expected_revenue", "stage", "probability"]
+      }
+    },
+    {
+      "name": "Lead Detail Form",
+      "model": "crm_lead",
+      "view_type": "form",
+      "is_default": true,
+      "layout_schema": {
+        "sections": [
+          {
+            "title": "Deal Details",
+            "fields": ["title", "partner_id", "stage"]
+          },
+          {
+            "title": "Financials & Projections",
+            "fields": ["expected_revenue", "probability", "notes"]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Pipeline Kanban Board",
+      "model": "crm_lead",
+      "view_type": "kanban",
+      "is_default": false,
+      "layout_schema": {
+        "group_by": "stage",
+        "card_fields": ["title", "partner_id", "expected_revenue"]
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "All Leads Action",
+      "action_type": "window",
+      "model": "crm_lead",
+      "view": "Leads List View"
+    }
+  ],
+  "menus": [
+    {
+      "name": "CRM",
+      "icon": "briefcase",
+      "app_label": "crm",
+      "sequence": 20,
+      "action": "All Leads Action"
+    }
+  ],
+  "reports": [
+    {
+      "name": "Sales Pipeline Summary",
+      "slug": "crm_pipeline_summary_pdf",
+      "model": "crm_lead",
+      "report_type": "pdf",
+      "paper_format": "A4",
+      "orientation": "landscape",
+      "is_default": true,
+      "template_dsl": "<div class='crm-pipeline'><h1>Pipeline: {{record.title}}</h1><p>Expected: ${{record.expected_revenue}} ({{record.probability}}%)</p></div>"
+    }
+  ]
+}

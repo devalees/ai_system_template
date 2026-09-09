@@ -158,10 +158,10 @@ class SoftDeleteModel(models.Model):
         self.save(update_fields=["is_deleted", "deleted_at"], using=using)
 
 
-class AuditableModel(models.Model):
+class AuditableModel(TimeStampedModel):
     """
     Abstract model capturing created_by and updated_by actors automatically
-    using the active request context from CurrentUserMiddleware.
+    along with automatic created_at and updated_at timestamps.
     """
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -184,6 +184,7 @@ class AuditableModel(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
         """Automatically populate actor fields from active request context."""
@@ -195,7 +196,7 @@ class AuditableModel(models.Model):
         super().save(*args, **kwargs)
 
 
-class AppSettingValue(TimeStampedModel):
+class AppSettingValue(AuditableModel):
     """
     Relational storage for application-level settings overriding defaults.
     """
