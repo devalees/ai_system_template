@@ -167,3 +167,97 @@ class OrganizationInvitationTests(TestCase):
 
         with self.assertRaises(ValidationError):
             invite.accept(self.invitee)
+
+
+class TenantContextTests(TestCase):
+    """Verify thread-safe contextvars tenant management and bypasses."""
+
+    def setUp(self):
+        self.org = Organization.objects.create(name="Alpha Org", slug="alpha-org")
+
+    def test_tenant_context_scoping(self):
+        from apps.tenants.context import get_current_tenant, tenant_context
+        self.assertIsNone(get_current_tenant())
+
+        with tenant_context(self.org):
+            self.assertEqual(get_current_tenant(), self.org)
+
+        self.assertIsNone(get_current_tenant())
+
+    def test_bypass_tenant_isolation(self):
+        from apps.tenants.context import is_tenant_isolation_bypassed, bypass_tenant_isolation
+        self.assertFalse(is_tenant_isolation_bypassed())
+
+        with bypass_tenant_isolation():
+            self.assertTrue(is_tenant_isolation_bypassed())
+
+        self.assertFalse(is_tenant_isolation_bypassed())
+
+
+class TenantMiddlewareTests(TestCase):
+    """Verify middleware resolution strategies and security gates."""
+
+    def setUp(self):
+        from django.test import RequestFactory
+        from apps.tenants.middleware import TenantMiddleware
+
+        self.factory = RequestFactory()
+        self.middleware = TenantMiddleware(get_response=lambda r: r)
+        self.org1 = Organization.objects.create(name="Org One", slug="org-one")
+        self.org2 = Organization.objects.create(name="Org Two", slug="org-two")
+
+        self.user1 = User.objects.create_user(username="user1", password="pw")
+        OrganizationMembership.objects.create(organization=self.org1, user=self.user1, role="member")
+
+        self.superuser = User.objects.create_superuser(username="admin_user", email="admin@test.com", password="pw")
+
+    def test_resolve_via_header_slug(self):
+        from apps.tenants.context import get_current_tenant
+
+        request = self.factory.get("/", HTTP_X_WORKSPACE_SLUG="org-one")
+        request.user = self.user1
+
+        self.middleware(request)
+        self.assertEqual(request.tenant, self.org1)
+        self.assertEqual(request.organization, self.org1)
+        # Verify context is cleaned up after request
+        self.assertIsNone(get_current_tenant())
+
+    def test_resolve_via_header_uuid(self):
+        request = self.factory.get("/", HTTP_X_ORGANIZATION_ID=str(self.org1.id))
+        request.user = self.user1
+
+        self.middleware(request)
+        self.assertEqual(request.tenant, self.org1)
+
+    def test_resolve_via_query_param(self):
+        request = self.factory.get("/?workspace=org-one")
+        request.user = self.user1
+
+        self.middleware(request)
+        self.assertEqual(request.tenant, self.org1)
+
+    def test_resolve_via_user_default_membership(self):
+        request = self.factory.get("/")
+        request.user = self.user1
+
+        self.middleware(request)
+        self.assertEqual(request.tenant, self.org1)
+
+    def test_explicit_workspace_forbidden_for_non_members(self):
+        # User 1 is a member of Org 1, but requests Org 2
+        request = self.factory.get("/", HTTP_X_WORKSPACE_SLUG="org-two")
+        request.user = self.user1
+
+        response = self.middleware(request)
+        self.assertEqual(response.status_code, 403)
+
+    def test_superuser_can_access_any_explicit_workspace(self):
+        request = self.factory.get("/", HTTP_X_WORKSPACE_SLUG="org-two")
+        request.user = self.superuser
+
+        response = self.middleware(request)
+        self.assertEqual(request.tenant, self.org2)
+        # Response should pass through without 403
+        self.assertEqual(response, request)
+
