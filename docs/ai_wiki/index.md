@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 5 Completed (Centralized Automation Engine, Celery Beat & Dynamic Hermes Profile Auto-Provisioning)
+- **Status**: Phase 6 Completed (Next-Gen Odoo-Style Automation Actions, Target Model CRUD, Dynamic Introspection & Reactive UI)
 
 ---
 
@@ -61,12 +61,8 @@ An extensible, production-grade starter template pairing a **Django** web framew
 ### 8. Centralized Automation Engine & Distributed Task Queue (`apps.automation`)
 - **Distributed Queue**: Celery 5.4+ with Redis 7 message broker and `django-celery-beat` database scheduler running in isolated worker (`celery_worker`) and scheduler (`celery_beat`) containers.
 - **Dynamic Service Registry**: 4 distinct service categories (`hermes_agent`, `internal_app`, `script_service`, `external_webhook`) with decorator-based registration (`@register_action`).
-- **Dynamic Introspection**: Zero-touch App and Model discovery leveraging `django.apps.apps.get_models()`, exposing all installed models and their field choices in automation forms.
-- **Dual Triggers**:
-  - *Model Events*: Dynamic CRUD post_save and post_delete lifecycle triggers with JSON condition evaluation (`field == value`).
-  - *Time-based Schedules*: Dual-mode (`once` one-shot vs `recurring` with intervals `seconds`, `minutes`, `hours`, `days`, `weeks`, `months`) seamlessly synchronized to `django_celery_beat.models.PeriodicTask`.
-- **Dynamic Hermes Profile Auto-Provisioning**: Flagship automation pipeline that detects new agent profiles, auto-generates DRF API tokens, writes declarative files (`SOUL.md`, `config.yaml`, `profile.yaml`) to `/app/agent_profiles/`, and injects runtime `.env` directly into `/app/hermes_runtime_profiles/`, recognized immediately by Hermes Agent.
-- **Automation Admin & Audit Logs**: Interactive Django admin with live status toggles, "▶ Run Now" manual execution actions, dynamic schema-driven action payload forms, and granular execution logs (`AutomationLog`).
-
-
-
+- **Dynamic Introspection API**: REST endpoint `GET /api/automation/introspection/?model=...` providing real-time schema field types, requirement constraints, and choices.
+- **Next-Gen Odoo-Style Target Operations**: Semantic separation of `trigger_model` (source event) vs `target_model` (destination record operations), executing automated `create`, `update`, and `delete` actions with template context interpolation (`{{var}}`).
+- **Visual Condition Rules**: Declarative operator evaluation (`==`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `in`, `is_empty`, `is_not_empty`) and Odoo-style state transition monitoring (`trigger_field`, `previous_value`, `target_value`).
+- **System Signal Reification**: Foundational routines (Hermes auto-provisioning, spend audit, QA review routing, budget alert) marked `is_system=True` and locked against deletion in models and Admin.
+- **Reactive Dynamic Admin UI**: Conditional section toggling, live AJAX field introspection, and interactive field mapping assistant with required field badges.

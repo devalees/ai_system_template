@@ -299,5 +299,28 @@ When an administrative user or API client creates an AI Agent account (`Profile.
 - **UUID & Datetime Handling**: To prevent database JSONField serialization errors (`TypeError: Object of type UUID is not JSON serializable`), `AutomationEngine` recursively transforms all inputs via `make_json_serializable()`.
 - **Decoupled Bootstrapping**: `AppConfig.ready()` bypasses database queries during initialization, ensuring zero `RuntimeWarning` or migration deadlocks on greenfield database setup.
 
+### 10.6 Next-Gen Odoo-Style Automation Actions (Phase 6)
+- **Semantic Separation of Source vs. Destination**:
+  - `trigger_model`: Source model monitored for database lifecycle triggers (`auth.User`, `integration.Profile`, `integration.AgentTask`).
+  - `target_model`: Destination model receiving automated record CRUD operations.
+- **Direct Target Model CRUD Operations**:
+  - `create`: Instantiates new records on `target_model` with mapped fields and type coercion.
+  - `update`: Locates records via `target_record_id`, `id`, `pk`, or context `pk`, updating attributes while protecting immutable fields.
+  - `delete`: Removes records identified by ID with transactional safety.
+- **Dynamic Field Mapping & Template Interpolation**:
+  - Declarative `field_mappings` support scalar constants and context interpolation (`{{username}}`, `{{pk}}`, `{{status}}`).
+  - Automatic relationship resolution: Foreign key fields automatically resolve username strings, scalar IDs, and related model instances.
+- **Visual Condition Rules Engine**:
+  - `condition_rules`: Evaluates structured operator rules (`==`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `in`, `is_empty`, `is_not_empty`) with dot-notation lookup (`profile.is_agent`).
+- **Dynamic Model & Field Introspection API**:
+  - `GET /api/automation/introspection/?model=<app_label.ModelName>` provides real-time schema specifications, field types, requirement constraints (`required_fields`), and choice options.
+  - Parameterless requests return a complete catalog of all installed system models grouped by Django application.
+- **System Signal Reification & Deletion Protection**:
+  - Core automation routines (`Auto-Provision Hermes Profile`, `Daily Spend Audit`, `QA Review Routing`, `Daily Budget Alert`) are marked `is_system=True`.
+  - Enforces deletion locks across `AutomationRule.delete()` (raising `ValidationError`) and Django Admin (`has_delete_permission`, `delete_queryset`), preventing accidental removal of foundational workflows.
+- **Reactive Dynamic Admin UI**:
+  - Static script `automation_reactive_admin.js` provides conditional fieldset toggles (showing/hiding Model Event vs. Beat Scheduling sections), live AJAX schema introspection, and interactive field mapping pills with required field badges.
+
+
 
 
