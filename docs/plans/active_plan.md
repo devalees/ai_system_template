@@ -382,7 +382,7 @@ Phase 11 complete, authenticated end-to-end with Hermes Agent runtime, duplicate
 
 ---
 
-## Phase 12: Core Foundations, Modular App Settings & Multi-Language Engine (`apps.core`) (IN_PROGRESS)
+## Phase 12: Core Foundations, Modular App Settings & Multi-Language Engine (`apps.core`) (COMPLETED)
 
 ### 1. Objective & Scope
 Establish foundational abstract models, a centralized Odoo-style modular application settings framework, and complete out-of-the-box bilingual (English / Arabic) multi-language architecture:
@@ -405,15 +405,26 @@ Establish foundational abstract models, a centralized Odoo-style modular applica
   - **DRF Content Negotiation**: Auto-resolves error messages and localized responses via HTTP `Accept-Language` headers.
 
 ### 2. Task Checklist & Progress
-- [/] **Sub-task 1: Abstract Base Models (`apps.core.models`) & Request Context Middleware** - IN PROGRESS
-- [ ] **Sub-task 2: Dynamic Settings Registry, Type Validators & Secret Encryption** - PENDING
-- [ ] **Sub-task 3: Database Models (`AppSettingValue`) & Redis Caching Layer** - PENDING
-- [ ] **Sub-task 4: Fast Runtime Resolution Service (`get_setting`, `set_setting`) with Code/Env Fallback** - PENDING
-- [ ] **Sub-task 5: Unified Odoo-Style Admin Settings Hub with Categorized App Sidebar** - PENDING
-- [ ] **Sub-task 6: Bilingual Multi-Language Engine (i18n/l10n, Arabic RTL, LocaleMiddleware & Profile Language)** - PENDING
-- [ ] **Sub-task 7: Migrate Existing Hardcoded Constants (Hermes Timeouts, Budget Caps, Defaults) to Settings Registry** - PENDING
-- [ ] **Sub-task 8: Automated Testing & Verification** - PENDING
-- [ ] **Sub-task 9: LLM Wiki & Architecture Synchronization** - PENDING
+- [x] **Sub-task 1: Abstract Base Models (`apps.core.models`) & Request Context Middleware** - COMPLETED (Commit: `3bb8e7b`)
+- [x] **Sub-task 2: Dynamic Settings Registry, Type Validators & Secret Encryption** - COMPLETED (Commit: `79178fa`)
+- [x] **Sub-task 3: Database Models (`AppSettingValue`) & Redis Caching Layer** - COMPLETED (Commit: `84f944d`)
+- [x] **Sub-task 4: Fast Runtime Resolution Service (`get_setting`, `set_setting`) with Code/Env Fallback** - COMPLETED (Commit: `57440c2`)
+- [x] **Sub-task 5: Unified Odoo-Style Admin Settings Hub with Categorized App Sidebar** - COMPLETED (Commit: `5f96a80`)
+- [x] **Sub-task 6: Bilingual Multi-Language Engine (i18n/l10n, Arabic RTL, LocaleMiddleware & Profile Language)** - COMPLETED (Commit: `fffb6cf`)
+- [x] **Sub-task 7: Migrate Existing Hardcoded Constants (Hermes Timeouts, Budget Caps, Defaults) to Settings Registry** - COMPLETED (Commit: `482e44d`)
+- [x] **Sub-task 8: Automated Testing & Verification (69 Tests Passing)** - COMPLETED (Commit: `98fd48f`)
+- [x] **Sub-task 9: LLM Wiki & Architecture Synchronization** - COMPLETED (Commit: `5d5f803`)
+
+### 3. Key Decisions & Deviations (Phase 12)
+- *2026-09-09*: Initialized Phase 12 on branch `feat/core-foundations-settings-i18n`.
+- *2026-09-09*: Implemented thread-safe `CurrentUserMiddleware` utilizing Python 3.11 `contextvars.ContextVar` to automatically populate `created_by` and `updated_by` on `AuditableModel.save()` without leaking context across concurrent requests.
+- *2026-09-09*: Implemented `TimeStampedModel`, `UUIDModel`, and paranoid `SoftDeleteModel` with custom `SoftDeleteQuerySet`, `SoftDeleteManager` (filtering out soft-deleted records by default), and `all_objects` manager. Fixed `_state.adding` detection for default UUID primary keys.
+- *2026-09-09*: Built declarative `settings_registry` supporting rich typed parameters (`int`, `float`, `bool`, `choice`, `secret`, `json`) and cryptographic secret encryption (`crypto.py`) with UI masking (`••••`).
+- *2026-09-09*: Created `AppSettingValue` model with post-save/post-delete signals invalidating Redis cache keys instantly, providing zero-downtime configuration updates across Django and Celery.
+- *2026-09-09*: Created single-screen Odoo-style Settings Hub in Django Admin (`/admin/core/appsettingvalue/hub/`) with categorized app sidebar and responsive toggle controls.
+- *2026-09-09*: Integrated full bilingual English / Arabic support (`LANGUAGES`, `LocaleMiddleware`, compiled `django.mo` catalogs, and native Arabic RTL BiDi layouts). Added `preferred_language` to `Profile`.
+- *2026-09-09*: Migrated hardcoded constants (`HERMES_REQUEST_TIMEOUT`, inference defaults, budget caps) into `apps.automation.conf` and `apps.integration.conf` with runtime fallback.
+- *2026-09-09*: Full test suite passing at 69/69 (100% OK) across all test suites.
 
 
 
@@ -556,6 +567,6 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
 ---
 
 ### 4. Current Focus
-Phase 12, Sub-task 1: Abstract Base Models (`apps.core.models`) & Request Context Middleware.
+Phase 12 completed and verified (69/69 passing tests). Ready for Phase 13 (Multi-Tenancy, Organizations & Workspaces).
 
 
