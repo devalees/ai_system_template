@@ -69,6 +69,11 @@ class AutomationRuleAdmin(admin.ModelAdmin):
     form = AutomationRuleAdminForm
     inlines = [AutomationLogInline]
 
+    class Media:
+        js = (
+            'automation/js/automation_reactive_admin.js',
+        )
+
     list_display = (
         'name',
         'scope_badge',
