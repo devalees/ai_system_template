@@ -126,7 +126,7 @@ Phase 4 completed and merged into main (Commit: `6e688bc`). Transitioning to Pha
 
 ---
 
-## Phase 5: Centralized Automation Engine, Service Registry & Celery Infrastructure (IN_PROGRESS)
+## Phase 5: Centralized Automation Engine, Service Registry & Celery Infrastructure (COMPLETED)
 
 ### 1. Objective & Scope
 Build a centralized, domain-agnostic Automation and Event-Driven Orchestration Engine in Django (`backend/apps/automation/`) powered by Celery and Celery Beat:
@@ -142,15 +142,19 @@ Build a centralized, domain-agnostic Automation and Event-Driven Orchestration E
 - [x] **Sub-task 3: Celery Tasks & Celery Beat Schedule Integration** - COMPLETED (Commit: `e351a8c`)
 - [x] **Sub-task 4: Rich Administrative Interface & Dynamic Model/App Dropdowns** - COMPLETED (Commit: `8ebdfd1`)
 - [x] **Sub-task 5: Flagship Use Case & Seeding: Dynamic Hermes Profile Auto-Provisioner** - COMPLETED (Commit: `58a9ac6`)
-- [ ] **Sub-task 6: Comprehensive Automated Testing & Empirical Verification** - PENDING
-- [ ] **Sub-task 7: LLM Wiki & Architecture Documentation Synchronization** - PENDING
+- [x] **Sub-task 6: Comprehensive Automated Testing & Empirical Verification** - COMPLETED (Commit: `89066bd`)
+- [x] **Sub-task 7: LLM Wiki & Architecture Documentation Synchronization** - COMPLETED (Commit: `a70d8d0`)
 
 ### 3. Key Decisions & Deviations (Phase 5)
 - *2026-09-09*: Initialized Phase 5 on branch `feat/centralized-automation-engine`.
 - *2026-09-09*: Selected Celery + Celery Beat + Redis backed by `django-celery-beat` database scheduler per user request for unified, heavy-workload task execution.
-- *2026-09-09*: Configured profile volume mounts to read-write (`rw`) to allow Django automation workers to provision agent profiles and `.env` credentials dynamically.
+- *2026-09-09*: Configured profile volume mounts to read-write (`rw`) across `backend/docker-compose.yml` to allow Django automation workers to provision agent profiles and `.env` credentials dynamically into `/app/agent_profiles/` and `/app/hermes_runtime_profiles/`.
+- *2026-09-09*: Implemented `make_json_serializable()` in `engine.py` to prevent PostgreSQL JSONField serialization crashes when handling UUID primary keys (`Profile.id`) and `datetime` objects.
+- *2026-09-09*: Decoupled model signal bootstrapping in `AppConfig.ready()`: core models (`User`, `Profile`, `AgentTask`) are hooked in memory, while custom rule models are registered safely via `post_migrate` and `AutomationRule.save()`, completely eliminating startup `RuntimeWarning: Accessing the database during app initialization is discouraged`.
+- *2026-09-09*: Empirically validated dynamic Hermes profile provisioning: creating an agent user triggered the Celery worker, generated DRF Token, created declarative files in `/app/agent_profiles/`, and injected `.env` into `/app/hermes_runtime_profiles/`, recognized immediately by Hermes Agent runtime.
+- *2026-09-09*: Added 11 automated unit tests in `apps/automation/tests.py` covering registry, condition matching, once/recurring schedules, Celery task execution, Beat synchronization, live provisioning action, and REST API. Full test suite passing at 22/22 (100%).
 
 ### 4. Current Focus
-Sub-task 6: Comprehensive Automated Testing & Empirical Verification.
+Phase 5 completed. Ready for review and merge into `main`.
 
 
