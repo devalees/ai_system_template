@@ -155,3 +155,46 @@ class NotificationDispatcherTests(TestCase):
         # Check cache is set
         cache_key = get_unread_cache_key(str(self.user.id), str(self.org.id))
         self.assertEqual(cache.get(cache_key), 2)
+
+
+class NotificationTasksAndAutomationTests(TestCase):
+    """Test suite verifying Celery tasks and automation action integration."""
+
+    def setUp(self):
+        self.org = Organization.objects.create(name="Task Org", slug="task-org")
+        self.user = User.objects.create_user(username="taskuser", password="password123")
+
+    def test_send_notification_async_task(self):
+        """Verify send_notification_async_task executes and dispatches notification."""
+        from apps.notifications.tasks import send_notification_async_task
+
+        res = send_notification_async_task(
+            recipient_id=str(self.user.id),
+            title="Async Notification",
+            message="Background celery dispatch.",
+            level=Notification.LEVEL_SUCCESS,
+            organization_id=str(self.org.id)
+        )
+        self.assertTrue(res.get(Notification.CHANNEL_IN_APP))
+        n = Notification.objects.filter(recipient=self.user, title="Async Notification").first()
+        self.assertIsNotNone(n)
+
+    def test_automation_send_notification_action(self):
+        """Verify registered send_notification action handler executes correctly."""
+        from apps.automation.actions import send_notification_action
+
+        context = {
+            "recipient_username": "taskuser",
+            "title": "Automated Alert",
+            "message": "Automation trigger executed.",
+            "level": "warning",
+            "action_url": "/api/v1/test/"
+        }
+        output = send_notification_action(context)
+        self.assertEqual(output.get("status"), "success")
+        self.assertEqual(output.get("recipient"), "taskuser")
+
+        n = Notification.objects.filter(recipient=self.user, title="Automated Alert").first()
+        self.assertIsNotNone(n)
+        self.assertEqual(n.level, Notification.LEVEL_WARNING)
+

@@ -314,3 +314,68 @@ def provision_user_profile_action(context: Dict[str, Any]) -> Dict[str, Any]:
         "created": created,
     }
 
+
+@register_action(
+    name="send_notification",
+    category="notifications",
+    description="Dispatches multi-channel notification to a target user recipient",
+    schema={
+        "recipient_username": "Username of target user (e.g. {{username}} or admin)",
+        "title": "Notification title (e.g. Task {{task_name}} Completed)",
+        "message": "Notification message body",
+        "level": "Level: info, success, warning, or error (default: info)",
+        "action_url": "Optional action URL link",
+    },
+    presets=[
+        {
+            "name": "🔔 Send System Notification to Trigger User",
+            "description": "Sends notification alert to the user in trigger context.",
+            "params": {
+                "recipient_username": "{{username}}",
+                "title": "System Alert",
+                "message": "Action executed successfully for record {{pk}}.",
+                "level": "info",
+                "action_url": ""
+            }
+        }
+    ]
+)
+def send_notification_action(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Action Handler: Send Multi-Channel Notification.
+    """
+    from apps.notifications.dispatcher import NotificationDispatcher
+    from apps.notifications.models import Notification
+
+    recipient_username = context.get('recipient_username') or context.get('username')
+    user = None
+    if recipient_username:
+        user = User.objects.filter(username=recipient_username).first()
+    if not user and context.get('created_by_id'):
+        user = User.objects.filter(pk=context.get('created_by_id')).first()
+    if not user and context.get('user_id'):
+        user = User.objects.filter(pk=context.get('user_id')).first()
+
+    if not user:
+        raise ValueError(f"Could not resolve recipient user for context: {context}")
+
+    title = context.get('title') or "System Notification"
+    message = context.get('message') or "An automated system action was executed."
+    level = context.get('level') or Notification.LEVEL_INFO
+    action_url = context.get('action_url') or ""
+
+    results = NotificationDispatcher.send(
+        recipient=user,
+        title=title,
+        message=message,
+        level=level,
+        action_url=action_url,
+        extra_data=context,
+    )
+    return {
+        "status": "success",
+        "recipient": user.username,
+        "results": results,
+    }
+
+
