@@ -536,4 +536,110 @@ class DynamicModelAuditIntegrationTests(TestCase):
         self.assertEqual(delete_log.changes["is_deleted"]["new"], True)
 
 
+from rest_framework.test import APITestCase
+from django.contrib.admin.sites import AdminSite
+
+
+class ActivityLogAdminTests(TestCase):
+    """Verify read-only restrictions and formatted displays in Django Admin."""
+
+    def setUp(self):
+        from apps.audit.admin import ActivityLogAdmin
+        self.site = AdminSite()
+        self.admin = ActivityLogAdmin(ActivityLog, self.site)
+        self.user = User.objects.create_user(username="adminauditor", password="pw")
+        self.log = ActivityLog.objects.create(
+            actor=self.user,
+            action=ActivityLog.ACTION_UPDATE,
+            status=ActivityLog.STATUS_SUCCESS,
+            object_repr="Test Target Object",
+            changes={"name": {"old": "Alpha", "new": "Beta"}},
+            metadata={"source": "admin_test"},
+        )
+
+    def test_admin_permissions_are_strictly_read_only(self):
+        self.assertFalse(self.admin.has_add_permission(None))
+        self.assertFalse(self.admin.has_change_permission(None))
+        self.assertFalse(self.admin.has_delete_permission(None))
+
+    def test_admin_custom_displays(self):
+        action_html = self.admin.action_badge(self.log)
+        self.assertIn("Update", action_html)
+
+        status_html = self.admin.status_badge(self.log)
+        self.assertIn("Success", status_html)
+
+        diff_html = self.admin.changes_diff_card(self.log)
+        self.assertIn("Alpha", diff_html)
+        self.assertIn("Beta", diff_html)
+
+        meta_html = self.admin.metadata_display(self.log)
+        self.assertIn("admin_test", meta_html)
+
+
+class ActivityLogAPITests(APITestCase):
+    """Verify ActivityLog REST API endpoints and tenant scoping."""
+
+    def setUp(self):
+        self.org1 = Organization.objects.create(name="Org One", slug="org-one")
+        self.org2 = Organization.objects.create(name="Org Two", slug="org-two")
+
+        self.user1 = User.objects.create_user(username="user1", password="pw")
+        self.superuser = User.objects.create_superuser(username="admin", email="admin@test.com", password="pw")
+
+        self.log1 = ActivityLog.objects.create(
+            organization=self.org1,
+            actor=self.user1,
+            action=ActivityLog.ACTION_CREATE,
+            object_repr="Org 1 Doc",
+        )
+        self.log2 = ActivityLog.objects.create(
+            organization=self.org2,
+            action=ActivityLog.ACTION_CREATE,
+            object_repr="Org 2 Doc",
+        )
+
+    def test_unauthenticated_access_blocked(self):
+        response = self.client.get("/api/v1/audit/logs/")
+        self.assertEqual(response.status_code, 401)
+
+    def test_authenticated_tenant_scoped_access(self):
+        self.client.force_authenticate(user=self.user1)
+        response = self.client.get("/api/v1/audit/logs/?workspace=org-one")
+        self.assertEqual(response.status_code, 200)
+        results = response.data if isinstance(response.data, list) else response.data.get("results", [])
+        ids = [item["id"] for item in results]
+        self.assertIn(str(self.log1.id), ids)
+        self.assertNotIn(str(self.log2.id), ids)
+
+    def test_superuser_global_access(self):
+        self.client.force_authenticate(user=self.superuser)
+        response = self.client.get("/api/v1/audit/logs/")
+        self.assertEqual(response.status_code, 200)
+        results = response.data if isinstance(response.data, list) else response.data.get("results", [])
+        ids = [item["id"] for item in results]
+        self.assertIn(str(self.log1.id), ids)
+        self.assertIn(str(self.log2.id), ids)
+
+    def test_retrieve_single_log(self):
+        self.client.force_authenticate(user=self.superuser)
+        response = self.client.get(f"/api/v1/audit/logs/{self.log1.id}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["id"], str(self.log1.id))
+        self.assertEqual(response.data["action"], ActivityLog.ACTION_CREATE)
+
+    def test_read_only_mutations_disallowed(self):
+        self.client.force_authenticate(user=self.superuser)
+        # POST
+        res_post = self.client.post("/api/v1/audit/logs/", {"action": "create"})
+        self.assertEqual(res_post.status_code, 405)
+        # PUT
+        res_put = self.client.put(f"/api/v1/audit/logs/{self.log1.id}/", {"action": "update"})
+        self.assertEqual(res_put.status_code, 405)
+        # DELETE
+        res_del = self.client.delete(f"/api/v1/audit/logs/{self.log1.id}/")
+        self.assertEqual(res_del.status_code, 405)
+
+
+
 

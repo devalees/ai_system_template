@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/automation/', include('apps.automation.urls')),
     path('api/v1/', include('apps.tenants.urls')),
     path('api/v1/', include('apps.meta_engine.urls')),
+    path('api/v1/audit/', include('apps.audit.urls')),
 ]
 
 
