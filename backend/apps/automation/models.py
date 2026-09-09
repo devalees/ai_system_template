@@ -44,6 +44,13 @@ LOG_STATUS_CHOICES = [
 ]
 
 
+TARGET_OPERATION_CHOICES = [
+    ('create', '➕ Create New Record'),
+    ('update', '✏️ Update Existing Record'),
+    ('delete', '🗑️ Delete Record'),
+]
+
+
 class AutomationRule(models.Model):
     """
     Configurable Automation Rule linking Triggers to Registered Actions.
@@ -54,8 +61,12 @@ class AutomationRule(models.Model):
         default=True,
         help_text="Active toggle: uncheck to pause this rule without deleting it."
     )
+    is_system = models.BooleanField(
+        default=False,
+        help_text="System-level rule protecting core workflows (Hermes provisioning, audits, QA routing) from deletion."
+    )
 
-    # Trigger Configuration
+    # Trigger Configuration (Source)
     trigger_type = models.CharField(
         max_length=50,
         choices=TRIGGER_TYPE_CHOICES,
@@ -68,10 +79,10 @@ class AutomationRule(models.Model):
         default='recurring',
         help_text="'once' automatically deactivates the rule after a single successful run."
     )
-    target_model = models.CharField(
+    trigger_model = models.CharField(
         max_length=150,
         blank=True,
-        help_text="Django model to watch, e.g. 'auth.User' or 'integration.AgentTask'."
+        help_text="Source Django model to watch for events, e.g. 'auth.User' or 'integration.AgentTask'."
     )
     event_type = models.CharField(
         max_length=50,
@@ -84,6 +95,11 @@ class AutomationRule(models.Model):
         default=dict,
         blank=True,
         help_text="JSON criteria required for trigger match, e.g. {'is_agent': true} or {'status': 'completed'}."
+    )
+    condition_rules = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Structured Odoo-style visual filter rules: [{'field': 'status', 'operator': '==', 'value': 'completed'}]."
     )
 
     # State Transition & Field Change Configuration (Odoo-Style)
@@ -101,6 +117,25 @@ class AutomationRule(models.Model):
         max_length=100,
         blank=True,
         help_text="Optional target value after change (e.g. 'completed' or 'approved')."
+    )
+
+    # Target Model Record CRUD & Field Mapping (Destination)
+    target_model = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text="Destination Django model for CRUD record operations, e.g. 'integration.AgentTask'."
+    )
+    target_operation = models.CharField(
+        max_length=50,
+        choices=TARGET_OPERATION_CHOICES,
+        default='',
+        blank=True,
+        help_text="CRUD operation to execute on the target model ('create', 'update', 'delete')."
+    )
+    field_mappings = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Mapping of target model fields to values or context expressions, e.g. {'title': '{{task_title}}'}."
     )
 
     # Time-Based Scheduling Configuration (Celery Beat)
@@ -160,11 +195,11 @@ class AutomationRule(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         # 1. Connect targeted model signals if model_event
-        if self.is_active and self.trigger_type == 'model_event' and self.target_model:
+        if self.is_active and self.trigger_type == 'model_event' and self.trigger_model:
             try:
                 from django.apps import apps
                 from .signals import connect_model_signals
-                model_cls = apps.get_model(self.target_model)
+                model_cls = apps.get_model(self.trigger_model)
                 if model_cls:
                     connect_model_signals(model_cls)
             except Exception:
@@ -178,6 +213,9 @@ class AutomationRule(models.Model):
             pass
 
     def delete(self, *args, **kwargs):
+        if self.is_system:
+            from django.core.exceptions import ValidationError
+            raise ValidationError(f"System automation action '{self.name}' is protected and cannot be deleted.")
         try:
             from .scheduler import delete_rule_periodic_task
             delete_rule_periodic_task(self)

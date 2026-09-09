@@ -167,7 +167,7 @@ class AutomationEngine:
         matching_rules = AutomationRule.objects.filter(
             is_active=True,
             trigger_type='model_event',
-            target_model=model_identifier,
+            trigger_model=model_identifier,
             event_type__in=matching_event_types
         )
 

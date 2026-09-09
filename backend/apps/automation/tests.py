@@ -281,7 +281,7 @@ class AutomationCoreTests(TestCase):
         rule = AutomationRule.objects.create(
             name="QA Approval Notification",
             trigger_type="model_event",
-            target_model="integration.AgentTask",
+            trigger_model="integration.AgentTask",
             event_type="field_changed",
             trigger_field="status",
             previous_value="review",

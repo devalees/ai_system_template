@@ -83,13 +83,13 @@ def sync_automation_signals():
     bootstrap_core_signals()
     try:
         from .models import AutomationRule
-        target_models = (
+        trigger_models = (
             AutomationRule.objects.filter(is_active=True, trigger_type='model_event')
-            .values_list('target_model', flat=True)
+            .values_list('trigger_model', flat=True)
             .distinct()
         )
 
-        for model_str in target_models:
+        for model_str in trigger_models:
             if not model_str or '.' not in model_str:
                 continue
             try:
