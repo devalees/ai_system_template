@@ -11,6 +11,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     gettext \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libharfbuzz0b \
+    libpangoft2-1.0-0 \
+    libgobject-2.0-0 \
+    libglib2.0-0 \
+    libffi-dev \
+    fonts-amiri \
+    fonts-freefont-ttf \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

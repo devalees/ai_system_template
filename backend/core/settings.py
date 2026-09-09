@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'apps.integration',
     'apps.automation',
     'apps.api_gateway',
+    'apps.reports',
 ]
 
 MIDDLEWARE = [

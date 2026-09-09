@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/v1/notifications/', include('apps.notifications.urls')),
     path('api/v1/media/', include('apps.media.urls')),
     path('api/v1/gateway/', include('apps.api_gateway.urls')),
+    path('api/v1/reports/', include('apps.reports.urls')),
 ]
 
 

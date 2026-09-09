@@ -609,7 +609,7 @@ Expose secure, programmatic API access and inbound webhook ingestion for third-p
 
 ---
 
-## Phase 19: Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`) (PENDING)
+## Phase 19: Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`) (IN_PROGRESS)
 
 ### 1. Objective & Scope
 Implement an enterprise-grade, dynamic reporting engine in Django capable of rendering both interactive HTML views and pixel-perfect vector PDFs:
@@ -622,12 +622,12 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
   - Multi-language & RTL Arabic typography support (`Cairo`, `Amiri`, UTF-8).
 - **Frontend Designer Integration API**:
   - Introspection API bridge exposing dynamic model fields and reverse relationships as draggable tokens.
-  - Preview endpoint (`GET /api/reports/templates/<id>/preview/?record_id=...&format=html`) and binary download endpoint (`GET /api/reports/templates/<id>/render/?record_id=...&format=pdf`).
+  - Preview endpoint (`GET /api/v1/reports/templates/<id>/preview/?record_id=...&format=html`) and binary download endpoint (`GET /api/v1/reports/templates/<id>/render/?record_id=...&format=pdf`).
 - **Automation & Agent Ecosystem Bridge**:
   - Register `generate_pdf_report` action in `apps.automation` allowing triggers (e.g. Invoice approved, Task completed) to automatically compile reports, attach them to `apps.media`, and dispatch via `apps.notifications`.
 
 ### 2. Task Checklist & Progress
-- [ ] **Sub-task 1: ReportTemplate & ReportExecutionLog Data Models (`apps.reports.models`)** - PENDING
+- [/] **Sub-task 1: ReportTemplate & ReportExecutionLog Data Models (`apps.reports.models`)** - IN_PROGRESS
 - [ ] **Sub-task 2: WeasyPrint Engine & CSS Paged Media Service Layer** - PENDING
 - [ ] **Sub-task 3: Model Introspection Token Bridge & Template Compiler** - PENDING
 - [ ] **Sub-task 4: REST API Endpoints (Template CRUD, Live HTML Preview, PDF Render)** - PENDING
@@ -639,7 +639,8 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
 ---
 
 ### 4. Current Focus
-Phase 18 (Developer API Gateway, Scoped Keys & Inbound Webhooks): COMPLETED. Ready to proceed to Phase 19: Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`).
+Starting Phase 19: Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`). Sub-task 1: Data Models & Scaffolding.
+
 
 
 
