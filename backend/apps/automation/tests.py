@@ -857,3 +857,118 @@ class Phase7DecoupledPipelineTests(TestCase):
         task.save()
         self.assertEqual(AutomationLog.objects.filter(action=action).count(), initial_count + 1)
 
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    def test_action_params_template_interpolation_in_execute_action(self):
+        """
+        Tests that AutomationEngine.execute_action dynamically interpolates {{variables}}
+        inside action_params against the trigger execution context.
+        """
+        captured_contexts = []
+
+        @register_action(
+            name="test_params_capture_action",
+            category="internal_app",
+            description="Captures execution context for template testing",
+            schema={}
+        )
+        def capture_handler(ctx):
+            captured_contexts.append(dict(ctx))
+            return {"status": "captured"}
+
+        trigger = AutomationTrigger.objects.create(
+            name="Template Params Test Trigger",
+            trigger_type="manual",
+            is_active=True
+        )
+        action = AutomationAction.objects.create(
+            trigger=trigger,
+            name="Capture Action",
+            sequence=10,
+            action_category="internal_app",
+            action_type="test_params_capture_action",
+            action_params={
+                "prompt": "Audit task #{{pk}} ('{{task_name}}') costing ${{cost_usd}} for user {{username}}.",
+                "scalar_id": "{{pk}}",
+                "nested_meta": {
+                    "source_model": "{{model}}",
+                    "status_copy": "{{status}}"
+                }
+            },
+            is_active=True
+        )
+
+        trigger_context = {
+            "pk": "99",
+            "task_name": "Quarterly Budget Review",
+            "cost_usd": "42.50",
+            "username": "lead_accountant",
+            "model": "integration.AgentTask",
+            "status": "pending",
+        }
+
+        res = AutomationEngine.execute_action(action.id, trigger_context=trigger_context)
+        self.assertEqual(res["status"], "success")
+
+        self.assertTrue(len(captured_contexts) > 0)
+        final_ctx = captured_contexts[-1]
+
+        # Verify string interpolation
+        self.assertEqual(
+            final_ctx.get("prompt"),
+            "Audit task #99 ('Quarterly Budget Review') costing $42.50 for user lead_accountant."
+        )
+        # Verify scalar exact match
+        self.assertEqual(final_ctx.get("scalar_id"), "99")
+        # Verify recursive nested dictionary interpolation
+        self.assertEqual(
+            final_ctx.get("nested_meta"),
+            {
+                "source_model": "integration.AgentTask",
+                "status_copy": "pending"
+            }
+        )
+
+        # Verify audit log recorded the resolved context
+        log = AutomationLog.objects.get(id=res["log_id"])
+        self.assertEqual(
+            log.input_context.get("prompt"),
+            "Audit task #99 ('Quarterly Budget Review') costing $42.50 for user lead_accountant."
+        )
+
+    def test_services_api_exposes_presets(self):
+        """
+        Tests that the GET /api/automation/services/ API includes presets and schemas
+        for Hermes agent profiles and registered actions.
+        """
+        response = self.client.get('/api/automation/services/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn("services", data)
+
+        services_by_name = {s["name"]: s for s in data["services"]}
+
+        # Check cost_controller presets
+        self.assertIn("hermes_profile:cost_controller", services_by_name)
+        cost_service = services_by_name["hermes_profile:cost_controller"]
+        self.assertIn("presets", cost_service)
+        self.assertTrue(len(cost_service["presets"]) >= 2)
+        preset_names = [p["name"] for p in cost_service["presets"]]
+        self.assertTrue(any("Token & Budget Audit" in name for name in preset_names))
+        self.assertTrue(any("Audit Task Spend" in name for name in preset_names))
+
+        # Check prompt inside cost controller preset
+        sample_preset = cost_service["presets"][0]
+        self.assertIn("params", sample_preset)
+        self.assertIn("prompt", sample_preset["params"])
+
+        # Check qa_auditor presets
+        self.assertIn("hermes_profile:qa_auditor", services_by_name)
+        qa_service = services_by_name["hermes_profile:qa_auditor"]
+        self.assertTrue(len(qa_service["presets"]) >= 1)
+
+        # Check generic_webhook presets
+        self.assertIn("generic_webhook", services_by_name)
+        webhook_service = services_by_name["generic_webhook"]
+        self.assertTrue(len(webhook_service["presets"]) >= 1)
+
+

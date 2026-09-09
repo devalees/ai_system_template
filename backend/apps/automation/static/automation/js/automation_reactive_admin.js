@@ -93,6 +93,46 @@ document.addEventListener('DOMContentLoaded', function () {
             color: #0369a1;
             margin-left: 6px;
         }
+        .auto-preset-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 6px 0 10px 0;
+        }
+        .auto-preset-btn {
+            background: #ffffff;
+            border: 1px solid #93c5fd;
+            color: #1d4ed8;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .auto-preset-btn:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e40af;
+            transform: translateY(-1px);
+        }
+        .auto-schema-hint {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #475569;
+            margin-top: 6px;
+        }
+        .auto-schema-hint code {
+            font-weight: 600;
+            color: #0f172a;
+        }
 
         /* Group Builder Component Styles (Option A) */
         .auto-builder-card {
@@ -418,6 +458,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 badge.textContent = `✓ ${data.verbose_name} (${data.fields.length} fields)`;
 
                 updateAllFieldDropdowns();
+                if (typeof activeParamsAssistants !== 'undefined') {
+                    activeParamsAssistants.forEach(fn => {
+                        try { fn(); } catch (err) {}
+                    });
+                }
             } catch (e) {
                 console.warn('Failed to introspect trigger model:', e);
             }
@@ -1031,12 +1076,163 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 5. ACTION PARAMS ASSISTANT WITH PROMPT PRESETS & CONTEXT INSERTION
+    let cachedServices = null;
+    const activeParamsAssistants = [];
+
+    async function getRegisteredServices() {
+        if (cachedServices) return cachedServices;
+        try {
+            const resp = await fetch('/api/automation/services/', {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                cachedServices = data.services || [];
+                return cachedServices;
+            }
+        } catch (e) {
+            console.warn('Failed to fetch automation services:', e);
+        }
+        return [];
+    }
+
+    function setupActionParamsAssistant(container) {
+        const actionTypeSelects = container.querySelectorAll('select[name$="action_type"]');
+
+        actionTypeSelects.forEach(select => {
+            if (select.dataset.autoParamsAssistantBound) return;
+            select.dataset.autoParamsAssistantBound = "true";
+
+            const parentRow = select.closest('.inline-related') || select.closest('fieldset') || select.closest('form');
+            if (!parentRow) return;
+
+            const actionParamsArea = parentRow.querySelector('textarea[name$="action_params"]');
+            if (!actionParamsArea) return;
+
+            let assistantPanel = null;
+
+            async function updateParamsAssistant() {
+                const actionType = select.value;
+                if (!assistantPanel) {
+                    assistantPanel = document.createElement('div');
+                    assistantPanel.className = 'auto-schema-panel';
+                    actionParamsArea.parentNode.insertBefore(assistantPanel, actionParamsArea);
+                    activeParamsAssistants.push(updateParamsAssistant);
+                }
+
+                if (!actionType || actionType === 'none') {
+                    assistantPanel.style.display = 'none';
+                    return;
+                }
+
+                const services = await getRegisteredServices();
+                const actionDef = services.find(s => s.name === actionType);
+
+                if (!actionDef) {
+                    assistantPanel.style.display = 'none';
+                    return;
+                }
+
+                assistantPanel.style.display = 'block';
+
+                const presets = actionDef.presets || [];
+                const schemaKeys = Object.keys(actionDef.schema || {});
+
+                let presetsHtml = '';
+                if (presets.length > 0) {
+                    presetsHtml = `
+                        <div style="margin-top: 8px;">
+                            <span style="font-size: 11px; font-weight: 700; color: #1e293b;">💡 Quick Action Presets (Click to Load):</span>
+                            <div class="auto-preset-list">
+                                ${presets.map((p, idx) => `
+                                    <button type="button" class="auto-preset-btn" data-preset-idx="${idx}" title="${p.description || ''}">
+                                        ${p.name}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Context pills
+                let contextTags = ['{{pk}}', '{{username}}', '{{model}}', '{{now}}'];
+                if (currentTriggerFields && currentTriggerFields.length > 0) {
+                    currentTriggerFields.forEach(f => {
+                        const tag = `{{${f.name}}}`;
+                        if (!contextTags.includes(tag) && f.name !== 'id') {
+                            contextTags.push(tag);
+                        }
+                    });
+                }
+
+                let schemaHtml = '';
+                if (schemaKeys.length > 0) {
+                    schemaHtml = `
+                        <div class="auto-schema-hint">
+                            <strong>📋 Expected Parameters:</strong>
+                            ${schemaKeys.map(k => `<div><code>${k}</code>: <span style="opacity:0.85">${actionDef.schema[k]}</span></div>`).join('')}
+                        </div>
+                    `;
+                }
+
+                assistantPanel.innerHTML = `
+                    <div class="auto-panel-header">
+                        <span>🤖 Action Assistant: <strong>${actionDef.name}</strong></span>
+                        <span style="font-size: 11px; font-weight: normal; color: #64748b;">${actionDef.category}</span>
+                    </div>
+                    <div style="font-size: 11.5px; color: #475569; margin-bottom: 6px;">
+                        ${actionDef.description}
+                    </div>
+                    ${presetsHtml}
+                    <div style="margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+                        <span style="font-size: 11px; font-weight: 600; color: #334155; margin-right: 6px;">⚡ Insert Context Variables:</span>
+                        ${contextTags.map(tag => `<span class="auto-tag-context" data-val="${tag}">${tag}</span>`).join('')}
+                    </div>
+                    ${schemaHtml}
+                `;
+
+                // Bind preset clicks
+                assistantPanel.querySelectorAll('.auto-preset-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = parseInt(btn.getAttribute('data-preset-idx'), 10);
+                        const chosenPreset = presets[idx];
+                        if (chosenPreset && chosenPreset.params) {
+                            actionParamsArea.value = JSON.stringify(chosenPreset.params, null, 2);
+                            actionParamsArea.focus();
+                        }
+                    });
+                });
+
+                // Bind context tag clicks
+                assistantPanel.querySelectorAll('.auto-tag-context').forEach(tag => {
+                    tag.addEventListener('click', () => {
+                        const text = tag.getAttribute('data-val');
+                        const start = actionParamsArea.selectionStart;
+                        const end = actionParamsArea.selectionEnd;
+                        const val = actionParamsArea.value;
+                        actionParamsArea.value = val.substring(0, start) + text + val.substring(end);
+                        actionParamsArea.focus();
+                        actionParamsArea.selectionStart = actionParamsArea.selectionEnd = start + text.length;
+                    });
+                });
+            }
+
+            select.addEventListener('change', updateParamsAssistant);
+            if (select.value) {
+                updateParamsAssistant();
+            }
+        });
+    }
+
     setupActionMappingAssistant(document);
+    setupActionParamsAssistant(document);
 
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(mutation => {
             if (mutation.addedNodes.length > 0) {
                 setupActionMappingAssistant(document);
+                setupActionParamsAssistant(document);
             }
         });
     });

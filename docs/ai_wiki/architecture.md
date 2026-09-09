@@ -470,6 +470,50 @@ The filtering engine unifies trigger condition evaluation into a single authorit
 - Features real-time two-way JSON synchronization writing to `filter_conditions` and mirroring to `condition_rules`.
 - Displays dynamic model introspection field dropdowns, field type badges, and inline date formatting reminders.
 
+---
+
+## 14. Action Params Assistant, Persona-Specific Prompt Presets & Template Resolution (Phase 10)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🤖 Action Assistant: hermes_profile:cost_controller             hermes_agent           │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ Monitor token consumption, track operational budget, and audit expenditures.          │
+│                                                                                        │
+│ 💡 Quick Action Presets (Click to Load):                                               │
+│ [ 📊 Daily Token & Budget Audit ]  [ 🔍 Audit Task Spend ]  [ ⚠️ Budget Overrun Check ]│
+│                                                                                        │
+│ ⚡ Insert Context Variables:                                                           │
+│ [ {{pk}} ] [ {{username}} ] [ {{task_name}} ] [ {{cost_usd}} ] [ {{status}} ] [ {{now}} ]│
+│                                                                                        │
+│ 📋 Expected Parameters:                                                                │
+│ prompt: Natural language task instruction dispatched to the agent                      │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 14.1 Interactive Action Params Assistant (`automation_reactive_admin.js`)
+- Dynamically rendered in both standalone `AutomationActionAdmin` and inline action rows on `AutomationTriggerAdmin`.
+- Binds to `action_type` changes and queries `/api/automation/services/` to load persona descriptions, parameter schemas, and production presets.
+- **1-Click Presets**: Immediately populates pre-crafted, production-ready JSON into the `action_params` textarea.
+- **Context Variable Insertion**: Displays trigger context variables (`{{pk}}`, `{{task_name}}`, `{{cost_usd}}`, `{{username}}`, `{{status}}`, `{{now}}`), inserting them directly at the cursor position.
+- **Schema Guidance**: Explains expected keys and data structures (e.g. `prompt: string`).
+
+### 14.2 Persona-Specific Prompt Presets (`registry.py`)
+- Standard presets tailored to the 5 core Nous Research Hermes Agent personas:
+  - **`cost_controller`**: Daily token & budget audit, task spend verification against thresholds, budget overrun anomaly alerts.
+  - **`qa_auditor`**: Review task output deliverables & submit verdict, scan for hardcoded secrets and unfinished placeholders.
+  - **`orchestrator`**: Triage & decompose new intake tasks, synthesize deliverables across sub-tasks.
+  - **`comms_agent`**: Draft professional client milestone and progress updates.
+  - **`archivist`**: Extract institutional knowledge and SOPs into project documentation.
+  - **System Handlers**: Generic webhook payload dispatches, user profile auto-provisioning.
+
+### 14.3 Recursive Template Variable Resolution (`engine.py`)
+- In `AutomationEngine.execute_action`, `resolve_nested_template` recursively scans `action_params` data structures (strings, dicts, lists).
+- Embedded placeholders like `Audit task #{{pk}} ('{{task_name}}') costing ${{cost_usd}}` are dynamically interpolated at runtime against the in-flight trigger execution context.
+- Exact scalar matches (e.g. `{{cost_usd}}` or `{{pk}}`) are coerced cleanly to native numbers or strings.
+- Audit logs in `AutomationLog.input_context` capture the resolved parameters for full transparency and reproducibility.
+
+
 
 
 

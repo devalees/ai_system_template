@@ -244,6 +244,20 @@ def resolve_template_value(template: Any, context: Dict[str, Any], field_meta: A
     return val
 
 
+def resolve_nested_template(val: Any, context: Dict[str, Any]) -> Any:
+    """
+    Recursively resolves template string placeholders {{variable}} within data structures
+    (strings, dictionaries, and lists) against execution context.
+    """
+    if isinstance(val, str):
+        return resolve_template_value(val, context)
+    elif isinstance(val, dict):
+        return {k: resolve_nested_template(v, context) for k, v in val.items()}
+    elif isinstance(val, list):
+        return [resolve_nested_template(item, context) for item in val]
+    return val
+
+
 class AutomationEngine:
     """
     Central Automation Engine.
@@ -440,7 +454,8 @@ class AutomationEngine:
         context = dict(trigger_context or {})
         if action.action_params:
             for k, v in action.action_params.items():
-                context.setdefault(k, v)
+                resolved_v = resolve_nested_template(v, context)
+                context.setdefault(k, resolved_v)
 
         # 2. Initialize Audit Log entry
         safe_context = make_json_serializable(context)

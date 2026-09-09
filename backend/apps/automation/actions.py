@@ -25,7 +25,20 @@ from .registry import register_action
         "role": "Functional role of the profile",
         "provider": "LLM Provider (default: openrouter)",
         "model_name": "Model identifier (default: google/gemini-2.5-flash)",
-    }
+    },
+    presets=[
+        {
+            "name": "🤖 Provision Profile from Trigger Context",
+            "description": "Uses trigger user/profile context to provision runtime files and token.",
+            "params": {
+                "username": "{{username}}",
+                "profile_name": "{{username}}",
+                "role": "specialist",
+                "provider": "openrouter",
+                "model_name": "google/gemini-2.5-flash"
+            }
+        }
+    ]
 )
 def provision_hermes_profile_action(context: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -147,7 +160,17 @@ Be direct, objective, concise, and rigorous. Execute assigned tasks with empiric
         "prompt": "The prompt or instruction string to dispatch",
         "profile": "Optional Hermes profile name (e.g. orchestrator)",
         "task_id": "Optional Django AgentTask ID",
-    }
+    },
+    presets=[
+        {
+            "name": "⚡ General Agent Task Execution",
+            "description": "Dispatches an instruction with trigger task variables to an agent.",
+            "params": {
+                "profile": "orchestrator",
+                "prompt": "Execute task #{{pk}} ('{{task_name}}') and report back with findings."
+            }
+        }
+    ]
 )
 def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -189,7 +212,22 @@ def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
         "url": "Target destination URL (https://...)",
         "payload": "Dictionary payload to send",
         "headers": "Optional dictionary of custom HTTP headers",
-    }
+    },
+    presets=[
+        {
+            "name": "🌐 Dispatch Event Payload to Webhook",
+            "description": "Sends event data and record details to external service.",
+            "params": {
+                "url": "https://webhook.site/your-endpoint",
+                "payload": {
+                    "event": "{{event}}",
+                    "model": "{{model}}",
+                    "pk": "{{pk}}",
+                    "status": "{{status}}"
+                }
+            }
+        }
+    ]
 )
 def generic_webhook_action(context: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -216,7 +254,16 @@ def generic_webhook_action(context: Dict[str, Any]) -> Dict[str, Any]:
     description="Provisions or updates a 1-to-1 Profile for a Django User, with automatic AI Agent bot detection",
     schema={
         "username": "Django User username (or pk in context)",
-    }
+    },
+    presets=[
+        {
+            "name": "👤 Auto-Provision User Profile",
+            "description": "Automatically provisions linked Profile for created or updated User.",
+            "params": {
+                "username": "{{username}}"
+            }
+        }
+    ]
 )
 def provision_user_profile_action(context: Dict[str, Any]) -> Dict[str, Any]:
     """

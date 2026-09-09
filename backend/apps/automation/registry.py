@@ -20,6 +20,82 @@ CATEGORY_CHOICES = [
     ('external_webhook', '🌐 Outbound Webhook / API'),
 ]
 
+HERMES_PROFILE_PRESETS: Dict[str, List[Dict[str, Any]]] = {
+    "cost_controller": [
+        {
+            "name": "📊 Daily Token & Budget Audit",
+            "description": "Audits daily token expenditure and budget status across all agent profiles.",
+            "params": {
+                "prompt": "Perform a comprehensive token usage and expenditure audit across all agent profiles, inspect SQLite session records, and create a SpendReport comparing usage against daily budget limits."
+            }
+        },
+        {
+            "name": "🔍 Audit Task Spend & Budget Variance",
+            "description": "Verifies whether a specific task's cost exceeds project budget thresholds.",
+            "params": {
+                "prompt": "Audit task #{{pk}} ('{{task_name}}') with cost ${{cost_usd}} created by {{username}}. Verify if this expenditure is within operational limits and note any variance."
+            }
+        },
+        {
+            "name": "⚠️ Budget Overrun Anomaly Check",
+            "description": "Checks aggregate spend and flags any task exceeding normal cost parameters.",
+            "params": {
+                "prompt": "Inspect aggregate daily token spend. If total cost exceeds the daily limit, flag high-cost tasks and generate a budget variance alert."
+            }
+        }
+    ],
+    "qa_auditor": [
+        {
+            "name": "✅ Review Task Deliverables & Verdict",
+            "description": "Reviews output deliverables of a task and submits an approval/rejection verdict.",
+            "params": {
+                "prompt": "Review output deliverables and code changes for task #{{pk}} ('{{task_name}}'). Check correctness, verify adherence to requirements, and submit a review verdict (approved/rejected) with actionable feedback."
+            }
+        },
+        {
+            "name": "🛡️ Placeholder & Secret Leak Audit",
+            "description": "Scans task deliverables for hardcoded secrets, unfinished TODOs, or syntax errors.",
+            "params": {
+                "prompt": "Scan deliverables for task #{{pk}} ('{{task_name}}') for hardcoded API keys, passwords, unfinished placeholders (TODO/FIXME), or syntax errors."
+            }
+        }
+    ],
+    "orchestrator": [
+        {
+            "name": "📋 Triage & Decompose Task",
+            "description": "Analyzes an incoming task and decomposes it into specialist sub-tasks.",
+            "params": {
+                "prompt": "Analyze incoming task #{{pk}} ('{{task_name}}'). Decompose into specialist sub-tasks and assign to respective agent profiles (cost_controller, qa_auditor, comms_agent, archivist)."
+            }
+        },
+        {
+            "name": "📑 Consolidate Project Deliverables",
+            "description": "Collects deliverables from all sub-tasks and produces a consolidated project summary.",
+            "params": {
+                "prompt": "Collect all finished sub-tasks for task #{{pk}} ('{{task_name}}') and produce a comprehensive project status summary."
+            }
+        }
+    ],
+    "comms_agent": [
+        {
+            "name": "✉️ Draft Client Status Update",
+            "description": "Drafts a polished status report to communicate progress to clients.",
+            "params": {
+                "prompt": "Draft a professional status update email for the client regarding task #{{pk}} ('{{task_name}}') summarizing recent progress and milestones."
+            }
+        }
+    ],
+    "archivist": [
+        {
+            "name": "📚 Archive Task Documentation & SOP",
+            "description": "Extracts institutional knowledge and updates project documentation.",
+            "params": {
+                "prompt": "Extract institutional knowledge and SOPs from completed task #{{pk}} ('{{task_name}}') and update project documentation."
+            }
+        }
+    ]
+}
+
 
 class ActionDefinition:
     """Represents a registered executable action or service."""
@@ -31,12 +107,14 @@ class ActionDefinition:
         description: str = "",
         handler: Optional[Callable] = None,
         schema: Optional[Dict[str, Any]] = None,
+        presets: Optional[List[Dict[str, Any]]] = None,
     ):
         self.name = name
         self.category = category
         self.description = description
         self.handler = handler
         self.schema = schema or {}
+        self.presets = presets or []
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -44,6 +122,7 @@ class ActionDefinition:
             "category": self.category,
             "description": self.description,
             "schema": self.schema,
+            "presets": self.presets,
             "has_handler": self.handler is not None,
         }
 
@@ -68,6 +147,7 @@ class ServiceRegistry:
         description: str = "",
         handler: Optional[Callable] = None,
         schema: Optional[Dict[str, Any]] = None,
+        presets: Optional[List[Dict[str, Any]]] = None,
     ):
         """Registers an action definition into the global registry."""
         cls._actions[name] = ActionDefinition(
@@ -76,6 +156,7 @@ class ServiceRegistry:
             description=description,
             handler=handler,
             schema=schema,
+            presets=presets,
         )
 
     @classmethod
@@ -102,6 +183,15 @@ class ServiceRegistry:
             for p in profiles:
                 action_name = f"hermes_profile:{p['name']}"
                 desc = p.get('description') or f"Dispatches task/prompt to Hermes profile: {p['name']}"
+                profile_presets = HERMES_PROFILE_PRESETS.get(p['name'], [
+                    {
+                        "name": f"⚡ Dispatch {p['name'].replace('_', ' ').title()} Prompt",
+                        "description": f"Dispatches task prompt to {p['name']} agent profile.",
+                        "params": {
+                            "prompt": f"Execute task #{{{{pk}}}} ('{{{{task_name}}}}') and report results to system."
+                        }
+                    }
+                ])
                 dynamic_actions[action_name] = ActionDefinition(
                     name=action_name,
                     category="hermes_agent",
@@ -111,7 +201,9 @@ class ServiceRegistry:
                         "profile_name": p['name'],
                         "model": p.get('model', ''),
                         "role": p.get('role', ''),
-                    }
+                        "prompt": "Natural language task instruction dispatched to the agent",
+                    },
+                    presets=profile_presets,
                 )
         except Exception:
             pass
@@ -180,11 +272,12 @@ def register_action(
     category: str = "internal_app",
     description: str = "",
     schema: Optional[Dict[str, Any]] = None,
+    presets: Optional[List[Dict[str, Any]]] = None,
 ):
     """
     Decorator for registering action handler functions.
     Usage:
-        @register_action(name="provision_hermes_profile", category="hermes_agent", description="...")
+        @register_action(name="provision_hermes_profile", category="hermes_agent", description="...", presets=[...])
         def provision_profile(context):
             ...
     """
@@ -196,6 +289,7 @@ def register_action(
             description=doc.strip().splitlines()[0] if doc else "",
             handler=fn,
             schema=schema,
+            presets=presets,
         )
         return fn
     return decorator

@@ -275,6 +275,11 @@ class AutomationActionAdmin(admin.ModelAdmin):
     Dedicated view for inspecting and managing individual Automation Actions.
     """
     form = AutomationActionAdminForm
+
+    class Media:
+        js = (
+            'automation/js/automation_reactive_admin.js',
+        )
     list_display = (
         'name',
         'trigger_link',

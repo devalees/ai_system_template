@@ -304,7 +304,43 @@ Unify `filter_conditions` and `condition_rules` into a single, comprehensive Fil
 - *2026-09-09*: Expanded test suite with comprehensive tests verifying root AND/OR combinators, nested groups, multi-level nesting, temporal date comparison inside boolean groups, and in-flight model event dispatch.
 
 ### 4. Current Focus
-Phase 9 complete and verified across all 42 unit tests. Ready for next phase or instructions.
+Phase 9 complete. Transitioning to Phase 10.
+
+---
+
+## Phase 10: Action Params Assistant, Persona-Specific Prompt Presets & Template Resolution (COMPLETED)
+
+### 1. Objective & Scope
+Address the UI and runtime gap for Action Parameters (`action_params`) across Hermes Agent Profiles and registered actions:
+- **Action Params Assistant Panel (`automation_reactive_admin.js`)**:
+  - Dynamically render an interactive guide panel above `action_params` in both `AutomationActionAdmin` and inline action rows.
+  - Automatically detect the selected `action_type` (e.g. `hermes_profile:cost_controller`, `qa_auditor`, `orchestrator`, `generic_webhook`).
+- **Persona-Specific Prompt Presets**:
+  - Provide 1-click preset buttons that immediately populate production-ready JSON into `action_params` (e.g. Daily Spend Audit, Task Spend Verification, QA Output Review, Triage & Task Decomposition).
+- **Clickable Context Variable Insertion**:
+  - Display available trigger context variables (`{{pk}}`, `{{task_name}}`, `{{cost_usd}}`, `{{username}}`, `{{status}}`, `{{now}}`) that insert into `action_params` at the current cursor position.
+- **Dynamic Template Resolution in Engine (`apps.automation.engine.py`)**:
+  - Upgrade `AutomationEngine.execute_action` to resolve template variables (`{{...}}`) inside `action_params` values against the trigger context before execution.
+- **Comprehensive Unit Testing**:
+  - Verify parameter interpolation, Hermes dispatch with resolved prompt strings, and UI regression coverage.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Dynamic Template Resolution for `action_params` in `AutomationEngine` (`engine.py`)** - COMPLETED
+- [x] **Sub-task 2: Persona-Specific Prompt Presets & Preset Registry (`registry.py` / `actions.py`)** - COMPLETED
+- [x] **Sub-task 3: Action Params Assistant Component in Reactive Admin UI (`automation_reactive_admin.js`)** - COMPLETED
+- [x] **Sub-task 4: Automated Testing for Interpolated Action Params (44 Tests Passing)** - COMPLETED
+- [x] **Sub-task 5: Documentation, Architecture Synchronization & Verification** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 10)
+- *2026-09-09*: Added prompt presets tailored to the 5 standard Hermes Agent personas (`cost_controller`, `qa_auditor`, `orchestrator`, `comms_agent`, `archivist`).
+- *2026-09-09*: Implemented recursive template interpolation across `action_params` dictionaries and lists so any parameter value can dynamically reference trigger context variables.
+- *2026-09-09*: Added `Media` class to `AutomationActionAdmin` so both standalone Action views and inline action rows render the assistant.
+- *2026-09-09*: Verified 44/44 unit tests passing across all Django applications.
+
+### 4. Current Focus
+Phase 10 complete and verified across all 44 unit tests. Ready for operator review or next phase.
+
+
 
 
 
