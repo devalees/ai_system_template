@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     # Template Local Apps
     'apps.core',
     'apps.tenants',
+    'apps.audit',
     'apps.meta_engine',
     'apps.integration',
     'apps.automation',
