@@ -291,11 +291,11 @@ Unify `filter_conditions` and `condition_rules` into a single, comprehensive Fil
 - **Full Backward Compatibility**: Seamlessly evaluate legacy flat dicts (`{"is_agent": true}`) and flat lists while synchronizing state into the unified filter field.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Recursive Boolean Engine & Unified Filter Evaluation (`apps.automation.engine.py`)** - COMPLETED
-- [x] **Sub-task 2: Visual Group Builder Component with Indented Cards (`automation_reactive_admin.js`)** - COMPLETED
-- [x] **Sub-task 3: Form & Admin Unification (`forms.py` & `admin.py`)** - COMPLETED
-- [x] **Sub-task 4: Automated Testing for Complex Boolean Trees & Groups (42 Tests Passing)** - COMPLETED
-- [x] **Sub-task 5: Documentation & Architecture Synchronization** - COMPLETED
+- [x] **Sub-task 1: Recursive Boolean Engine & Unified Filter Evaluation (`apps.automation.engine.py`)** - COMPLETED (Commit: `92170d4`)
+- [x] **Sub-task 2: Visual Group Builder Component with Indented Cards (`automation_reactive_admin.js`)** - COMPLETED (Commit: `92170d4`)
+- [x] **Sub-task 3: Form & Admin Unification (`forms.py` & `admin.py`)** - COMPLETED (Commit: `92170d4`)
+- [x] **Sub-task 4: Automated Testing for Complex Boolean Trees & Groups (42 Tests Passing)** - COMPLETED (Commit: `92170d4`)
+- [x] **Sub-task 5: Documentation & Architecture Synchronization** - COMPLETED (Commit: `92170d4`)
 
 ### 3. Key Decisions & Deviations (Phase 9)
 - *2026-09-09*: Selected Option A (Visual Group Blocks with Indentation) per user preference, eliminating unmatched parentheses syntax errors.
