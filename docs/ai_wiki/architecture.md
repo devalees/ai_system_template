@@ -988,6 +988,60 @@ The filtering engine unifies trigger condition evaluation into a single authorit
   - Full-text search across `object_repr`, `object_id`, and `actor__username`.
   - Mutation endpoints (`POST`, `PUT`, `PATCH`, `DELETE`) return `405 Method Not Allowed`.
 
+---
+
+## 20. Universal Notifications Engine Architecture (`apps.notifications`)
+
+### 20.1 Data Model Architecture
+- **`Notification` Model**:
+  - Inherits `(TenantAwareModel, SoftDeleteModel)`.
+  - Fields: `recipient` (`auth.User`), `actor` (`auth.User`, nullable), `level` (`info`, `success`, `warning`, `error`), `title`, `message`, `action_url`, `read_at`, `is_read`, `channel` (`in_app`, `email`, `webhook`, `slack`, `hermes`), `extra_data` (JSON payload).
+  - Database Indexes: `(recipient, is_read, -created_at)` and `(organization, recipient, is_read)`.
+  - Instance Method: `mark_as_read()` updating `is_read=True` and timestamp `read_at=now()`.
+- **`NotificationPreference` Model**:
+  - Inherits `(UUIDModel, TimeStampedModel)`.
+  - 1-to-1 relationship with `auth.User`.
+  - Multi-channel delivery toggles (`in_app_enabled`, `email_enabled`, `webhook_enabled`, `slack_enabled`).
+  - Target endpoints (`webhook_url`, `slack_webhook_url`, `channel_config`).
+  - Auto-provisioning signal: `post_save` on `User` automatically creates a `NotificationPreference` record.
+
+### 20.2 Dispatcher Service & Multi-Channel Adapters (`dispatcher.py`)
+- **`NotificationDispatcher`**:
+  - Central manager resolving recipient preferences and dispatching payloads.
+  - `ADAPTERS` registry mapping channel identifiers to adapter handlers.
+  - Redis Unread Count Manager: `get_unread_count(user_id, org_id)` reading from Redis key `notifications:unread_count:{user_id}:{org_id}` with 10-minute cache TTL and database fallback on cache miss.
+  - Signal-Driven Cache Invalidation: `post_save` and `post_delete` signals on `Notification` automatically invalidate Redis unread count keys for the recipient workspace.
+- **Adapters**:
+  - `InAppAdapter`: Constructs persistent `Notification` database record.
+  - `EmailAdapter`: Formats HTML / plain text and dispatches via Django email framework.
+  - `WebhookAdapter`: Constructs structured JSON payload (`event: "notification.delivered"`, timestamp, payload) and executes HTTP POST request to user endpoint.
+  - `SlackAdapter`: Constructs Slack message blocks with colored level attachments and posts to Slack incoming webhook.
+
+### 20.3 Asynchronous Celery Dispatcher (`apps.notifications.tasks`)
+- **`send_notification_async_task`**: `@shared_task` receiving recipient, level, title, message, action_url, and extra_data.
+- Executes background multi-channel delivery with automated 3-tier retries on network failures.
+
+### 20.4 Automation Engine Action Integration (`apps.automation.actions`)
+- `@register_action("send_notification", ...)`:
+  - Canonical flagship action handler in `apps.automation`.
+  - Bridges trigger context (`{{username}}`, `{{task_name}}`, `{{pk}}`) to `NotificationDispatcher.send(...)`.
+  - Ships with prompt presets for system notification alerts.
+
+### 20.5 REST API Surface & Administrative Portal
+- **`NotificationViewSet` (`/api/v1/notifications/`)**:
+  - Authenticated user inbox endpoint (`list`, `retrieve`, `destroy`).
+  - Workspace scoping: automatically filters records by current user and active workspace tenant.
+  - Filtering by `is_read` (`true`/`false`) and `level`.
+  - Custom Action `POST /api/v1/notifications/<id>/mark-read/`: Marks single item read.
+  - Custom Action `POST /api/v1/notifications/mark-all-read/`: Bulk marks all workspace notifications as read.
+  - Custom Action `GET /api/v1/notifications/unread-count/`: Returns ultra-fast cached count `{ "unread_count": N }`.
+- **`NotificationPreferenceViewSet` (`/api/v1/notifications/preferences/`)**:
+  - Endpoint for inspecting (`GET`) and modifying (`PUT`/`PATCH`) delivery preferences and webhook endpoints.
+- **`NotificationAdmin`**:
+  - Visual HTML level badges (`ℹ️ Info`, `✅ Success`, `⚠️ Warning`, `🚨 Error`).
+  - Admin Action `mark_selected_as_read`.
+
+
 
 
 

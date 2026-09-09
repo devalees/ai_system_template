@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 15 Completed (Comprehensive Activity Audit Trail across Platform, GenericForeignKey Relations, Immutable ActivityLog, Request Telemetry Middleware, Model Diffing Signals, and Declarative MetaEngine Integration)
+- **Status**: Phase 16 Completed (Universal Notifications Engine across Multi-Channel Adapters, Redis Unread Caching, Celery Tasks, REST APIs, and Automation Bridge)
 
 
 ---
@@ -147,6 +147,23 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Read-Only Admin Dashboard & REST API Gateway**:
   - Read-only Django Admin (`ActivityLogAdmin`) with formatted visual before/after HTML diff cards and colored status/action badges.
   - Read-only REST API (`/api/v1/audit/logs/`) with multi-tenant filtering, search, and action parameter filters.
+
+### 14. Universal Notifications Engine (`apps.notifications`)
+- **Notification Data Models**:
+  - `Notification`: Inherits `TenantAwareModel` and `SoftDeleteModel`. Multi-tenant workspace notification record supporting levels (`info`, `success`, `warning`, `error`), recipient, actor (User/Bot), action URLs, read status, channel (`in_app`, `email`, `webhook`, `slack`, `hermes`), and JSON metadata payload.
+  - `NotificationPreference`: Per-user multi-channel toggles (`in_app`, `email`, `webhook`, `slack`) and webhook/Slack destination endpoints.
+- **Real-Time Dispatcher & Multi-Channel Adapters (`dispatcher.py`)**:
+  - `NotificationDispatcher`: Central manager for preference resolution, channel filtering, and adapter invocation.
+  - Multi-channel adapters (`InAppAdapter`, `EmailAdapter`, `WebhookAdapter`, `SlackAdapter`).
+  - Redis unread counter management (`notifications:unread_count:{user_id}:{org_id}`) with automatic signal invalidation.
+- **Asynchronous Celery Tasks (`tasks.py`)**:
+  - `send_notification_async_task`: Non-blocking background worker task with exponential backoff retries.
+- **Automation Engine Integration (`apps.automation.actions`)**:
+  - Registered flagship action `@register_action("send_notification", ...)` allowing system triggers to fire notifications automatically.
+- **REST API Gateway & Django Admin**:
+  - DRF ViewSets (`/api/v1/notifications/`, `/mark-read/`, `/mark-all-read/`, `/unread-count/`, `/preferences/`).
+  - Colored Django Admin badges and bulk `mark_selected_as_read` actions.
+
 
 
 
