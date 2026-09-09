@@ -198,3 +198,77 @@ class NotificationTasksAndAutomationTests(TestCase):
         self.assertIsNotNone(n)
         self.assertEqual(n.level, Notification.LEVEL_WARNING)
 
+
+class NotificationAPITests(TestCase):
+    """Test suite verifying REST API endpoints for inbox, mark-read, unread-count, and preferences."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+        from apps.tenants.models import OrganizationMembership
+        self.client = APIClient()
+        self.org = Organization.objects.create(name="API Org", slug="api-org")
+        self.user = User.objects.create_user(username="apiuser", password="password123")
+        self.other_user = User.objects.create_user(username="otheruser", password="password123")
+
+        OrganizationMembership.objects.create(user=self.user, organization=self.org, role=OrganizationMembership.ROLE_ADMIN)
+        OrganizationMembership.objects.create(user=self.other_user, organization=self.org, role=OrganizationMembership.ROLE_MEMBER)
+
+        self.client.force_authenticate(user=self.user)
+        self.client.credentials(HTTP_X_WORKSPACE_SLUG="api-org")
+
+        self.n1 = Notification.objects.create(organization=self.org, recipient=self.user, title="N1", message="Msg 1")
+        self.n2 = Notification.objects.create(organization=self.org, recipient=self.user, title="N2", message="Msg 2")
+        # Other user's notification should be isolated
+        self.n_other = Notification.objects.create(organization=self.org, recipient=self.other_user, title="N Other", message="Msg Other")
+
+    def test_inbox_list_api(self):
+        """Verify GET /api/v1/notifications/ returns user's notifications exclusively."""
+        res = self.client.get("/api/v1/notifications/")
+        self.assertEqual(res.status_code, 200)
+        results = res.data.get("results") if isinstance(res.data, dict) else res.data
+        self.assertEqual(len(results), 2)
+        titles = [n["title"] for n in results]
+        self.assertIn("N1", titles)
+        self.assertIn("N2", titles)
+        self.assertNotIn("N Other", titles)
+
+    def test_mark_single_read_api(self):
+        """Verify POST /api/v1/notifications/<id>/mark-read/ marks notification read."""
+        res = self.client.post(f"/api/v1/notifications/{self.n1.id}/mark-read/")
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.data["is_read"])
+        self.n1.refresh_from_db()
+        self.assertTrue(self.n1.is_read)
+
+    def test_mark_all_read_api(self):
+        """Verify POST /api/v1/notifications/mark-all-read/ marks all user unread notifications."""
+        res = self.client.post("/api/v1/notifications/mark-all-read/")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data["marked_read_count"], 2)
+        self.assertEqual(Notification.objects.filter(recipient=self.user, is_read=False).count(), 0)
+
+    def test_unread_count_api(self):
+        """Verify GET /api/v1/notifications/unread-count/ returns unread count."""
+        res = self.client.get("/api/v1/notifications/unread-count/")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data["unread_count"], 2)
+
+    def test_preferences_api(self):
+        """Verify GET & PUT /api/v1/notifications/preferences/ retrieve and update preferences."""
+        res_get = self.client.get("/api/v1/notifications/preferences/")
+        self.assertEqual(res_get.status_code, 200)
+
+        pref_id = res_get.data["id"] if isinstance(res_get.data, dict) and "id" in res_get.data else res_get.data[0]["id"]
+        res_put = self.client.put(f"/api/v1/notifications/preferences/{pref_id}/", {
+            "in_app_enabled": True,
+            "email_enabled": False,
+            "webhook_enabled": True,
+            "webhook_url": "https://example.com/api/hook"
+        }, format="json")
+        self.assertEqual(res_put.status_code, 200)
+        self.assertFalse(res_put.data["email_enabled"])
+        self.assertTrue(res_put.data["webhook_enabled"])
+        self.assertEqual(res_put.data["webhook_url"], "https://example.com/api/hook")
+
+
+
