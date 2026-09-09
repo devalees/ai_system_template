@@ -183,7 +183,35 @@ Refine the Automation Engine per user feedback and Odoo's design principles:
 - *2026-09-09*: Added unit tests verifying Celery Beat models are unregistered from Admin, and verified positive/negative test cases for state transitions. Full test suite passing at 24/24 (100%).
 
 ### 4. Current Focus
-Phase 5.1 completed. Ready for user review and merge into `main`.
+Phase 5.1 completed. Transitioning to Phase 6 (Next-Gen Odoo-Style Automation Actions).
+
+---
+
+## Phase 6: Next-Gen Odoo-Style Automation Actions (PENDING)
+
+### 1. Objective & Scope
+Elevate `apps.automation` to a fully dynamic, declarative, and observable workflow platform inspired by Odoo:
+- **Semantic Separation**: Rename `target_model` to `trigger_model` (source) and introduce a true `target_model` (destination).
+- **Target Model CRUD Operations**: Enable direct record `create`, `update`, and `delete` on destination models.
+- **Dynamic Field Mapping**: Map triggered record attributes and static defaults into target model fields, respecting required schema constraints.
+- **Signal Reification & System Protection**: Register all core routines (Hermes provisioning, spend alerts, QA review routing) as non-deletable `is_system=True` records.
+- **Reactive Dynamic Admin UI**: Conditional section toggling, dynamic AJAX field loading, visual condition builder, and required-field mapping table.
+
+### 2. Task Checklist & Progress
+- [ ] **Sub-task 1: Data Model Evolution & Database Migration (`apps.automation.models.py`)** - PENDING
+- [ ] **Sub-task 2: Dynamic Model & Field Introspection API (`apps.automation.views.py`)** - PENDING
+- [ ] **Sub-task 3: Execution Engine & Target Model CRUD Handler (`apps.automation.engine.py`)** - PENDING
+- [ ] **Sub-task 4: System Signal Reification & Seed Data (`seed_automations.py`)** - PENDING
+- [ ] **Sub-task 5: Reactive Dynamic Admin UI (`automation_reactive_admin.js` & `admin.py`)** - PENDING
+- [ ] **Sub-task 6: Automated Testing & Empirical Verification** - PENDING
+- [ ] **Sub-task 7: Documentation & Architecture Synchronization** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 6)
+- *2026-09-09*: Planned Phase 6 based on user feedback to bring true Odoo-style target model record operations, field mapping, system signal reification, and reactive UI into the engine.
+
+### 4. Current Focus
+Awaiting execution start for Sub-task 1.
+
 
 
 
