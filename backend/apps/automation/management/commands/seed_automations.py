@@ -3,7 +3,7 @@ Management command to seed default/flagship automation triggers and action pipel
 """
 
 from django.core.management.base import BaseCommand
-from apps.automation.models import AutomationTrigger, AutomationAction
+from apps.automation.models import AutomationTrigger, AutomationAction, AutomationLog
 
 
 DEFAULT_TRIGGERS = [
@@ -154,6 +154,20 @@ class Command(BaseCommand):
             else:
                 updated_triggers += 1
                 self.stdout.write(self.style.NOTICE(f"  • Trigger (updated): {name}"))
+
+            # Reconcile legacy auto-generated action records from migration 0004
+            legacy_actions = trigger.actions.filter(name=f"{trigger.name} - Action")
+            for leg_act in legacy_actions:
+                canonical_name = actions_data[0]["name"] if actions_data else None
+                existing_canonical = trigger.actions.filter(name=canonical_name).exclude(id=leg_act.id).first() if canonical_name else None
+                if existing_canonical:
+                    AutomationLog.objects.filter(action=leg_act).update(action=existing_canonical)
+                    leg_act.delete()
+                elif canonical_name:
+                    leg_act.name = canonical_name
+                    for k, v in actions_data[0].items():
+                        setattr(leg_act, k, v)
+                    leg_act.save()
 
             for act_data in actions_data:
                 act_name = act_data["name"]

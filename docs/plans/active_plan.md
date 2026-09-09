@@ -375,6 +375,8 @@ Provide direct 1-step test execution mechanisms (`▶ Run Pipeline Now` and `▶
 - *2026-09-09*: Added `AutomationDirectExecutionTests` in `tests.py` covering context extraction, fallback defaults, redirect endpoints, and HTML button formatters. Test suite expanded to 49/49 passing unit tests.
 - *2026-09-09*: Resolved Hermes Agent Gateway authentication issue (HTTP 401 in AutomationLog #7). Synchronized `API_SERVER_KEY` and `HERMES_API_KEY` across backend environment and settings, updated `actions.py` and `engine.py` to flag HTTP 4xx/5xx responses as 'failed', and verified successful end-to-end execution in AutomationLog #9 (12.8s runtime, full multi-profile token & budget audit generated).
 - *2026-09-09*: Resolved HTTP read timeout issue (Read timed out at 30s in AutomationLog #10). Introduced configurable `HERMES_REQUEST_TIMEOUT` (default: 120s with 10s connect timeout) in `settings.py` and `actions.py`. Verified end-to-end execution in AutomationLog #11 (24.6s runtime, 85 calls audited, status: success).
+- *2026-09-09*: Diagnosed and resolved duplicate action execution and log entries (Logs #13 & #14). Identified that migration `0004` auto-created generic actions (`f"{trigger.name} - Action"`), while `seed_automations.py` created canonical actions with distinct names, resulting in two active actions on Triggers 2, 3, 4, and 5. Re-linked all historical logs to canonical action records, deleted legacy duplicate actions, and added automated reconciliation logic to `seed_automations.py` to prevent future duplicates. All 49 unit tests passing.
 
 ### 4. Current Focus
-Phase 11 complete, authenticated end-to-end with Hermes Agent runtime, and empirically validated. All 49 unit tests passing.
+Phase 11 complete, authenticated end-to-end with Hermes Agent runtime, duplicate actions reconciled, and empirically validated. All 49 unit tests passing.
+
