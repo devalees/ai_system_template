@@ -141,7 +141,7 @@ Build a centralized, domain-agnostic Automation and Event-Driven Orchestration E
 - [x] **Sub-task 2: Dynamic Service Registry & Core Automation Engine (`apps.automation`)** - COMPLETED (Commit: `196c3cd`)
 - [x] **Sub-task 3: Celery Tasks & Celery Beat Schedule Integration** - COMPLETED (Commit: `e351a8c`)
 - [x] **Sub-task 4: Rich Administrative Interface & Dynamic Model/App Dropdowns** - COMPLETED (Commit: `8ebdfd1`)
-- [ ] **Sub-task 5: Flagship Use Case & Seeding: Dynamic Hermes Profile Auto-Provisioner** - PENDING
+- [x] **Sub-task 5: Flagship Use Case & Seeding: Dynamic Hermes Profile Auto-Provisioner** - COMPLETED (Commit: `58a9ac6`)
 - [ ] **Sub-task 6: Comprehensive Automated Testing & Empirical Verification** - PENDING
 - [ ] **Sub-task 7: LLM Wiki & Architecture Documentation Synchronization** - PENDING
 
@@ -151,6 +151,6 @@ Build a centralized, domain-agnostic Automation and Event-Driven Orchestration E
 - *2026-09-09*: Configured profile volume mounts to read-write (`rw`) to allow Django automation workers to provision agent profiles and `.env` credentials dynamically.
 
 ### 4. Current Focus
-Sub-task 5: Flagship Use Case & Seeding: Dynamic Hermes Profile Auto-Provisioner.
+Sub-task 6: Comprehensive Automated Testing & Empirical Verification.
 
 
