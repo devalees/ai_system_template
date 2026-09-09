@@ -66,3 +66,79 @@ def list_registered_services(request):
         "services": data,
         "available_models": ServiceRegistry.get_registered_model_choices(),
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def model_introspection(request):
+    """
+    Dynamic Model & Field Introspection API for Automation Actions.
+    Provides schema, field types, requirement constraints, and choices for a requested model,
+    or lists all discoverable system models.
+    """
+    from django.apps import apps
+    model_param = request.query_params.get('model', '').strip()
+
+    if not model_param:
+        choices = ServiceRegistry.get_registered_model_choices()
+        return Response({
+            "available_models": choices,
+            "count": sum(len(models) for _, models in choices),
+        })
+
+    if '.' not in model_param:
+        return Response(
+            {"error": f"Invalid model identifier '{model_param}'. Expected format: 'app_label.ModelName'."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        model_cls = apps.get_model(model_param)
+        if not model_cls:
+            raise LookupError()
+    except (LookupError, ValueError):
+        return Response(
+            {"error": f"Model '{model_param}' not found in installed Django apps."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    fields_data = []
+    required_fields = []
+    for field in model_cls._meta.fields:
+        is_pk = field.primary_key
+        is_editable = field.editable
+        has_default = field.has_default()
+        is_required = not field.blank and not field.null and not has_default and not is_pk
+
+        if is_required:
+            required_fields.append(field.name)
+
+        choices = []
+        if field.choices:
+            for val, label in field.choices:
+                choices.append({"value": str(val), "label": str(label)})
+
+        field_info = {
+            "name": field.name,
+            "verbose_name": str(field.verbose_name).title(),
+            "type": field.get_internal_type(),
+            "required": is_required,
+            "editable": is_editable,
+            "primary_key": is_pk,
+            "help_text": str(field.help_text) if field.help_text else "",
+            "choices": choices,
+        }
+        if field.is_relation and field.related_model:
+            field_info["related_model"] = f"{field.related_model._meta.app_label}.{field.related_model.__name__}"
+
+        fields_data.append(field_info)
+
+    return Response({
+        "model": model_param,
+        "app_label": model_cls._meta.app_label,
+        "model_name": model_cls._meta.model_name,
+        "verbose_name": str(model_cls._meta.verbose_name).title(),
+        "verbose_name_plural": str(model_cls._meta.verbose_name_plural).title(),
+        "required_fields": required_fields,
+        "fields": fields_data,
+    })
