@@ -70,6 +70,7 @@ economy_editor/
 - `role`: Canonical role choice.
 - `provider`: Inference provider slug (`openrouter`, `anthropic`, `openai-api`, `gemini`, `deepseek`, etc.).
 - `model_name`: Selected model identifier (e.g. `google/gemini-2.5-flash`, `claude-sonnet-4-6`).
+- `reasoning_effort`: Thinking/reasoning token budget (`none`, `low`, `medium`, `high`, `max`).
 - `is_active`: Boolean flag controlling execution eligibility.
 - `description`: Role narrative and assignment boundaries.
 
@@ -78,6 +79,7 @@ economy_editor/
 - `assigned_profile`: Foreign key to `AgentProfile`.
 - `status`: Workflow state (`pending`, `in_progress`, `review`, `completed`, `failed`).
 - `review_verdict`: QA decision (`pending`, `approved`, `rejected`, `changes_requested`).
+- `reasoning_effort`: Task-specific override (`inherit`, `none`, `low`, `medium`, `high`, `max`).
 - `cost_usd`: Measured token cost incurred during execution.
 - `reviewer_notes`: Structured feedback from `qa_auditor`.
 
@@ -91,12 +93,13 @@ economy_editor/
 
 ---
 
-## 5. Hermes Multi-Profile Architecture
+## 5. Hermes Multi-Profile Architecture & Reasoning Ladder
 
 - **Isolation**: Each profile maintains an isolated directory under `/root/.hermes/profiles/<name>/` with its own `config.yaml`, `SOUL.md`, `.env`, and SQLite `state.db`.
-- **Invocation**: Agents are executed directly using the profile flag:
+- **Reasoning Effort Ladder**: Profiles configure native `agent.reasoning_effort` (`none`, `low`, `medium`, `high`, `max`). Hermes Agent automatically enforces wire clamping (`clamp_effort`) so unsupported vendor levels degrade gracefully to the nearest supported level without throwing errors.
+- **Invocation**: Agents are executed directly using profile and reasoning flags:
   ```bash
-  hermes -p <profile_name> -z "Task prompt"
+  hermes -p <profile_name> --reasoning <level> -z "Task prompt"
   ```
 - **Declarative Source of Truth**: Source definitions reside in `agent_service/profiles/` and are synchronized via `scripts/provision_profiles.py`.
 

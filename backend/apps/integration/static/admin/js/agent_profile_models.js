@@ -45,10 +45,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const inCost = modelData.cost_input_per_1m !== undefined ? `$${Number(modelData.cost_input_per_1m).toFixed(3)}` : 'N/A';
         const outCost = modelData.cost_output_per_1m !== undefined ? `$${Number(modelData.cost_output_per_1m).toFixed(3)}` : 'N/A';
         const desc = modelData.description || 'Standard inference model.';
+        const reasoningBadge = modelData.supports_reasoning 
+            ? `<span style="background: #065f46; color: #6ee7b7; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px; font-weight: 600;">🧠 Reasoning Supported</span>`
+            : `<span style="background: #334155; color: #94a3b8; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px;">Standard Inference</span>`;
 
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #475569; padding-bottom: 6px;">
-                <span style="font-weight: 600; color: #38bdf8; font-size: 14px;">⚡ Model Specifications & Pricing</span>
+                <div style="display: flex; align-items: center;">
+                    <span style="font-weight: 600; color: #38bdf8; font-size: 14px;">⚡ Model Specifications & Pricing</span>
+                    ${reasoningBadge}
+                </div>
                 <span style="background: #0f172a; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #94a3b8;">${providerSelect.value.toUpperCase()}</span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px;">

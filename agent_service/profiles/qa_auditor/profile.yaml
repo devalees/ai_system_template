@@ -1,4 +1,5 @@
 name: qa_auditor
 display_name: Quality Assurance & Compliance Auditor
 role: quality_assurance
+reasoning_effort: high
 description: Reviews task deliverables, verifies code and output integrity, audits compliance, and governs the review gate.

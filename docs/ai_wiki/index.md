@@ -18,20 +18,20 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Dynamic Administrative Portal**: Django Admin with dynamic, dependent `<select>` dropdowns for provider and model selection.
 - **Model Catalog Engine**: Powered by `models.dev` dynamic registry and OpenRouter, rendering live context window length and token pricing cards ($/1M tokens).
 - **Core Models**:
-  - `AgentProfile`: Profile registry matching Hermes profiles with providers and model overrides.
-  - `AgentTask`: Task execution registry with assigned profiles, execution costs, and QA review pipelines.
+  - `AgentProfile`: Profile registry matching Hermes profiles with providers, model overrides, and reasoning effort levels (`none`, `low`, `medium`, `high`, `max`).
+  - `AgentTask`: Task execution registry with assigned profiles, execution costs, reasoning overrides, and QA review pipelines.
   - `SpendReport`: Structured token usage and budget status reports emitted by the cost controller.
   - `HandshakeLog`: Audit log of agent container boot and lifecycle handshakes.
 
 ### 2. Autonomous Agent Engine (`agent_service/` & Hermes Runtime)
 - **Engine**: Nous Research `hermes-agent` running in an isolated Docker container (`hermes-template-agent`).
 - **5 Universal Agent Profiles**:
-  1. `orchestrator`: Request intake, project decomposition, Kanban routing, and response synthesis.
-  2. `cost_controller`: Token consumption tracking, budget cap enforcement, expense auditing.
-  3. `qa_auditor`: Review pipeline gatekeeper, quality control, output verification (`request-changes` / `approve`).
-  4. `comms_agent`: Customer communications, email drafting, meeting scheduling, client intake.
-  5. `archivist`: Documentation maintainer, institutional memory, SOPs, wiki indexing.
-- **Execution Mechanism**: Invoked directly via `hermes -p <profile_name>`.
+  1. `orchestrator`: Request intake, project decomposition, Kanban routing, and response synthesis (Effort: `medium`).
+  2. `cost_controller`: Token consumption tracking, budget cap enforcement, expense auditing (Effort: `low`).
+  3. `qa_auditor`: Review pipeline gatekeeper, quality control, output verification (Effort: `high`).
+  4. `comms_agent`: Customer communications, email drafting, meeting scheduling, client intake (Effort: `low`).
+  5. `archivist`: Documentation maintainer, institutional memory, SOPs, wiki indexing (Effort: `medium`).
+- **Execution Mechanism**: Invoked directly via `hermes -p <profile_name> --reasoning <level>`.
 
 ### 3. Declarative Profile Provisioning (`scripts/provision_profiles.py`)
 - Declarative source definitions in `agent_service/profiles/<name>/` containing `SOUL.md`, `config.yaml`, and `profile.yaml`.

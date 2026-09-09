@@ -118,3 +118,27 @@ class IntegrationAPITests(TestCase):
         self.assertIn('context_length', first_model)
         self.assertIn('cost_input_per_1m', first_model)
         self.assertIn('cost_output_per_1m', first_model)
+
+    def test_agent_profile_reasoning_effort(self):
+        """Verify reasoning_effort field on AgentProfile and AgentTask."""
+        self.assertEqual(self.profile.reasoning_effort, 'medium')
+
+        qa_profile = AgentProfile.objects.create(
+            name="qa_auditor_test",
+            display_name="QA Auditor",
+            role="quality_assurance",
+            reasoning_effort="high"
+        )
+        self.assertEqual(qa_profile.reasoning_effort, 'high')
+
+        task = AgentTask.objects.create(
+            task_name="Reasoning Audit Task",
+            assigned_profile=qa_profile,
+        )
+        self.assertEqual(task.reasoning_effort, 'inherit')
+
+        # Test API serialization
+        url = reverse('agent-profile-detail', kwargs={'name': qa_profile.name})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['reasoning_effort'], 'high')

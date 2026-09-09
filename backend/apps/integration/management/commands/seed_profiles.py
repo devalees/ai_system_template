@@ -9,6 +9,7 @@ CORE_PROFILES = [
         "description": "Primary request intake, goal decomposition, Kanban workstream routing, and final executive synthesis.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
+        "reasoning_effort": "medium",
     },
     {
         "name": "cost_controller",
@@ -17,6 +18,7 @@ CORE_PROFILES = [
         "description": "Monitors token consumption, tracks operational budgets, audits expenses, and enforces spending limits.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
+        "reasoning_effort": "low",
     },
     {
         "name": "qa_auditor",
@@ -25,6 +27,7 @@ CORE_PROFILES = [
         "description": "Reviews task deliverables, verifies code and output integrity, audits compliance, and governs the review gate.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
+        "reasoning_effort": "high",
     },
     {
         "name": "comms_agent",
@@ -33,6 +36,7 @@ CORE_PROFILES = [
         "description": "Manages customer interactions, drafts professional client emails and proposals, and coordinates schedules.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
+        "reasoning_effort": "low",
     },
     {
         "name": "archivist",
@@ -41,6 +45,7 @@ CORE_PROFILES = [
         "description": "Maintains system documentation, standard operating procedures (SOPs), knowledge bases, and corporate memory.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
+        "reasoning_effort": "medium",
     },
 ]
 

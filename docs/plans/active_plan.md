@@ -47,6 +47,7 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 - [x] **Sub-task 4: Foundation Skills for Specialist Profiles (`agent_service/skills/`)** - COMPLETED (Commit: `83e6d73`)
 - [x] **Sub-task 5: Django Backend Profile Integration & Task Registry (`backend/apps/integration/`)** - COMPLETED (Commit: `80d4478`)
 - [x] **Sub-task 6: End-to-End Verification & Documentation Synchronization** - COMPLETED (Commit: `c7c2823`)
+- [x] **Sub-task 7: Agent Profile Reasoning Effort Integration & Hermes Runtime Propagation** - COMPLETED (Commit: pending)
 
 ### 3. Key Decisions & Deviations (Phase 2)
 - *2026-09-08*: Created branch `feat/core-agent-profiles`.
@@ -55,8 +56,10 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 - *2026-09-08*: Committed and pushed Sub-task 2 (Commit: `0d219b6`).
 - *2026-09-08*: Implemented `scripts/provision_profiles.py` with cross-environment execution support (host & container), successfully provisioned all 5 profiles into Hermes runtime, and empirically verified persona inference on OpenRouter with `google/gemini-2.5-flash` (Commit: `1f09b23`).
 - *2026-09-08*: Built and verified specialist foundation skills: `cost_monitor` (real-time token accounting & budget status across all profile SQLite databases) and `output_validator` (empirical syntax, hygiene, and security audit for the QA review gate) (Commit: `83e6d73`).
-- *2026-09-08*: Implemented Django backend profile integration: added `AgentProfile`, `SpendReport`, and review pipeline on `AgentTask`. Applied migration `0002_agentprofile_agenttask_cost_usd_and_more`, added `seed_profiles` command, updated Django Admin and DRF ViewSets. In response to user direction, reordered `provider` before `model_name` as dependent dropdowns in Django Admin. Upgraded `hermes_catalog.py` to utilize the live multi-provider `models.dev` registry (identical to Hermes Agent CLI), unlocking all contemporary 2026 models for Anthropic (Claude Sonnet 4.6, Opus 5, Fable 5.1), OpenAI (GPT-5, GPT-5.6 Sol, GPT-6 Astra), Google Gemini (Gemini 3.8 Flash, 3.1 Pro), DeepSeek (V4 Pro, V4 Flash), xAI (Grok 4.6, 4.3), Groq, and Nous Portal with live context windows and token pricing. Verified with 7/7 passing unit tests (Commit: `80d4478`).
-- *2026-09-08*: Verified end-to-end execution: tested reverse container reachability (`/api/ping-hermes/`), validated profile persona execution in container runtime via `hermes -p <profile>`, and synchronized architecture documentation in `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md`.
+- *2026-09-08*: Implemented Django backend profile integration: added `AgentProfile`, `SpendReport`, and review pipeline on `AgentTask`. Applied migration `0002_agentprofile_agenttask_cost_usd_and_more`, added `seed_profiles` command, updated Django Admin and DRF ViewSets. In response to user direction, reordered `provider` before `model_name` as dependent dropdowns in Django Admin. Upgraded `hermes_catalog.py` to utilize the live multi-provider `models.dev` registry (identical to Hermes Agent CLI), unlocking all contemporary 2026 models for Anthropic, OpenAI, Google Gemini, DeepSeek, xAI, Groq, and Nous Portal. Verified with 7/7 passing unit tests (Commit: `80d4478`).
+- *2026-09-08*: Verified end-to-end execution: tested reverse container reachability (`/api/ping-hermes/`), validated profile persona execution in container runtime via `hermes -p <profile>`, and synchronized architecture documentation in `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md` (Commit: `69196cc`).
+- *2026-09-09*: Added reasoning effort configuration (`reasoning_effort`: `none`, `low`, `medium`, `high`, `max`) to `AgentProfile` and `AgentTask` in Django backend and declarative profile configs (`agent_service/profiles/*/config.yaml`), leveraging Hermes Agent's native `VALID_REASONING_EFFORTS`, `clamp_effort()` safety wire, and `--reasoning` CLI runtime flag. Applied migration `0003_agentprofile_reasoning_effort_and_more`, seeded profiles, updated admin UI with live reasoning capability badge, and verified with 8/8 passing tests.
 
 ### 4. Current Focus
-Phase 2 completed. Awaiting user review and commit approval to finalize Phase 2.
+Phase 2 Point 1 completed. Awaiting user directions and requirements for Point 2.
+

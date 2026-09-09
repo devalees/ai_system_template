@@ -3,6 +3,9 @@ model:
   default: "google/gemini-2.5-flash"
   provider: "openrouter"
 
+agent:
+  reasoning_effort: "low"
+
 toolsets:
   - "file_ops"
   - "terminal"

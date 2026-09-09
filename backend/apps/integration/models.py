@@ -42,6 +42,14 @@ class AgentProfile(models.Model):
         ('general', 'General / Custom'),
     ]
 
+    REASONING_EFFORT_CHOICES = [
+        ('none', 'None (Disabled)'),
+        ('low', 'Low (Fast / Minimal Cost)'),
+        ('medium', 'Medium (Balanced Default)'),
+        ('high', 'High (Deep Reasoning / Strict QA)'),
+        ('max', 'Max (Frontier Reasoning Budget)'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=64, unique=True, help_text="Hermes profile slug (e.g., cost_controller)")
     display_name = models.CharField(max_length=120)
@@ -49,6 +57,12 @@ class AgentProfile(models.Model):
     description = models.TextField(blank=True)
     model_name = models.CharField(max_length=120, default='google/gemini-2.5-flash')
     provider = models.CharField(max_length=60, default='openrouter')
+    reasoning_effort = models.CharField(
+        max_length=20,
+        choices=REASONING_EFFORT_CHOICES,
+        default='medium',
+        help_text="Reasoning/thinking effort level passed to Hermes Agent runtime (none, low, medium, high, max).",
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -120,6 +134,12 @@ class AgentTask(models.Model):
     reviewer_notes = models.TextField(blank=True, default='')
     cost_usd = models.DecimalField(max_digits=8, decimal_places=4, default=0.0)
     tokens_used = models.PositiveIntegerField(default=0)
+    reasoning_effort = models.CharField(
+        max_length=20,
+        choices=AgentProfile.REASONING_EFFORT_CHOICES + [('inherit', 'Inherit from Profile')],
+        default='inherit',
+        help_text="Task-specific reasoning effort override, or inherit from profile.",
+    )
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -89,6 +89,7 @@ _NOUS_MODELS = [
         "context_length": 1000000,
         "cost_input_per_1m": 3.00,
         "cost_output_per_1m": 15.00,
+        "supports_reasoning": True,
         "description": "Nous Portal flagship agent reasoning model.",
     },
     {
@@ -97,6 +98,7 @@ _NOUS_MODELS = [
         "context_length": 1000000,
         "cost_input_per_1m": 3.00,
         "cost_output_per_1m": 15.00,
+        "supports_reasoning": True,
         "description": "High-throughput Nous Portal reasoning model.",
     },
     {
@@ -105,6 +107,7 @@ _NOUS_MODELS = [
         "context_length": 1000000,
         "cost_input_per_1m": 5.00,
         "cost_output_per_1m": 25.00,
+        "supports_reasoning": True,
         "description": "Ultra-large frontier reasoning model.",
     },
     {
@@ -113,6 +116,7 @@ _NOUS_MODELS = [
         "context_length": 500000,
         "cost_input_per_1m": 4.50,
         "cost_output_per_1m": 22.50,
+        "supports_reasoning": True,
         "description": "Frontier agent model on Nous infrastructure.",
     },
     {
@@ -121,6 +125,7 @@ _NOUS_MODELS = [
         "context_length": 1000000,
         "cost_input_per_1m": 2.80,
         "cost_output_per_1m": 14.00,
+        "supports_reasoning": True,
         "description": "High-speed multimodal coding and agent operations.",
     },
     {
@@ -129,6 +134,7 @@ _NOUS_MODELS = [
         "context_length": 131072,
         "cost_input_per_1m": 1.50,
         "cost_output_per_1m": 3.50,
+        "supports_reasoning": True,
         "description": "Nous Research flagship open-weight agent model.",
     },
 ]
@@ -232,12 +238,20 @@ def fetch_openrouter_catalog() -> List[Dict[str, Any]]:
                     p_in = 0.0
                     p_out = 0.0
 
+                params = m.get("supported_parameters", []) or []
+                supports_reasoning = (
+                    "reasoning" in params or
+                    "include_reasoning" in params or
+                    any(term in m_id.lower() for term in ["deepseek-r1", "o1", "o3", "thinking", "gemini-2.5", "gemini-3", "sonnet-3.7", "sonnet-4", "opus-5", "fable-5"])
+                )
+
                 formatted.append({
                     "id": m_id,
                     "name": name,
                     "context_length": ctx,
                     "cost_input_per_1m": round(p_in, 4),
                     "cost_output_per_1m": round(p_out, 4),
+                    "supports_reasoning": supports_reasoning,
                     "description": m.get("description", "")[:120] or "OpenRouter high-performance model.",
                 })
 
@@ -327,6 +341,7 @@ def _parse_models_dev_provider(provider_key: str, provider_data: Dict[str, Any])
             "context_length": ctx_int,
             "cost_input_per_1m": round(in_cost, 4),
             "cost_output_per_1m": round(out_cost, 4),
+            "supports_reasoning": bool(mval.get("reasoning")),
             "description": desc,
             "_raw_order": mval.get("release_date", ""),
         })

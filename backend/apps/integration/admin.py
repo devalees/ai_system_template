@@ -16,9 +16,9 @@ class HandshakeLogAdmin(admin.ModelAdmin):
 @admin.register(AgentProfile)
 class AgentProfileAdmin(admin.ModelAdmin):
     form = AgentProfileAdminForm
-    fields = ('name', 'display_name', 'role', 'provider', 'model_name', 'is_active', 'description')
-    list_display = ('display_name', 'name', 'role', 'provider', 'model_name', 'is_active', 'created_at')
-    list_filter = ('role', 'is_active', 'provider')
+    fields = ('name', 'display_name', 'role', 'provider', 'model_name', 'reasoning_effort', 'is_active', 'description')
+    list_display = ('display_name', 'name', 'role', 'provider', 'model_name', 'reasoning_effort', 'is_active', 'created_at')
+    list_filter = ('role', 'reasoning_effort', 'is_active', 'provider')
     search_fields = ('name', 'display_name', 'description')
     ordering = ('name',)
 
@@ -36,7 +36,7 @@ class SpendReportAdmin(admin.ModelAdmin):
 
 @admin.register(AgentTask)
 class AgentTaskAdmin(admin.ModelAdmin):
-    list_display = ('task_name', 'assigned_profile', 'status', 'review_verdict', 'cost_usd', 'created_at')
-    list_filter = ('status', 'review_verdict', 'assigned_profile', 'created_at')
+    list_display = ('task_name', 'assigned_profile', 'status', 'review_verdict', 'reasoning_effort', 'cost_usd', 'created_at')
+    list_filter = ('status', 'review_verdict', 'reasoning_effort', 'assigned_profile', 'created_at')
     search_fields = ('task_name', 'agent_name', 'reviewer_notes', 'input_payload', 'output_result')
     readonly_fields = ('id', 'created_at', 'updated_at')

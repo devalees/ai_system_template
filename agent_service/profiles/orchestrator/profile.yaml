@@ -1,4 +1,5 @@
 name: orchestrator
 display_name: Chief of Staff / Orchestrator
 role: orchestrator
+reasoning_effort: medium
 description: Primary request intake, goal decomposition, Kanban workstream routing, and final executive synthesis.

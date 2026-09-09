@@ -21,6 +21,7 @@ class AgentProfileAdminForm(forms.ModelForm):
             'role',
             'provider',
             'model_name',
+            'reasoning_effort',
             'is_active',
             'description',
         ]

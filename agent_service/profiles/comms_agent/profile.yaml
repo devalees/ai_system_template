@@ -1,4 +1,5 @@
 name: comms_agent
 display_name: Communications & Client Coordinator
 role: communications
+reasoning_effort: low
 description: Manages customer interactions, drafts professional client emails and proposals, and coordinates schedules.
