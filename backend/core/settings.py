@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.meta_engine',
     'apps.integration',
     'apps.automation',
+    'apps.api_gateway',
 ]
 
 MIDDLEWARE = [
@@ -142,6 +143,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django REST Framework Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'apps.api_gateway.authentication.APIKeyAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
