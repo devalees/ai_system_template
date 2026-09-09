@@ -12,12 +12,13 @@ DEFAULT_RULES = [
         "description": "Automatically generates DRF auth token, creates declarative configuration files, and injects runtime .env into the Hermes Agent container whenever an Agent User is created or updated in Django.",
         "trigger_type": "model_event",
         "execution_mode": "recurring",
-        "target_model": "integration.Profile",
+        "trigger_model": "integration.Profile",
         "event_type": "any",
         "filter_conditions": {"is_agent": True},
         "action_category": "hermes_agent",
         "action_type": "provision_hermes_profile",
         "action_params": {},
+        "is_system": True,
         "is_active": True,
     },
     {
@@ -33,6 +34,41 @@ DEFAULT_RULES = [
             "profile": "cost_controller",
             "prompt": "Perform daily token expenditure and budget status audit across all agent profiles."
         },
+        "is_system": True,
+        "is_active": True,
+    },
+    {
+        "name": "QA Review Routing on Task Status Change",
+        "description": "Monitors tasks transitioning into 'review' status and automatically notifies the QA Auditor agent to review work output.",
+        "trigger_type": "model_event",
+        "execution_mode": "recurring",
+        "trigger_model": "integration.AgentTask",
+        "event_type": "field_changed",
+        "trigger_field": "status",
+        "target_value": "review",
+        "action_category": "hermes_agent",
+        "action_type": "dispatch_hermes_prompt",
+        "action_params": {
+            "profile": "qa_auditor",
+            "prompt": "Evaluate task quality, output correctness, and compliance for task in review."
+        },
+        "is_system": True,
+        "is_active": True,
+    },
+    {
+        "name": "Daily Budget Alert Notification",
+        "description": "Periodic automated check dispatching Cost Controller to evaluate burn rate and budget variance.",
+        "trigger_type": "time_based",
+        "execution_mode": "recurring",
+        "schedule_unit": "hours",
+        "schedule_value": 12,
+        "action_category": "hermes_agent",
+        "action_type": "dispatch_hermes_prompt",
+        "action_params": {
+            "profile": "cost_controller",
+            "prompt": "Audit recent spend reports and alert on budget variance exceeding 80%."
+        },
+        "is_system": True,
         "is_active": True,
     },
 ]

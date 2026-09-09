@@ -71,6 +71,7 @@ class AutomationRuleAdmin(admin.ModelAdmin):
 
     list_display = (
         'name',
+        'scope_badge',
         'trigger_badge',
         'execution_mode',
         'action_badge',
@@ -79,22 +80,23 @@ class AutomationRuleAdmin(admin.ModelAdmin):
         'last_run_at',
         'run_now_action',
     )
-    list_filter = ('trigger_type', 'action_category', 'is_active', 'execution_mode')
-    search_fields = ('name', 'description', 'action_type', 'target_model')
+    list_filter = ('is_system', 'trigger_type', 'target_operation', 'action_category', 'is_active', 'execution_mode')
+    search_fields = ('name', 'description', 'action_type', 'trigger_model', 'target_model')
     readonly_fields = ('run_count', 'last_run_at', 'next_run_at', 'created_at', 'updated_at')
 
     fieldsets = (
         ("Rule Identification", {
-            "fields": ("name", "description", "is_active")
+            "fields": ("name", "description", "is_active", "is_system")
         }),
-        ("Trigger Configuration", {
+        ("Trigger Configuration (Source Event)", {
             "description": "Configure when this automation is triggered (Model Events, Scheduled Timers, or Webhooks).",
             "fields": (
                 "trigger_type",
                 "execution_mode",
-                "target_model",
+                "trigger_model",
                 "event_type",
                 "filter_conditions",
+                "condition_rules",
             )
         }),
         ("Field Change & State Transition (Odoo-Style)", {
@@ -103,6 +105,15 @@ class AutomationRuleAdmin(admin.ModelAdmin):
                 "trigger_field",
                 "previous_value",
                 "target_value",
+            ),
+            "classes": ("collapse",)
+        }),
+        ("Target Model Record Operations & Field Mapping (Odoo-Style)", {
+            "description": "Execute automated CRUD record operations on a destination model with field mapping.",
+            "fields": (
+                "target_model",
+                "target_operation",
+                "field_mappings",
             ),
             "classes": ("collapse",)
         }),
@@ -132,6 +143,25 @@ class AutomationRuleAdmin(admin.ModelAdmin):
 
     actions = ['activate_rules', 'pause_rules', 'trigger_rules_now']
 
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.is_system:
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        system_rules = queryset.filter(is_system=True)
+        if system_rules.exists():
+            names = ", ".join(system_rules.values_list('name', flat=True))
+            messages.warning(
+                request,
+                f"Protected system automation actions cannot be deleted: {names}."
+            )
+        non_system = queryset.filter(is_system=False)
+        for rule in non_system:
+            rule.delete()
+        if non_system.exists():
+            messages.success(request, f"Successfully deleted {non_system.count()} custom automation rule(s).")
+
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
@@ -159,6 +189,12 @@ class AutomationRuleAdmin(admin.ModelAdmin):
         )
     run_now_action.short_description = "Execute"
 
+    def scope_badge(self, obj):
+        if obj.is_system:
+            return format_html('<span style="background-color:#ffe69c; color:#664d03; padding:3px 8px; border-radius:10px; font-weight:bold; font-size:11px;">🛡️ SYSTEM</span>')
+        return format_html('<span style="color:#6c757d; font-size:11px; padding:3px 8px;">User Defined</span>')
+    scope_badge.short_description = "Scope"
+
     def status_toggle(self, obj):
         if obj.is_active:
             return format_html('<span style="color:#198754; font-weight:bold;">🟢 Active</span>')
@@ -173,8 +209,8 @@ class AutomationRuleAdmin(admin.ModelAdmin):
             'manual': '▶️ Manual',
         }
         label = icons.get(obj.trigger_type, obj.trigger_type)
-        if obj.trigger_type == 'model_event' and obj.target_model:
-            model_short = obj.target_model.split('.')[-1]
+        if obj.trigger_type == 'model_event' and obj.trigger_model:
+            model_short = obj.trigger_model.split('.')[-1]
             if obj.trigger_field:
                 trans = f" ➔ {obj.target_value}" if obj.target_value else ""
                 label = f"📦 {model_short}.{obj.trigger_field}{trans}"
@@ -190,11 +226,17 @@ class AutomationRuleAdmin(admin.ModelAdmin):
             'script_service': ('📜 Script', '#6f42c1', '#fff'),
             'external_webhook': ('🌐 Webhook', '#fd7e14', '#fff'),
         }
-        badge, bg, fg = cat_badges.get(obj.action_category, ('Action', '#6c757d', '#fff'))
-        return format_html(
-            '<span style="background-color:{}; color:{}; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:bold; margin-right:5px;">{}</span> <strong>{}</strong>',
-            bg, fg, badge, obj.action_type
-        )
+        badges = []
+        if obj.target_model and obj.target_operation:
+            target_short = obj.target_model.split('.')[-1]
+            op_label = f"{obj.target_operation.upper()} {target_short}"
+            badges.append(f'<span style="background-color:#20c997; color:#fff; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:bold; margin-right:4px;">📦 {op_label}</span>')
+
+        if obj.action_type and obj.action_type not in ('', 'none', 'target_crud'):
+            badge, bg, fg = cat_badges.get(obj.action_category, ('Action', '#6c757d', '#fff'))
+            badges.append(f'<span style="background-color:{bg}; color:{fg}; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:bold; margin-right:4px;">{badge}</span> <strong>{obj.action_type}</strong>')
+
+        return format_html(" ".join(badges) if badges else "<em>None</em>")
     action_badge.short_description = "Action Target"
 
     @admin.action(description="🟢 Activate selected rules")
