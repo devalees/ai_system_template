@@ -176,3 +176,59 @@ class MetaCatalogModelTests(TestCase):
 
         self.assertEqual(model.created_by, self.user)
         self.assertEqual(model.updated_by, self.user)
+
+
+class DynamicSchemaEngineTests(TestCase):
+    """
+    Test suite verifying PostgreSQL DDL operations via DynamicSchemaEngine.
+    """
+
+    def test_dynamic_table_lifecycle(self):
+        """Verify dynamic CREATE TABLE, ADD COLUMN, DROP COLUMN, and DROP TABLE operations."""
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+
+        meta_model = MetaModel.objects.create(
+            name="test_warehouse_item",
+            label="Warehouse Item",
+            app_label="inventory",
+        )
+
+        # 1. Verify physical table was created in PostgreSQL
+        table_name = meta_model.table_name
+        self.assertTrue(DynamicSchemaEngine.table_exists(table_name))
+
+        # 2. Verify base kernel audit columns exist
+        columns = DynamicSchemaEngine.get_existing_columns(table_name)
+        self.assertIn("id", columns)
+        self.assertIn("created_at", columns)
+        self.assertIn("updated_at", columns)
+        self.assertIn("created_by_id", columns)
+        self.assertIn("updated_by_id", columns)
+
+        # 3. Add dynamic columns
+        field_sku = MetaField.objects.create(
+            model=meta_model,
+            name="sku",
+            label="SKU Code",
+            field_type="char",
+            max_length=64,
+            required=True,
+        )
+        field_quantity = MetaField.objects.create(
+            model=meta_model,
+            name="quantity",
+            label="Stock Quantity",
+            field_type="integer",
+            default_value="10",
+        )
+
+        self.assertTrue(DynamicSchemaEngine.column_exists(table_name, "sku"))
+        self.assertTrue(DynamicSchemaEngine.column_exists(table_name, "quantity"))
+
+        # 4. Drop dynamic column
+        field_quantity.delete()
+        self.assertFalse(DynamicSchemaEngine.column_exists(table_name, "quantity"))
+
+        # 5. Drop dynamic table
+        meta_model.delete()
+        self.assertFalse(DynamicSchemaEngine.table_exists(table_name))

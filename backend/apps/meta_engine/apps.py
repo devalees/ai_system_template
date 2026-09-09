@@ -11,4 +11,7 @@ class MetaEngineConfig(AppConfig):
         """
         Bootstrap the dynamic models and register application signals.
         """
-        pass
+        try:
+            import apps.meta_engine.signals  # noqa
+        except Exception:
+            pass
