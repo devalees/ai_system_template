@@ -16,6 +16,7 @@ from apps.meta_engine.models import (
     MetaReport,
     MetaRule,
     MetaView,
+    SystemModule,
 )
 
 User = get_user_model()
@@ -441,4 +442,119 @@ class ModularAppRegistryTests(TransactionTestCase):
         crm_meta.delete()
         contacts_meta.delete()
         SystemModule.objects.filter(app_id__in=["contacts", "crm"]).delete()
+
+
+class SafeAppUninstallerTests(TransactionTestCase):
+    """
+    Test suite for Sub-task 6: Safe App Uninstall, Reverse Dependency Guard,
+    and Data Retention Policies (Archive, Snapshot Backup, Cascade Drop).
+    """
+
+    def setUp(self):
+        from apps.meta_engine.app_installer import AppInstaller
+        AppInstaller.install("crm")
+
+    def tearDown(self):
+        # Clean up any leftover metadata or physical tables for test isolation
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+        for name in ["crm_lead", "contacts_partner"]:
+            meta = MetaModel.objects.filter(name=name).first()
+            if meta:
+                try:
+                    DynamicSchemaEngine.drop_table(meta)
+                except Exception:
+                    pass
+                meta.delete()
+        SystemModule.objects.filter(app_id__in=["crm", "contacts"]).delete()
+
+    def test_reverse_dependency_guard_blocks_uninstall(self):
+        """Verify uninstaller blocks removing 'contacts' while active 'crm' depends on it."""
+        from apps.meta_engine.app_uninstaller import AppUninstaller, AppUninstallBlockedError
+
+        with self.assertRaises(AppUninstallBlockedError) as ctx:
+            AppUninstaller.uninstall("contacts")
+
+        self.assertIn("crm", str(ctx.exception))
+        self.assertEqual(SystemModule.objects.get(app_id="contacts").status, "installed")
+
+    def test_uninstall_policy_archive(self):
+        """Verify archive policy deactivates models/views but preserves physical PostgreSQL tables."""
+        from apps.meta_engine.app_uninstaller import AppUninstaller
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+
+        crm_meta = MetaModel.objects.get(name="crm_lead")
+        table_name = crm_meta.table_name
+
+        result = AppUninstaller.uninstall("crm", data_policy="archive")
+        self.assertEqual(result["policy"], "archive")
+        self.assertIn("crm_lead", result["models_affected"])
+
+        # SystemModule marked uninstalled
+        crm_mod = SystemModule.objects.get(app_id="crm")
+        self.assertEqual(crm_mod.status, "uninstalled")
+
+        # MetaModel soft deactivated
+        crm_meta.refresh_from_db()
+        self.assertFalse(crm_meta.is_active)
+
+        # Physical database table remains intact
+        self.assertTrue(DynamicSchemaEngine.table_exists(table_name))
+
+    def test_uninstall_policy_snapshot_backup_and_drop(self):
+        """Verify snapshot backup export and physical table drop."""
+        import json
+        import os
+        from apps.meta_engine.app_uninstaller import AppUninstaller
+        from apps.meta_engine.model_factory import DynamicModelFactory
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+
+        LeadClass = DynamicModelFactory.get_by_slug("crm_lead")
+        LeadClass.objects.create(title="Backup Test Lead", expected_revenue="50000.00")
+
+        crm_meta = MetaModel.objects.get(name="crm_lead")
+        table_name = crm_meta.table_name
+
+        result = AppUninstaller.uninstall("crm", data_policy="snapshot_backup_and_drop")
+        self.assertEqual(result["policy"], "snapshot_backup_and_drop")
+        self.assertIsNotNone(result["backup_file"])
+        self.assertTrue(os.path.exists(result["backup_file"]))
+
+        # Check backup content
+        with open(result["backup_file"], "r", encoding="utf-8") as bf:
+            backup_json = json.load(bf)
+        self.assertIn("crm_lead", backup_json["models"])
+        self.assertEqual(backup_json["models"]["crm_lead"]["count"], 1)
+
+        # Physical database table is dropped
+        self.assertFalse(DynamicSchemaEngine.table_exists(table_name))
+
+        # Clean up backup file
+        try:
+            os.remove(result["backup_file"])
+        except Exception:
+            pass
+
+    def test_uninstall_policy_cascade_drop(self):
+        """Verify cascade drop deletes metadata and physical database table directly."""
+        from apps.meta_engine.app_uninstaller import AppUninstaller
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+
+        crm_meta = MetaModel.objects.get(name="crm_lead")
+        table_name = crm_meta.table_name
+
+        result = AppUninstaller.uninstall("crm", data_policy="cascade_drop")
+        self.assertEqual(result["policy"], "cascade_drop")
+
+        # MetaModel is deleted
+        self.assertFalse(MetaModel.objects.filter(name="crm_lead").exists())
+
+        # Physical table is dropped
+        self.assertFalse(DynamicSchemaEngine.table_exists(table_name))
+
+        # Now contacts can be safely uninstalled since crm is uninstalled
+        contacts_meta = MetaModel.objects.get(name="contacts_partner")
+        contacts_table = contacts_meta.table_name
+        AppUninstaller.uninstall("contacts", data_policy="cascade_drop")
+        self.assertFalse(DynamicSchemaEngine.table_exists(contacts_table))
+
 
