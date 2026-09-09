@@ -65,6 +65,7 @@ economy_editor/
 ## 4. Data Models (`backend/apps/integration/models.py`)
 
 ### `AgentProfile`
+- `user`: OneToOneField to `auth.User` (dedicated service account `bot_<name>`).
 - `name`: Unique slug (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `archivist`).
 - `display_name`: Human-readable title (e.g. "Chief of Staff / Orchestrator").
 - `role`: Canonical role choice.
@@ -75,6 +76,7 @@ economy_editor/
 - `description`: Role narrative and assignment boundaries.
 
 ### `AgentTask`
+- `created_by`: ForeignKey to `auth.User` tracking dispatching agent / service account.
 - `task_name`: Human-readable task title.
 - `assigned_profile`: Foreign key to `AgentProfile`.
 - `status`: Workflow state (`pending`, `in_progress`, `review`, `completed`, `failed`).
@@ -84,6 +86,7 @@ economy_editor/
 - `reviewer_notes`: Structured feedback from `qa_auditor`.
 
 ### `SpendReport`
+- `created_by`: ForeignKey to `auth.User` (must be `bot_cost_controller`).
 - `reported_by`: Profile identifier (typically `cost_controller`).
 - `total_cost_usd`: Aggregated expenditure.
 - `daily_budget_usd`: Configured ceiling.
@@ -135,3 +138,46 @@ economy_editor/
         ▼                                                ▼
 [Status: Completed]                            [Status: In Progress / Failed]
 ```
+
+---
+
+## 8. Role-Based Access Control (RBAC) & Service Account Architecture
+
+To uphold the Principle of Least Privilege across the multi-agent ecosystem, agent profiles do not share a single master API key or operate with unbounded administrative access. Instead, each profile operates as an isolated Django Service Account bound to native Django permissions.
+
+### 8.1 Service Account & Permission Matrix
+
+| Profile | Bot User (`auth.User`) | Django Group (`auth.Group`) | Model Permissions (`auth.Permission`) | Endpoint Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `orchestrator` | `bot_orchestrator` | `Agent_Orchestrator` | `view_agentprofile`, `view_agenttask`, `add_agenttask`, `change_agenttask` | POST/GET `/api/tasks/`, GET `/api/profiles/` |
+| `cost_controller` | `bot_cost_controller` | `Agent_CostController` | `view_spendreport`, `add_spendreport`, `view_agentprofile` | POST/GET `/api/spend-reports/`, GET `/api/profiles/` |
+| `qa_auditor` | `bot_qa_auditor` | `Agent_QAAuditor` | `view_agenttask`, `change_agenttask`, `view_agentprofile` | GET `/api/tasks/`, POST `/api/tasks/<id>/submit-verdict/` |
+| `comms_agent` | `bot_comms_agent` | `Agent_CommsAgent` | `view_agenttask`, `view_agentprofile` | GET `/api/tasks/`, GET `/api/profiles/` |
+| `archivist` | `bot_archivist` | `Agent_Archivist` | `view_agentprofile`, `view_agenttask` | GET `/api/profiles/`, GET `/api/tasks/` |
+
+### 8.2 Endpoint Authorization & Defense-in-Depth
+
+- **`StrictDjangoModelPermissions`**: Custom DRF permission class mapping HTTP verbs to native Django permissions:
+  - `GET`, `HEAD` -> `view_<model>`
+  - `POST` -> `add_<model>`
+  - `PUT`, `PATCH` -> `change_<model>`
+  - `DELETE` -> `delete_<model>`
+- **Cost Controller Boundary**: `bot_cost_controller` possesses `add_spendreport` but lacks `add_agenttask`. Any attempt by `cost_controller` to POST to `/api/tasks/` is immediately rejected with `403 Forbidden`.
+- **Review Gate Defense**: `AgentTaskViewSet.submit_verdict` explicitly validates that the authenticated caller belongs to `Agent_QAAuditor` and holds `change_agenttask` permission. Submitting reviews from unauthorized profiles (such as `cost_controller` or `orchestrator`) is strictly blocked (`403 Forbidden`).
+- **Audit Trails**: `AgentTask` and `SpendReport` models capture `created_by`, automatically populated from `request.user` via DRF `perform_create()`.
+
+### 8.3 Runtime Token Provisioning Flow
+
+```
+[Django: seed_profiles]
+       │
+       ▼ (Generates bot users, groups, permissions & DRF tokens)
+[/tmp/agent_tokens.json]
+       │
+       ▼ (scripts/provision_profiles.py reads manifest)
+[/root/.hermes/profiles/<profile_name>/.env] (Injected inside Hermes container)
+       │
+       ▼
+[Hermes Runtime: DJANGO_API_TOKEN] (Sourced on profile execution: hermes -p <profile>)
+```
+

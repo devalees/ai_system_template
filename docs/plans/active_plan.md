@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
-- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `feat/agent-rbac-service-accounts`
-- **Last Updated**: 2026-09-09 04:02:00+03:00
+- **Last Updated**: 2026-09-09 04:15:00+03:00
 
 ---
 
@@ -62,7 +62,7 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 
 ---
 
-## Phase 3: Django Native RBAC, Service Accounts & Agent Token Authentication (IN_PROGRESS)
+## Phase 3: Django Native RBAC, Service Accounts & Agent Token Authentication (COMPLETED)
 
 ### 1. Objective & Scope
 Integrate Django's native authentication framework, Role-Based Access Control (`auth.Group` and `auth.Permission`), and Django REST Framework (DRF) Token Authentication to secure agent-to-backend database operations under the Principle of Least Privilege:
@@ -73,18 +73,22 @@ Integrate Django's native authentication framework, Role-Based Access Control (`
 
 ### 2. Task Checklist & Progress
 - [x] **Sub-task 1: Backend Auth Dependencies & Model Extensions** - COMPLETED (Commit: `e332042`)
-- [x] **Sub-task 2: Automated RBAC Groups, Bot Users & Token Generation (`seed_profiles.py`)** - COMPLETED (Commit: pending)
-- [/] **Sub-task 3: DRF Views Authorization & Endpoint Security Hardening** - IN PROGRESS
-- [ ] **Sub-task 4: Hermes Agent Runtime Token Provisioning (`scripts/provision_profiles.py`)** - PENDING
-- [ ] **Sub-task 5: Comprehensive Unit Testing & End-to-End Verification** - PENDING
-- [ ] **Sub-task 6: Documentation Synchronization (Wiki & Architecture)** - PENDING
+- [x] **Sub-task 2: Automated RBAC Groups, Bot Users & Token Generation (`seed_profiles.py`)** - COMPLETED (Commit: `c312146`)
+- [x] **Sub-task 3: DRF Views Authorization & Endpoint Security Hardening** - COMPLETED (Commit: `8a155ee`)
+- [x] **Sub-task 4: Hermes Agent Runtime Token Provisioning (`scripts/provision_profiles.py`)** - COMPLETED (Commit: `8a155ee`)
+- [x] **Sub-task 5: Comprehensive Unit Testing & End-to-End Verification** - COMPLETED (Commit: `8a155ee`)
+- [x] **Sub-task 6: Documentation Synchronization (Wiki & Architecture)** - COMPLETED (Commit: `cb0b13d`)
 
 ### 3. Key Decisions & Deviations (Phase 3)
 - *2026-09-09*: Initialized Phase 3 on branch `feat/agent-rbac-service-accounts`. Standardized bot username prefix `bot_<profile_name>` and group prefix `Agent_<Role>`.
 - *2026-09-09*: Installed `rest_framework.authtoken`, configured TokenAuthentication and SessionAuthentication in `settings.py`, and added `user` OneToOneField to `AgentProfile`, `created_by` ForeignKey to `AgentTask` and `SpendReport`. Applied migration `0004_agentprofile_user_agenttask_created_by_and_more` (Commit: `e332042`).
-- *2026-09-09*: Enhanced `seed_profiles.py` to idempotently construct Django Groups (`Agent_Orchestrator`, `Agent_CostController`, `Agent_QAAuditor`, `Agent_CommsAgent`, `Agent_Archivist`) with native model permissions (`add`, `change`, `view`), generate dedicated `bot_*` users with unusable passwords, issue DRF tokens, and export token manifests via `--export-tokens`.
+- *2026-09-09*: Enhanced `seed_profiles.py` to idempotently construct Django Groups (`Agent_Orchestrator`, `Agent_CostController`, `Agent_QAAuditor`, `Agent_CommsAgent`, `Agent_Archivist`) with native model permissions (`add`, `change`, `view`), generate dedicated `bot_*` users with unusable passwords, issue DRF tokens, and export token manifests via `--export-tokens` (Commit: `c312146`).
+- *2026-09-09*: Implemented `StrictDjangoModelPermissions` on ViewSets to enforce RBAC across all HTTP verbs (`view` on GET, `add` on POST, `change` on PUT/PATCH, `delete` on DELETE). Enforced dedicated review gate authorization on `submit_verdict` requiring `Agent_QAAuditor` membership and `change_agenttask` permission. Overrode `perform_create` on `AgentTaskViewSet` and `SpendReportViewSet` to automatically record `created_by` audit trail (Commit: `8a155ee`).
+- *2026-09-09*: Upgraded `scripts/provision_profiles.py` with cross-service token synchronization, dynamically fetching the tokens manifest from Django and injecting `DJANGO_API_TOKEN` and `DJANGO_API_URL` into `/root/.hermes/profiles/<name>/.env`. Added `--push` flag to `cost_monitor` skill to upload spend reports using DRF TokenAuth (Commit: `8a155ee`).
+- *2026-09-09*: Empirically verified with 9/9 passing automated unit tests covering positive and negative authorization boundaries, verified live spend report push from inside Hermes container resulting in HTTP 201 (`created_by: bot_cost_controller`), and verified blocking of unauthorized task creation attempts from `bot_cost_controller` (HTTP 403 Forbidden).
+- *2026-09-09*: Synchronized system documentation in `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md`.
 
 ### 4. Current Focus
-Sub-task 3: DRF Views Authorization & Endpoint Security Hardening
+Phase 3 fully complete. Ready to push branch to remote repository.
 
 
