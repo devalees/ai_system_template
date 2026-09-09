@@ -553,3 +553,22 @@ The filtering engine unifies trigger condition evaluation into a single authorit
   - Bypasses inactive trigger status when an operator explicitly tests an action or pipeline from the admin interface.
   - Skips conditional rule filtering during manual testing, allowing operators to verify action execution and prompt formatting immediately.
   - Records full timing, duration, and structured outputs in `AutomationLog`.
+
+### 15.4 Hermes Agent Gateway Authentication & Timeout Resilience
+- **Credential Synchronization**:
+  - The backend communicates with the Hermes Gateway daemon (`http://host.docker.internal:8643/v1/chat/completions`) using the `Authorization: Bearer <API_SERVER_KEY>` header.
+  - Automatically falls back to `HERMES_API_KEY` from Django settings or environment to ensure seamless authorization.
+- **Configurable Timeouts**:
+  - Multi-profile agent audits and complex reasoning routines require generous HTTP timeouts.
+  - Configurable `HERMES_REQUEST_TIMEOUT = 120` (seconds) introduced in `core/settings.py` and passed to `requests.post(..., timeout=(10, timeout_val))` in `apps.automation.actions.py`.
+- **Status Classification**:
+  - Responses returning HTTP 4xx/5xx status codes or gateway error bodies are explicitly categorized as `status="failed"` in `AutomationLog` with the full response body captured for debugging.
+
+### 15.5 Action Deduplication & Idempotent Seeding Architecture
+- **Pipeline Multi-Action Execution**:
+  - `AutomationEngine.execute_trigger` executes all active `AutomationAction` records attached to a trigger in sequence order (`sequence=10, 20...`).
+  - To prevent duplicate action dispatches, each trigger maintains a distinct pipeline of action handlers.
+- **Idempotent Seeder Reconciliation (`seed_automations.py`)**:
+  - Detects and reconciles any legacy auto-generated action records (e.g. `f"{trigger.name} - Action"`) produced during schema migrations.
+  - Automatically re-links historical `AutomationLog` audit trails to canonical action records before purging redundant entries, ensuring idempotent runs with zero duplicate action creation.
+

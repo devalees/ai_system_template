@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `feat/centralized-automation-engine`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 10 Completed (Action Params Assistant, Persona-Specific Prompt Presets & Dynamic Template Resolution)
+- **Status**: Phase 11 Completed (Direct On-Page Automation Execution, Dynamic Context Builder, Hermes Gateway Hardening & Action Deduplication)
 
 ---
 
@@ -65,4 +65,6 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Next-Gen Odoo-Style Target Operations**: Semantic separation of `trigger_model` (source event) vs `target_model` (destination record operations), executing automated `create`, `update`, and `delete` actions with template context interpolation (`{{var}}`).
 - **Visual Condition Rules**: Declarative operator evaluation (`==`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `in`, `is_empty`, `is_not_empty`) and Odoo-style state transition monitoring (`trigger_field`, `previous_value`, `target_value`).
 - **System Signal Reification**: Foundational routines (Hermes auto-provisioning, spend audit, QA review routing, budget alert) marked `is_system=True` and locked against deletion in models and Admin.
-- **Reactive Dynamic Admin UI**: Conditional section toggling, live AJAX field introspection, and interactive field mapping assistant with required field badges.
+- **Reactive Dynamic Admin UI**: Conditional section toggling, live AJAX field introspection, interactive field mapping assistant with required field badges, and visual boolean filter group builders.
+- **Direct On-Page Execution & Context Builder**: On-demand `▶ Run Pipeline Now` and `▶ Run Action Now` execution buttons on change forms and changelists, backed by dynamic database context resolution, sensible fallback synthesis, and `force_execution` testing bypasses.
+- **Hermes Gateway Resilience**: Standardized token authentication, configurable execution timeouts (`HERMES_REQUEST_TIMEOUT = 120s`), and automated action deduplication.
