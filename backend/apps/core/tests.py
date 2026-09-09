@@ -198,3 +198,35 @@ class SettingsRegistryTests(TestCase):
         self.assertIsNotNone(sample_setting)
         self.assertEqual(sample_setting.default, "hello_world")
 
+
+class AppSettingValueModelTests(TestCase):
+    """Test suite verifying AppSettingValue database model and signal cache invalidation."""
+
+    def test_app_setting_value_persistence_and_cache_invalidation(self):
+        from apps.core.models import AppSettingValue
+        from django.core.cache import cache
+
+        setting_val = AppSettingValue.objects.create(
+            app_label="automation",
+            key="TIMEOUT",
+            raw_value="180",
+            data_type="int"
+        )
+        self.assertEqual(str(setting_val), "automation.TIMEOUT")
+
+        # Manually populate cache to verify post_save and post_delete invalidation
+        cache_key = setting_val.get_cache_key("automation", "TIMEOUT")
+        cache.set(cache_key, 180)
+        self.assertEqual(cache.get(cache_key), 180)
+
+        # Trigger post_save
+        setting_val.raw_value = "240"
+        setting_val.save()
+        self.assertIsNone(cache.get(cache_key))
+
+        # Re-populate and trigger post_delete
+        cache.set(cache_key, 240)
+        setting_val.delete()
+        self.assertIsNone(cache.get(cache_key))
+
+

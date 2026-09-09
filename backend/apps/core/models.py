@@ -193,3 +193,50 @@ class AuditableModel(models.Model):
                 self.created_by = user
             self.updated_by = user
         super().save(*args, **kwargs)
+
+
+class AppSettingValue(TimeStampedModel):
+    """
+    Relational storage for application-level settings overriding defaults.
+    """
+    app_label = models.CharField(
+        max_length=100,
+        db_index=True,
+        verbose_name=_("App Label"),
+        help_text=_("Application identifier (e.g. 'automation', 'integration', 'general').")
+    )
+    key = models.CharField(
+        max_length=100,
+        db_index=True,
+        verbose_name=_("Setting Key"),
+        help_text=_("Unique parameter key within the application group.")
+    )
+    raw_value = models.TextField(
+        blank=True,
+        default="",
+        verbose_name=_("Raw Stored Value"),
+        help_text=_("Serialized or encrypted value stored in the database.")
+    )
+    data_type = models.CharField(
+        max_length=20,
+        default="str",
+        verbose_name=_("Data Type"),
+        help_text=_("Data type matching the registered Setting definition.")
+    )
+
+    class Meta:
+        verbose_name = _("Application Setting Value")
+        verbose_name_plural = _("Application Setting Values")
+        unique_together = [("app_label", "key")]
+        indexes = [
+            models.Index(fields=["app_label", "key"]),
+        ]
+
+    def __str__(self):
+        return f"{self.app_label}.{self.key}"
+
+    @classmethod
+    def get_cache_key(cls, app_label: str, key: str) -> str:
+        """Generate standardized Redis cache key."""
+        return f"core:setting:{app_label}:{key}"
+
