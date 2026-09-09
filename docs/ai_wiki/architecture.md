@@ -572,3 +572,71 @@ The filtering engine unifies trigger condition evaluation into a single authorit
   - Detects and reconciles any legacy auto-generated action records (e.g. `f"{trigger.name} - Action"`) produced during schema migrations.
   - Automatically re-links historical `AutomationLog` audit trails to canonical action records before purging redundant entries, ensuring idempotent runs with zero duplicate action creation.
 
+---
+
+## 16. Core Foundations, Modular App Settings & Bilingual Multi-Language Engine (`apps.core`) (Phase 12)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        apps.core Foundational Architecture                             │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ 1. Abstract Base Models:                                                               │
+│    • UUIDModel (Non-enumerable uuid4 PKs)                                              │
+│    • TimeStampedModel (Auto-indexed created_at, updated_at)                            │
+│    • SoftDeleteModel (Paranoid model: objects.alive() vs all_objects, restore())       │
+│    • AuditableModel (Auto created_by / updated_by via contextvars CurrentUserMiddleware)│
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ 2. Odoo-Style Modular Application Settings Framework:                                  │
+│    • Declarative App Registration: `@register_settings_group('automation', ...)`       │
+│    • Typed Validation: int, str, float, bool, choice, secret, json                     │
+│    • Secret Encryption & UI Masking: AES/Signing crypto with `••••••••` masking        │
+│    • Dual-Layer Resolution: Redis Cache (TTL) ➔ DB (AppSettingValue) ➔ Code Fallback  │
+│    • Unified Settings Hub in Admin: Single-screen view with categorized app sidebar    │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ 3. Bilingual Multi-Language Engine (English / Arabic):                                 │
+│    • GNU gettext extraction & compilation (`locale/ar/LC_MESSAGES/django.mo`)         │
+│    • LocaleMiddleware with URL prefix, Cookie, and Accept-Language header resolution   │
+│    • BiDi / Native RTL Layout for Arabic with full Django Admin translation            │
+│    • User Profile Preference: `preferred_language` on `Profile` with 1-click switching│
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 16.1 Abstract Base Models (`apps.core.models`)
+- **`TimeStampedModel`**: Standardizes indexed `created_at` and `updated_at` fields across domain models.
+- **`UUIDModel`**: Equips domain models with UUIDv4 primary keys to defend external APIs against automated record ID enumeration attacks.
+- **`SoftDeleteModel`**: Implements paranoid deletion semantics:
+  - Default `objects` manager delegates to `SoftDeleteQuerySet.alive()`, concealing soft-deleted records from standard queries.
+  - `all_objects` manager includes soft-deleted records for auditing and recovery.
+  - Safe lifecycle methods: `.delete(soft=True)`, `.hard_delete()`, and `.restore()`.
+- **`AuditableModel`**: Captures `created_by` and `updated_by` foreign keys to `auth.User`, auto-populated during `save()` via the active request context.
+
+### 16.2 Thread-Safe Request Context Tracking (`apps.core.middleware`)
+- Employs Python 3.11's standard `contextvars.ContextVar("current_user")` to capture the authenticated user from `request.user`.
+- Context token is guaranteed to reset in a `finally` block upon response delivery, preventing user state leakage across worker threads.
+- Enables `AuditableModel.save()` to record audit actors without polluting method signatures or requiring explicit user arguments.
+
+### 16.3 Odoo-Style Modular Application Settings Framework (`apps.core.settings_registry`)
+- **App-Scoped Declarations**: Each installed application declares its own configuration parameters cleanly in `conf.py` using `@register_settings_group`.
+- **Rich Typed Parameters**: Supports `int`, `str`, `float`, `bool` (toggle switches), `choice` (dropdowns), `secret` (encrypted credentials), and `json`.
+- **Cryptographic Secret Protection (`crypto.py`)**: Sensitive values (API keys, webhook signing secrets) are encrypted and signed using Django's `SECRET_KEY` before database persistence, and masked in the UI.
+- **Fast Dual-Layer Resolution (`config.py`)**:
+  - `get_setting("app.KEY", default=...)` queries Redis cache (`core:setting:<app>:<key>`) first.
+  - If missing from cache, queries PostgreSQL `AppSettingValue`.
+  - Falls back to registered setting defaults, then Django `settings.py` / `.env`.
+  - Signal-based automatic cache invalidation on save and delete guarantees zero-downtime configuration updates across all running Django processes and Celery workers.
+
+### 16.4 Unified Django Admin Settings Hub (`apps.core.admin`)
+- Accessible directly at `/admin/core/appsettingvalue/hub/` with a prominent changelist shortcut button.
+- Clean Odoo-style visual interface featuring:
+  - Left navigation sidebar of installed applications (`⚙️ General Platform`, `⚡ Automation Engine`, `🤖 AI Agents & Hermes`).
+  - Native toggle switches for booleans, number steppers, dropdowns for choices, and show/hide toggles for secrets.
+  - Instant form persistence updating PostgreSQL and invalidating Redis cache.
+
+### 16.5 Bilingual Multi-Language Architecture (English / Arabic)
+- Configured in `core/settings.py` with `LocaleMiddleware`, `LANGUAGES = [('en', 'English'), ('ar', 'العربية')]`, and `LOCALE_PATHS`.
+- Compiled Arabic binary translation catalog (`backend/locale/ar/LC_MESSAGES/django.mo`).
+- Full BiDi / RTL support automatically formatting Arabic interface layouts.
+- User profile preference `Profile.preferred_language` on `apps.integration.models.Profile` exposed in Django Admin user forms.
+- DRF content negotiation dynamically resolves localized error messages and responses based on client `Accept-Language` headers.
+
+

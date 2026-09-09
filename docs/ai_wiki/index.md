@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 11 Completed (Direct On-Page Automation Execution, Dynamic Context Builder, Hermes Gateway Hardening & Action Deduplication)
+- **Status**: Phase 12 Completed (Core Foundations, Abstract Models, Odoo-Style Modular App Settings Hub & Bilingual Multi-Language Engine)
 
 ---
 
@@ -68,3 +68,19 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Reactive Dynamic Admin UI**: Conditional section toggling, live AJAX field introspection, interactive field mapping assistant with required field badges, and visual boolean filter group builders.
 - **Direct On-Page Execution & Context Builder**: On-demand `▶ Run Pipeline Now` and `▶ Run Action Now` execution buttons on change forms and changelists, backed by dynamic database context resolution, sensible fallback synthesis, and `force_execution` testing bypasses.
 - **Hermes Gateway Resilience**: Standardized token authentication, configurable execution timeouts (`HERMES_REQUEST_TIMEOUT = 120s`), and automated action deduplication.
+
+### 9. Core Foundations, Modular App Settings & Multi-Language Engine (`apps.core`)
+- **Abstract Base Models**:
+  - `TimeStampedModel`: Standardized indexed `created_at` and `updated_at`.
+  - `UUIDModel`: Distributed, non-enumerable `id = UUIDField(primary_key=True, default=uuid.uuid4)`.
+  - `SoftDeleteModel`: Paranoid soft-deletion model with dual managers (`objects.alive()` vs `all_objects`) and `.restore()` method.
+  - `AuditableModel`: Contextvars-driven request user tracking auto-populating `created_by` and `updated_by`.
+- **Odoo-Style Modular Application Settings Framework**:
+  - **Declarative App Registration**: Each app defines its settings in `conf.py` using `@register_settings_group` with typed definitions (`int`, `str`, `float`, `bool`, `choice`, `secret`, `json`).
+  - **Tamper-Proof Secret Encryption**: Dedicated `crypto.py` utilities encrypting and signing sensitive credentials with masking in the admin UI.
+  - **High-Speed Dual-Layer Resolution**: `get_setting("app.KEY", default=...)` with sub-millisecond Redis caching, database persistence, and automatic cache invalidation.
+  - **Unified Settings Hub**: Single-screen configuration dashboard in Django Admin with categorized app sidebar navigation.
+- **Bilingual Multi-Language Engine (English / Arabic)**:
+  - Full i18n & l10n pipeline via `LocaleMiddleware`, compiled `.mo` catalogs, and native Arabic RTL typography.
+  - User profile `preferred_language` on `Profile` model with dynamic admin language switcher.
+
