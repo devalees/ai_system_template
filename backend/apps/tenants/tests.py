@@ -261,3 +261,84 @@ class TenantMiddlewareTests(TestCase):
         # Response should pass through without 403
         self.assertEqual(response, request)
 
+
+from django.db import connection, models
+from apps.core.models import UUIDModel, SoftDeleteModel
+from apps.tenants.base_models import TenantAwareModel
+from apps.tenants.context import tenant_context, bypass_tenant_isolation
+
+
+class ConcreteTenantItem(UUIDModel, TenantAwareModel, SoftDeleteModel):
+    """Concrete model created specifically to verify TenantAwareModel."""
+    title = models.CharField(max_length=100)
+
+    class Meta:
+        app_label = "tenants"
+
+
+class TenantAwareModelTests(TestCase):
+    """Verify row-level tenant isolation, auto-population, and soft delete."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        with connection.schema_editor() as editor:
+            editor.create_model(ConcreteTenantItem)
+
+    @classmethod
+    def tearDownClass(cls):
+        with connection.schema_editor() as editor:
+            editor.delete_model(ConcreteTenantItem)
+        super().tearDownClass()
+
+    def setUp(self):
+        self.org_a = Organization.objects.create(name="Org A", slug="org-a")
+        self.org_b = Organization.objects.create(name="Org B", slug="org-b")
+
+    def test_auto_populate_organization_from_context(self):
+        with tenant_context(self.org_a):
+            item = ConcreteTenantItem.objects.create(title="Document A")
+            self.assertEqual(item.organization, self.org_a)
+
+    def test_row_level_tenant_query_scoping(self):
+        with tenant_context(self.org_a):
+            ConcreteTenantItem.objects.create(title="Alpha Doc")
+
+        with tenant_context(self.org_b):
+            ConcreteTenantItem.objects.create(title="Beta Doc")
+
+        # In Org A context, only Alpha Doc should be visible
+        with tenant_context(self.org_a):
+            items_a = ConcreteTenantItem.objects.all()
+            self.assertEqual(items_a.count(), 1)
+            self.assertEqual(items_a.first().title, "Alpha Doc")
+
+        # In Org B context, only Beta Doc should be visible
+        with tenant_context(self.org_b):
+            items_b = ConcreteTenantItem.objects.all()
+            self.assertEqual(items_b.count(), 1)
+            self.assertEqual(items_b.first().title, "Beta Doc")
+
+    def test_soft_delete_with_tenant_manager(self):
+        with tenant_context(self.org_a):
+            item = ConcreteTenantItem.objects.create(title="Trashable")
+            self.assertEqual(ConcreteTenantItem.objects.count(), 1)
+
+            # Soft delete
+            item.delete()
+            self.assertEqual(ConcreteTenantItem.objects.count(), 0)
+
+            # Unfiltered all_objects still contains it
+            self.assertEqual(ConcreteTenantItem.all_objects.count(), 1)
+
+    def test_bypass_tenant_isolation_shows_all_records(self):
+        with tenant_context(self.org_a):
+            ConcreteTenantItem.objects.create(title="Global 1")
+
+        with tenant_context(self.org_b):
+            ConcreteTenantItem.objects.create(title="Global 2")
+
+        with bypass_tenant_isolation():
+            self.assertEqual(ConcreteTenantItem.objects.count(), 2)
+
+
