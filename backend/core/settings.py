@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'django_celery_beat',
 
     # Template Local Apps
     'apps.integration',
@@ -140,3 +141,12 @@ REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 # Inter-Service Integrations
 HERMES_GATEWAY_URL = os.getenv('HERMES_GATEWAY_URL', 'http://hermes:8642')
 HERMES_API_KEY = os.getenv('API_SERVER_KEY', '')
+
+# Celery & Celery Beat Configuration
+CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'

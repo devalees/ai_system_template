@@ -44,8 +44,8 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-      - ../agent_service/profiles:/app/agent_profiles:ro
-      - ../agent_service/data/profiles:/app/hermes_runtime_profiles:ro
+      - ../agent_service/profiles:/app/agent_profiles:rw
+      - ../agent_service/data/profiles:/app/hermes_runtime_profiles:rw
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     extra_hosts:
@@ -61,6 +61,56 @@ services:
       sh -c "python manage.py migrate &&
              python manage.py init_admin &&
              python manage.py runserver 0.0.0.0:8000"
+    networks:
+      - backend_network
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: django-template-celery-worker
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ../agent_service/profiles:/app/agent_profiles:rw
+      - ../agent_service/data/profiles:/app/hermes_runtime_profiles:rw
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    command: celery -A core worker -l info
+    networks:
+      - backend_network
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: django-template-celery-beat
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    command: celery -A core beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     networks:
       - backend_network
 
