@@ -30,10 +30,17 @@ class HandshakeLog(models.Model):
         return f"{self.agent_id} ({self.status}) @ {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
-class AgentProfile(models.Model):
+class Profile(models.Model):
     """
-    Registry of configured Hermes Agent Profiles (digital employees).
+    Unified User Profile attached 1-to-1 to Django's auth.User.
+    Accommodates human staff, autonomous AI agent service accounts, and external clients.
     """
+    USER_TYPE_CHOICES = [
+        ('human', 'Human User / Staff'),
+        ('agent', 'AI Agent Service Account'),
+        ('client', 'External Client / Customer'),
+    ]
+
     ROLE_CHOICES = [
         ('orchestrator', 'Orchestrator / Chief of Staff'),
         ('finance', 'Finance & Cost Control'),
@@ -52,9 +59,38 @@ class AgentProfile(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=64, unique=True, help_text="Hermes profile slug (e.g., cost_controller)")
-    display_name = models.CharField(max_length=120)
-    role = models.CharField(max_length=60, choices=ROLE_CHOICES, default='general')
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='profile',
+        help_text="Underlying Django auth.User."
+    )
+    is_agent = models.BooleanField(
+        default=False,
+        help_text="Designates whether this user operates as an AI Agent."
+    )
+    user_type = models.CharField(
+        max_length=20,
+        choices=USER_TYPE_CHOICES,
+        default='human',
+        help_text="User classification across the ecosystem."
+    )
+    name = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text="Profile identifier / alias."
+    )
+    hermes_profile_name = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text="Hermes engine profile folder/slug (e.g., cost_controller)."
+    )
+    display_name = models.CharField(max_length=120, blank=True)
+    role = models.CharField(max_length=60, choices=ROLE_CHOICES, default='general', blank=True)
     description = models.TextField(blank=True)
     model_name = models.CharField(max_length=120, default='google/gemini-2.5-flash')
     provider = models.CharField(max_length=60, default='openrouter')
@@ -64,25 +100,35 @@ class AgentProfile(models.Model):
         default='medium',
         help_text="Reasoning/thinking effort level passed to Hermes Agent runtime (none, low, medium, high, max).",
     )
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='agent_profile',
-        help_text="Underlying Django service account / bot user for RBAC and API authentication."
-    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['name']
-        verbose_name = 'Agent Profile'
-        verbose_name_plural = 'Agent Profiles'
+        ordering = ['user__username', 'created_at']
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
+
+    def save(self, *args, **kwargs):
+        if not self.hermes_profile_name and self.name:
+            self.hermes_profile_name = self.name
+        if not self.name:
+            self.name = self.hermes_profile_name or (self.user.username if self.user else '')
+        if not self.display_name:
+            self.display_name = self.name.replace('_', ' ').title() if self.name else ''
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.display_name} ({self.name})"
+        label = self.display_name or (self.user.username if self.user else str(self.id))
+        if self.is_agent:
+            return f"🤖 {label} ({self.hermes_profile_name or self.name or 'Agent'})"
+        return f"👤 {label} ({self.get_user_type_display()})"
+
+
+# Backward-compatible alias
+AgentProfile = Profile
+User.agent_profile = property(lambda u: getattr(u, 'profile', None))
+
 
 
 class SpendReport(models.Model):
