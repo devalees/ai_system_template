@@ -553,7 +553,7 @@ Centralized notification dispatcher connecting human users, administrative teams
 - [x] **Sub-task 3: Celery Asynchronous Email & Webhook Tasks** - COMPLETED (Commit: `fe775e2`)
 - [x] **Sub-task 4: REST API Endpoints (Inbox, Mark-as-Read, Unread Count)** - COMPLETED (Commit: `a4df246`)
 - [x] **Sub-task 5: Automated Testing & Verification (163 Tests Passing)** - COMPLETED (Commit: `a4df246`)
-- [x] **Sub-task 6: LLM Wiki & Architecture Synchronization** - COMPLETED (Commit: `docs`)
+- [x] **Sub-task 6: LLM Wiki & Architecture Synchronization** - COMPLETED (Commit: `eb0963e`)
 
 ---
 
