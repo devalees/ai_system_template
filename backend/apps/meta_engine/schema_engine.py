@@ -190,6 +190,17 @@ class DynamicSchemaEngine:
             attrs["is_deleted"] = models.BooleanField(default=False, db_index=True)
             attrs["deleted_at"] = models.DateTimeField(null=True, blank=True)
 
+        # 4. Multi-Tenant Isolation Column
+        if getattr(meta_model, "is_tenant_aware", False):
+            attrs["organization"] = models.ForeignKey(
+                "tenants.Organization",
+                on_delete=models.CASCADE,
+                null=True,
+                blank=True,
+                db_index=True,
+                related_name="+",
+            )
+
         # 4. Custom User-Defined MetaFields
         if include_user_fields and meta_model.pk:
             for meta_field in meta_model.fields.all():

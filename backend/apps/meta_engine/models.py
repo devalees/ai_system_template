@@ -240,6 +240,12 @@ class MetaModel(UUIDModel, AuditableModel):
         verbose_name=_("Supports Soft Delete"),
         help_text=_("If enabled, instances support paranoid soft deletion via SoftDeleteModel.")
     )
+    is_tenant_aware = models.BooleanField(
+        default=True,
+        db_index=True,
+        verbose_name=_("Is Tenant Aware"),
+        help_text=_("Enforces row-level multi-tenant isolation scoped to an Organization/Workspace.")
+    )
     is_active = models.BooleanField(
         default=True,
         verbose_name=_("Is Active"),

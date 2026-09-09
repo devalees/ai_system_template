@@ -27,6 +27,8 @@ class TenantAwareModel(AuditableModel):
     organization = models.ForeignKey(
         "tenants.Organization",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="%(app_label)s_%(class)s_set",
         db_index=True,
         verbose_name=_("Organization"),
@@ -45,6 +47,15 @@ class TenantAwareModel(AuditableModel):
         """
         if not hasattr(self, "organization") or self.organization_id is None:
             active_tenant = get_current_tenant()
+            if active_tenant is None:
+                try:
+                    from apps.tenants.models import Organization
+                    active_tenant = (
+                        Organization.objects.filter(slug="default", is_active=True).first()
+                        or Organization.objects.filter(is_active=True).first()
+                    )
+                except Exception:
+                    pass
             if active_tenant is not None:
                 self.organization = active_tenant
         super().save(*args, **kwargs)

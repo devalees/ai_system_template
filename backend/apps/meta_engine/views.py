@@ -176,6 +176,21 @@ class UniversalEntityGatewayView(APIView):
             extra_save_kwargs["created_by"] = request.user
             extra_save_kwargs["updated_by"] = request.user
 
+        if getattr(meta_model, "is_tenant_aware", False):
+            from apps.tenants.context import get_current_tenant
+            active_tenant = get_current_tenant()
+            if not active_tenant:
+                try:
+                    from apps.tenants.models import Organization
+                    active_tenant = (
+                        Organization.objects.filter(slug="default", is_active=True).first()
+                        or Organization.objects.filter(is_active=True).first()
+                    )
+                except Exception:
+                    pass
+            if active_tenant:
+                extra_save_kwargs["organization"] = active_tenant
+
         instance = serializer.save(**extra_save_kwargs)
         return Response(serializer_cls(instance).data, status=status.HTTP_201_CREATED)
 

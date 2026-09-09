@@ -6,11 +6,12 @@ and explicit bypass managers for cross-tenant operations.
 """
 
 from django.db import models
+from apps.core.models import SoftDeleteQuerySet
 from apps.tenants.context import get_current_tenant, is_tenant_isolation_bypassed
 
 
-class TenantQuerySet(models.QuerySet):
-    """QuerySet that supports explicit or implicit tenant scoping."""
+class TenantQuerySet(SoftDeleteQuerySet):
+    """QuerySet that supports explicit or implicit tenant scoping with soft-delete support."""
 
     def filter_by_tenant(self, tenant=None):
         """Explicitly scope this queryset to a specific organization or current tenant."""
@@ -34,7 +35,7 @@ class TenantManager(models.Manager):
 
         # Exclude soft-deleted records if model supports soft deletion
         if hasattr(self.model, "is_deleted"):
-            qs = qs.filter(is_deleted=False)
+            qs = qs.alive()
 
         # Apply tenant isolation unless explicitly bypassed
         if not is_tenant_isolation_bypassed():
@@ -43,6 +44,24 @@ class TenantManager(models.Manager):
                 qs = qs.filter(organization=tenant)
 
         return qs
+
+    def dead(self):
+        """Return soft-deleted records, optionally scoped to tenant."""
+        qs = TenantQuerySet(self.model, using=self._db).dead()
+        if not is_tenant_isolation_bypassed():
+            tenant = get_current_tenant()
+            if tenant is not None:
+                qs = qs.filter(organization=tenant)
+        return qs
+
+    def alive(self):
+        return self.get_queryset()
+
+    def restore(self):
+        return self.get_queryset().restore()
+
+    def hard_delete(self):
+        return self.get_queryset().hard_delete()
 
 
 class TenantAllManager(models.Manager):

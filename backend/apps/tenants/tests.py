@@ -342,3 +342,68 @@ class TenantAwareModelTests(TestCase):
             self.assertEqual(ConcreteTenantItem.objects.count(), 2)
 
 
+class DynamicModelTenantTests(TestCase):
+    """Verify that dynamic models compiled via MetaEngine support full multi-tenancy."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        from apps.meta_engine.models import MetaModel, MetaField
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+        from apps.meta_engine.model_factory import DynamicModelFactory
+
+        cls.meta_model = MetaModel.objects.create(
+            name="tenant_task",
+            label="Tenant Task",
+            app_label="tenants_test",
+            table_name="app_test_tenant_task",
+            is_tenant_aware=True,
+            is_soft_delete=True,
+            is_auditable=True,
+        )
+        MetaField.objects.create(
+            model=cls.meta_model,
+            name="title",
+            field_type="char",
+            label="Title",
+        )
+        DynamicSchemaEngine.create_table(cls.meta_model)
+        cls.dynamic_cls = DynamicModelFactory.get_or_create_model(cls.meta_model, force_reload=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+        DynamicSchemaEngine.drop_table(cls.meta_model)
+        cls.meta_model.delete()
+        super().tearDownClass()
+
+    def setUp(self):
+        self.org_x = Organization.objects.create(name="Org X", slug="org-x")
+        self.org_y = Organization.objects.create(name="Org Y", slug="org-y")
+
+    def test_dynamic_model_inherits_tenant_aware_model(self):
+        from apps.tenants.base_models import TenantAwareModel
+        self.assertTrue(issubclass(self.dynamic_cls, TenantAwareModel))
+        # Verify organization field is present on dynamic model
+        field_names = [f.name for f in self.dynamic_cls._meta.fields]
+        self.assertIn("organization", field_names)
+
+    def test_dynamic_model_row_level_isolation(self):
+        with tenant_context(self.org_x):
+            self.dynamic_cls.objects.create(title="Task for Org X")
+
+        with tenant_context(self.org_y):
+            self.dynamic_cls.objects.create(title="Task for Org Y")
+
+        with tenant_context(self.org_x):
+            tasks_x = self.dynamic_cls.objects.all()
+            self.assertEqual(tasks_x.count(), 1)
+            self.assertEqual(tasks_x.first().title, "Task for Org X")
+
+        with tenant_context(self.org_y):
+            tasks_y = self.dynamic_cls.objects.all()
+            self.assertEqual(tasks_y.count(), 1)
+            self.assertEqual(tasks_y.first().title, "Task for Org Y")
+
+
+
