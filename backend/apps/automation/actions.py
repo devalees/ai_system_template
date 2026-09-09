@@ -189,7 +189,8 @@ def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
-    timeout_seconds = getattr(settings, 'HERMES_REQUEST_TIMEOUT', 120)
+    from apps.core.config import get_setting
+    timeout_seconds = get_setting('automation.HERMES_REQUEST_TIMEOUT', default=getattr(settings, 'HERMES_REQUEST_TIMEOUT', 120))
     try:
         resp = requests.post(f"{gateway_url}/v1/chat/completions", json=payload, headers=headers, timeout=(10, timeout_seconds))
         is_error = resp.status_code >= 400

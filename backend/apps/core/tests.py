@@ -366,6 +366,30 @@ class MultiLanguageI18nTests(TestCase):
         self.assertEqual(refetched.preferred_language, "ar")
 
 
+class AppConfDiscoveryTests(TestCase):
+    """Test suite verifying auto-discovery of app configurations across installed apps."""
+
+    def test_automation_and_integration_conf_discovered(self):
+        from apps.core.config import get_setting
+        from apps.core.settings_registry import settings_registry
+
+        settings_registry.ensure_discovered()
+
+        automation_group = settings_registry.get_group("automation")
+        self.assertIsNotNone(automation_group)
+        self.assertEqual(automation_group.verbose_name, "Automation Engine")
+
+        integration_group = settings_registry.get_group("integration")
+        self.assertIsNotNone(integration_group)
+        self.assertEqual(integration_group.verbose_name, "AI Agents & Hermes")
+
+        # Test runtime resolutions
+        self.assertEqual(get_setting("automation.HERMES_REQUEST_TIMEOUT"), 120)
+        self.assertEqual(get_setting("integration.DEFAULT_PROVIDER"), "openrouter")
+        self.assertEqual(get_setting("integration.DEFAULT_MODEL"), "google/gemini-2.5-flash")
+
+
+
 
 
 
