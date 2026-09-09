@@ -6,10 +6,9 @@ from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 
-from .models import AutomationRule, AutomationLog
-from .forms import AutomationRuleAdminForm
+from .models import AutomationTrigger, AutomationAction, AutomationLog, AutomationRule
+from .forms import AutomationTriggerAdminForm, AutomationActionAdminForm
 from .tasks import execute_automation_rule_task
 
 from django_celery_beat.models import (
@@ -28,18 +27,45 @@ for beat_model in (ClockedSchedule, CrontabSchedule, IntervalSchedule, SolarSche
         pass
 
 
+class AutomationActionInline(admin.StackedInline):
+    """
+    Inline editor for sequenced AutomationActions inside the AutomationTrigger change form.
+    Enables configuring 1-to-N action pipelines directly on the trigger event.
+    """
+    model = AutomationAction
+    form = AutomationActionAdminForm
+    extra = 1
+    fk_name = 'trigger'
+    fields = (
+        ('name', 'sequence', 'is_active'),
+        'description',
+        ('target_model', 'target_operation'),
+        'field_mappings',
+        ('action_category', 'action_type'),
+        'action_params',
+    )
+    ordering = ('sequence', 'created_at')
+
+
 class AutomationLogInline(admin.TabularInline):
-    """Inline view of recent execution logs inside the AutomationRule change form."""
+    """Inline view of recent execution logs inside the AutomationTrigger change form."""
     model = AutomationLog
     extra = 0
+    fk_name = 'trigger'
     can_delete = False
     max_num = 15
-    fields = ('executed_at', 'status_badge', 'trigger_source', 'duration_display', 'error_snippet')
-    readonly_fields = ('executed_at', 'status_badge', 'trigger_source', 'duration_display', 'error_snippet')
+    fields = ('executed_at', 'status_badge', 'action_display', 'trigger_source', 'duration_display', 'error_snippet')
+    readonly_fields = ('executed_at', 'status_badge', 'action_display', 'trigger_source', 'duration_display', 'error_snippet')
     ordering = ('-executed_at',)
 
     def has_add_permission(self, request, obj=None):
         return False
+
+    def action_display(self, obj):
+        if obj.action:
+            return f"[{obj.action.sequence}] {obj.action.name}"
+        return "-"
+    action_display.short_description = "Action"
 
     def status_badge(self, obj):
         if obj.status == 'success':
@@ -60,14 +86,13 @@ class AutomationLogInline(admin.TabularInline):
     error_snippet.short_description = "Error Note"
 
 
-@admin.register(AutomationRule)
-class AutomationRuleAdmin(admin.ModelAdmin):
+@admin.register(AutomationTrigger)
+class AutomationTriggerAdmin(admin.ModelAdmin):
     """
-    Control Plane for Automation Rules with quick toggles, Run Now dispatch,
-    and embedded execution audit logs.
+    Control Plane for Automation Triggers (WHEN events occur) with sequenced Action pipelines.
     """
-    form = AutomationRuleAdminForm
-    inlines = [AutomationLogInline]
+    form = AutomationTriggerAdminForm
+    inlines = [AutomationActionInline, AutomationLogInline]
 
     class Media:
         js = (
@@ -79,18 +104,18 @@ class AutomationRuleAdmin(admin.ModelAdmin):
         'scope_badge',
         'trigger_badge',
         'execution_mode',
-        'action_badge',
+        'actions_summary',
         'status_toggle',
-        'run_count',
-        'last_run_at',
+        'trigger_count',
+        'last_triggered_at',
         'run_now_action',
     )
-    list_filter = ('is_system', 'trigger_type', 'target_operation', 'action_category', 'is_active', 'execution_mode')
-    search_fields = ('name', 'description', 'action_type', 'trigger_model', 'target_model')
-    readonly_fields = ('run_count', 'last_run_at', 'next_run_at', 'created_at', 'updated_at')
+    list_filter = ('is_system', 'trigger_type', 'is_active', 'execution_mode')
+    search_fields = ('name', 'description', 'trigger_model')
+    readonly_fields = ('trigger_count', 'last_triggered_at', 'created_at', 'updated_at')
 
     fieldsets = (
-        ("Rule Identification", {
+        ("Trigger Event Identification", {
             "fields": ("name", "description", "is_active", "is_system")
         }),
         ("Trigger Configuration (Source Event)", {
@@ -113,15 +138,6 @@ class AutomationRuleAdmin(admin.ModelAdmin):
             ),
             "classes": ("collapse",)
         }),
-        ("Target Model Record Operations & Field Mapping (Odoo-Style)", {
-            "description": "Execute automated CRUD record operations on a destination model with field mapping.",
-            "fields": (
-                "target_model",
-                "target_operation",
-                "field_mappings",
-            ),
-            "classes": ("collapse",)
-        }),
         ("Time-Based Scheduling (Celery Beat)", {
             "description": "Configures periodic intervals or exact one-shot execution timestamps via Celery Beat.",
             "fields": (
@@ -132,21 +148,13 @@ class AutomationRuleAdmin(admin.ModelAdmin):
             ),
             "classes": ("collapse",)
         }),
-        ("Action Execution & Service Target", {
-            "description": "Choose which service or agent to execute when triggered.",
-            "fields": (
-                "action_category",
-                "action_type",
-                "action_params",
-            )
-        }),
         ("Execution Metrics & State", {
-            "fields": ("run_count", "last_run_at", "next_run_at", "created_at", "updated_at"),
+            "fields": ("trigger_count", "last_triggered_at", "created_at", "updated_at"),
             "classes": ("collapse",)
         }),
     )
 
-    actions = ['activate_rules', 'pause_rules', 'trigger_rules_now']
+    actions = ['activate_triggers', 'pause_triggers', 'trigger_now']
 
     def has_delete_permission(self, request, obj=None):
         if obj and obj.is_system:
@@ -154,42 +162,42 @@ class AutomationRuleAdmin(admin.ModelAdmin):
         return super().has_delete_permission(request, obj)
 
     def delete_queryset(self, request, queryset):
-        system_rules = queryset.filter(is_system=True)
-        if system_rules.exists():
-            names = ", ".join(system_rules.values_list('name', flat=True))
+        system_triggers = queryset.filter(is_system=True)
+        if system_triggers.exists():
+            names = ", ".join(system_triggers.values_list('name', flat=True))
             messages.warning(
                 request,
-                f"Protected system automation actions cannot be deleted: {names}."
+                f"Protected system automation triggers cannot be deleted: {names}."
             )
         non_system = queryset.filter(is_system=False)
-        for rule in non_system:
-            rule.delete()
+        for trigger in non_system:
+            trigger.delete()
         if non_system.exists():
-            messages.success(request, f"Successfully deleted {non_system.count()} custom automation rule(s).")
+            messages.success(request, f"Successfully deleted {non_system.count()} custom automation trigger(s).")
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path('<int:rule_id>/run-now/', self.admin_site.admin_view(self.run_now_view), name='automation_rule_run_now'),
+            path('<int:trigger_id>/run-now/', self.admin_site.admin_view(self.run_now_view), name='automation_trigger_run_now'),
         ]
         return custom_urls + urls
 
-    def run_now_view(self, request, rule_id):
-        """Allows executing a rule immediately on demand via Celery."""
-        rule = self.get_object(request, rule_id)
-        if not rule:
-            messages.error(request, f"Automation Rule #{rule_id} not found.")
-            return HttpResponseRedirect(reverse('admin:automation_automationrule_changelist'))
+    def run_now_view(self, request, trigger_id):
+        """Allows executing all actions for a trigger immediately on demand via Celery."""
+        trigger = self.get_object(request, trigger_id)
+        if not trigger:
+            messages.error(request, f"Automation Trigger #{trigger_id} not found.")
+            return HttpResponseRedirect(reverse('admin:automation_automationtrigger_changelist'))
 
         # Dispatch via Celery worker
-        async_res = execute_automation_rule_task.delay(rule.id, {"manual_trigger": True}, f"admin_run_now:{request.user.username}")
-        messages.success(request, f"▶ Automation Action '{rule.name}' queued to Celery worker (Task ID: {async_res.id}).")
-        return HttpResponseRedirect(reverse('admin:automation_automationrule_change', args=[rule.id]))
+        async_res = execute_automation_rule_task.delay(trigger.id, {"manual_trigger": True}, f"admin_run_now:{request.user.username}")
+        messages.success(request, f"▶ Automation Pipeline '{trigger.name}' queued to Celery worker (Task ID: {async_res.id}).")
+        return HttpResponseRedirect(reverse('admin:automation_automationtrigger_change', args=[trigger.id]))
 
     def run_now_action(self, obj):
-        url = reverse('admin:automation_rule_run_now', args=[obj.id])
+        url = reverse('admin:automation_trigger_run_now', args=[obj.id])
         return format_html(
-            '<a class="button" href="{}" style="background-color:#0d6efd; color:#ffffff; font-weight:bold; padding:3px 10px; border-radius:4px; text-decoration:none;">▶ Run Now</a>',
+            '<a class="button" href="{}" style="background-color:#0d6efd; color:#ffffff; font-weight:bold; padding:3px 10px; border-radius:4px; text-decoration:none;">▶ Run Pipeline</a>',
             url
         )
     run_now_action.short_description = "Execute"
@@ -224,7 +232,69 @@ class AutomationRuleAdmin(admin.ModelAdmin):
         return format_html('<code style="font-size:11px; padding:2px 6px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px;">{}</code>', label)
     trigger_badge.short_description = "Trigger"
 
-    def action_badge(self, obj):
+    def actions_summary(self, obj):
+        actions = list(obj.actions.filter(is_active=True).order_by('sequence'))
+        if not actions:
+            return format_html('<em>No Actions</em>')
+        badges = []
+        for act in actions:
+            badges.append(f'<span style="background-color:#0d6efd; color:#fff; padding:2px 6px; border-radius:8px; font-size:10px; margin-right:3px;">#{act.sequence} {act.name}</span>')
+        return format_html(" ".join(badges))
+    actions_summary.short_description = "Actions Pipeline"
+
+    @admin.action(description="🟢 Activate selected triggers")
+    def activate_triggers(self, request, queryset):
+        count = queryset.update(is_active=True)
+        for trigger in queryset:
+            trigger.save()
+        messages.success(request, f"{count} trigger(s) activated successfully.")
+
+    @admin.action(description="⏸️ Pause selected triggers")
+    def pause_triggers(self, request, queryset):
+        count = queryset.update(is_active=False)
+        for trigger in queryset:
+            trigger.save()
+        messages.success(request, f"{count} trigger(s) paused.")
+
+    @admin.action(description="▶ Dispatch selected pipelines now via Celery")
+    def trigger_now(self, request, queryset):
+        count = 0
+        for trigger in queryset:
+            execute_automation_rule_task.delay(trigger.id, {"manual_trigger": True}, f"admin_bulk_trigger:{request.user.username}")
+            count += 1
+        messages.success(request, f"Dispatched {count} pipeline(s) to Celery workers.")
+
+
+# Alias for backward compatibility
+AutomationRuleAdmin = AutomationTriggerAdmin
+
+
+@admin.register(AutomationAction)
+class AutomationActionAdmin(admin.ModelAdmin):
+    """
+    Dedicated view for inspecting and managing individual Automation Actions.
+    """
+    form = AutomationActionAdminForm
+    list_display = (
+        'name',
+        'trigger_link',
+        'sequence',
+        'target_badge',
+        'is_active',
+        'is_system',
+        'run_count',
+        'last_run_at',
+    )
+    list_filter = ('is_system', 'is_active', 'action_category', 'target_operation')
+    search_fields = ('name', 'description', 'target_model', 'action_type')
+    readonly_fields = ('run_count', 'last_run_at', 'created_at', 'updated_at')
+
+    def trigger_link(self, obj):
+        url = reverse('admin:automation_automationtrigger_change', args=[obj.trigger.id])
+        return format_html('<a href="{}"><strong>{}</strong></a>', url, obj.trigger.name)
+    trigger_link.short_description = "Trigger"
+
+    def target_badge(self, obj):
         cat_badges = {
             'hermes_agent': ('🤖 Hermes', '#0dcaf0', '#000'),
             'internal_app': ('🐍 Django', '#198754', '#fff'),
@@ -242,29 +312,7 @@ class AutomationRuleAdmin(admin.ModelAdmin):
             badges.append(f'<span style="background-color:{bg}; color:{fg}; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:bold; margin-right:4px;">{badge}</span> <strong>{obj.action_type}</strong>')
 
         return format_html(" ".join(badges) if badges else "<em>None</em>")
-    action_badge.short_description = "Action Target"
-
-    @admin.action(description="🟢 Activate selected rules")
-    def activate_rules(self, request, queryset):
-        count = queryset.update(is_active=True)
-        for rule in queryset:
-            rule.save()
-        messages.success(request, f"{count} rule(s) activated successfully.")
-
-    @admin.action(description="⏸️ Pause selected rules")
-    def pause_rules(self, request, queryset):
-        count = queryset.update(is_active=False)
-        for rule in queryset:
-            rule.save()
-        messages.success(request, f"{count} rule(s) paused.")
-
-    @admin.action(description="▶ Dispatch selected rules now via Celery")
-    def trigger_rules_now(self, request, queryset):
-        count = 0
-        for rule in queryset:
-            execute_automation_rule_task.delay(rule.id, {"manual_trigger": True}, f"admin_bulk_trigger:{request.user.username}")
-            count += 1
-        messages.success(request, f"Dispatched {count} rule(s) to Celery workers.")
+    target_badge.short_description = "Action Target"
 
 
 @admin.register(AutomationLog)
@@ -273,12 +321,13 @@ class AutomationLogAdmin(admin.ModelAdmin):
     list_display = (
         'executed_at',
         'status_badge',
-        'rule_link',
+        'trigger_link',
+        'action_display',
         'trigger_source',
         'duration_display',
     )
-    list_filter = ('status', 'rule', 'executed_at')
-    search_fields = ('trigger_source', 'error_message', 'rule__name')
+    list_filter = ('status', 'executed_at')
+    search_fields = ('trigger_source', 'error_message', 'trigger__name', 'action__name')
     readonly_fields = [f.name for f in AutomationLog._meta.fields]
 
     def has_add_permission(self, request):
@@ -287,12 +336,22 @@ class AutomationLogAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
 
-    def rule_link(self, obj):
-        if obj.rule:
-            url = reverse('admin:automation_automationrule_change', args=[obj.rule.id])
+    def trigger_link(self, obj):
+        if obj.trigger:
+            url = reverse('admin:automation_automationtrigger_change', args=[obj.trigger.id])
+            return format_html('<a href="{}"><strong>{}</strong></a>', url, obj.trigger.name)
+        elif obj.rule:
+            url = reverse('admin:automation_automationtrigger_change', args=[obj.rule.id])
             return format_html('<a href="{}"><strong>{}</strong></a>', url, obj.rule.name)
-        return "Ad-Hoc / Deleted Rule"
-    rule_link.short_description = "Rule"
+        return "Ad-Hoc / Deleted"
+    trigger_link.short_description = "Trigger"
+
+    def action_display(self, obj):
+        if obj.action:
+            url = reverse('admin:automation_automationaction_change', args=[obj.action.id])
+            return format_html('<a href="{}">#{} {}</a>', url, obj.action.sequence, obj.action.name)
+        return "-"
+    action_display.short_description = "Action"
 
     def status_badge(self, obj):
         if obj.status == 'success':

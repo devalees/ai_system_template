@@ -220,26 +220,28 @@ Phase 6 completed. Transitioning to Phase 7 (Decoupled Triggers & Universal Syst
 
 ---
 
-## Phase 7: Decoupled Triggers & Universal System Signal Reification (PENDING)
+## Phase 7: Decoupled Triggers & Universal System Signal Reification (IN_PROGRESS)
 
 ### 1. Objective & Scope
 Evolve the automation platform to a 1-to-N workflow pipeline architecture inspired by modern event-driven engines (Zapier, GitHub Actions, Odoo):
 - **Decoupled 1-to-N Models**: Split `AutomationRule` into `AutomationTrigger` ("WHEN & UNDER WHAT CONDITIONS") and `AutomationAction` ("WHAT TO DO"), supporting multiple sequenced actions (`sequence=10, 20...`) per trigger.
-- **Dual Execution Modes**: Support `sync` (in-process immediate execution for database invariants) and `async_celery` (background task execution for inference/webhooks).
+- **Unified Asynchronous Celery Execution**: All actions execute through Celery distributed workers, ensuring uniform background processing, Redis queueing, non-blocking HTTP requests, and standardized execution logs (`AutomationLog`).
 - **Universal System Signal Reification**: Reify core Django lifecycle routines (including `auth.User` ➔ `integration.Profile` creation) into system automation triggers and actions, guaranteeing 100% centralized observability in `AutomationLog`.
 - **Reactive Multi-Action Admin UI**: `AutomationTriggerAdmin` embedding `AutomationActionInline` to configure triggers and visual action pipelines on a unified screen.
 
 ### 2. Task Checklist & Progress
-- [ ] **Sub-task 1: Data Model Decomposition & Migration (`AutomationTrigger` & `AutomationAction`)** - PENDING
-- [ ] **Sub-task 2: Execution Engine Pipeline & Dual Execution Modes (`sync` vs `async_celery`)** - PENDING
-- [ ] **Sub-task 3: Celery Beat Scheduler & Task Dispatch Refactoring** - PENDING
-- [ ] **Sub-task 4: System Signal Reification (`User` ➔ `Profile` Synchronous Action & Seed Data)** - PENDING
+- [x] **Sub-task 1: Data Model Decomposition & Migration (`AutomationTrigger` & `AutomationAction`)** - COMPLETED
+- [/] **Sub-task 2: Execution Engine Pipeline & Unified Celery Task Dispatch** - IN PROGRESS
+- [ ] **Sub-task 3: Celery Beat Scheduler Refactoring & Trigger Synchronization** - PENDING
+- [ ] **Sub-task 4: System Signal Reification & Seed Data (`User` ➔ `Profile` & Core Workflows)** - PENDING
 - [ ] **Sub-task 5: Reactive Multi-Action Admin UI (`AutomationActionInline` & `admin.py`)** - PENDING
 - [ ] **Sub-task 6: Automated Testing & Empirical Verification (33+ Tests)** - PENDING
 - [ ] **Sub-task 7: Documentation & Architecture Synchronization** - PENDING
 
 ### 3. Key Decisions & Deviations (Phase 7)
-- *2026-09-09*: Initiated Phase 7 per user design feedback to decouple triggers from actions, enabling 1-to-N reusable execution pipelines and centralizing all system signals (like Profile creation) into the audit log.
+- *2026-09-09*: Initiated Phase 7 per user design feedback to decouple triggers from actions, enabling 1-to-N reusable execution pipelines and centralizing all system signals into the audit log.
+- *2026-09-09*: Selected unified Asynchronous Celery execution for all automated actions per user directive, eliminating `sync` mode complexity and standardizing all background processing and logs through Celery distributed workers.
+- *2026-09-09*: Successfully decomposed `AutomationRule` into `AutomationTrigger` and `AutomationAction` (migration `0004_decouple_triggers_and_actions.py`), seamlessly migrating all existing rules and logs without data loss.
 
 ### 4. Current Focus
-Awaiting user confirmation of the Phase 7 implementation plan to begin Sub-task 1.
+Sub-task 2: Execution Engine Pipeline & Unified Celery Task Dispatch (`apps.automation.engine.py` & `tasks.py`).
