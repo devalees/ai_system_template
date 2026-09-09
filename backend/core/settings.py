@@ -35,6 +35,7 @@ INSTALLED_APPS = [
 
     # Template Local Apps
     'apps.integration',
+    'apps.automation',
 ]
 
 MIDDLEWARE = [
