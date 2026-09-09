@@ -361,12 +361,12 @@ Provide direct 1-step test execution mechanisms (`▶ Run Pipeline Now` and `▶
   - Dispatches tasks to the Celery worker queue immediately, displaying the Celery Task ID in admin success notifications and logging full audit entries in `AutomationLog`.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Change Form Templates with Object-Tools Actions (`templates/admin/automation/...`)** - COMPLETED
-- [x] **Sub-task 2: Rich Execution Context Builder & Admin URL Endpoints (`apps.automation.admin.py`)** - COMPLETED
-- [x] **Sub-task 3: Reactive Submit-Row & Inline Button Injection (`automation_reactive_admin.js`)** - COMPLETED
-- [x] **Sub-task 4: Engine Force-Execution & Inactive Bypass (`apps.automation.engine.py`)** - COMPLETED
-- [x] **Sub-task 5: Automated Testing & Verification (49 Tests Passing)** - COMPLETED
-- [x] **Sub-task 6: Documentation & Architecture Synchronization** - COMPLETED
+- [x] **Sub-task 1: Change Form Templates with Object-Tools Actions (`templates/admin/automation/...`)** - COMPLETED (Commit: `15bd454`)
+- [x] **Sub-task 2: Rich Execution Context Builder & Admin URL Endpoints (`apps.automation.admin.py`)** - COMPLETED (Commit: `15bd454`)
+- [x] **Sub-task 3: Reactive Submit-Row & Inline Button Injection (`automation_reactive_admin.js`)** - COMPLETED (Commit: `15bd454`)
+- [x] **Sub-task 4: Engine Force-Execution & Inactive Bypass (`apps.automation.engine.py`)** - COMPLETED (Commit: `15bd454`)
+- [x] **Sub-task 5: Automated Testing & Verification (49 Tests Passing)** - COMPLETED (Commit: `15bd454`)
+- [x] **Sub-task 6: Documentation & Architecture Synchronization** - COMPLETED (Commit: `15bd454`)
 
 ### 3. Key Decisions & Deviations (Phase 11)
 - *2026-09-09*: Implemented `build_execution_context` in `admin.py` to automatically bridge the gap between trigger models and action prompts, pulling live records or falling back to clean defaults so operators never need to leave the page or create dummy records in other apps.
