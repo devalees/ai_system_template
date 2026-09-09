@@ -501,7 +501,7 @@ Implement multi-tenant data isolation and workspace management to support B2B Sa
 - [x] **Sub-task 4: Multi-Tenant Declarative Engine Integration (`MetaModel`, Dynamic Factory & Schemas)** - COMPLETED (Commit: `240d64a`)
 - [x] **Sub-task 5: Organization Admin, Member Management & REST API Endpoints** - COMPLETED (Commit: `86de7af`)
 - [x] **Sub-task 6: Comprehensive Automated Testing & End-to-End Verification** - COMPLETED (Commit: `7162d9b`)
-- [x] **Sub-task 7: LLM Wiki & Architecture Synchronization** - COMPLETED
+- [x] **Sub-task 7: LLM Wiki & Architecture Synchronization** - COMPLETED (Commit: `76d5e86`)
 
 ### 3. Key Decisions & Deviations (Phase 14)
 - *2026-09-09*: Selected **Row-Level Shared-Database Multi-Tenancy** over schema-per-tenant or multi-database routing. Row-level partitioning eliminates DDL migration bottlenecks, connection pool starvation, and complex connection routing while ensuring strict query isolation.
