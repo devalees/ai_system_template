@@ -191,10 +191,20 @@ def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         resp = requests.post(f"{gateway_url}/v1/chat/completions", json=payload, headers=headers, timeout=30)
+        is_error = resp.status_code >= 400
+        res_data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text[:300]
+        err_detail = ""
+        if is_error:
+            if isinstance(res_data, dict):
+                err_detail = res_data.get("error", {}).get("message") or str(res_data.get("error")) or f"HTTP {resp.status_code}"
+            else:
+                err_detail = str(res_data)
+
         return {
-            "status": "dispatched",
+            "status": "error" if is_error else "dispatched",
             "http_status": resp.status_code,
-            "response": resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text[:300],
+            "response": res_data,
+            "error": err_detail,
         }
     except Exception as exc:
         return {

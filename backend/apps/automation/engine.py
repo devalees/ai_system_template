@@ -486,7 +486,9 @@ class AutomationEngine:
                     from .actions import dispatch_hermes_prompt_action
                     context['profile'] = profile_slug
                     action_result = dispatch_hermes_prompt_action(context)
-                    success = action_result.get('status') != 'error'
+                    success = action_result.get('status') not in ('error', 'failed')
+                    if not success and not error_msg:
+                        error_msg = action_result.get('error') or f"Hermes Gateway returned HTTP {action_result.get('http_status')}"
                 else:
                     action_def = ServiceRegistry.get_action(action_type)
                     if not action_def or not action_def.handler:

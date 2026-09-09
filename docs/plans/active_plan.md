@@ -373,6 +373,7 @@ Provide direct 1-step test execution mechanisms (`▶ Run Pipeline Now` and `▶
 - *2026-09-09*: Added `force_execution` flag to allow on-demand testing of draft or paused triggers/actions from the admin UI.
 - *2026-09-09*: Implemented custom change form templates (`change_form.html`) and reactive `.submit-row` injection so the execute button is readily accessible both at the top and bottom of the page.
 - *2026-09-09*: Added `AutomationDirectExecutionTests` in `tests.py` covering context extraction, fallback defaults, redirect endpoints, and HTML button formatters. Test suite expanded to 49/49 passing unit tests.
+- *2026-09-09*: Resolved Hermes Agent Gateway authentication issue (HTTP 401 in AutomationLog #7). Synchronized `API_SERVER_KEY` and `HERMES_API_KEY` across backend environment and settings, updated `actions.py` and `engine.py` to flag HTTP 4xx/5xx responses as 'failed', and verified successful end-to-end execution in AutomationLog #9 (12.8s runtime, full multi-profile token & budget audit generated).
 
 ### 4. Current Focus
-Phase 11 complete and empirically validated. All 49 unit tests passing.
+Phase 11 complete, authenticated end-to-end with Hermes Agent runtime, and empirically validated. All 49 unit tests passing.

@@ -141,7 +141,7 @@ REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 
 # Inter-Service Integrations
 HERMES_GATEWAY_URL = os.getenv('HERMES_GATEWAY_URL', 'http://hermes:8642')
-HERMES_API_KEY = os.getenv('API_SERVER_KEY', '')
+HERMES_API_KEY = os.getenv('HERMES_API_KEY') or os.getenv('API_SERVER_KEY', '')
 
 # Celery & Celery Beat Configuration
 CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
