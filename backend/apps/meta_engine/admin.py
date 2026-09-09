@@ -7,6 +7,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
+    SystemModule,
     MetaModel,
     MetaField,
     MetaAction,
@@ -217,3 +218,35 @@ class MetaReportAdmin(admin.ModelAdmin):
     list_filter = ("report_type", "paper_format", "orientation", "is_default", "is_active")
     search_fields = ("name", "slug", "model__name")
     readonly_fields = ("id", "created_by", "updated_by", "created_at", "updated_at")
+
+
+@admin.register(SystemModule)
+class SystemModuleAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "app_id",
+        "version",
+        "category",
+        "status_badge",
+        "author",
+        "installed_at",
+    )
+    list_filter = ("status", "category")
+    search_fields = ("name", "app_id", "description", "author")
+    readonly_fields = ("id", "created_by", "updated_by", "created_at", "updated_at", "installed_at")
+
+    def status_badge(self, obj):
+        colors = {
+            "installed": "#10b981",
+            "uninstalled": "#6b7280",
+            "to_upgrade": "#f59e0b",
+            "error": "#ef4444",
+        }
+        color = colors.get(obj.status, "#6b7280")
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 9999px; font-weight: bold; font-size: 0.75rem;">{}</span>',
+            color,
+            obj.get_status_display()
+        )
+    status_badge.short_description = _("Status")
+

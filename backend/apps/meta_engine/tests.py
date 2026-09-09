@@ -337,3 +337,108 @@ class DynamicModelFactoryTests(TransactionTestCase):
         self.assertEqual(ContractClass.objects.count(), 1)
 
         meta_model.delete()
+
+
+class ModularAppRegistryTests(TransactionTestCase):
+    """
+    Test suite for Sub-task 5: Modular App Discovery, Topological Dependency
+    Resolution, and Declarative Multi-Pass Package Installation.
+    """
+
+    def test_manifest_discovery_and_sync(self):
+        """Verify AppManifestReader scans directory packages and creates SystemModule records."""
+        from apps.meta_engine.manifest_reader import AppManifestReader
+        from apps.meta_engine.models import SystemModule
+
+        synced = AppManifestReader.sync_discovered_modules()
+        app_ids = [m.app_id for m in synced]
+        self.assertIn("contacts", app_ids)
+        self.assertIn("crm", app_ids)
+
+        contacts_mod = SystemModule.objects.get(app_id="contacts")
+        self.assertEqual(contacts_mod.status, "uninstalled")
+        self.assertEqual(contacts_mod.category, "Operations")
+
+        crm_mod = SystemModule.objects.get(app_id="crm")
+        self.assertEqual(crm_mod.dependencies, ["contacts"])
+
+    def test_dependency_resolution_order_and_errors(self):
+        """Verify topological sort, cycle detection, and missing dependency errors."""
+        from apps.meta_engine.dependency_resolver import (
+            CyclicDependencyError,
+            DependencyResolver,
+            MissingDependencyError,
+        )
+
+        dep_map = {
+            "app_a": [],
+            "app_b": ["app_a"],
+            "app_c": ["app_b"],
+        }
+        order = DependencyResolver.resolve_install_order(["app_c"], dependency_map=dep_map, installed_app_ids=set())
+        self.assertEqual(order, ["app_a", "app_b", "app_c"])
+
+        # Test missing dependency error
+        with self.assertRaises(MissingDependencyError):
+            DependencyResolver.resolve_install_order(["unknown_app"], dependency_map=dep_map)
+
+        # Test circular dependency detection
+        cyclic_map = {
+            "node_1": ["node_2"],
+            "node_2": ["node_1"],
+        }
+        with self.assertRaises(CyclicDependencyError):
+            DependencyResolver.resolve_install_order(["node_1"], dependency_map=cyclic_map, installed_app_ids=set())
+
+    def test_end_to_end_app_installation(self):
+        """Verify 1-click installation of CRM which auto-installs Contacts and builds relational schema."""
+        from apps.meta_engine.app_installer import AppInstaller
+        from apps.meta_engine.model_factory import DynamicModelFactory
+        from apps.meta_engine.models import SystemModule
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+
+        installed = AppInstaller.install("crm")
+        installed_ids = [m.app_id for m in installed]
+        self.assertEqual(installed_ids, ["contacts", "crm"])
+
+        # 1. Verify SystemModule statuses
+        contacts_mod = SystemModule.objects.get(app_id="contacts")
+        crm_mod = SystemModule.objects.get(app_id="crm")
+        self.assertEqual(contacts_mod.status, "installed")
+        self.assertEqual(crm_mod.status, "installed")
+        self.assertIsNotNone(contacts_mod.installed_at)
+        self.assertIsNotNone(crm_mod.installed_at)
+
+        # 2. Verify physical tables exist in PostgreSQL
+        contacts_meta = MetaModel.objects.get(name="contacts_partner")
+        crm_meta = MetaModel.objects.get(name="crm_lead")
+        self.assertTrue(DynamicSchemaEngine.table_exists(contacts_meta.table_name))
+        self.assertTrue(DynamicSchemaEngine.table_exists(crm_meta.table_name))
+
+        # 3. Verify views and reports
+        self.assertTrue(MetaView.objects.filter(model=crm_meta, view_type="kanban").exists())
+        self.assertTrue(MetaReport.objects.filter(slug="crm_pipeline_summary_pdf").exists())
+        self.assertTrue(MetaMenu.objects.filter(name="CRM").exists())
+
+        # 4. Verify in-memory models and relational ORM execution
+        PartnerClass = DynamicModelFactory.get_by_slug("contacts_partner")
+        LeadClass = DynamicModelFactory.get_by_slug("crm_lead")
+        self.assertIsNotNone(PartnerClass)
+        self.assertIsNotNone(LeadClass)
+
+        partner = PartnerClass.objects.create(name="Acme Global Corporation", email="info@acme.com", is_company=True)
+        lead = LeadClass.objects.create(
+            title="Enterprise Cloud Deal",
+            partner_id=partner,
+            expected_revenue="120000.00",
+            stage="qualified",
+            probability=60,
+        )
+        self.assertEqual(lead.partner_id.name, "Acme Global Corporation")
+        self.assertEqual(str(lead.expected_revenue), "120000.00")
+
+        # Clean up created records and metadata for idempotency
+        crm_meta.delete()
+        contacts_meta.delete()
+        SystemModule.objects.filter(app_id__in=["contacts", "crm"]).delete()
+

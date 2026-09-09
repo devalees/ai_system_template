@@ -68,12 +68,125 @@ ORIENTATION_CHOICES = [
 ]
 
 
+MODULE_STATUS_CHOICES = [
+    ("uninstalled", _("Not Installed")),
+    ("installed", _("Installed")),
+    ("to_upgrade", _("Upgrade Available")),
+    ("error", _("Installation / Runtime Error")),
+]
+
+
+class SystemModule(UUIDModel, AuditableModel):
+    """
+    Registry for modular apps and declarative packages.
+    Similar to Odoo's ir.module.module. Tracks app packages, metadata,
+    status, dependencies, and installed components.
+    """
+    app_id = models.CharField(
+        max_length=100,
+        unique=True,
+        db_index=True,
+        verbose_name=_("Module Identifier"),
+        help_text=_("Unique identifier/slug for the app package (e.g. 'crm', 'contacts').")
+    )
+    name = models.CharField(
+        max_length=150,
+        verbose_name=_("Module Name"),
+        help_text=_("Human-readable title (e.g. 'Customer Relationship Management').")
+    )
+    version = models.CharField(
+        max_length=50,
+        default="1.0.0",
+        verbose_name=_("Version"),
+    )
+    category = models.CharField(
+        max_length=100,
+        default="General",
+        verbose_name=_("Category"),
+        help_text=_("Business category (e.g. 'Sales', 'Operations', 'Finance', 'Productivity').")
+    )
+    icon = models.CharField(
+        max_length=100,
+        default="box",
+        verbose_name=_("Icon"),
+        help_text=_("Icon identifier (e.g. 'users', 'briefcase', 'database').")
+    )
+    summary = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_("Summary"),
+        help_text=_("Short one-sentence summary.")
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name=_("Description"),
+        help_text=_("Full description of the module capabilities.")
+    )
+    author = models.CharField(
+        max_length=150,
+        default="System",
+        verbose_name=_("Author"),
+    )
+    website = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_("Website / Repo"),
+    )
+    license = models.CharField(
+        max_length=50,
+        default="MIT",
+        verbose_name=_("License"),
+    )
+    status = models.CharField(
+        max_length=30,
+        choices=MODULE_STATUS_CHOICES,
+        default="uninstalled",
+        db_index=True,
+        verbose_name=_("Status"),
+    )
+    dependencies = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Dependencies"),
+        help_text=_("List of app_ids required by this module.")
+    )
+    manifest_data = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name=_("Manifest Data"),
+        help_text=_("Full cached manifest payload.")
+    )
+    installed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Installed At"),
+    )
+
+    class Meta:
+        ordering = ["category", "name"]
+        verbose_name = _("System Module")
+        verbose_name_plural = _("System Modules")
+
+    def __str__(self):
+        status_icon = "🟢" if self.status == "installed" else "⚪"
+        return f"{status_icon} {self.name} ({self.app_id} v{self.version})"
+
+
 class MetaModel(UUIDModel, AuditableModel):
     """
     Authoritative definition of a dynamic business entity.
     Represents an entity type (e.g. contacts, crm_lead, invoice) mapped
     to an underlying physical PostgreSQL table.
     """
+    module = models.ForeignKey(
+        SystemModule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="models",
+        verbose_name=_("Parent Module"),
+        help_text=_("Modular app package that introduced this metadata definition.")
+    )
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -325,6 +438,14 @@ class MetaAction(UUIDModel, AuditableModel):
     """
     Action descriptor defining window opens, server tasks, reports, or redirects.
     """
+    module = models.ForeignKey(
+        SystemModule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="actions",
+        verbose_name=_("Parent Module"),
+    )
     name = models.CharField(
         max_length=150,
         verbose_name=_("Action Name"),
@@ -393,6 +514,14 @@ class MetaView(UUIDModel, AuditableModel):
     Declarative layout specification for forms, tables, Kanban, and pivot views.
     Stores the visual coordinate tree and widget properties as JSON.
     """
+    module = models.ForeignKey(
+        SystemModule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="views",
+        verbose_name=_("Parent Module"),
+    )
     model = models.ForeignKey(
         MetaModel,
         on_delete=models.CASCADE,
@@ -442,6 +571,14 @@ class MetaMenu(UUIDModel, AuditableModel):
     """
     Hierarchical navigation item linking UI menus to target actions and views.
     """
+    module = models.ForeignKey(
+        SystemModule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="menus",
+        verbose_name=_("Parent Module"),
+    )
     name = models.CharField(
         max_length=150,
         verbose_name=_("Menu Label"),
@@ -503,6 +640,14 @@ class MetaRule(UUIDModel, AuditableModel):
     """
     Security and access control policy defining CRUD permissions and row-level domain filters.
     """
+    module = models.ForeignKey(
+        SystemModule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rules",
+        verbose_name=_("Parent Module"),
+    )
     model = models.ForeignKey(
         MetaModel,
         on_delete=models.CASCADE,
@@ -551,6 +696,14 @@ class MetaReport(UUIDModel, AuditableModel):
     Declarative printable report definition (PDF / HTML) bound to a MetaModel.
     Supports CSS Paged Media pagination and model introspection placeholders.
     """
+    module = models.ForeignKey(
+        SystemModule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reports",
+        verbose_name=_("Parent Module"),
+    )
     model = models.ForeignKey(
         MetaModel,
         on_delete=models.CASCADE,

@@ -1,0 +1,136 @@
+{
+  "app_id": "contacts",
+  "name": "Contacts & Address Book",
+  "version": "1.0.0",
+  "category": "Operations",
+  "icon": "users",
+  "summary": "Centralized directory for individual and corporate contacts",
+  "description": "Provides customer, partner, and vendor address management with full audit trails and printable profile cards.",
+  "author": "Antigravity Core",
+  "website": "https://github.com/devalees/ai_system_template",
+  "license": "MIT",
+  "depends": [],
+  "models": [
+    {
+      "name": "contacts_partner",
+      "label": "Contact",
+      "label_plural": "Contacts",
+      "app_label": "contacts",
+      "description": "Unified business partner, client, or individual contact record",
+      "is_auditable": true,
+      "is_soft_delete": true,
+      "ordering_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Full Name",
+          "field_type": "char",
+          "max_length": 150,
+          "required": true,
+          "index": true,
+          "sequence": 1
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "field_type": "char",
+          "max_length": 120,
+          "index": true,
+          "sequence": 2
+        },
+        {
+          "name": "phone",
+          "label": "Phone Number",
+          "field_type": "char",
+          "max_length": 50,
+          "sequence": 3
+        },
+        {
+          "name": "is_company",
+          "label": "Is Company",
+          "field_type": "boolean",
+          "default": false,
+          "sequence": 4
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "field_type": "char",
+          "max_length": 100,
+          "sequence": 5
+        },
+        {
+          "name": "street",
+          "label": "Street Address",
+          "field_type": "text",
+          "sequence": 6
+        },
+        {
+          "name": "website",
+          "label": "Website",
+          "field_type": "char",
+          "max_length": 200,
+          "sequence": 7
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "Contacts List View",
+      "model": "contacts_partner",
+      "view_type": "list",
+      "is_default": true,
+      "layout_schema": {
+        "columns": ["name", "email", "phone", "city", "is_company"]
+      }
+    },
+    {
+      "name": "Contact Detail Form",
+      "model": "contacts_partner",
+      "view_type": "form",
+      "is_default": true,
+      "layout_schema": {
+        "sections": [
+          {
+            "title": "Basic Information",
+            "fields": ["name", "is_company", "email", "phone"]
+          },
+          {
+            "title": "Address & Web",
+            "fields": ["street", "city", "website"]
+          }
+        ]
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "All Contacts Action",
+      "action_type": "window",
+      "model": "contacts_partner",
+      "view": "Contacts List View"
+    }
+  ],
+  "menus": [
+    {
+      "name": "Contacts",
+      "icon": "users",
+      "app_label": "contacts",
+      "sequence": 10,
+      "action": "All Contacts Action"
+    }
+  ],
+  "reports": [
+    {
+      "name": "Contact Profile Card",
+      "slug": "contacts_partner_card_pdf",
+      "model": "contacts_partner",
+      "report_type": "pdf",
+      "paper_format": "A4",
+      "orientation": "portrait",
+      "is_default": true,
+      "template_dsl": "<div class='contact-card'><h1>{{record.name}}</h1><p>Email: {{record.email}}</p><p>Phone: {{record.phone}}</p></div>"
+    }
+  ]
+}
