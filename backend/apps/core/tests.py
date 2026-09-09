@@ -230,3 +230,52 @@ class AppSettingValueModelTests(TestCase):
         self.assertIsNone(cache.get(cache_key))
 
 
+class SettingsResolutionServiceTests(TestCase):
+    """Test suite for get_setting, set_setting, and Redis fallback behavior."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_get_setting_with_registered_default(self):
+        from apps.core.config import get_setting
+        from apps.core.settings_registry import Setting, register_settings_group
+
+        @register_settings_group("service_app", verbose_name="Service App")
+        class ServiceSettings:
+            MAX_RETRIES = Setting(data_type="int", default=5)
+
+        # Should retrieve the registered default 5
+        val = get_setting("service_app.MAX_RETRIES")
+        self.assertEqual(val, 5)
+
+    def test_set_setting_persists_to_db_and_cache(self):
+        from apps.core.config import get_setting, set_setting
+        from apps.core.models import AppSettingValue
+        from apps.core.settings_registry import Setting, register_settings_group
+
+        @register_settings_group("service_app", verbose_name="Service App")
+        class ServiceSettings:
+            TIMEOUT = Setting(data_type="int", default=30)
+
+        # Set to 90
+        saved_val = set_setting("service_app.TIMEOUT", 90)
+        self.assertEqual(saved_val, 90)
+
+        # DB has raw 90
+        db_obj = AppSettingValue.objects.get(app_label="service_app", key="TIMEOUT")
+        self.assertEqual(db_obj.raw_value, "90")
+
+        # get_setting returns 90
+        self.assertEqual(get_setting("service_app.TIMEOUT"), 90)
+
+    def test_fallback_to_django_settings(self):
+        from apps.core.config import get_setting
+        from django.test import override_settings
+
+        with override_settings(AUTOTEST_GLOBAL_FLAG="ACTIVE_MODE"):
+            val = get_setting("general.AUTOTEST_GLOBAL_FLAG")
+            self.assertEqual(val, "ACTIVE_MODE")
+
+
+
