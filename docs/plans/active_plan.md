@@ -382,10 +382,10 @@ Phase 11 complete, authenticated end-to-end with Hermes Agent runtime, duplicate
 
 ---
 
-## Phase 12: Core Foundations & Modular App Settings Hub (`apps.core`) (PENDING)
+## Phase 12: Core Foundations, Modular App Settings & Multi-Language Engine (`apps.core`) (PENDING)
 
 ### 1. Objective & Scope
-Establish foundational abstract models and a centralized, Odoo-style modular application settings framework:
+Establish foundational abstract models, a centralized Odoo-style modular application settings framework, and complete out-of-the-box bilingual (English / Arabic) multi-language architecture:
 - **Abstract Base Models**:
   - `TimeStampedModel`: Standardized `created_at` and `updated_at` timestamps with database indexing.
   - `UUIDModel`: Distributed, non-enumerable `id = UUIDField(primary_key=True, default=uuid.uuid4)` to prevent ID enumeration vulnerabilities.
@@ -397,6 +397,12 @@ Establish foundational abstract models and a centralized, Odoo-style modular app
   - **Dual-Layer Resolution with Redis Caching**: Fast runtime access (`get_setting("app.KEY", default=...)`) checking Redis cache first, falling back to PostgreSQL, then to Django `settings.py` or `.env`.
   - **Instant Cache Invalidation**: Automatic Redis cache invalidation on save ensures zero-downtime updates across all running Django processes and Celery workers.
   - **Unified Settings Hub in Django Admin**: Single-screen configuration dashboard organized by app tabs/sidebar (General, AI Agents & Hermes, Automation, Reports & Branding, Notifications).
+- **Bilingual & Multi-Language Architecture (English / Arabic i18n & l10n)**:
+  - **Core i18n Setup**: `LocaleMiddleware` in request pipeline, `LANGUAGES = [('en', 'English'), ('ar', 'العربية')]`, and centralized message catalogs (`locale/`).
+  - **Full Arabic RTL Support**: Right-to-Left layout, BiDi typography detection, and native Django Admin Arabic translations.
+  - **User & Profile Language Scoping**: `preferred_language` on `Profile` with dynamic 1-click language switcher in Django Admin.
+  - **Model & Content Translation Foundation**: Translation utilities for dynamic database records (JSONB multilingual values e.g. `{"en": "...", "ar": "..."}`).
+  - **DRF Content Negotiation**: Auto-resolves error messages and localized responses via HTTP `Accept-Language` headers.
 
 ### 2. Task Checklist & Progress
 - [ ] **Sub-task 1: Abstract Base Models (`apps.core.models`) & Request Context Middleware** - PENDING
@@ -404,9 +410,11 @@ Establish foundational abstract models and a centralized, Odoo-style modular app
 - [ ] **Sub-task 3: Database Models (`AppSettingValue`) & Redis Caching Layer** - PENDING
 - [ ] **Sub-task 4: Fast Runtime Resolution Service (`get_setting`, `set_setting`) with Code/Env Fallback** - PENDING
 - [ ] **Sub-task 5: Unified Odoo-Style Admin Settings Hub with Categorized App Sidebar** - PENDING
-- [ ] **Sub-task 6: Migrate Existing Hardcoded Constants (Hermes Timeouts, Budget Caps, Defaults) to Settings Registry** - PENDING
-- [ ] **Sub-task 7: Automated Testing & Verification** - PENDING
-- [ ] **Sub-task 8: LLM Wiki & Architecture Synchronization** - PENDING
+- [ ] **Sub-task 6: Bilingual Multi-Language Engine (i18n/l10n, Arabic RTL, LocaleMiddleware & Profile Language)** - PENDING
+- [ ] **Sub-task 7: Migrate Existing Hardcoded Constants (Hermes Timeouts, Budget Caps, Defaults) to Settings Registry** - PENDING
+- [ ] **Sub-task 8: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 9: LLM Wiki & Architecture Synchronization** - PENDING
+
 
 
 ---
