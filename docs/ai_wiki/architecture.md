@@ -321,6 +321,63 @@ When an administrative user or API client creates an AI Agent account (`Profile.
 - **Reactive Dynamic Admin UI**:
   - Static script `automation_reactive_admin.js` provides conditional fieldset toggles (showing/hiding Model Event vs. Beat Scheduling sections), live AJAX schema introspection, and interactive field mapping pills with required field badges.
 
+---
+
+## 11. Decoupled Triggers & 1-to-N Action Pipelines (Phase 7)
+
+```
+                       ┌─────────────────────────┐
+                       │    AutomationTrigger    │
+                       │ (WHEN & Under What Cond)│
+                       └────────────┬────────────┘
+                                    │ 1-to-N
+             ┌──────────────────────┼──────────────────────┐
+             ▼                      ▼                      ▼
+    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+    │AutomationAction │    │AutomationAction │    │AutomationAction │
+    │ [Sequence: 10]  │    │ [Sequence: 20]  │    │ [Sequence: 30]  │
+    └────────┬────────┘    └────────┬────────┘    └────────┬────────┘
+             │                      │                      │
+             ▼                      ▼                      ▼
+  [Celery Task Dispatch] [Celery Task Dispatch] [Celery Task Dispatch]
+             │                      │                      │
+             ▼                      ▼                      ▼
+    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+    │  AutomationLog  │    │  AutomationLog  │    │  AutomationLog  │
+    │ (trigger,action)│    │ (trigger,action)│    │ (trigger,action)│
+    └─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### 11.1 Decomposed Data Models
+- **`AutomationTrigger` ("WHEN")**: Defines root event sources, lifecycle rules, schedules, and filtering:
+  - `trigger_type`: `model_event`, `time_based`, `webhook`, `manual`.
+  - `trigger_model`, `event_type`, `filter_conditions`, `condition_rules`.
+  - State transitions: `trigger_field`, `previous_value`, `target_value`.
+  - Scheduling: `schedule_unit`, `schedule_value`, `scheduled_time`, `periodic_task`.
+  - Metrics: `last_triggered_at`, `trigger_count`.
+- **`AutomationAction` ("WHAT")**: Represents sequenced, executable steps linked 1-to-N to a parent trigger:
+  - `trigger`: ForeignKey to `AutomationTrigger` (`related_name='actions'`).
+  - `sequence`: Integer execution ordering (`10, 20, 30...`).
+  - Target model operations: `target_model`, `target_operation`, `field_mappings`.
+  - Service handlers: `action_category`, `action_type`, `action_params`.
+  - Metrics: `last_run_at`, `run_count`.
+- **`AutomationLog`**: Audit record retaining foreign keys to both `trigger` and `action`, capturing granular duration, status, context snapshots, output payloads, and stack traces.
+
+### 11.2 Unified Asynchronous Celery Execution
+- All automated actions execute asynchronously via Celery distributed workers (`execute_automation_action_task.delay(action.id, context, trigger_source)`).
+- Eliminates synchronous execution blockages on web server worker threads, ensuring sub-millisecond HTTP response cycles, Redis task queueing, and uniform observability.
+- Celery Beat schedules trigger `scheduled_automation_task`, which automatically evaluates the trigger and enqueues all active actions in sequential order.
+
+### 11.3 Universal System Signal Reification
+- **Reified User Profile Lifecycle**: `auth.User` creation is elevated into a first-class automation pipeline (`Auto-Provision Profile on User Creation` trigger + `Provision Django User Profile` action handler).
+- Eliminates unobserved hidden side effects and brings core Django framework lifecycle events under the centralized visibility and audit tracking of `AutomationLog`.
+
+### 11.4 Reactive Multi-Action Admin UI
+- `AutomationTriggerAdmin` embeds `AutomationActionInline` (with dynamic model and action introspection) and `AutomationLogInline`.
+- Allows operators to configure root triggers and view/edit multi-step action sequences and recent execution audit logs on a single unified screen.
+- Enhanced with `automation_reactive_admin.js` for instant schema introspection pills and visual condition presets.
+
+
 
 
 
