@@ -1,7 +1,7 @@
 """
 Targeted Model Lifecycle Signals Bridge for Automation Engine.
 
-Connects signals specifically to models registered in active AutomationRules,
+Connects signals specifically to models registered in active AutomationTriggers,
 avoiding global signal overhead and preventing migration interference.
 """
 
@@ -77,14 +77,14 @@ def bootstrap_core_signals():
 
 def sync_automation_signals():
     """
-    Scans active AutomationRules and connects signals for all target models.
-    Called post-migration and on rule creation/updates.
+    Scans active AutomationTriggers and connects signals for all target models.
+    Called post-migration and on trigger creation/updates.
     """
     bootstrap_core_signals()
     try:
-        from .models import AutomationRule
+        from .models import AutomationTrigger
         trigger_models = (
-            AutomationRule.objects.filter(is_active=True, trigger_type='model_event')
+            AutomationTrigger.objects.filter(is_active=True, trigger_type='model_event')
             .values_list('trigger_model', flat=True)
             .distinct()
         )

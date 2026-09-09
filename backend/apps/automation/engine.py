@@ -1,5 +1,6 @@
 """
 Core Execution Engine & Dispatcher for Centralized Automations.
+Unified Asynchronous Celery Execution Pipeline for 1-to-N Decoupled Triggers and Actions.
 """
 
 import re
@@ -8,7 +9,7 @@ import traceback
 import uuid
 from typing import Any, Dict, List, Optional
 from django.utils import timezone
-from .models import AutomationRule, AutomationLog
+from .models import AutomationTrigger, AutomationAction, AutomationLog, AutomationRule
 from .registry import ServiceRegistry
 
 
@@ -160,15 +161,12 @@ def resolve_template_value(template: Any, context: Dict[str, Any], field_meta: A
                 pass
 
         elif field_meta.is_relation and field_meta.related_model:
-            # If value is already an instance of related model
             if isinstance(val, field_meta.related_model):
                 return val
-            # If string and model has 'username', try to look up user
             if isinstance(val, str) and hasattr(field_meta.related_model, 'username'):
                 user_obj = field_meta.related_model.objects.filter(username=val).first()
                 if user_obj:
                     return user_obj
-            # If UUID or PK
             try:
                 obj = field_meta.related_model.objects.filter(pk=val).first()
                 if obj:
@@ -180,7 +178,10 @@ def resolve_template_value(template: Any, context: Dict[str, Any], field_meta: A
 
 
 class AutomationEngine:
-    """Central engine orchestrating trigger evaluation and action execution."""
+    """
+    Central Automation Engine.
+    Evaluates AutomationTriggers and dispatches sequenced AutomationActions via unified Celery queues.
+    """
 
     @classmethod
     def evaluate_conditions(cls, context: Dict[str, Any], conditions: Dict[str, Any]) -> bool:
@@ -221,27 +222,32 @@ class AutomationEngine:
         return True
 
     @classmethod
-    def execute_target_crud(cls, rule: AutomationRule, context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_target_crud(cls, action_or_rule: Any, context: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Executes automated Odoo-style CRUD operations on rule.target_model.
+        Executes automated Odoo-style CRUD operations on target_model.
         Supports 'create', 'update', and 'delete' with dynamic field mappings.
+        Accepts either an AutomationAction or legacy AutomationRule.
         """
         from django.apps import apps
-        if not rule.target_model:
+        target_model = getattr(action_or_rule, 'target_model', '')
+        target_operation = getattr(action_or_rule, 'target_operation', '')
+        field_mappings = getattr(action_or_rule, 'field_mappings', {}) or {}
+
+        if not target_model:
             raise ValueError("Target model is not specified for CRUD operation.")
 
         try:
-            target_cls = apps.get_model(rule.target_model)
+            target_cls = apps.get_model(target_model)
             if not target_cls:
                 raise LookupError()
         except (LookupError, ValueError):
-            raise ValueError(f"Target model '{rule.target_model}' not found in installed apps.")
+            raise ValueError(f"Target model '{target_model}' not found in installed apps.")
 
-        operation = (rule.target_operation or 'create').lower().strip()
+        operation = (target_operation or 'create').lower().strip()
         fields_by_name = {f.name: f for f in target_cls._meta.fields}
         resolved_fields = {}
 
-        for k, raw_v in (rule.field_mappings or {}).items():
+        for k, raw_v in field_mappings.items():
             field_meta = fields_by_name.get(k)
             resolved_v = resolve_template_value(raw_v, context, field_meta)
             if field_meta and field_meta.is_relation and not hasattr(resolved_v, '_meta'):
@@ -254,7 +260,7 @@ class AutomationEngine:
             instance = target_cls.objects.create(**resolved_fields)
             return {
                 "operation": "create",
-                "target_model": rule.target_model,
+                "target_model": target_model,
                 "record_id": str(instance.pk),
                 "created_fields": make_json_serializable(resolved_fields),
             }
@@ -278,7 +284,7 @@ class AutomationEngine:
             instance.save()
             return {
                 "operation": "update",
-                "target_model": rule.target_model,
+                "target_model": target_model,
                 "record_id": str(instance.pk),
                 "updated_fields": updated_fields,
             }
@@ -297,49 +303,48 @@ class AutomationEngine:
             instance.delete()
             return {
                 "operation": "delete",
-                "target_model": rule.target_model,
+                "target_model": target_model,
                 "record_id": str(record_id),
             }
 
         else:
-            raise ValueError(f"Unsupported target operation: '{rule.target_operation}'")
+            raise ValueError(f"Unsupported target operation: '{target_operation}'")
 
     @classmethod
-    def execute_rule(
+    def execute_action(
         cls,
-        rule_id: int,
+        action_id: int,
         trigger_context: Optional[Dict[str, Any]] = None,
-        trigger_source: str = "manual"
+        trigger_source: str = "celery_async"
     ) -> Dict[str, Any]:
         """
-        Executes an AutomationRule with timing, error containment, and audit logging.
-        Handles both target model CRUD operations and registered action handlers.
+        Executes a single AutomationAction step.
+        Unified execution: records full audit log in AutomationLog, timing, and error handling.
         """
         try:
-            rule = AutomationRule.objects.get(id=rule_id)
-        except AutomationRule.DoesNotExist:
-            return {"status": "error", "error": f"Rule {rule_id} not found"}
+            action = AutomationAction.objects.select_related('trigger').get(id=action_id)
+        except AutomationAction.DoesNotExist:
+            return {"status": "error", "error": f"AutomationAction {action_id} not found"}
+
+        trigger = action.trigger
+
+        # 1. Check if action or trigger is paused
+        if not action.is_active:
+            return {"status": "skipped", "reason": f"Action '{action.name}' is inactive"}
+        if trigger and not trigger.is_active:
+            return {"status": "skipped", "reason": f"Parent trigger '{trigger.name}' is inactive"}
 
         context = dict(trigger_context or {})
-        # Merge rule action_params into context
-        if rule.action_params:
-            for k, v in rule.action_params.items():
+        if action.action_params:
+            for k, v in action.action_params.items():
                 context.setdefault(k, v)
 
-        # 1. Active & Condition Validation
-        if not rule.is_active:
-            return {"status": "skipped", "reason": "Rule is currently paused (is_active=False)"}
-
-        if rule.filter_conditions and not cls.evaluate_conditions(context, rule.filter_conditions):
-            return {"status": "skipped", "reason": "Trigger conditions did not match"}
-
-        if rule.condition_rules and not cls.evaluate_condition_rules(context, rule.condition_rules):
-            return {"status": "skipped", "reason": "Condition rules did not match"}
-
-        # 2. Initialize Audit Log (safe serialized context)
+        # 2. Initialize Audit Log entry
         safe_context = make_json_serializable(context)
         log_entry = AutomationLog.objects.create(
-            rule=rule,
+            trigger=trigger,
+            action=action,
+            rule=trigger,
             trigger_source=trigger_source,
             status='running',
             input_context=safe_context,
@@ -352,14 +357,13 @@ class AutomationEngine:
 
         try:
             crud_result = None
-            if rule.target_model and rule.target_operation:
-                crud_result = cls.execute_target_crud(rule, context)
+            if action.target_model and action.target_operation:
+                crud_result = cls.execute_target_crud(action, context)
 
             action_result = None
-            action_type = rule.action_type
+            action_type = action.action_type
             if action_type and action_type not in ('', 'none', 'target_crud'):
                 if action_type.startswith("hermes_profile:"):
-                    # Dynamic dispatch to specific Hermes profile
                     profile_slug = action_type.removeprefix("hermes_profile:")
                     from .actions import dispatch_hermes_prompt_action
                     context['profile'] = profile_slug
@@ -374,7 +378,7 @@ class AutomationEngine:
             elif crud_result:
                 success = True
             else:
-                raise ValueError(f"Action '{action_type}' has no registered handler.")
+                raise ValueError(f"Action '{action.name}' has no defined target operation or handler.")
 
             if crud_result and action_result:
                 output_result = {"crud": crud_result, "action": action_result}
@@ -390,20 +394,26 @@ class AutomationEngine:
 
         duration_ms = int((time.time() - start_time) * 1000)
 
-        # 4. Finalize Audit Log
+        # 3. Finalize Audit Log
         log_entry.status = 'success' if success else 'failed'
         log_entry.output_result = make_json_serializable(output_result)
         log_entry.error_message = error_msg
         log_entry.duration_ms = duration_ms
         log_entry.save(update_fields=['status', 'output_result', 'error_message', 'duration_ms'])
 
-        # 5. Update Rule Metrics & One-Shot State
-        rule.last_run_at = timezone.now()
-        rule.run_count += 1
-        if rule.execution_mode == 'once' and success:
-            rule.is_active = False
+        # 4. Update Action Metrics
+        now = timezone.now()
+        action.last_run_at = now
+        action.run_count += 1
+        action.save(update_fields=['last_run_at', 'run_count'])
 
-        rule.save(update_fields=['last_run_at', 'run_count', 'is_active'])
+        # 5. Update Trigger Metrics
+        if trigger:
+            trigger.last_triggered_at = now
+            trigger.trigger_count += 1
+            if trigger.execution_mode == 'once' and success:
+                trigger.is_active = False
+            trigger.save(update_fields=['last_triggered_at', 'trigger_count', 'is_active'])
 
         return {
             "status": "success" if success else "failed",
@@ -414,11 +424,77 @@ class AutomationEngine:
         }
 
     @classmethod
-    def dispatch_model_event(cls, instance: Any, event_type: str, old_values: Optional[Dict[str, Any]] = None) -> int:
+    def execute_trigger(
+        cls,
+        trigger_id: int,
+        trigger_context: Optional[Dict[str, Any]] = None,
+        trigger_source: str = "manual"
+    ) -> Dict[str, Any]:
         """
-        Finds and dispatches matching model event rules for a model instance.
-        Supports creation, updates, deletions, and Odoo-style state transitions.
-        Returns count of rules dispatched.
+        Evaluates an AutomationTrigger and dispatches all attached active actions sequentially via Celery.
+        """
+        try:
+            trigger = AutomationTrigger.objects.prefetch_related('actions').get(id=trigger_id)
+        except AutomationTrigger.DoesNotExist:
+            return {"status": "error", "error": f"Trigger {trigger_id} not found"}
+
+        if not trigger.is_active:
+            return {"status": "skipped", "reason": f"Trigger '{trigger.name}' is paused (is_active=False)"}
+
+        context = dict(trigger_context or {})
+
+        # Condition checks
+        if trigger.filter_conditions and not cls.evaluate_conditions(context, trigger.filter_conditions):
+            return {"status": "skipped", "reason": "Trigger filter conditions did not match"}
+
+        if trigger.condition_rules and not cls.evaluate_condition_rules(context, trigger.condition_rules):
+            return {"status": "skipped", "reason": "Trigger visual condition rules did not match"}
+
+        actions = list(trigger.actions.filter(is_active=True).order_by('sequence', 'created_at'))
+        if not actions:
+            return {"status": "skipped", "reason": f"Trigger '{trigger.name}' has no active actions"}
+
+        from .tasks import execute_automation_action_task
+
+        dispatched_task_ids = []
+        for action in actions:
+            task_res = execute_automation_action_task.delay(action.id, context, trigger_source)
+            dispatched_task_ids.append(task_res.id if hasattr(task_res, 'id') else str(task_res))
+
+        return {
+            "status": "success",
+            "trigger_id": trigger.id,
+            "dispatched_actions": len(actions),
+            "celery_tasks": dispatched_task_ids,
+        }
+
+    @classmethod
+    def execute_rule(
+        cls,
+        rule_id: int,
+        trigger_context: Optional[Dict[str, Any]] = None,
+        trigger_source: str = "manual"
+    ) -> Dict[str, Any]:
+        """
+        Backward-compatibility execution entrypoint.
+        Delegates to execute_trigger.
+        """
+        return cls.execute_trigger(
+            trigger_id=rule_id,
+            trigger_context=trigger_context,
+            trigger_source=trigger_source
+        )
+
+    @classmethod
+    def dispatch_model_event(
+        cls,
+        instance: Any,
+        event_type: str,
+        old_values: Optional[Dict[str, Any]] = None
+    ) -> int:
+        """
+        Finds matching AutomationTriggers for a model instance event and dispatches their actions via Celery.
+        Returns total count of actions dispatched.
         """
         app_label = instance._meta.app_label
         model_name = instance._meta.model_name
@@ -428,14 +504,14 @@ class AutomationEngine:
         if event_type == 'updated':
             matching_event_types.append('field_changed')
 
-        matching_rules = AutomationRule.objects.filter(
+        matching_triggers = AutomationTrigger.objects.filter(
             is_active=True,
             trigger_type='model_event',
             trigger_model=model_identifier,
             event_type__in=matching_event_types
-        )
+        ).prefetch_related('actions')
 
-        if not matching_rules.exists():
+        if not matching_triggers.exists():
             return 0
 
         # Build context snapshot
@@ -468,7 +544,7 @@ class AutomationEngine:
         if hasattr(instance, 'username'):
             context['username'] = instance.username
 
-        # If user model, check for attached profile fields
+        # Profile context integration
         if hasattr(instance, 'profile') and instance.profile:
             p = instance.profile
             context['is_agent'] = p.is_agent
@@ -479,46 +555,51 @@ class AutomationEngine:
             context['model_name'] = p.model_name
             context['reasoning_effort'] = p.reasoning_effort
 
-        # If profile model, check for attached user fields
         if hasattr(instance, 'user') and instance.user:
             context['username'] = instance.user.username
             context['is_agent'] = getattr(instance, 'is_agent', False)
 
         dispatched_count = 0
-        from .tasks import execute_automation_rule_task
+        from .tasks import execute_automation_action_task
 
-        for rule in matching_rules:
+        for trigger in matching_triggers:
             # 1. State transition / Field change evaluation
-            if rule.event_type == 'field_changed' or rule.trigger_field:
-                if rule.trigger_field:
-                    if rule.trigger_field not in changed_fields:
+            if trigger.event_type == 'field_changed' or trigger.trigger_field:
+                if trigger.trigger_field:
+                    if trigger.trigger_field not in changed_fields:
                         continue
 
-                    # Previous value check (before update)
-                    if rule.previous_value:
-                        prev_val = old_values.get(rule.trigger_field) if old_values else None
-                        if str(prev_val).lower() != str(rule.previous_value).lower():
+                    # Previous value check
+                    if trigger.previous_value:
+                        prev_val = old_values.get(trigger.trigger_field) if old_values else None
+                        if str(prev_val).lower() != str(trigger.previous_value).lower():
                             continue
 
-                    # Target value check (after update)
-                    if rule.target_value:
-                        new_val = context.get(rule.trigger_field)
-                        if str(new_val).lower() != str(rule.target_value).lower():
+                    # Target value check
+                    if trigger.target_value:
+                        new_val = context.get(trigger.trigger_field)
+                        if str(new_val).lower() != str(trigger.target_value).lower():
                             continue
 
             # 2. General filter conditions check
-            if rule.filter_conditions and not cls.evaluate_conditions(context, rule.filter_conditions):
+            if trigger.filter_conditions and not cls.evaluate_conditions(context, trigger.filter_conditions):
                 continue
 
             # 3. Visual condition rules check (Odoo-Style)
-            if rule.condition_rules and not cls.evaluate_condition_rules(context, rule.condition_rules):
+            if trigger.condition_rules and not cls.evaluate_condition_rules(context, trigger.condition_rules):
+                continue
+
+            # Find active actions attached to this trigger
+            actions = list(trigger.actions.filter(is_active=True).order_by('sequence', 'created_at'))
+            if not actions:
                 continue
 
             trigger_source = f"model_event:{model_identifier}#{instance.pk}:{event_type}"
-            if rule.trigger_field:
-                trigger_source += f":{rule.trigger_field}"
+            if trigger.trigger_field:
+                trigger_source += f":{trigger.trigger_field}"
 
-            execute_automation_rule_task.delay(rule.id, context, trigger_source)
-            dispatched_count += 1
+            for action in actions:
+                execute_automation_action_task.delay(action.id, context, trigger_source)
+                dispatched_count += 1
 
         return dispatched_count

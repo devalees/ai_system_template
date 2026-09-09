@@ -1,7 +1,7 @@
 """
 Celery Beat Scheduling Synchronization for Automation Engine.
 
-Bridges AutomationRule time-based triggers with django-celery-beat
+Bridges AutomationTrigger time-based triggers with django-celery-beat
 PeriodicTask, IntervalSchedule, CrontabSchedule, and ClockedSchedule.
 """
 
@@ -15,28 +15,28 @@ from django_celery_beat.models import (
 )
 
 
-def sync_rule_to_celery_beat(rule) -> Optional[PeriodicTask]:
+def sync_trigger_to_celery_beat(trigger) -> Optional[PeriodicTask]:
     """
-    Synchronizes an AutomationRule's time-based scheduling into Celery Beat.
+    Synchronizes an AutomationTrigger's time-based scheduling into Celery Beat.
     """
-    if rule.trigger_type != 'time_based':
-        if rule.periodic_task:
-            task = rule.periodic_task
-            rule.periodic_task = None
-            rule.__class__.objects.filter(id=rule.id).update(periodic_task=None)
+    if trigger.trigger_type != 'time_based':
+        if trigger.periodic_task:
+            task = trigger.periodic_task
+            trigger.periodic_task = None
+            trigger.__class__.objects.filter(id=trigger.id).update(periodic_task=None)
             try:
                 task.delete()
             except Exception:
                 pass
         return None
 
-    task_name = f"automation_rule_{rule.id}_{rule.name[:50]}"
-    task_args = json.dumps([rule.id])
+    task_name = f"automation_trigger_{trigger.id}_{trigger.name[:50]}"
+    task_args = json.dumps([trigger.id])
     task_path = "apps.automation.tasks.scheduled_run"
 
     # 1. One-Shot Scheduled Time
-    if rule.execution_mode == 'once' and rule.scheduled_time:
-        clocked, _ = ClockedSchedule.objects.get_or_create(clocked_time=rule.scheduled_time)
+    if trigger.execution_mode == 'once' and trigger.scheduled_time:
+        clocked, _ = ClockedSchedule.objects.get_or_create(clocked_time=trigger.scheduled_time)
         periodic_task, _ = PeriodicTask.objects.update_or_create(
             name=task_name,
             defaults={
@@ -44,13 +44,13 @@ def sync_rule_to_celery_beat(rule) -> Optional[PeriodicTask]:
                 'args': task_args,
                 'clocked': clocked,
                 'one_off': True,
-                'enabled': rule.is_active,
-                'description': f"One-shot schedule for AutomationRule #{rule.id}: {rule.name}",
+                'enabled': trigger.is_active,
+                'description': f"One-shot schedule for AutomationTrigger #{trigger.id}: {trigger.name}",
             }
         )
     # 2. Monthly Crontab Schedule
-    elif rule.schedule_unit == 'months':
-        interval_val = rule.schedule_value or 1
+    elif trigger.schedule_unit == 'months':
+        interval_val = trigger.schedule_value or 1
         month_expr = f"*/{interval_val}" if interval_val > 1 else "*"
         crontab, _ = CrontabSchedule.objects.get_or_create(
             minute='0',
@@ -65,14 +65,14 @@ def sync_rule_to_celery_beat(rule) -> Optional[PeriodicTask]:
                 'task': task_path,
                 'args': task_args,
                 'crontab': crontab,
-                'enabled': rule.is_active,
-                'description': f"Monthly schedule for AutomationRule #{rule.id}: {rule.name}",
+                'enabled': trigger.is_active,
+                'description': f"Monthly schedule for AutomationTrigger #{trigger.id}: {trigger.name}",
             }
         )
     # 3. Interval Schedule (seconds, minutes, hours, days, weeks)
     else:
-        unit = rule.schedule_unit or 'minutes'
-        val = rule.schedule_value or 5
+        unit = trigger.schedule_unit or 'minutes'
+        val = trigger.schedule_value or 5
 
         if unit == 'seconds':
             period = IntervalSchedule.SECONDS
@@ -95,22 +95,27 @@ def sync_rule_to_celery_beat(rule) -> Optional[PeriodicTask]:
                 'task': task_path,
                 'args': task_args,
                 'interval': interval,
-                'enabled': rule.is_active,
-                'description': f"Periodic schedule for AutomationRule #{rule.id}: {rule.name}",
+                'enabled': trigger.is_active,
+                'description': f"Periodic schedule for AutomationTrigger #{trigger.id}: {trigger.name}",
             }
         )
 
-    if rule.periodic_task_id != periodic_task.id:
-        rule.__class__.objects.filter(id=rule.id).update(periodic_task=periodic_task)
-        rule.periodic_task = periodic_task
+    if trigger.periodic_task_id != periodic_task.id:
+        trigger.__class__.objects.filter(id=trigger.id).update(periodic_task=periodic_task)
+        trigger.periodic_task = periodic_task
 
     return periodic_task
 
 
-def delete_rule_periodic_task(rule):
-    """Cleans up Celery Beat periodic task when rule is deleted."""
-    if rule.periodic_task:
+def delete_trigger_periodic_task(trigger):
+    """Cleans up Celery Beat periodic task when trigger is deleted."""
+    if trigger.periodic_task:
         try:
-            rule.periodic_task.delete()
+            trigger.periodic_task.delete()
         except Exception:
             pass
+
+
+# Backward-compatibility aliases
+sync_rule_to_celery_beat = sync_trigger_to_celery_beat
+delete_rule_periodic_task = delete_trigger_periodic_task

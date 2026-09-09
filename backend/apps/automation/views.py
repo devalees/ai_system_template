@@ -8,49 +8,69 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.integration.views import StrictDjangoModelPermissions
-from .models import AutomationRule, AutomationLog
-from .serializers import AutomationRuleSerializer, AutomationLogSerializer
+from .models import AutomationTrigger, AutomationAction, AutomationLog, AutomationRule
+from .serializers import (
+    AutomationTriggerSerializer,
+    AutomationActionSerializer,
+    AutomationLogSerializer,
+    AutomationRuleSerializer,
+)
 from .registry import ServiceRegistry
-from .tasks import execute_automation_rule_task
+from .tasks import execute_automation_trigger_task
 
 
-class AutomationRuleViewSet(viewsets.ModelViewSet):
+class AutomationTriggerViewSet(viewsets.ModelViewSet):
     """
-    CRUD ViewSet for managing Automation Rules.
+    CRUD ViewSet for managing Automation Triggers (WHEN events occur).
+    Includes nested sequenced actions.
     """
-    queryset = AutomationRule.objects.all()
-    serializer_class = AutomationRuleSerializer
+    queryset = AutomationTrigger.objects.prefetch_related('actions').all()
+    serializer_class = AutomationTriggerSerializer
     permission_classes = [IsAuthenticated, StrictDjangoModelPermissions]
 
     @action(detail=True, methods=['post'], url_path='trigger')
-    def trigger_rule(self, request, pk=None):
+    def trigger_pipeline(self, request, pk=None):
         """
-        On-demand trigger endpoint: immediately queues this rule to Celery.
+        On-demand trigger endpoint: immediately queues all active actions for this trigger to Celery.
         """
-        rule = self.get_object()
+        trigger = self.get_object()
         trigger_context = request.data if isinstance(request.data, dict) else {}
-        async_res = execute_automation_rule_task.delay(
-            rule.id,
+        async_res = execute_automation_trigger_task.delay(
+            trigger.id,
             trigger_context,
             f"api_trigger:{request.user.username}"
         )
         return Response({
             "status": "queued",
-            "rule_id": rule.id,
-            "rule_name": rule.name,
+            "trigger_id": trigger.id,
+            "trigger_name": trigger.name,
             "task_id": async_res.id,
-            "message": f"Rule '{rule.name}' queued to Celery worker."
+            "message": f"Automation Pipeline '{trigger.name}' queued to Celery worker."
         }, status=status.HTTP_202_ACCEPTED)
+
+
+# Backward-compatibility alias
+AutomationRuleViewSet = AutomationTriggerViewSet
+
+
+class AutomationActionViewSet(viewsets.ModelViewSet):
+    """
+    CRUD ViewSet for managing individual Automation Actions (WHAT happens).
+    """
+    queryset = AutomationAction.objects.select_related('trigger').all()
+    serializer_class = AutomationActionSerializer
+    permission_classes = [IsAuthenticated, StrictDjangoModelPermissions]
+    filterset_fields = ['trigger', 'is_active', 'action_category', 'target_operation']
 
 
 class AutomationLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Read-only ViewSet for reviewing automation execution logs.
+    Read-only ViewSet for reviewing automation execution audit logs.
     """
     queryset = AutomationLog.objects.all()
     serializer_class = AutomationLogSerializer
     permission_classes = [IsAuthenticated, StrictDjangoModelPermissions]
-    filterset_fields = ['status', 'rule']
+    filterset_fields = ['status', 'trigger', 'action', 'rule']
 
 
 @api_view(['GET'])
