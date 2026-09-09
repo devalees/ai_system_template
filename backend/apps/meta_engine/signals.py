@@ -6,6 +6,7 @@ when MetaModel and MetaField instances are created, modified, or deleted.
 """
 
 import logging
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -29,12 +30,18 @@ def on_meta_model_saved(sender, instance: MetaModel, created: bool, **kwargs):
 @receiver(post_delete, sender=MetaModel)
 def on_meta_model_deleted(sender, instance: MetaModel, **kwargs):
     """
-    Drop the physical PostgreSQL table upon MetaModel deletion.
+    Drop the physical PostgreSQL table upon MetaModel deletion and unregister from cache.
     """
     try:
         DynamicSchemaEngine.drop_table(instance)
     except Exception as exc:
         logger.error(f"Failed to drop table for deleted MetaModel '{instance.name}': {exc}", exc_info=True)
+
+    try:
+        from apps.meta_engine.model_factory import DynamicModelFactory
+        DynamicModelFactory.unregister_model(instance.name)
+    except Exception:
+        pass
 
 
 @receiver(post_save, sender=MetaField)

@@ -15,3 +15,14 @@ class MetaEngineConfig(AppConfig):
             import apps.meta_engine.signals  # noqa
         except Exception:
             pass
+
+        try:
+            from django.db.models.signals import post_migrate
+
+            def _on_post_migrate(**kwargs):
+                from apps.meta_engine.model_factory import DynamicModelFactory
+                DynamicModelFactory.load_all_active_models()
+
+            post_migrate.connect(_on_post_migrate, sender=self)
+        except Exception:
+            pass

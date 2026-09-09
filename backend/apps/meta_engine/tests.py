@@ -5,7 +5,7 @@ Unit Tests for apps.meta_engine Metadata Catalog Models.
 import uuid
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, TransactionTestCase
 
 from apps.core.middleware import CurrentUserMiddleware
 from apps.meta_engine.models import (
@@ -178,7 +178,7 @@ class MetaCatalogModelTests(TestCase):
         self.assertEqual(model.updated_by, self.user)
 
 
-class DynamicSchemaEngineTests(TestCase):
+class DynamicSchemaEngineTests(TransactionTestCase):
     """
     Test suite verifying PostgreSQL DDL operations via DynamicSchemaEngine.
     """
@@ -232,3 +232,108 @@ class DynamicSchemaEngineTests(TestCase):
         # 5. Drop dynamic table
         meta_model.delete()
         self.assertFalse(DynamicSchemaEngine.table_exists(table_name))
+
+
+class DynamicModelFactoryTests(TransactionTestCase):
+    """
+    Test suite verifying in-memory compilation of live Django models from MetaModel definitions.
+    """
+
+    def test_dynamic_model_compilation_and_orm(self):
+        """Verify dynamic model compilation, standard ORM CRUD queries, and audit headers."""
+        from apps.meta_engine.model_factory import DynamicModelFactory
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+
+        meta_model = MetaModel.objects.create(
+            name="store_product",
+            label="Store Product",
+            app_label="shop",
+        )
+        MetaField.objects.create(
+            model=meta_model,
+            name="title",
+            label="Product Title",
+            field_type="char",
+            max_length=150,
+            required=True,
+        )
+        MetaField.objects.create(
+            model=meta_model,
+            name="price",
+            label="Price",
+            field_type="decimal",
+            max_digits=10,
+            decimal_places=2,
+            required=True,
+        )
+        MetaField.objects.create(
+            model=meta_model,
+            name="in_stock",
+            label="In Stock",
+            field_type="boolean",
+            default_value="true",
+        )
+
+        # 1. Compile in-memory model
+        ProductClass = DynamicModelFactory.get_or_create_model(meta_model, force_reload=True)
+        self.assertIsNotNone(ProductClass)
+        self.assertEqual(ProductClass._meta.db_table, meta_model.table_name)
+
+        # 2. Standard ORM Create
+        product = ProductClass.objects.create(title="Ergonomic Keyboard", price="89.50", in_stock=True)
+        self.assertIsInstance(product.id, uuid.UUID)
+        self.assertIsNotNone(product.created_at)
+        self.assertIsNotNone(product.updated_at)
+        self.assertEqual(product.title, "Ergonomic Keyboard")
+        self.assertEqual(str(product), "Ergonomic Keyboard")
+
+        # 3. Standard ORM Filter & Count
+        self.assertEqual(ProductClass.objects.filter(in_stock=True).count(), 1)
+
+        # 4. Standard ORM Update
+        product.price = "79.99"
+        product.save()
+        reloaded = ProductClass.objects.get(id=product.id)
+        self.assertEqual(str(reloaded.price), "79.99")
+
+        # Clean up
+        meta_model.delete()
+
+    def test_dynamic_model_soft_delete(self):
+        """Verify dynamic model compilation with soft-delete paranoid manager."""
+        from apps.meta_engine.model_factory import DynamicModelFactory
+
+        meta_model = MetaModel.objects.create(
+            name="client_contract",
+            label="Client Contract",
+            app_label="contracts",
+            is_soft_delete=True,
+        )
+        MetaField.objects.create(
+            model=meta_model,
+            name="contract_number",
+            label="Contract #",
+            field_type="char",
+            max_length=50,
+            required=True,
+        )
+
+        ContractClass = DynamicModelFactory.get_or_create_model(meta_model, force_reload=True)
+
+        contract = ContractClass.objects.create(contract_number="CTR-2026-001")
+        self.assertFalse(contract.is_deleted)
+        self.assertIsNone(contract.deleted_at)
+
+        # Perform soft delete
+        contract.delete()
+        self.assertTrue(contract.is_deleted)
+        self.assertEqual(ContractClass.objects.count(), 0)
+        self.assertEqual(ContractClass.all_objects.count(), 1)
+        self.assertEqual(ContractClass.objects.dead().count(), 1)
+
+        # Restore
+        contract.restore()
+        self.assertFalse(contract.is_deleted)
+        self.assertEqual(ContractClass.objects.count(), 1)
+
+        meta_model.delete()
