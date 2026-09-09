@@ -245,10 +245,14 @@ The automation framework decouples trigger detection from business execution via
   ```
 - **Dynamic Introspection**: Zero-touch model discovery utilizes `django.apps.apps.get_models()`. Form choices dynamically present all installed models formatted as `<app_label>.<ModelName>` and expose field dictionaries for target conditions.
 
-### 10.2 Triggers: Model Events & Time Schedules
-Each `AutomationRule` is bound to either a `model_event` or `time_based` trigger:
-1. **Model Event Triggers**:
-   - Supported actions: `create` (post_save created=True), `update` (post_save created=False), `delete` (post_delete).
+### 10.2 Triggers: Model Events, State Transitions & Time Schedules
+Each `AutomationRule` (exposed in Admin as **Automation Action**) is bound to either a `model_event` or `time_based` trigger:
+1. **Model Event & State Transition Triggers (Odoo-Style)**:
+   - Supported actions: `created` (post_save created=True), `updated` (post_save created=False), `field_changed` (state transitions), `deleted` (post_delete), or `any`.
+   - **State Transition Engine**: Employs a lightweight `pre_save` signal hook caching the database state (`_automation_old_values`). On `post_save`, `AutomationEngine` computes `changed_fields` and evaluates:
+     - `trigger_field`: Monitors a specific attribute (e.g. `status` or `review_verdict`).
+     - `previous_value`: Ensures the field transitioned *from* this value (e.g. `review`).
+     - `target_value`: Ensures the field transitioned *to* this value (e.g. `completed`).
    - Dynamic lifecycle signals inspect `filter_conditions` (e.g. `{"is_agent": True}`).
    - Safe signal connection: Core model signals are connected on module import, while dynamic models declared in active rules are connected post-migration and during rule save.
 2. **Time-Based Triggers**:
@@ -256,6 +260,7 @@ Each `AutomationRule` is bound to either a `model_event` or `time_based` trigger
    - **Mode: `recurring`**: Recurring interval or cron-based execution.
    - **Supported Units**: `seconds`, `minutes`, `hours`, `days`, `weeks`, `months`.
    - Native integration with `django_celery_beat.models.PeriodicTask`, `IntervalSchedule`, and `CrontabSchedule`.
+   - **Admin Cleanliness**: Raw Celery Beat tables (`ClockedSchedule`, `CrontabSchedule`, `IntervalSchedule`, `SolarSchedule`, `PeriodicTask`) are unregistered from Django Admin, presenting a clean interface centered exclusively on **Automation Actions** and **Automation Logs**.
 
 ### 10.3 Celery & Celery Beat Execution Flow
 ```

@@ -155,6 +155,35 @@ Build a centralized, domain-agnostic Automation and Event-Driven Orchestration E
 - *2026-09-09*: Added 11 automated unit tests in `apps/automation/tests.py` covering registry, condition matching, once/recurring schedules, Celery task execution, Beat synchronization, live provisioning action, and REST API. Full test suite passing at 22/22 (100%).
 
 ### 4. Current Focus
-Phase 5 completed. Ready for review and merge into `main`.
+Phase 5 completed. Moving to Phase 5.1 (Admin UX Cleanliness & Odoo-Style State Transition Engine).
+
+---
+
+## Phase 5.1: Admin UX Cleanliness & Odoo-Style State Transition Engine (COMPLETED)
+
+### 1. Objective & Scope
+Refine the Automation Engine per user feedback and Odoo's design principles:
+- **Admin Sidebar Polish**: Unregister raw Celery Beat plumbing models (`ClockedSchedule`, `CrontabSchedule`, `IntervalSchedule`, `SolarSchedule`, `PeriodicTask`) from Django Admin to eliminate confusing tables.
+- **Naming Alignment**: Rename `AutomationRule` verbose names to "Automation Action" / "Automation Actions".
+- **Odoo-Style State Transitions**: Support field-level change triggers (`trigger_field`) with `previous_value` and `target_value` state transition conditions.
+- **Empirical Validation**: Automated test coverage and admin unregistration verification.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Admin Cleanup & Verbose Naming Alignment** - COMPLETED (Commit: `584141c`)
+- [x] **Sub-task 2: State Transition & Field Change Detection Engine** - COMPLETED (Commit: `584141c`)
+- [x] **Sub-task 3: Forms & Admin UI Integration** - COMPLETED (Commit: `584141c`)
+- [x] **Sub-task 4: Automated Testing & Verification** - COMPLETED (Commit: `584141c`)
+- [x] **Sub-task 5: Documentation & Architecture Synchronization** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 5.1)
+- *2026-09-09*: Initiated Phase 5.1 per user audio feedback regarding confusing Celery Beat table names (`Clocked`, `Crontabs`, `Solar events`, `Periodic tasks`) and preference for "Automation Actions" and Odoo-style state transition triggers.
+- *2026-09-09*: Unregistered `ClockedSchedule`, `CrontabSchedule`, `IntervalSchedule`, `SolarSchedule`, and `PeriodicTask` from `admin.site` in `backend/apps/automation/admin.py`, keeping the sidebar clean and dedicated exclusively to high-level **Automation Actions** and **Automation Logs**.
+- *2026-09-09*: Added `trigger_field`, `previous_value`, and `target_value` to `AutomationRule` with migration `0002_alter_automationrule_options_and_more`.
+- *2026-09-09*: Implemented lightweight `pre_save` signal hook caching `_automation_old_values` on model instances so `AutomationEngine` accurately detects changed fields and validates `previous_value` and `target_value` transitions without unnecessary database overhead.
+- *2026-09-09*: Added unit tests verifying Celery Beat models are unregistered from Admin, and verified positive/negative test cases for state transitions. Full test suite passing at 24/24 (100%).
+
+### 4. Current Focus
+Phase 5.1 completed. Ready for user review and merge into `main`.
+
 
 
