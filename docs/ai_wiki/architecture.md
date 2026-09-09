@@ -52,10 +52,16 @@ economy_editor/
 │   │   │   ├── registry.py          # 4-category ServiceRegistry with dynamic introspection
 │   │   │   ├── scheduler.py         # django-celery-beat synchronization engine
 │   │   │   ├── tasks.py             # Celery asynchronous execution tasks
-│   │   │   └── views.py             # REST API endpoints (/api/automation/)
+│   │   ├── api_gateway/             # Developer API Gateway, Scoped Keys & Webhooks
+│   │   ├── audit/                   # Immutable Activity Audit Trail & Context Middleware
+│   │   ├── automation/              # Centralized Automation Engine & Service Registry
 │   │   ├── core/                    # Core foundations, base models, settings hub & i18n
 │   │   ├── integration/             # Integration App & Hermes catalog
-│   │   └── meta_engine/             # Metadata Engine & Modular App Runtime
+│   │   ├── media/                   # Document & Media Management
+│   │   ├── meta_engine/             # Metadata Engine & Modular App Runtime
+│   │   ├── notifications/           # Universal Notifications Engine
+│   │   ├── reports/                 # Dynamic Visual Reporting & Vector PDF Engine
+│   │   └── tenants/                 # Multi-Tenancy, Organizations & Workspaces
 │   │       ├── admin.py             # Admin App Store & Studio UI
 │   │       ├── app_installer.py     # Multi-pass declarative app installer
 │   │       ├── app_uninstaller.py   # Reverse dependency guard & safe uninstaller

@@ -6,12 +6,12 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 18 Completed (Developer API Gateway, Scoped Keys & Inbound Webhooks across hashed secret tokens, HMAC verification, REST API ViewSets, and Admin management)
-
+- **Status**: Phase 19 Completed (Dynamic Visual Reporting & PDF Generation Engine across dual-representation storage, WeasyPrint vector PDF rendering, Arabic RTL typography, REST endpoints, and automation actions)
 
 ---
 
 ## Primary System Components
+
 
 ### 1. Backend Service (`backend/`)
 - **Framework**: Django 5.x with Django REST Framework on Python 3.11.
@@ -186,10 +186,19 @@ An extensible, production-grade starter template pairing a **Django** web framew
   - `APIKeyAuthentication`: DRF authentication class checking `X-API-Key` or `Authorization: Api-Key <raw_key>` headers, matching 12-char prefix, verifying SHA-256 hash digest, checking expiration and IP allowlists, setting active tenant context on request, and updating `last_used_at`.
 - **HMAC Signature Verification Engine (`signature.py`)**:
   - `verify_hmac_signature`: Supports GitHub (`X-Hub-Signature-256`), Stripe (`Stripe-Signature` timestamped), Slack (`X-Slack-Signature`), and custom HMAC SHA-256 providers.
+### 17. Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`)
+- **Data Models (`models.py`)**:
+  - `ReportTemplate`: Multi-tenant, soft-deletable document template specification supporting Jinja2/Django HTML compilation, visual layout schemas (`layout_schema`), CSS `@page` media rules, page formats (`A4`, `Letter`, `thermal_80mm`), orientations (`portrait`, `landscape`), and running headers/footers.
+  - `ReportExecutionLog`: Audit log tracking template rendering duration (`duration_ms`), output format (`html`/`pdf`), requesting actor, file size, status (`success`/`failed`), and generated `Document` attachments.
+- **Rendering & Conversion Engine (`engine.py`)**:
+  - `ReportEngine`: HTML template compiler with model introspection token bridge (`get_model_tokens`), WeasyPrint vector PDF rendering (`render_pdf`), and automatic Arabic RTL typography detection (`dir="rtl" lang="ar"`).
 - **REST API Gateway & Django Admin**:
-  - Public Ingestion Endpoint: `POST /api/v1/gateway/webhooks/<slug>/ingest/` (verifies HMAC, parses event type, logs `WebhookEvent`).
-  - Key & Webhook Management ViewSets: `APIKeyViewSet` (`/api/v1/gateway/keys/`), `InboundWebhookViewSet` (`/api/v1/gateway/webhooks/configs/`), `WebhookEventViewSet` (`/api/v1/gateway/webhooks/events/`).
-  - Django Admin integration with prefix search, read-only key hashes, and event payload viewers.
+  - Template ViewSet: `/api/v1/reports/templates/`, `/preview/` (interactive HTML), `/render/` (vector PDF binary download), `/tokens/` (introspected model tokens).
+  - Execution Log ViewSet: `/api/v1/reports/logs/`.
+  - Django Admin integration with changeform actions for `▶ Preview HTML` and `▶ Render PDF`.
+- **Automation Engine Bridge (`actions.py`)**:
+  - Registered `@register_action("generate_pdf_report", ...)` action allowing system triggers to compile PDF reports, store them in `apps.media`, and notify requesting actors.
+
 
 
 
