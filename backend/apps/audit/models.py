@@ -23,10 +23,26 @@ class ImmutabilityError(PermissionDenied):
     pass
 
 
+class ActivityLogQuerySet(models.QuerySet):
+    """QuerySet enforcing immutability on bulk operations."""
+
+    def delete(self, allow_purge: bool = False):
+        """Disallow bulk deletion unless allow_purge=True is provided."""
+        if not allow_purge:
+            raise ImmutabilityError(_("ActivityLog entries are immutable and cannot be bulk deleted."))
+        return super().delete()
+
+    def update(self, **kwargs):
+        """Disallow bulk updates on immutable audit log entries."""
+        raise ImmutabilityError(_("ActivityLog entries are immutable and cannot be updated."))
+
+
 class ActivityLog(UUIDModel):
     """
     Immutable, append-only log entry recording a human, bot, or system action.
     """
+    objects = ActivityLogQuerySet.as_manager()
+
     # Actor Types
     ACTOR_USER = "user"
     ACTOR_BOT = "bot"

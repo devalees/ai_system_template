@@ -114,6 +114,24 @@ class ActivityLogModelTests(TestCase):
         log.delete(allow_purge=True)
         self.assertFalse(ActivityLog.objects.filter(pk=log.pk).exists())
 
+    def test_bulk_immutability_enforced_on_queryset(self):
+        """Verify QuerySet.update and QuerySet.delete enforce immutability."""
+        log = ActivityLog.objects.create(
+            actor=self.user,
+            action=ActivityLog.ACTION_CREATE,
+            object_repr="Bulk Item",
+        )
+
+        with self.assertRaises(ImmutabilityError):
+            ActivityLog.objects.filter(pk=log.pk).update(object_repr="Illegal Update")
+
+        with self.assertRaises(ImmutabilityError):
+            ActivityLog.objects.filter(pk=log.pk).delete()
+
+        # QuerySet delete with allow_purge=True should succeed
+        ActivityLog.objects.filter(pk=log.pk).delete(allow_purge=True)
+        self.assertFalse(ActivityLog.objects.filter(pk=log.pk).exists())
+
 
 class AuditContextAndMiddlewareTests(TestCase):
     """
@@ -227,4 +245,195 @@ class AuditContextAndMiddlewareTests(TestCase):
 
         self.assertTrue(response.has_header("X-Request-ID"))
         self.assertTrue(response["X-Request-ID"].startswith("req_"))
+
+
+class AuditSignalAndDiffingTests(TestCase):
+    """
+    Test suite for model diffing signals and security authentication events.
+    """
+
+    def setUp(self):
+        from apps.audit.registry import register_auditable
+        register_auditable(Organization)
+
+        self.user = User.objects.create_user(
+            username="signalsuser",
+            email="signals@example.com",
+            password="securePassword456!",
+        )
+
+    def tearDown(self):
+        from apps.audit.registry import unregister_auditable
+        unregister_auditable(Organization)
+
+    def test_model_create_signal_generates_audit_log(self):
+        """Verify saving a new auditable model creates an ActivityLog with CREATE action."""
+        from apps.audit.context import audit_context
+
+        with audit_context(
+            actor=self.user,
+            ip="10.20.30.40",
+            user_agent="SignalTester/1.0",
+            request_id="req-sig-001",
+        ):
+            org = Organization.objects.create(
+                name="Acme Signals",
+                slug="acme-signals",
+                created_by=self.user,
+            )
+
+        log = ActivityLog.objects.filter(
+            object_id=str(org.id),
+            action=ActivityLog.ACTION_CREATE,
+        ).first()
+
+        self.assertIsNotNone(log)
+        self.assertEqual(log.actor, self.user)
+        self.assertEqual(log.ip_address, "10.20.30.40")
+        self.assertEqual(log.user_agent, "SignalTester/1.0")
+        self.assertEqual(log.request_id, "req-sig-001")
+        self.assertIn("name", log.changes)
+        self.assertEqual(log.changes["name"]["new"], "Acme Signals")
+
+    def test_model_update_signal_generates_diff(self):
+        """Verify modifying fields generates an ActivityLog with old/new diff."""
+        from apps.audit.context import audit_context
+
+        org = Organization.objects.create(
+            name="Initial Name",
+            slug="initial-slug",
+            created_by=self.user,
+        )
+        # Clear creation log
+        ActivityLog.objects.filter(object_id=str(org.id)).delete(allow_purge=True)
+
+        with audit_context(actor=self.user, request_id="req-update-123"):
+            org.name = "Updated Name"
+            org.max_users = 50
+            org.save()
+
+        log = ActivityLog.objects.filter(
+            object_id=str(org.id),
+            action=ActivityLog.ACTION_UPDATE,
+        ).first()
+
+        self.assertIsNotNone(log)
+        self.assertEqual(log.changes["name"]["old"], "Initial Name")
+        self.assertEqual(log.changes["name"]["new"], "Updated Name")
+        self.assertEqual(log.changes["max_users"]["old"], 10)
+        self.assertEqual(log.changes["max_users"]["new"], 50)
+        # Ensure updated_at is NOT in changes diff
+        self.assertNotIn("updated_at", log.changes)
+
+    def test_model_update_without_changes_skips_audit_log(self):
+        """Verify saving without changing fields suppresses empty audit logs."""
+        from apps.audit.context import audit_context
+
+        org = Organization.objects.create(
+            name="Static Org",
+            slug="static-org",
+            created_by=self.user,
+        )
+        ActivityLog.objects.filter(object_id=str(org.id)).delete(allow_purge=True)
+
+        with audit_context(actor=self.user):
+            org.save()
+
+        count = ActivityLog.objects.filter(object_id=str(org.id)).count()
+        self.assertEqual(count, 0)
+
+    def test_model_soft_delete_and_restore_signals(self):
+        """Verify soft-deleting and restoring an auditable model creates DELETE and RESTORE audit logs."""
+        from apps.audit.context import audit_context
+
+        org = Organization.objects.create(
+            name="Soft Delete Org",
+            slug="soft-delete-org",
+            created_by=self.user,
+        )
+        org_id = str(org.id)
+
+        # 1. Soft delete
+        with audit_context(actor=self.user, request_id="req-soft-del"):
+            org.delete()  # Performs soft delete (is_deleted=True)
+
+        soft_del_log = ActivityLog.objects.filter(
+            object_id=org_id,
+            action=ActivityLog.ACTION_DELETE,
+        ).first()
+        self.assertIsNotNone(soft_del_log)
+        self.assertEqual(soft_del_log.changes["is_deleted"]["old"], False)
+        self.assertEqual(soft_del_log.changes["is_deleted"]["new"], True)
+
+        # 2. Restore
+        with audit_context(actor=self.user, request_id="req-restore"):
+            org.restore()
+
+        restore_log = ActivityLog.objects.filter(
+            object_id=org_id,
+            action=ActivityLog.ACTION_RESTORE,
+        ).first()
+        self.assertIsNotNone(restore_log)
+        self.assertEqual(restore_log.changes["is_deleted"]["old"], True)
+        self.assertEqual(restore_log.changes["is_deleted"]["new"], False)
+
+    def test_model_hard_delete_signal(self):
+        """Verify permanently deleting a model creates a HARD_DELETE audit log."""
+        from apps.audit.context import audit_context
+
+        org = Organization.objects.create(
+            name="Doomed Org",
+            slug="doomed-org",
+            created_by=self.user,
+        )
+        org_id = str(org.id)
+
+        with audit_context(actor=self.user, request_id="req-del-999"):
+            org.hard_delete()
+
+        log = ActivityLog.objects.filter(
+            object_id=org_id,
+            action=ActivityLog.ACTION_HARD_DELETE,
+        ).first()
+
+        self.assertIsNotNone(log)
+        self.assertEqual(log.actor, self.user)
+        self.assertEqual(log.request_id, "req-del-999")
+
+    def test_auth_security_signals(self):
+        """Verify Django auth signals trigger ActivityLog entries."""
+        from django.contrib.auth import user_logged_in, user_logged_out, user_login_failed
+        from apps.audit.context import audit_context
+
+        with audit_context(ip="127.0.0.1", user_agent="AuthTestClient/1.0"):
+            # 1. Login signal
+            user_logged_in.send(sender=User, request=None, user=self.user)
+            login_log = ActivityLog.objects.filter(
+                actor=self.user,
+                action=ActivityLog.ACTION_LOGIN,
+            ).first()
+            self.assertIsNotNone(login_log)
+            self.assertEqual(login_log.status, ActivityLog.STATUS_SUCCESS)
+
+            # 2. Logout signal
+            user_logged_out.send(sender=User, request=None, user=self.user)
+            logout_log = ActivityLog.objects.filter(
+                actor=self.user,
+                action=ActivityLog.ACTION_LOGOUT,
+            ).first()
+            self.assertIsNotNone(logout_log)
+
+            # 3. Login failed signal
+            user_login_failed.send(
+                sender=User,
+                credentials={"username": "malicious_actor"},
+                request=None,
+            )
+            failed_log = ActivityLog.objects.filter(
+                action=ActivityLog.ACTION_LOGIN_FAILED,
+            ).first()
+            self.assertIsNotNone(failed_log)
+            self.assertEqual(failed_log.status, ActivityLog.STATUS_FAILURE)
+            self.assertEqual(failed_log.metadata.get("attempted_username"), "malicious_actor")
+
 
