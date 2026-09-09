@@ -325,11 +325,11 @@ Address the UI and runtime gap for Action Parameters (`action_params`) across He
   - Verify parameter interpolation, Hermes dispatch with resolved prompt strings, and UI regression coverage.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Dynamic Template Resolution for `action_params` in `AutomationEngine` (`engine.py`)** - COMPLETED
-- [x] **Sub-task 2: Persona-Specific Prompt Presets & Preset Registry (`registry.py` / `actions.py`)** - COMPLETED
-- [x] **Sub-task 3: Action Params Assistant Component in Reactive Admin UI (`automation_reactive_admin.js`)** - COMPLETED
-- [x] **Sub-task 4: Automated Testing for Interpolated Action Params (44 Tests Passing)** - COMPLETED
-- [x] **Sub-task 5: Documentation, Architecture Synchronization & Verification** - COMPLETED
+- [x] **Sub-task 1: Dynamic Template Resolution for `action_params` in `AutomationEngine` (`engine.py`)** - COMPLETED (Commit: `adeddac`)
+- [x] **Sub-task 2: Persona-Specific Prompt Presets & Preset Registry (`registry.py` / `actions.py`)** - COMPLETED (Commit: `adeddac`)
+- [x] **Sub-task 3: Action Params Assistant Component in Reactive Admin UI (`automation_reactive_admin.js`)** - COMPLETED (Commit: `adeddac`)
+- [x] **Sub-task 4: Automated Testing for Interpolated Action Params (44 Tests Passing)** - COMPLETED (Commit: `adeddac`)
+- [x] **Sub-task 5: Documentation, Architecture Synchronization & Verification** - COMPLETED (Commit: `adeddac`)
 
 ### 3. Key Decisions & Deviations (Phase 10)
 - *2026-09-09*: Added prompt presets tailored to the 5 standard Hermes Agent personas (`cost_controller`, `qa_auditor`, `orchestrator`, `comms_agent`, `archivist`).
