@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.tenants',
     'apps.audit',
+    'apps.notifications',
     'apps.meta_engine',
     'apps.integration',
     'apps.automation',
