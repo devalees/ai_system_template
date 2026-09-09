@@ -208,3 +208,50 @@ def generic_webhook_action(context: Dict[str, Any]) -> Dict[str, Any]:
         "status_code": resp.status_code,
         "response_text": resp.text[:300],
     }
+
+
+@register_action(
+    name="provision_user_profile",
+    category="internal_app",
+    description="Provisions or updates a 1-to-1 Profile for a Django User, with automatic AI Agent bot detection",
+    schema={
+        "username": "Django User username (or pk in context)",
+    }
+)
+def provision_user_profile_action(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Action Handler: Reified User Profile Auto-Provisioning.
+    Automatically ensures every auth.User has an initialized Profile in integration.
+    """
+    from apps.integration.models import Profile
+
+    username = context.get('username')
+    user = None
+    if username:
+        user = User.objects.filter(username=username).first()
+    if not user and context.get('pk'):
+        user = User.objects.filter(pk=context.get('pk')).first()
+    if not user:
+        raise ValueError(f"User not found for context: {context}")
+
+    is_bot = user.username.startswith("bot_")
+    profile_slug = user.username.removeprefix("bot_") if is_bot else ""
+    profile, created = Profile.objects.get_or_create(
+        user=user,
+        defaults={
+            "display_name": user.get_full_name() or user.username,
+            "name": profile_slug or user.username,
+            "hermes_profile_name": profile_slug,
+            "is_agent": is_bot,
+            "user_type": "agent" if is_bot else ("human" if user.is_staff else "client"),
+        }
+    )
+    return {
+        "status": "success",
+        "profile_id": str(profile.id),
+        "username": user.username,
+        "is_agent": profile.is_agent,
+        "user_type": profile.user_type,
+        "created": created,
+    }
+

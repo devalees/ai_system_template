@@ -1,12 +1,12 @@
 """
-Management command to seed default/flagship automation rules.
+Management command to seed default/flagship automation triggers and action pipelines.
 """
 
 from django.core.management.base import BaseCommand
-from apps.automation.models import AutomationRule
+from apps.automation.models import AutomationTrigger, AutomationAction
 
 
-DEFAULT_RULES = [
+DEFAULT_TRIGGERS = [
     {
         "name": "Auto-Provision Hermes Profile on Agent User Creation",
         "description": "Automatically generates DRF auth token, creates declarative configuration files, and injects runtime .env into the Hermes Agent container whenever an Agent User is created or updated in Django.",
@@ -15,11 +15,19 @@ DEFAULT_RULES = [
         "trigger_model": "integration.Profile",
         "event_type": "any",
         "filter_conditions": {"is_agent": True},
-        "action_category": "hermes_agent",
-        "action_type": "provision_hermes_profile",
-        "action_params": {},
         "is_system": True,
         "is_active": True,
+        "actions": [
+            {
+                "name": "Provision Hermes Profile Files & Token",
+                "sequence": 10,
+                "action_category": "hermes_agent",
+                "action_type": "provision_hermes_profile",
+                "action_params": {},
+                "is_system": True,
+                "is_active": True,
+            }
+        ]
     },
     {
         "name": "Daily Spend & Token Audit Dispatch",
@@ -28,14 +36,22 @@ DEFAULT_RULES = [
         "execution_mode": "recurring",
         "schedule_unit": "hours",
         "schedule_value": 24,
-        "action_category": "hermes_agent",
-        "action_type": "dispatch_hermes_prompt",
-        "action_params": {
-            "profile": "cost_controller",
-            "prompt": "Perform daily token expenditure and budget status audit across all agent profiles."
-        },
         "is_system": True,
         "is_active": True,
+        "actions": [
+            {
+                "name": "Dispatch Cost Controller Audit",
+                "sequence": 10,
+                "action_category": "hermes_agent",
+                "action_type": "dispatch_hermes_prompt",
+                "action_params": {
+                    "profile": "cost_controller",
+                    "prompt": "Perform daily token expenditure and budget status audit across all agent profiles."
+                },
+                "is_system": True,
+                "is_active": True,
+            }
+        ]
     },
     {
         "name": "QA Review Routing on Task Status Change",
@@ -46,14 +62,22 @@ DEFAULT_RULES = [
         "event_type": "field_changed",
         "trigger_field": "status",
         "target_value": "review",
-        "action_category": "hermes_agent",
-        "action_type": "dispatch_hermes_prompt",
-        "action_params": {
-            "profile": "qa_auditor",
-            "prompt": "Evaluate task quality, output correctness, and compliance for task in review."
-        },
         "is_system": True,
         "is_active": True,
+        "actions": [
+            {
+                "name": "Dispatch QA Auditor Review",
+                "sequence": 10,
+                "action_category": "hermes_agent",
+                "action_type": "dispatch_hermes_prompt",
+                "action_params": {
+                    "profile": "qa_auditor",
+                    "prompt": "Evaluate task quality, output correctness, and compliance for task in review."
+                },
+                "is_system": True,
+                "is_active": True,
+            }
+        ]
     },
     {
         "name": "Daily Budget Alert Notification",
@@ -62,41 +86,86 @@ DEFAULT_RULES = [
         "execution_mode": "recurring",
         "schedule_unit": "hours",
         "schedule_value": 12,
-        "action_category": "hermes_agent",
-        "action_type": "dispatch_hermes_prompt",
-        "action_params": {
-            "profile": "cost_controller",
-            "prompt": "Audit recent spend reports and alert on budget variance exceeding 80%."
-        },
         "is_system": True,
         "is_active": True,
+        "actions": [
+            {
+                "name": "Dispatch Budget Variance Check",
+                "sequence": 10,
+                "action_category": "hermes_agent",
+                "action_type": "dispatch_hermes_prompt",
+                "action_params": {
+                    "profile": "cost_controller",
+                    "prompt": "Audit recent spend reports and alert on budget variance exceeding 80%."
+                },
+                "is_system": True,
+                "is_active": True,
+            }
+        ]
+    },
+    {
+        "name": "Auto-Provision Profile on User Creation",
+        "description": "Reified system lifecycle routine automatically ensuring every auth.User has an initialized Profile in the integration system.",
+        "trigger_type": "model_event",
+        "execution_mode": "recurring",
+        "trigger_model": "auth.User",
+        "event_type": "created",
+        "is_system": True,
+        "is_active": True,
+        "actions": [
+            {
+                "name": "Provision Django User Profile",
+                "sequence": 10,
+                "action_category": "internal_app",
+                "action_type": "provision_user_profile",
+                "action_params": {},
+                "is_system": True,
+                "is_active": True,
+            }
+        ]
     },
 ]
 
 
 class Command(BaseCommand):
-    help = "Seeds default flagship automation rules for Hermes profiles and scheduling."
+    help = "Seeds default flagship automation triggers and action pipelines."
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.MIGRATE_HEADING("Seeding default automation rules..."))
+        self.stdout.write(self.style.MIGRATE_HEADING("Seeding default automation triggers & pipelines..."))
 
-        created_count = 0
-        updated_count = 0
+        created_triggers = 0
+        updated_triggers = 0
+        created_actions = 0
 
-        for rule_data in DEFAULT_RULES:
-            name = rule_data["name"]
-            rule, created = AutomationRule.objects.update_or_create(
+        for item in DEFAULT_TRIGGERS:
+            name = item["name"]
+            actions_data = item.get("actions", [])
+            trigger_fields = {k: v for k, v in item.items() if k != "actions"}
+
+            trigger, created = AutomationTrigger.objects.update_or_create(
                 name=name,
-                defaults=rule_data
+                defaults=trigger_fields
             )
-            # Trigger save() to ensure signals and Celery Beat schedules are synchronized
-            rule.save()
+            trigger.save()
 
             if created:
-                created_count += 1
-                self.stdout.write(self.style.SUCCESS(f"  ✓ Created rule: {name}"))
+                created_triggers += 1
+                self.stdout.write(self.style.SUCCESS(f"  ✓ Trigger: {name}"))
             else:
-                updated_count += 1
-                self.stdout.write(self.style.NOTICE(f"  • Updated rule: {name}"))
+                updated_triggers += 1
+                self.stdout.write(self.style.NOTICE(f"  • Trigger (updated): {name}"))
 
-        self.stdout.write(self.style.SUCCESS(f"\nAutomation seeding complete! ({created_count} created, {updated_count} updated)"))
+            for act_data in actions_data:
+                act_name = act_data["name"]
+                action, act_created = AutomationAction.objects.update_or_create(
+                    trigger=trigger,
+                    name=act_name,
+                    defaults=act_data
+                )
+                if act_created:
+                    created_actions += 1
+                    self.stdout.write(self.style.SUCCESS(f"     ↳ Action created: {act_name}"))
+
+        self.stdout.write(self.style.SUCCESS(
+            f"\nAutomation seeding complete! ({created_triggers} triggers created, {updated_triggers} triggers updated, {created_actions} actions created)"
+        ))
