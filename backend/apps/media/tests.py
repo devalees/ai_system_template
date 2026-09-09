@@ -156,3 +156,68 @@ class DocumentAdminTests(TestCase):
         self.assertIn("B", size_str)
 
 
+class DocumentAPITests(TestCase):
+    """Test suite verifying REST API endpoints for upload, document listing, and downloading."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+        from apps.tenants.models import OrganizationMembership
+        self.client = APIClient()
+        self.org = Organization.objects.create(name="Doc API Org", slug="doc-api-org")
+        self.user = User.objects.create_user(username="docuser", password="password123")
+        OrganizationMembership.objects.create(user=self.user, organization=self.org, role=OrganizationMembership.ROLE_ADMIN)
+
+        self.client.force_authenticate(user=self.user)
+        self.client.credentials(HTTP_X_WORKSPACE_SLUG="doc-api-org")
+
+        self.test_content = b"Binary API test file payload"
+        self.upload_file = SimpleUploadedFile("api_upload.pdf", self.test_content, content_type="application/pdf")
+
+    def test_upload_file_api(self):
+        """Verify POST /api/v1/media/documents/upload/ handles multipart file upload."""
+        res = self.client.post("/api/v1/media/documents/upload/", {
+            "file": self.upload_file,
+            "filename": "custom_api_upload.pdf",
+            "is_public": False
+        }, format="multipart")
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data["filename"], "custom_api_upload.pdf")
+        self.assertEqual(len(res.data["checksum_sha256"]), 64)
+        self.assertIn("download_url", res.data)
+
+        # Check DB record
+        doc = Document.objects.filter(id=res.data["id"]).first()
+        self.assertIsNotNone(doc)
+        self.assertEqual(doc.uploaded_by, self.user)
+        self.assertEqual(doc.organization, self.org)
+
+    def test_document_list_api(self):
+        """Verify GET /api/v1/media/documents/ lists workspace documents."""
+        doc = Document.objects.create(
+            organization=self.org,
+            file=self.upload_file,
+            filename="list_doc.pdf",
+            uploaded_by=self.user
+        )
+        res = self.client.get("/api/v1/media/documents/")
+        self.assertEqual(res.status_code, 200)
+        results = res.data.get("results") if isinstance(res.data, dict) else res.data
+        self.assertGreaterEqual(len(results), 1)
+        filenames = [d["filename"] for d in results]
+        self.assertIn("list_doc.pdf", filenames)
+
+    def test_document_download_api(self):
+        """Verify GET /api/v1/media/documents/<id>/download/ streams file content."""
+        doc = Document.objects.create(
+            organization=self.org,
+            file=self.upload_file,
+            filename="download_me.txt",
+            uploaded_by=self.user
+        )
+        res = self.client.get(f"/api/v1/media/documents/{doc.id}/download/")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res["Content-Type"], doc.mime_type)
+        self.assertIn("attachment", res["Content-Disposition"])
+
+
+
