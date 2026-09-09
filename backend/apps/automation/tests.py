@@ -990,6 +990,15 @@ class AutomationDirectExecutionTests(TestCase):
         self.client = APIClient()
         self.client.force_login(self.admin_user)
 
+        @register_action(
+            name="test_direct_mock_action",
+            category="internal_app",
+            description="Mock action for unit test runner",
+            schema={}
+        )
+        def mock_handler(ctx):
+            return {"status": "ok"}
+
         self.trigger = AutomationTrigger.objects.create(
             name="Direct Execution Pipeline",
             trigger_type="model_event",
@@ -1001,8 +1010,8 @@ class AutomationDirectExecutionTests(TestCase):
             trigger=self.trigger,
             name="Direct Cost Audit Step",
             sequence=1,
-            action_category="hermes_agent",
-            action_type="hermes_profile:cost_controller",
+            action_category="internal_app",
+            action_type="test_direct_mock_action",
             action_params={
                 "prompt": "Audit task #{{pk}} '{{task_name}}' costing ${{cost_usd}} for user {{username}}"
             },

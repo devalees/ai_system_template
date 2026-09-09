@@ -189,8 +189,9 @@ def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
+    timeout_seconds = getattr(settings, 'HERMES_REQUEST_TIMEOUT', 120)
     try:
-        resp = requests.post(f"{gateway_url}/v1/chat/completions", json=payload, headers=headers, timeout=30)
+        resp = requests.post(f"{gateway_url}/v1/chat/completions", json=payload, headers=headers, timeout=(10, timeout_seconds))
         is_error = resp.status_code >= 400
         res_data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text[:300]
         err_detail = ""
