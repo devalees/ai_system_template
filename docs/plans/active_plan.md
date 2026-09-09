@@ -338,10 +338,41 @@ Address the UI and runtime gap for Action Parameters (`action_params`) across He
 - *2026-09-09*: Verified 44/44 unit tests passing across all Django applications.
 
 ### 4. Current Focus
-Phase 10 complete and verified across all 44 unit tests. Ready for operator review or next phase.
+Phase 10 complete. Transitioned to Phase 11.
 
+---
 
+## Phase 11: Direct On-Page Automation Execution & Context Builder (COMPLETED)
 
+### 1. Objective & Scope
+Provide direct 1-step test execution mechanisms (`▶ Run Pipeline Now` and `▶ Run Action Now`) on both `AutomationTrigger` and `AutomationAction` Django admin change forms and list views, eliminating the need to leave the page or fabricate dummy records in other tables to test actions:
+- **Direct On-Page Execution Buttons**:
+  - Top `object-tools` button on `AutomationTrigger` change form: `▶ Run Pipeline Now`.
+  - Top `object-tools` button on `AutomationAction` change form: `▶ Run Action Now`.
+  - Injected button in `.submit-row` next to the `Save` button at the bottom of both change forms.
+  - Inline row button on `AutomationActionInline`: `▶ Run Step #{sequence}: {name}`.
+  - Action column `Execute` in both changelists (`▶ Run Pipeline` and `▶ Run Action`).
+- **Rich Execution Context Builder**:
+  - Automatically queries the monitored `trigger_model` or `target_model` for its latest live record or synthesizes sensible default test values (`task_name`, `cost_usd`, `status`, `username`, etc.).
+  - Ensures prompt template variables (`{{task_name}}`, `{{cost_usd}}`, `{{username}}`) evaluate cleanly without missing keys.
+- **Engine Manual / Force Execution Support**:
+  - Updated `AutomationEngine.execute_trigger` and `AutomationEngine.execute_action` to allow manual testing (`force_execution: True`) without skipping due to inactive status or condition rules mismatch during debugging.
+- **Unified Asynchronous Dispatch**:
+  - Dispatches tasks to the Celery worker queue immediately, displaying the Celery Task ID in admin success notifications and logging full audit entries in `AutomationLog`.
 
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Change Form Templates with Object-Tools Actions (`templates/admin/automation/...`)** - COMPLETED
+- [x] **Sub-task 2: Rich Execution Context Builder & Admin URL Endpoints (`apps.automation.admin.py`)** - COMPLETED
+- [x] **Sub-task 3: Reactive Submit-Row & Inline Button Injection (`automation_reactive_admin.js`)** - COMPLETED
+- [x] **Sub-task 4: Engine Force-Execution & Inactive Bypass (`apps.automation.engine.py`)** - COMPLETED
+- [x] **Sub-task 5: Automated Testing & Verification (49 Tests Passing)** - COMPLETED
+- [x] **Sub-task 6: Documentation & Architecture Synchronization** - COMPLETED
 
+### 3. Key Decisions & Deviations (Phase 11)
+- *2026-09-09*: Implemented `build_execution_context` in `admin.py` to automatically bridge the gap between trigger models and action prompts, pulling live records or falling back to clean defaults so operators never need to leave the page or create dummy records in other apps.
+- *2026-09-09*: Added `force_execution` flag to allow on-demand testing of draft or paused triggers/actions from the admin UI.
+- *2026-09-09*: Implemented custom change form templates (`change_form.html`) and reactive `.submit-row` injection so the execute button is readily accessible both at the top and bottom of the page.
+- *2026-09-09*: Added `AutomationDirectExecutionTests` in `tests.py` covering context extraction, fallback defaults, redirect endpoints, and HTML button formatters. Test suite expanded to 49/49 passing unit tests.
 
+### 4. Current Focus
+Phase 11 complete and empirically validated. All 49 unit tests passing.

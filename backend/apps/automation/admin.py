@@ -9,7 +9,7 @@ from django.utils.html import format_html
 
 from .models import AutomationTrigger, AutomationAction, AutomationLog, AutomationRule
 from .forms import AutomationTriggerAdminForm, AutomationActionAdminForm
-from .tasks import execute_automation_rule_task
+from .tasks import execute_automation_rule_task, execute_automation_action_task
 
 from django_celery_beat.models import (
     ClockedSchedule,
@@ -27,6 +27,55 @@ for beat_model in (ClockedSchedule, CrontabSchedule, IntervalSchedule, SolarSche
         pass
 
 
+def build_execution_context(model_identifier=None, user=None):
+    """
+    Builds a rich execution context for on-demand execution.
+    If a model_identifier is provided (e.g. 'integration.AgentTask'), retrieves the latest record's
+    fields or generates sensible default test values so prompt parameters & condition rules evaluate cleanly.
+    """
+    from django.apps import apps
+    context = {
+        "manual_trigger": True,
+        "force_execution": True,
+    }
+    if user and hasattr(user, 'username'):
+        context["username"] = user.username
+        context["user_id"] = user.id
+
+    if model_identifier:
+        try:
+            model_cls = apps.get_model(model_identifier)
+            if model_cls:
+                latest = model_cls.objects.order_by('-pk').first()
+                if latest:
+                    for field in latest._meta.fields:
+                        val = getattr(latest, field.name, None)
+                        if hasattr(val, 'pk'):
+                            context[field.name] = val.pk
+                        else:
+                            context[field.name] = val
+                    context['pk'] = latest.pk
+                    context['id'] = latest.pk
+                    context['model'] = model_identifier
+        except Exception:
+            pass
+
+    # Fallback sensible defaults if not populated from a live record
+    defaults = {
+        "pk": context.get("pk", 1),
+        "id": context.get("id", 1),
+        "task_name": "Sample Agent Task",
+        "cost_usd": 15.50,
+        "status": "completed",
+        "priority": "high",
+        "description": "On-demand test execution triggered directly from Admin UI",
+    }
+    for k, v in defaults.items():
+        context.setdefault(k, v)
+
+    return context
+
+
 class AutomationActionInline(admin.StackedInline):
     """
     Inline editor for sequenced AutomationActions inside the AutomationTrigger change form.
@@ -37,14 +86,27 @@ class AutomationActionInline(admin.StackedInline):
     extra = 1
     fk_name = 'trigger'
     fields = (
-        ('name', 'sequence', 'is_active'),
+        ('name', 'sequence', 'is_active', 'run_inline_button'),
         'description',
         ('target_model', 'target_operation'),
         'field_mappings',
         ('action_category', 'action_type'),
         'action_params',
     )
+    readonly_fields = ('run_inline_button',)
     ordering = ('sequence', 'created_at')
+
+    def run_inline_button(self, obj):
+        if obj and obj.pk:
+            url = reverse('admin:automation_action_run_now', args=[obj.pk])
+            return format_html(
+                '<a class="button" href="{}" style="background-color:#0d6efd; color:#ffffff; font-weight:bold; padding:4px 10px; border-radius:4px; text-decoration:none;">▶ Run Step #{}: {}</a>',
+                url,
+                obj.sequence,
+                obj.name
+            )
+        return format_html('<span style="color:#6c757d; font-size:11px;">Save first to test</span>')
+    run_inline_button.short_description = "Quick Run"
 
 
 class AutomationLogInline(admin.TabularInline):
@@ -189,8 +251,9 @@ class AutomationTriggerAdmin(admin.ModelAdmin):
             messages.error(request, f"Automation Trigger #{trigger_id} not found.")
             return HttpResponseRedirect(reverse('admin:automation_automationtrigger_changelist'))
 
+        context = build_execution_context(trigger.trigger_model, user=request.user)
         # Dispatch via Celery worker
-        async_res = execute_automation_rule_task.delay(trigger.id, {"manual_trigger": True}, f"admin_run_now:{request.user.username}")
+        async_res = execute_automation_rule_task.delay(trigger.id, context, f"admin_run_now:{request.user.username}")
         messages.success(request, f"▶ Automation Pipeline '{trigger.name}' queued to Celery worker (Task ID: {async_res.id}).")
         return HttpResponseRedirect(reverse('admin:automation_automationtrigger_change', args=[trigger.id]))
 
@@ -289,10 +352,47 @@ class AutomationActionAdmin(admin.ModelAdmin):
         'is_system',
         'run_count',
         'last_run_at',
+        'run_now_action',
     )
     list_filter = ('is_system', 'is_active', 'action_category', 'target_operation')
     search_fields = ('name', 'description', 'target_model', 'action_type')
     readonly_fields = ('run_count', 'last_run_at', 'created_at', 'updated_at')
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:action_id>/run-now/', self.admin_site.admin_view(self.run_action_now_view), name='automation_action_run_now'),
+        ]
+        return custom_urls + urls
+
+    def run_action_now_view(self, request, action_id):
+        """Allows executing a single action immediately on demand via Celery."""
+        action = self.get_object(request, action_id)
+        if not action:
+            messages.error(request, f"Automation Action #{action_id} not found.")
+            return HttpResponseRedirect(reverse('admin:automation_automationaction_changelist'))
+
+        model_name = (action.trigger.trigger_model if action.trigger else None) or action.target_model
+        context = build_execution_context(model_name, user=request.user)
+
+        async_res = execute_automation_action_task.delay(
+            action.id,
+            context,
+            f"admin_run_action_now:{request.user.username}"
+        )
+        messages.success(
+            request,
+            f"▶ Automation Action '{action.name}' (Step #{action.sequence}) queued to Celery worker (Task ID: {async_res.id})."
+        )
+        return HttpResponseRedirect(reverse('admin:automation_automationaction_change', args=[action.id]))
+
+    def run_now_action(self, obj):
+        url = reverse('admin:automation_action_run_now', args=[obj.id])
+        return format_html(
+            '<a class="button" href="{}" style="background-color:#0d6efd; color:#ffffff; font-weight:bold; padding:3px 10px; border-radius:4px; text-decoration:none;">▶ Run Action</a>',
+            url
+        )
+    run_now_action.short_description = "Execute"
 
     def trigger_link(self, obj):
         url = reverse('admin:automation_automationtrigger_change', args=[obj.trigger.id])

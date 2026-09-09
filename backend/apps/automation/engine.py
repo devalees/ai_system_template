@@ -448,10 +448,10 @@ class AutomationEngine:
         # 1. Check if action or trigger is paused
         if not action.is_active:
             return {"status": "skipped", "reason": f"Action '{action.name}' is inactive"}
-        if trigger and not trigger.is_active:
+        context = dict(trigger_context or {})
+        if trigger and not trigger.is_active and not context.get('force_execution', False):
             return {"status": "skipped", "reason": f"Parent trigger '{trigger.name}' is inactive"}
 
-        context = dict(trigger_context or {})
         if action.action_params:
             for k, v in action.action_params.items():
                 resolved_v = resolve_nested_template(v, context)
@@ -556,17 +556,18 @@ class AutomationEngine:
         except AutomationTrigger.DoesNotExist:
             return {"status": "error", "error": f"Trigger {trigger_id} not found"}
 
-        if not trigger.is_active:
-            return {"status": "skipped", "reason": f"Trigger '{trigger.name}' is paused (is_active=False)"}
-
         context = dict(trigger_context or {})
 
-        # Condition checks
-        if trigger.filter_conditions and not cls.evaluate_conditions(context, trigger.filter_conditions):
-            return {"status": "skipped", "reason": "Trigger filter conditions did not match"}
+        if not trigger.is_active and not context.get('force_execution'):
+            return {"status": "skipped", "reason": f"Trigger '{trigger.name}' is paused (is_active=False)"}
 
-        if trigger.condition_rules and not cls.evaluate_condition_rules(context, trigger.condition_rules):
-            return {"status": "skipped", "reason": "Trigger visual condition rules did not match"}
+        # Condition checks (skipped on manual on-demand test execution)
+        if not context.get('force_execution') and not context.get('manual_trigger'):
+            if trigger.filter_conditions and not cls.evaluate_conditions(context, trigger.filter_conditions):
+                return {"status": "skipped", "reason": "Trigger filter conditions did not match"}
+
+            if trigger.condition_rules and not cls.evaluate_condition_rules(context, trigger.condition_rules):
+                return {"status": "skipped", "reason": "Trigger visual condition rules did not match"}
 
         actions = list(trigger.actions.filter(is_active=True).order_by('sequence', 'created_at'))
         if not actions:

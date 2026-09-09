@@ -1225,14 +1225,46 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 5. INJECT RUN NOW BUTTON IN .submit-row NEXT TO SAVE
+    function setupSubmitRowRunButtons() {
+        const submitRow = document.querySelector('.submit-row');
+        if (!submitRow || document.getElementById('btn_submit_run_now')) return;
+
+        const path = window.location.pathname;
+        const triggerMatch = path.match(/\/admin\/automation\/automationtrigger\/(\d+)\/change\//);
+        const actionMatch = path.match(/\/admin\/automation\/automationaction\/(\d+)\/change\//);
+
+        if (triggerMatch) {
+            const triggerId = triggerMatch[1];
+            const btn = document.createElement('a');
+            btn.id = 'btn_submit_run_now';
+            btn.href = `/admin/automation/automationtrigger/${triggerId}/run-now/`;
+            btn.className = 'button';
+            btn.style.cssText = 'background: #0d6efd; color: #ffffff; font-weight: bold; border-radius: 4px; padding: 10px 16px; margin-left: 12px; float: right; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(13,110,253,0.25);';
+            btn.innerHTML = '▶ Run Pipeline Now';
+            submitRow.appendChild(btn);
+        } else if (actionMatch) {
+            const actionId = actionMatch[1];
+            const btn = document.createElement('a');
+            btn.id = 'btn_submit_run_now';
+            btn.href = `/admin/automation/automationaction/${actionId}/run-now/`;
+            btn.className = 'button';
+            btn.style.cssText = 'background: #0d6efd; color: #ffffff; font-weight: bold; border-radius: 4px; padding: 10px 16px; margin-left: 12px; float: right; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(13,110,253,0.25);';
+            btn.innerHTML = '▶ Run Action Now';
+            submitRow.appendChild(btn);
+        }
+    }
+
     setupActionMappingAssistant(document);
     setupActionParamsAssistant(document);
+    setupSubmitRowRunButtons();
 
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(mutation => {
             if (mutation.addedNodes.length > 0) {
                 setupActionMappingAssistant(document);
                 setupActionParamsAssistant(document);
+                setupSubmitRowRunButtons();
             }
         });
     });

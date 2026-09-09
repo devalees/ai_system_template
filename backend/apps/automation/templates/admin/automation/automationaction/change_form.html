@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+    {% if original and original.pk %}
+        <li>
+            <a href="{% url 'admin:automation_action_run_now' original.pk %}" class="historylink" style="background:#0d6efd; color:#ffffff; font-weight:bold; border-radius:4px; padding:5px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                ▶ Run Action Now
+            </a>
+        </li>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

@@ -972,3 +972,106 @@ class Phase7DecoupledPipelineTests(TestCase):
         self.assertTrue(len(webhook_service["presets"]) >= 1)
 
 
+class AutomationDirectExecutionTests(TestCase):
+    """
+    Tests direct on-page execution mechanisms for triggers and actions in Django admin:
+    - Run Pipeline Now endpoint
+    - Run Action Now endpoint
+    - Context building with model introspection & sensible defaults
+    - Formatting of execute buttons and inline controls
+    """
+
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username="test_admin_runner",
+            email="runner@test.com",
+            password="adminpassword123"
+        )
+        self.client = APIClient()
+        self.client.force_login(self.admin_user)
+
+        self.trigger = AutomationTrigger.objects.create(
+            name="Direct Execution Pipeline",
+            trigger_type="model_event",
+            trigger_model="integration.AgentTask",
+            event_type="created",
+            is_active=True
+        )
+        self.action = AutomationAction.objects.create(
+            trigger=self.trigger,
+            name="Direct Cost Audit Step",
+            sequence=1,
+            action_category="hermes_agent",
+            action_type="hermes_profile:cost_controller",
+            action_params={
+                "prompt": "Audit task #{{pk}} '{{task_name}}' costing ${{cost_usd}} for user {{username}}"
+            },
+            is_active=True
+        )
+
+    def test_build_execution_context_with_live_record(self):
+        """Tests that build_execution_context extracts fields from live DB records."""
+        from apps.automation.admin import build_execution_context
+        live_task = AgentTask.objects.create(
+            task_name="Live Production Task",
+            cost_usd=99.75,
+            status="completed"
+        )
+        ctx = build_execution_context("integration.AgentTask", user=self.admin_user)
+        self.assertTrue(ctx["manual_trigger"])
+        self.assertTrue(ctx["force_execution"])
+        self.assertEqual(ctx["task_name"], "Live Production Task")
+        self.assertEqual(float(ctx["cost_usd"]), 99.75)
+        self.assertEqual(ctx["status"], "completed")
+        self.assertEqual(ctx["username"], "test_admin_runner")
+
+    def test_build_execution_context_fallback_defaults(self):
+        """Tests that build_execution_context supplies sensible fallback values when table is empty."""
+        from apps.automation.admin import build_execution_context
+        ctx = build_execution_context(None, user=self.admin_user)
+        self.assertEqual(ctx["task_name"], "Sample Agent Task")
+        self.assertEqual(ctx["cost_usd"], 15.50)
+        self.assertEqual(ctx["username"], "test_admin_runner")
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    def test_trigger_run_now_view_endpoint(self):
+        """Tests the GET /admin/automation/automationtrigger/<id>/run-now/ endpoint."""
+        url = f"/admin/automation/automationtrigger/{self.trigger.id}/run-now/"
+        response = self.client.get(url, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(f"/admin/automation/automationtrigger/{self.trigger.id}/change/", response.url)
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    def test_action_run_now_view_endpoint(self):
+        """Tests the GET /admin/automation/automationaction/<id>/run-now/ endpoint."""
+        url = f"/admin/automation/automationaction/{self.action.id}/run-now/"
+        response = self.client.get(url, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(f"/admin/automation/automationaction/{self.action.id}/change/", response.url)
+
+    def test_admin_button_formatters(self):
+        """Tests HTML formatting of execute buttons and inline helpers."""
+        from apps.automation.admin import AutomationTriggerAdmin, AutomationActionAdmin, AutomationActionInline
+        from django.contrib.admin.sites import AdminSite
+
+        site = AdminSite()
+        trigger_admin = AutomationTriggerAdmin(AutomationTrigger, site)
+        action_admin = AutomationActionAdmin(AutomationAction, site)
+        inline_admin = AutomationActionInline(AutomationTrigger, site)
+
+        # Trigger list action button
+        trigger_btn_html = trigger_admin.run_now_action(self.trigger)
+        self.assertIn(f"/admin/automation/automationtrigger/{self.trigger.id}/run-now/", trigger_btn_html)
+        self.assertIn("▶ Run Pipeline", trigger_btn_html)
+
+        # Action list action button
+        action_btn_html = action_admin.run_now_action(self.action)
+        self.assertIn(f"/admin/automation/automationaction/{self.action.id}/run-now/", action_btn_html)
+        self.assertIn("▶ Run Action", action_btn_html)
+
+        # Inline quick run button
+        inline_btn_html = inline_admin.run_inline_button(self.action)
+        self.assertIn(f"/admin/automation/automationaction/{self.action.id}/run-now/", inline_btn_html)
+        self.assertIn("▶ Run Step #1", inline_btn_html)
+
+

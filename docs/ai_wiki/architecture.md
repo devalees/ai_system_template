@@ -513,10 +513,43 @@ The filtering engine unifies trigger condition evaluation into a single authorit
 - Exact scalar matches (e.g. `{{cost_usd}}` or `{{pk}}`) are coerced cleanly to native numbers or strings.
 - Audit logs in `AutomationLog.input_context` capture the resolved parameters for full transparency and reproducibility.
 
+---
 
+## 15. Direct On-Page Automation Execution & Context Builder (Phase 11)
 
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ Automation Trigger / Action Change Form                                                │
+│                                                     [ ▶ Run Pipeline Now ] [ History ] │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ Fields & Inlines ...                                                                   │
+│                                                                                        │
+│ [ Save ]  [ Save and continue editing ]                  [ ▶ Run Pipeline Now ]        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
+### 15.1 Direct On-Page Execution Mechanisms
+- **`AutomationTriggerAdmin`**:
+  - Top `object-tools` button: `▶ Run Pipeline Now` (`admin:automation_trigger_run_now`).
+  - Injected button in `.submit-row` at the bottom of the change form.
+  - Action column in changelist view: `▶ Run Pipeline`.
+- **`AutomationActionAdmin`**:
+  - Top `object-tools` button: `▶ Run Action Now` (`admin:automation_action_run_now`).
+  - Injected button in `.submit-row` at the bottom of the change form.
+  - Action column in changelist view: `▶ Run Action`.
+- **`AutomationActionInline`**:
+  - Inline row control: `▶ Run Step #{sequence}: {name}` directly alongside active toggle.
 
+### 15.2 Rich Execution Context Builder (`admin.py`)
+- `build_execution_context(model_identifier, user)`:
+  - Dynamically inspects the target or trigger model (e.g. `integration.AgentTask`).
+  - Extracts field values from the latest live database record (e.g. `pk`, `task_name`, `cost_usd`, `status`).
+  - Provides sensible fallback defaults (`task_name="Sample Agent Task"`, `cost_usd=15.50`, etc.) if the table is empty.
+  - Injects `username`, `user_id`, `manual_trigger=True`, and `force_execution=True`.
+  - Ensures interpolated prompt parameters in `action_params` (e.g. `{{task_name}}`, `{{cost_usd}}`) evaluate cleanly without missing keys.
 
-
-
+### 15.3 Engine Manual / Force Execution Support (`engine.py`)
+- `AutomationEngine.execute_trigger` and `AutomationEngine.execute_action` support the `force_execution` flag:
+  - Bypasses inactive trigger status when an operator explicitly tests an action or pipeline from the admin interface.
+  - Skips conditional rule filtering during manual testing, allowing operators to verify action execution and prompt formatting immediately.
+  - Records full timing, duration, and structured outputs in `AutomationLog`.
