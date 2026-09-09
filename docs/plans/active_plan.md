@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
-- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `main`
-- **Last Updated**: 2026-09-09 05:07:00+03:00
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `feat/centralized-automation-engine`
+- **Last Updated**: 2026-09-09 06:03:00+03:00
 
 ---
 
@@ -122,6 +122,35 @@ Refactor the system template from an isolated, hardcoded `AgentProfile` table in
 - *2026-09-09*: Merged `feat/unified-user-profile-architecture` into `main` branch. All features verified and synchronized.
 
 ### 4. Current Focus
-Phase 4 completed and merged into main (Commit: `6e688bc`). Ready for next milestone or feature request.
+Phase 4 completed and merged into main (Commit: `6e688bc`). Transitioning to Phase 5.
+
+---
+
+## Phase 5: Centralized Automation Engine, Service Registry & Celery Infrastructure (IN_PROGRESS)
+
+### 1. Objective & Scope
+Build a centralized, domain-agnostic Automation and Event-Driven Orchestration Engine in Django (`backend/apps/automation/`) powered by Celery and Celery Beat:
+- Support Model Event Triggers (CRUD events across any current or future Django app models).
+- Support Time-Based Triggers (`once` and `recurring` across seconds, minutes, hours, days, weeks, months) managed by `django-celery-beat`.
+- Implement a 4-category Service Registry (`hermes_agent`, `internal_app`, `script_service`, `external_webhook`) with zero-touch discovery.
+- Implement the Flagship Auto-Provisioning Action for Hermes Agent Profiles (creating bot users, generating DRF tokens, and writing runtime `.env` files directly into Hermes).
+- Provide a rich Django Admin dashboard with active/pause toggles and execution audit logs (`AutomationLog`).
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Celery & Celery Beat Scaffolding & Docker Compose Configuration** - COMPLETED (Commit: `443576f`)
+- [ ] **Sub-task 2: Dynamic Service Registry & Core Automation Engine (`apps.automation`)** - PENDING
+- [ ] **Sub-task 3: Celery Tasks & Celery Beat Schedule Integration** - PENDING
+- [ ] **Sub-task 4: Rich Administrative Interface & Dynamic Model/App Dropdowns** - PENDING
+- [ ] **Sub-task 5: Flagship Use Case & Seeding: Dynamic Hermes Profile Auto-Provisioner** - PENDING
+- [ ] **Sub-task 6: Comprehensive Automated Testing & Empirical Verification** - PENDING
+- [ ] **Sub-task 7: LLM Wiki & Architecture Documentation Synchronization** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 5)
+- *2026-09-09*: Initialized Phase 5 on branch `feat/centralized-automation-engine`.
+- *2026-09-09*: Selected Celery + Celery Beat + Redis backed by `django-celery-beat` database scheduler per user request for unified, heavy-workload task execution.
+- *2026-09-09*: Configured profile volume mounts to read-write (`rw`) to allow Django automation workers to provision agent profiles and `.env` credentials dynamically.
+
+### 4. Current Focus
+Sub-task 2: Dynamic Service Registry & Core Automation Engine (`apps.automation`).
 
 
