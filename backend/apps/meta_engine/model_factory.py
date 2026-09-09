@@ -176,15 +176,21 @@ class DynamicModelFactory:
         class_name = "".join(part.capitalize() for part in slug.split("_"))
 
         # Determine base classes based on model capabilities
-        # Order matters for Python MRO: UUIDModel first, SoftDeleteModel, then AuditableModel
+        # Order matters for Python MRO: UUIDModel, TenantAwareModel/AuditableModel, SoftDeleteModel
         bases = []
         bases.append(UUIDModel)
-        if meta_model.is_soft_delete:
-            bases.append(SoftDeleteModel)
-        if meta_model.is_auditable:
-            bases.append(AuditableModel)
+        if getattr(meta_model, "is_tenant_aware", False):
+            from apps.tenants.base_models import TenantAwareModel
+            bases.append(TenantAwareModel)
+            if meta_model.is_soft_delete:
+                bases.append(SoftDeleteModel)
         else:
-            bases.append(TimeStampedModel)
+            if meta_model.is_soft_delete:
+                bases.append(SoftDeleteModel)
+            if meta_model.is_auditable:
+                bases.append(AuditableModel)
+            else:
+                bases.append(TimeStampedModel)
 
         # Meta options
         meta_attrs = {

@@ -748,5 +748,112 @@ The filtering engine unifies trigger condition evaluation into a single authorit
 - Integrated disk synchronization ("🔄 Scan Disk for Modules").
 - Live PostgreSQL DDL status badges and direct REST API gateway links in `MetaModelAdmin`.
 
+---
+
+## 18. Multi-Tenancy, Organizations & Workspaces Architecture (Phase 14)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        🌐 Incoming Request / API / Celery Task                         │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+                    ┌───────────────────────────────────────────────┐
+                    │      TenantMiddleware Resolution Strategy     │
+                    │ 1. Header: X-Workspace-Slug / Organization-ID │
+                    │ 2. Query Param: ?workspace=<slug>             │
+                    │ 3. Subdomain / Domain: <slug>.platform.com    │
+                    │ 4. Authenticated User Default Membership       │
+                    │ 5. Global Fallback: "default" Workspace       │
+                    └───────────────────────┬───────────────────────┘
+                                            │
+                                            ▼
+                    ┌───────────────────────────────────────────────┐
+                    │   Python 3.11 contextvars Tenant Scope        │
+                    │   _current_tenant_ctx.set(organization)       │
+                    │   (guaranteed token reset in finally block)   │
+                    └───────────────────────┬───────────────────────┘
+                                            │
+             ┌──────────────────────────────┴──────────────────────────────┐
+             ▼                                                             ▼
+┌─────────────────────────────┐                               ┌─────────────────────────────┐
+│    Static Stored Models     │                               │  Declarative Dynamic Models │
+│  (TenantAwareModel Bases)   │                               │  (apps.meta_engine Factory) │
+│ - Organization FK (indexed) │                               │ - is_tenant_aware = True    │
+│ - Automatic tenant on save  │                               │ - Compiles TenantAwareModel │
+│ - TenantManager filtering   │                               │ - DDL organization_id col   │
+└────────────┬────────────────┘                               └──────────────┬──────────────┘
+             │                                                             │
+             └──────────────────────────────┬──────────────────────────────┘
+                                            │
+                                            ▼
+                       ┌────────────────────────────────────────┐
+                       │  Row-Level Scoped QuerySet Execution   │
+                       │  .filter(organization=current_tenant)  │
+                       │  (Unfiltered via TenantAllManager /    │
+                       │   bypass_tenant_isolation() context)   │
+                       └────────────────────────────────────────┘
+```
+
+### 18.1 Tenant Representation & RBAC Hierarchy (`apps.tenants.models`)
+- **`Organization`**:
+  - Inherits `(UUIDModel, SoftDeleteModel, AuditableModel)`.
+  - Fields: `name`, `slug` (unique, db_index), `tier` (`free`, `starter`, `pro`, `enterprise`), `max_users` (seat limit), `domain` (custom domain / email domain), `is_active`, and `metadata` (JSON configuration).
+  - Helper methods: `active_members_count`, `can_add_user()`, `get_owner()`, `is_member(user)`.
+- **`OrganizationMembership`**:
+  - Junction linking `auth.User` to `Organization` with unique constraint `(organization, user)`.
+  - Granular Workspace Roles: `owner` (full workspace ownership & deletion), `admin` (member & invitation management), `member` (standard operational access), `viewer` (read-only), `guest` (restricted).
+  - Validates seat capacity on creation via `clean()`.
+- **`OrganizationInvitation`**:
+  - Expiring, tokenized invitations (`secrets.token_urlsafe(64)`).
+  - Lifecycles: `pending` → `accepted` | `expired` | `revoked`.
+  - Atomic `accept(user)` method creating membership and timestamping acceptance.
+
+### 18.2 Row-Level Tenant Isolation via TenantAwareModel (`apps.tenants.base_models`)
+- **`TenantAwareModel(AuditableModel)`**:
+  - Abstract base model ensuring every tenant-scoped entity carries an indexed foreign key to `Organization`.
+  - Nullable with fallback: `organization = models.ForeignKey(..., null=True, blank=True)` preventing migration deadlocks and supporting system-wide templates.
+  - Auto-population in `save()`: Binds `self.organization` to `get_current_tenant()` (or system default workspace) if omitted.
+- **`TenantManager` & `TenantQuerySet` (`apps.tenants.managers`)**:
+  - Automatically applies `is_deleted=False` (via integrated `SoftDeleteQuerySet.alive()`) and `.filter(organization=get_current_tenant())`.
+  - Provides convenience helpers: `.alive()`, `.dead()`, `.restore()`, `.hard_delete()`.
+- **`TenantAllManager`**:
+  - Exposed via `Model.all_objects` to allow explicit unfiltered access for migrations, global analytics, and superuser maintenance.
+
+### 18.3 Thread-Safe ContextVars Context Management (`apps.tenants.context`)
+- Avoids thread-local memory leakage across worker threads by utilizing Python 3.11's `contextvars.ContextVar`.
+- Public API:
+  - `get_current_tenant() -> Optional[Organization]`
+  - `set_current_tenant(organization) -> Token`
+  - `clear_current_tenant(token=None)`
+  - `tenant_context(organization)`: Scoped execution context manager.
+  - `bypass_tenant_isolation()`: Scoped bypass context manager for cross-tenant operations.
+
+### 18.4 Multi-Strategy Tenant Resolution Middleware (`apps.tenants.middleware`)
+- Multi-tier resolution order:
+  1. HTTP Header: `X-Workspace-Slug` or `X-Organization-ID` (UUID or slug).
+  2. Query Parameter: `?workspace=<slug>`.
+  3. Host domain or subdomain: `<slug>.domain.com` or custom domain.
+  4. Authenticated user's default active membership.
+  5. Global system default workspace (`Default Workspace`, slug: `default`).
+- Security gate: If an explicit workspace is requested, verifies that `request.user` has active membership (superusers bypass check). Non-members receive `403 Forbidden`.
+
+### 18.5 Declarative MetaEngine Integration
+- **`MetaModel.is_tenant_aware`**: Boolean flag (default `True`) instructing the engine to partition dynamic entity records by tenant.
+- **Dynamic Model Factory**: Injects `TenantAwareModel` into compiled model bases, compiling dynamic models with `organization` foreign key and `TenantManager`.
+- **Dynamic Schema Engine**: Automatically generates `organization_id` foreign key column pointing to `tenants_organization` in physical PostgreSQL tables.
+- **Universal Declarative REST API Gateway**: In `UniversalEntityViewSet`, queries are auto-scoped by tenant, and new records automatically bind to `get_current_tenant()`.
+
+### 18.6 Administrative & REST API Surface (`apps.tenants.views` & `admin`)
+- **`OrganizationViewSet` (`/api/v1/organizations/`)**:
+  - Full CRUD with membership filtering (superusers see all; regular users see their active workspaces).
+  - Creator is automatically assigned as `owner`.
+  - Action `@action(detail=True) members`: List and add members.
+  - Action `@action(detail=True) invite`: List pending invitations and dispatch new invites.
+  - Action `@action(detail=True) switch`: Verify membership and return active workspace header hints.
+- **`InvitationAcceptAPIView` (`/api/v1/invitations/<token>/accept/`)**: Self-service invitation token validation and membership activation.
+- **Django Admin**: `OrganizationAdmin` with `OrganizationMembershipInline`, user capacity badges, tier styling, and invitation revocation actions.
+
+
 
 
