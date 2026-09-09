@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 13 Completed (Metadata-Driven Architecture, Dynamic PostgreSQL Schema Engine, In-Memory Model Factory, Modular App Registry, Safe Uninstall Lifecycle & Declarative REST Gateway)
+- **Status**: Phase 14 Completed (Multi-Tenancy, Organizations, Workspaces, Row-Level Tenant Isolation, and Declarative MetaEngine Partitioning)
 
 
 ---
@@ -107,5 +107,26 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Odoo-Style Admin App Store & Studio UI**:
   - Visual App Store dashboard (`/admin/meta_engine/systemmodule/app-store/`) with 1-click install, uninstall with data retention policies, and disk synchronization.
   - Dynamic PostgreSQL DDL status badges and API gateway navigation directly in Django Admin.
+
+### 12. Multi-Tenancy, Organizations & Workspaces (`apps.tenants`)
+- **Tenant Hierarchy & RBAC Memberships**:
+  - `Organization`: Tenant entity managing workspaces, subscription tiers (`free`, `starter`, `pro`, `enterprise`), max user capacity, custom domains, and JSON metadata.
+  - `OrganizationMembership`: Junction associating users with workspaces under role-based membership (`owner`, `admin`, `member`, `viewer`, `guest`).
+  - `OrganizationInvitation`: Expiring tokenized email invitations with self-service acceptance lifecycle.
+- **Row-Level Tenant Isolation**:
+  - `TenantAwareModel`: Abstract base model with indexed foreign key to `Organization` and automated context binding on save.
+  - `TenantManager` & `TenantQuerySet`: Automatic query scoping with integrated soft-delete support (`alive()`, `dead()`, `restore()`, `hard_delete()`).
+  - `TenantAllManager`: Explicit unfiltered access for migrations, global analytics, and superuser maintenance.
+- **Thread-Safe Context & Multi-Strategy Middleware**:
+  - Python 3.11 `contextvars` context manager (`tenant_context(org)`, `bypass_tenant_isolation()`).
+  - `TenantMiddleware`: Resolves active workspace from HTTP headers (`X-Workspace-Slug`, `X-Organization-ID`), query parameters (`?workspace=`), host domains/subdomains, user default active memberships, and the global fallback default workspace.
+- **Declarative Dynamic Engine Integration**:
+  - `MetaModel.is_tenant_aware` flag compiling in-memory dynamic models with `TenantAwareModel` base class and physical PostgreSQL `organization_id` foreign key column.
+  - Dynamic REST API Gateway (`/api/v1/entities/<model_slug>/`) auto-scopes records and auto-binds tenant foreign keys upon creation.
+- **REST APIs & Admin Site**:
+  - `OrganizationViewSet` (`/api/v1/organizations/`): CRUD for organizations, member listing/adding, invitation creation, and workspace switching.
+  - `InvitationAcceptAPIView` (`/api/v1/invitations/<token>/accept/`): Secure invitation token acceptance endpoint.
+  - Full Django Admin with inline member management, active seat counters, and tier badges.
+
 
 
