@@ -1,0 +1,103 @@
+# Translation catalog for Arabic (العربية).
+# Copyright (C) 2026 AI System Template
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-09 16:30+0300\n"
+"PO-Revision-Date: 2026-09-09 16:30+0300\n"
+"Last-Translator: Admin <admin@example.com>\n"
+"Language-Team: Arabic <ar@example.com>\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "English"
+msgstr "الإنجليزية"
+
+msgid "Arabic"
+msgstr "العربية"
+
+msgid "Core & System Configuration"
+msgstr "الأساسات وإعدادات النظام"
+
+msgid "Created At"
+msgstr "تاريخ الإنشاء"
+
+msgid "Updated At"
+msgstr "تاريخ التحديث"
+
+msgid "ID"
+msgstr "المعرف"
+
+msgid "Is Deleted"
+msgstr "محذوف"
+
+msgid "Deleted At"
+msgstr "تاريخ الحذف"
+
+msgid "Created By"
+msgstr "تم الإنشاء بواسطة"
+
+msgid "Updated By"
+msgstr "تم التحديث بواسطة"
+
+msgid "Application Setting Value"
+msgstr "قيمة إعداد التطبيق"
+
+msgid "Application Setting Values"
+msgstr "قيم إعدادات التطبيقات"
+
+msgid "App Label"
+msgstr "معرّف التطبيق"
+
+msgid "Setting Key"
+msgstr "مفتاح الإعداد"
+
+msgid "Raw Stored Value"
+msgstr "القيمة المخزنة"
+
+msgid "Data Type"
+msgstr "نوع البيانات"
+
+msgid "General Platform"
+msgstr "المنصة العامة"
+
+msgid "Platform Title"
+msgstr "عنوان المنصة"
+
+msgid "Maintenance Mode"
+msgstr "وضع الصيانة"
+
+msgid "Default Currency"
+msgstr "العملة الافتراضية"
+
+msgid "Default Page Size"
+msgstr "حجم الصفحة الافتراضي"
+
+msgid "System Configuration Hub"
+msgstr "مركز إعدادات النظام"
+
+msgid "Configuration Hub"
+msgstr "مركز الإعدادات"
+
+msgid "Applications"
+msgstr "التطبيقات"
+
+msgid "Settings"
+msgstr "الإعدادات"
+
+msgid "Save Changes"
+msgstr "حفظ التغييرات"
+
+msgid "Enabled"
+msgstr "مفعل"
+
+msgid "Disabled"
+msgstr "معطل"
+
+msgid "Preferred Language"
+msgstr "اللغة المفضلة"

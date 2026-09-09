@@ -24,7 +24,7 @@ class ProfileInline(admin.StackedInline):
             'fields': (
                 ('user_type', 'is_agent'),
                 ('hermes_profile_name', 'display_name'),
-                'role',
+                ('role', 'preferred_language'),
                 'description',
             )
         }),

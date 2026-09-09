@@ -321,5 +321,51 @@ class SettingsHubAdminTests(TestCase):
         self.assertEqual(get_setting("general.ITEMS_PER_PAGE"), 50)
 
 
+class MultiLanguageI18nTests(TestCase):
+    """Test suite verifying bilingual English/Arabic translations, RTL, and language headers."""
+
+    def test_arabic_translations(self):
+        from django.utils import translation
+        from django.utils.translation import gettext as _
+
+        with translation.override("ar"):
+            self.assertEqual(_("Core & System Configuration"), "الأساسات وإعدادات النظام")
+            self.assertEqual(_("System Configuration Hub"), "مركز إعدادات النظام")
+            self.assertEqual(_("General Platform"), "المنصة العامة")
+            self.assertEqual(_("Save Changes"), "حفظ التغييرات")
+            self.assertEqual(_("Created At"), "تاريخ الإنشاء")
+
+        with translation.override("en"):
+            self.assertEqual(_("Core & System Configuration"), "Core & System Configuration")
+
+    def test_rtl_bidi_detection(self):
+        from django.utils import translation
+
+        with translation.override("ar"):
+            self.assertTrue(translation.get_language_bidi())
+
+        with translation.override("en"):
+            self.assertFalse(translation.get_language_bidi())
+
+    def test_locale_middleware_accept_language_header(self):
+        # Client request with Arabic Accept-Language header
+        response = self.client.get("/admin/login/", HTTP_ACCEPT_LANGUAGE="ar")
+        self.assertEqual(response.status_code, 200)
+        # Verify Arabic language was activated on the response
+        self.assertEqual(response.headers.get("Content-Language"), "ar")
+
+    def test_profile_preferred_language_field(self):
+        from apps.integration.models import Profile
+
+        user = User.objects.create_user(username="arabic_user", password="password123")
+        profile = user.profile
+        profile.preferred_language = "ar"
+        profile.save()
+
+        refetched = Profile.objects.get(user=user)
+        self.assertEqual(refetched.preferred_language, "ar")
+
+
+
 
 

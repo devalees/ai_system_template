@@ -101,6 +101,12 @@ class Profile(models.Model):
         help_text="Reasoning/thinking effort level passed to Hermes Agent runtime (none, low, medium, high, max).",
     )
     is_active = models.BooleanField(default=True)
+    preferred_language = models.CharField(
+        max_length=10,
+        choices=[('en', 'English'), ('ar', 'العربية')],
+        default='en',
+        help_text="User interface language preference (en / ar)."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
