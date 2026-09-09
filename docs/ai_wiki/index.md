@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 16 Completed (Universal Notifications Engine across Multi-Channel Adapters, Redis Unread Caching, Celery Tasks, REST APIs, and Automation Bridge)
+- **Status**: Phase 17 Completed (Universal Document & Media Management across SHA-256 Checksums, GenericForeignKey Attachments, Secure Token Signer, REST APIs, and Admin Generic Inlines)
 
 
 ---
@@ -163,6 +163,20 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **REST API Gateway & Django Admin**:
   - DRF ViewSets (`/api/v1/notifications/`, `/mark-read/`, `/mark-all-read/`, `/unread-count/`, `/preferences/`).
   - Colored Django Admin badges and bulk `mark_selected_as_read` actions.
+
+### 15. Universal Document & Media Management (`apps.media`)
+- **Document Data Model**:
+  - `Document`: Inherits `TenantAwareModel` and `SoftDeleteModel`. Multi-tenant workspace file attachment model featuring SHA-256 checksums (`checksum_sha256`), automatic MIME detection, size formatting (`1.5 MB`), `uploaded_by`, and `is_public` flags.
+  - `GenericForeignKey` (`content_type` + `object_id`): Enables seamless attachment linking to any system model (`AgentTask`, `User`, `Organization`, etc.).
+- **Pluggable Storage & Secure Token Signer (`storage.py` & `services.py`)**:
+  - `SecureDocumentStorage`: Partitioned directory structure (`/app/media/documents/<org_id>/<sha256[:2]>/<sha256>_<filename>`).
+  - Cryptographically signed URL generator (`generate_secure_download_token`) with time-limited expiration (`TimestampSigner`).
+  - `MediaService`: Centralized file ingestion, SHA-256 calculation, and permission-checked `FileResponse` binary streaming.
+- **REST API Gateway & Django Admin**:
+  - DRF ViewSet (`/api/v1/media/documents/upload/`, `/download/`).
+  - `DocumentAdmin` with monospaced SHA-256 badges and human size formatters.
+  - Reusable `GenericDocumentInline` component embeddable in any admin model change form.
+
 
 
 
