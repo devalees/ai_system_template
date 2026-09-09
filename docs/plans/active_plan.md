@@ -72,18 +72,19 @@ Integrate Django's native authentication framework, Role-Based Access Control (`
 - Synchronize API tokens to Hermes Agent profile `.env` runtimes via automated provisioning.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Backend Auth Dependencies & Model Extensions** - COMPLETED (Commit: pending)
-- [/] **Sub-task 2: Automated RBAC Groups, Bot Users & Token Generation (`seed_profiles.py`)** - IN PROGRESS
-- [ ] **Sub-task 3: DRF Views Authorization & Endpoint Security Hardening** - PENDING
+- [x] **Sub-task 1: Backend Auth Dependencies & Model Extensions** - COMPLETED (Commit: `e332042`)
+- [x] **Sub-task 2: Automated RBAC Groups, Bot Users & Token Generation (`seed_profiles.py`)** - COMPLETED (Commit: pending)
+- [/] **Sub-task 3: DRF Views Authorization & Endpoint Security Hardening** - IN PROGRESS
 - [ ] **Sub-task 4: Hermes Agent Runtime Token Provisioning (`scripts/provision_profiles.py`)** - PENDING
 - [ ] **Sub-task 5: Comprehensive Unit Testing & End-to-End Verification** - PENDING
 - [ ] **Sub-task 6: Documentation Synchronization (Wiki & Architecture)** - PENDING
 
 ### 3. Key Decisions & Deviations (Phase 3)
 - *2026-09-09*: Initialized Phase 3 on branch `feat/agent-rbac-service-accounts`. Standardized bot username prefix `bot_<profile_name>` and group prefix `Agent_<Role>`.
-- *2026-09-09*: Installed `rest_framework.authtoken`, configured TokenAuthentication and SessionAuthentication in `settings.py`, and added `user` OneToOneField to `AgentProfile`, `created_by` ForeignKey to `AgentTask` and `SpendReport`. Applied migration `0004_agentprofile_user_agenttask_created_by_and_more`.
+- *2026-09-09*: Installed `rest_framework.authtoken`, configured TokenAuthentication and SessionAuthentication in `settings.py`, and added `user` OneToOneField to `AgentProfile`, `created_by` ForeignKey to `AgentTask` and `SpendReport`. Applied migration `0004_agentprofile_user_agenttask_created_by_and_more` (Commit: `e332042`).
+- *2026-09-09*: Enhanced `seed_profiles.py` to idempotently construct Django Groups (`Agent_Orchestrator`, `Agent_CostController`, `Agent_QAAuditor`, `Agent_CommsAgent`, `Agent_Archivist`) with native model permissions (`add`, `change`, `view`), generate dedicated `bot_*` users with unusable passwords, issue DRF tokens, and export token manifests via `--export-tokens`.
 
 ### 4. Current Focus
-Sub-task 2: Automated RBAC Groups, Bot Users & Token Generation (`seed_profiles.py`)
+Sub-task 3: DRF Views Authorization & Endpoint Security Hardening
 
 
