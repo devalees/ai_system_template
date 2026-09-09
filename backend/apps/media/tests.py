@@ -74,3 +74,58 @@ class DocumentModelTests(TestCase):
         doc.delete()
         self.assertTrue(Document.all_objects.get(id=doc_id).is_deleted)
         self.assertFalse(Document.objects.filter(id=doc_id).exists())
+
+
+class StorageAndServiceTests(TestCase):
+    """Test suite verifying secure token signing and MediaService features."""
+
+    def setUp(self):
+        from apps.media.services import MediaService
+        from apps.media.storage import (
+            generate_secure_download_token,
+            verify_secure_download_token,
+        )
+        self.org = Organization.objects.create(name="Service Org", slug="service-org")
+        self.user = User.objects.create_user(username="serviceuser", password="password123")
+        self.file_content = b"Binary stream content for testing MediaService."
+        self.test_file = SimpleUploadedFile(
+            name="stream_test.txt",
+            content=self.file_content,
+            content_type="text/plain"
+        )
+        self.generate_token = generate_secure_download_token
+        self.verify_token = verify_secure_download_token
+        self.service = MediaService
+
+    def test_signed_token_generation_and_verification(self):
+        """Verify generating and verifying signed document download tokens."""
+        doc_id = "doc-12345"
+        user_id = "user-67890"
+
+        token = self.generate_token(doc_id, user_id)
+        self.assertIsNotNone(token)
+        self.assertIn(":", token)
+
+        res = self.verify_token(token, max_age=60)
+        self.assertIsNotNone(res)
+        self.assertEqual(res, (doc_id, user_id))
+
+    def test_verify_invalid_or_tampered_token(self):
+        """Verify tampered or invalid token returns None."""
+        invalid_res = self.verify_token("tampered_token_string")
+        self.assertIsNone(invalid_res)
+
+    def test_media_service_create_document(self):
+        """Verify MediaService.create_document persists file with checksum."""
+        doc = self.service.create_document(
+            file_obj=self.test_file,
+            organization=self.org,
+            uploaded_by=self.user,
+            filename="service_report.txt",
+            is_public=True
+        )
+        self.assertIsNotNone(doc.id)
+        self.assertEqual(doc.filename, "service_report.txt")
+        self.assertTrue(doc.is_public)
+        self.assertEqual(len(doc.checksum_sha256), 64)
+
