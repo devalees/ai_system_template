@@ -638,13 +638,26 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
 
 ---
 
+## Phase 20: Decouple & Remove Dynamic Metadata Engine (`apps.meta_engine`) (COMPLETED)
+
+### 1. Objective & Scope
+Decouple and remove the dynamic metadata engine (`apps.meta_engine`) and PostgreSQL dynamic DDL schema generator (introduced in Phase 13) to return to standard, static Django ORM models across the codebase:
+- Unregister `apps.meta_engine` from `INSTALLED_APPS` and URL routers.
+- Remove dynamic model lookups and references in `apps/reports`, `apps/tenants`, and `apps/audit`.
+- Retain core abstract base models in `apps/core/models.py` (`TimeStampedModel`, `UUIDModel`, `SoftDeleteModel`, `AuditableModel`).
+- Remove `apps/meta_engine` module directory.
+- Empirically verify 100% test pass rate across all remaining applications.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Unregister `apps.meta_engine` from Settings & URL Routes** - COMPLETED
+- [x] **Sub-task 2: Refactor Cross-App References (`apps.reports.engine`, `apps.tenants.tests`, `apps.audit.tests`)** - COMPLETED
+- [x] **Sub-task 3: Remove `apps/meta_engine` Module Directory** - COMPLETED
+- [x] **Sub-task 4: Comprehensive Test Suite Verification & Database Sanity Check** - COMPLETED
+- [x] **Sub-task 5: Documentation & LLM Wiki Synchronization** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 20)
+- *2026-09-10*: Initiated Phase 20 per user directive to revert Phase 13's dynamic metadata engine (`apps.meta_engine`) and maintain standard, explicit Django ORM models across all features. Verified that Phases 14–19 use native models and remain fully functional.
+- *2026-09-10*: Successfully unregistered `apps.meta_engine` from settings and routing, removed dynamic model resolution fallback from `apps/reports/engine.py`, cleaned up tests, deleted `apps/meta_engine` module, and verified 100% pass rate across 164 unit tests.
+
 ### 4. Current Focus
-Phase 19 (Dynamic Visual Reporting & PDF Generation Engine): COMPLETED. System fully tested and synchronized.
-
-
-
-
-
-
-
-
+Phase 20 completed. System fully clean, verified, and synchronized with native Django models across all applications.

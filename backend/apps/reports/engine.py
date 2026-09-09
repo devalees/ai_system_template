@@ -63,20 +63,10 @@ class ReportEngine:
             except (ValueError, LookupError):
                 pass
 
-        # Search across registered models by model_name or meta_engine slug
+        # Search across registered models by model_name or label
         for model in apps.get_models():
             if model._meta.model_name.lower() == model_identifier.lower() or model._meta.label.lower() == model_identifier.lower():
                 return model
-
-        # Check meta_engine dynamic models
-        try:
-            from apps.meta_engine.models import MetaModel
-            meta_model = MetaModel.objects.filter(slug=model_identifier).first() or MetaModel.objects.filter(name=model_identifier).first()
-            if meta_model:
-                from apps.meta_engine.model_factory import DynamicModelFactory
-                return DynamicModelFactory.get_model_class(meta_model.slug)
-        except Exception as e:
-            logger.debug(f"MetaModel resolution error for {model_identifier}: {e}")
 
         return None
 

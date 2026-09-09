@@ -11,7 +11,6 @@ urlpatterns = [
     path('api/', include('apps.integration.urls')),
     path('api/automation/', include('apps.automation.urls')),
     path('api/v1/', include('apps.tenants.urls')),
-    path('api/v1/', include('apps.meta_engine.urls')),
     path('api/v1/audit/', include('apps.audit.urls')),
     path('api/v1/notifications/', include('apps.notifications.urls')),
     path('api/v1/media/', include('apps.media.urls')),

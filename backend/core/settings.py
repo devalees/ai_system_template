@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'apps.audit',
     'apps.notifications',
     'apps.media',
-    'apps.meta_engine',
     'apps.integration',
     'apps.automation',
     'apps.api_gateway',
