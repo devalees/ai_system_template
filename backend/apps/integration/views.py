@@ -1,18 +1,18 @@
 import datetime
 import requests
 from django.conf import settings
-from django.db import connection
+from django.db import connection, models
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, DjangoModelPermissions, IsAuthenticated
 from rest_framework.response import Response
 
-from .models import HandshakeLog, AgentProfile, SpendReport, AgentTask
+from .models import HandshakeLog, Profile, AgentProfile, SpendReport, AgentTask
 from .serializers import (
     HandshakeRequestSerializer,
     HandshakeLogSerializer,
-    AgentProfileSerializer,
+    ProfileSerializer,
     SpendReportSerializer,
     AgentTaskSerializer,
     TaskVerdictSerializer,
@@ -64,7 +64,7 @@ def health_check(request):
         "redis": redis_status,
         "server_time": timezone.now().isoformat(),
         "hermes_gateway_target": settings.HERMES_GATEWAY_URL,
-        "active_profiles_count": AgentProfile.objects.filter(is_active=True).count(),
+        "active_profiles_count": Profile.objects.filter(is_active=True).count(),
     })
 
 
@@ -140,14 +140,29 @@ def ping_hermes_gateway(request):
         }, status=status.HTTP_502_BAD_GATEWAY)
 
 
-class AgentProfileViewSet(viewsets.ModelViewSet):
+class ProfileViewSet(viewsets.ModelViewSet):
     """
-    CRUD API for Hermes Agent Profiles (digital employees).
+    CRUD API for User Profiles and AI Agent Service Accounts.
     """
-    queryset = AgentProfile.objects.all()
-    serializer_class = AgentProfileSerializer
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated, StrictDjangoModelPermissions]
     lookup_field = 'name'
+
+    def get_object(self):
+        """Allows lookup by name, hermes_profile_name, or user username."""
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        val = self.kwargs.get(lookup_url_kwarg)
+        try:
+            return self.get_queryset().get(
+                models.Q(name=val) | models.Q(hermes_profile_name=val) | models.Q(user__username=val)
+            )
+        except Profile.DoesNotExist:
+            return super().get_object()
+
+
+# Backward compatibility alias
+AgentProfileViewSet = ProfileViewSet
 
 
 class SpendReportViewSet(viewsets.ModelViewSet):

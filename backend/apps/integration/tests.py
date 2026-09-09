@@ -152,3 +152,24 @@ class IntegrationAPITests(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data['reasoning_effort'], 'high')
+
+    def test_user_post_save_signal_creates_profile(self):
+        """Verify standard Django lifecycle: creating User auto-generates linked Profile."""
+        new_user = User.objects.create(username="jane_analyst", email="jane@example.com")
+        self.assertTrue(hasattr(new_user, "profile"))
+        self.assertIsNotNone(new_user.profile)
+        self.assertFalse(new_user.profile.is_agent)
+        self.assertEqual(new_user.profile.user_type, "client")
+
+    def test_hermes_profiles_discovery_endpoint(self):
+        """Verify GET /api/hermes/profiles/ discovers and returns live Hermes engine profiles."""
+        url = reverse('hermes-profiles')
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn("profiles", resp.data)
+        self.assertGreaterEqual(resp.data["count"], 5)
+        names = [p["name"] for p in resp.data["profiles"]]
+        self.assertIn("orchestrator", names)
+        self.assertIn("cost_controller", names)
+        self.assertIn("qa_auditor", names)
+

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import HandshakeLog, AgentProfile, SpendReport, AgentTask
+from .models import HandshakeLog, Profile, SpendReport, AgentTask
 
 class HandshakeRequestSerializer(serializers.Serializer):
     agent_id = serializers.CharField(max_length=120, default='hermes-agent')
@@ -15,12 +15,17 @@ class HandshakeLogSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AgentProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
     task_count = serializers.IntegerField(source='tasks.count', read_only=True)
 
     class Meta:
-        model = AgentProfile
+        model = Profile
         fields = '__all__'
+
+
+# Backward compatibility alias
+AgentProfileSerializer = ProfileSerializer
 
 
 class SpendReportSerializer(serializers.ModelSerializer):

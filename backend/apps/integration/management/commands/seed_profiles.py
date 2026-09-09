@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.authtoken.models import Token
-from apps.integration.models import AgentProfile
+from apps.integration.models import Profile
 
 CORE_PROFILES = [
     {
@@ -60,7 +60,7 @@ ROLE_GROUP_PERMISSIONS = {
             ("integration", "agenttask", "add_agenttask"),
             ("integration", "agenttask", "change_agenttask"),
             ("integration", "agenttask", "view_agenttask"),
-            ("integration", "agentprofile", "view_agentprofile"),
+            ("integration", "profile", "view_profile"),
         ]
     },
     "cost_controller": {
@@ -68,7 +68,7 @@ ROLE_GROUP_PERMISSIONS = {
         "permissions": [
             ("integration", "spendreport", "add_spendreport"),
             ("integration", "spendreport", "view_spendreport"),
-            ("integration", "agentprofile", "view_agentprofile"),
+            ("integration", "profile", "view_profile"),
         ]
     },
     "qa_auditor": {
@@ -76,21 +76,21 @@ ROLE_GROUP_PERMISSIONS = {
         "permissions": [
             ("integration", "agenttask", "change_agenttask"),
             ("integration", "agenttask", "view_agenttask"),
-            ("integration", "agentprofile", "view_agentprofile"),
+            ("integration", "profile", "view_profile"),
         ]
     },
     "comms_agent": {
         "group_name": "Agent_CommsAgent",
         "permissions": [
             ("integration", "agenttask", "view_agenttask"),
-            ("integration", "agentprofile", "view_agentprofile"),
+            ("integration", "profile", "view_profile"),
         ]
     },
     "archivist": {
         "group_name": "Agent_Archivist",
         "permissions": [
             ("integration", "agenttask", "view_agenttask"),
-            ("integration", "agentprofile", "view_agentprofile"),
+            ("integration", "profile", "view_profile"),
             ("integration", "spendreport", "view_spendreport"),
         ]
     },
@@ -150,12 +150,15 @@ class Command(BaseCommand):
             # 4. Create or retrieve DRF API Token
             token, _ = Token.objects.get_or_create(user=bot_user)
 
-            # 5. Create or update AgentProfile linked to Bot User
+            # 5. Create or update Profile linked to Bot User
             profile_defaults = dict(p)
             profile_defaults["user"] = bot_user
+            profile_defaults["is_agent"] = True
+            profile_defaults["user_type"] = "agent"
+            profile_defaults["hermes_profile_name"] = name
 
-            obj, created = AgentProfile.objects.update_or_create(
-                name=name,
+            obj, created = Profile.objects.update_or_create(
+                user=bot_user,
                 defaults=profile_defaults
             )
 
