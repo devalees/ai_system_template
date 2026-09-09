@@ -208,6 +208,7 @@ class DynamicModelFactory:
             "Meta": type("Meta", (), meta_attrs),
             "_meta_model_id": meta_model.id,
             "_meta_model_slug": slug,
+            "_audit_enabled": getattr(meta_model, "is_auditable", False),
         }
 
         # Dynamic string representation
@@ -236,6 +237,14 @@ class DynamicModelFactory:
 
         # Construct class in memory (ModelBase.__new__ automatically registers with apps)
         model_cls = type(class_name, tuple(bases), attrs)
+
+        # Register in audit engine if marked as auditable
+        if getattr(meta_model, "is_auditable", False):
+            try:
+                from apps.audit.registry import register_auditable
+                register_auditable(model_cls)
+            except ImportError:
+                pass
 
         # Store in factory registry
         cls._registry[slug] = model_cls

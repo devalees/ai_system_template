@@ -437,3 +437,103 @@ class AuditSignalAndDiffingTests(TestCase):
             self.assertEqual(failed_log.metadata.get("attempted_username"), "malicious_actor")
 
 
+class DynamicModelAuditIntegrationTests(TestCase):
+    """
+    Verify declarative dynamic models created via apps.meta_engine
+    automatically integrate with the activity audit trail.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        from apps.meta_engine.models import MetaModel, MetaField
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+        from apps.meta_engine.model_factory import DynamicModelFactory
+
+        cls.meta_model = MetaModel.objects.create(
+            name="audit_deal",
+            label="Audit Deal",
+            app_label="audit_test",
+            table_name="app_test_audit_deal",
+            is_tenant_aware=True,
+            is_soft_delete=True,
+            is_auditable=True,
+        )
+        MetaField.objects.create(
+            model=cls.meta_model,
+            name="title",
+            field_type="char",
+            label="Deal Title",
+        )
+        MetaField.objects.create(
+            model=cls.meta_model,
+            name="amount",
+            field_type="integer",
+            label="Deal Amount",
+        )
+        DynamicSchemaEngine.create_table(cls.meta_model)
+        cls.dynamic_cls = DynamicModelFactory.get_or_create_model(cls.meta_model, force_reload=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+        DynamicSchemaEngine.drop_table(cls.meta_model)
+        cls.meta_model.delete()
+        super().tearDownClass()
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="dynaudituser", email="dynaudit@test.com", password="pw")
+        self.org = Organization.objects.create(name="Dynamic Org", slug="dynamic-org")
+
+    def test_dynamic_model_audit_lifecycle(self):
+        from apps.audit.context import audit_context
+        from apps.tenants.context import tenant_context
+
+        # 1. CREATE dynamic record
+        with tenant_context(self.org):
+            with audit_context(actor=self.user, request_id="req-dyn-create"):
+                deal = self.dynamic_cls.objects.create(title="Series A Investment", amount=1000000)
+
+        create_log = ActivityLog.objects.filter(
+            object_id=str(deal.id),
+            action=ActivityLog.ACTION_CREATE,
+        ).first()
+
+        self.assertIsNotNone(create_log)
+        self.assertEqual(create_log.actor, self.user)
+        self.assertEqual(create_log.organization, self.org)
+        self.assertEqual(create_log.request_id, "req-dyn-create")
+        self.assertEqual(create_log.changes["title"]["new"], "Series A Investment")
+        self.assertEqual(create_log.changes["amount"]["new"], 1000000)
+
+        # 2. UPDATE dynamic record
+        with tenant_context(self.org):
+            with audit_context(actor=self.user, request_id="req-dyn-update"):
+                deal.amount = 1500000
+                deal.save()
+
+        update_log = ActivityLog.objects.filter(
+            object_id=str(deal.id),
+            action=ActivityLog.ACTION_UPDATE,
+        ).first()
+
+        self.assertIsNotNone(update_log)
+        self.assertEqual(update_log.changes["amount"]["old"], 1000000)
+        self.assertEqual(update_log.changes["amount"]["new"], 1500000)
+
+        # 3. SOFT DELETE dynamic record
+        with tenant_context(self.org):
+            with audit_context(actor=self.user, request_id="req-dyn-del"):
+                deal.delete()
+
+        delete_log = ActivityLog.objects.filter(
+            object_id=str(deal.id),
+            action=ActivityLog.ACTION_DELETE,
+        ).first()
+
+        self.assertIsNotNone(delete_log)
+        self.assertEqual(delete_log.changes["is_deleted"]["old"], False)
+        self.assertEqual(delete_log.changes["is_deleted"]["new"], True)
+
+
+
