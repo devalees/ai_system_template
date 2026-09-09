@@ -3,7 +3,7 @@
 An extensible, production-grade starter template pairing a **Django** web framework (REST API, Admin, PostgreSQL, Redis) with the autonomous **Nous Research Hermes Agent** execution runtime in Docker, featuring isolated specialist agent profiles, custom skill auditing, and dynamic model catalogs.
 
 - **Repository**: `devalees/ai_system_template`
-- **Active Branch**: `feat/centralized-automation-engine`
+- **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
 - **Status**: Phase 11 Completed (Direct On-Page Automation Execution, Dynamic Context Builder, Hermes Gateway Hardening & Action Deduplication)
