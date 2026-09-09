@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
-- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `feat/core-agent-profiles`
-- **Last Updated**: 2026-09-08 19:42:00+03:00
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `feat/agent-rbac-service-accounts`
+- **Last Updated**: 2026-09-09 04:02:00+03:00
 
 ---
 
@@ -29,7 +29,7 @@ Build a clean, domain-agnostic starter template integrating Django (backend + ad
 
 ---
 
-## Phase 2: 5 Universal Core Agent Profiles (IN_PROGRESS)
+## Phase 2: 5 Universal Core Agent Profiles (COMPLETED)
 
 ### 1. Objective & Scope
 Design, configure, and integrate 5 universal, domain-agnostic agent profiles into the Hermes Agent environment and Django backend. These profiles act as permanent "department heads" with distinct personas (`SOUL.md`), toolsets, model configurations, and skills, capable of dispatching tasks and spawning ephemeral sub-agents:
@@ -60,6 +60,30 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 - *2026-09-08*: Verified end-to-end execution: tested reverse container reachability (`/api/ping-hermes/`), validated profile persona execution in container runtime via `hermes -p <profile>`, and synchronized architecture documentation in `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md` (Commit: `69196cc`).
 - *2026-09-09*: Added reasoning effort configuration (`reasoning_effort`: `none`, `low`, `medium`, `high`, `max`) to `AgentProfile` and `AgentTask` in Django backend and declarative profile configs (`agent_service/profiles/*/config.yaml`), leveraging Hermes Agent's native `VALID_REASONING_EFFORTS`, `clamp_effort()` safety wire, and `--reasoning` CLI runtime flag. Applied migration `0003_agentprofile_reasoning_effort_and_more`, seeded profiles, updated admin UI with live reasoning capability badge, and verified with 8/8 passing tests.
 
+---
+
+## Phase 3: Django Native RBAC, Service Accounts & Agent Token Authentication (IN_PROGRESS)
+
+### 1. Objective & Scope
+Integrate Django's native authentication framework, Role-Based Access Control (`auth.Group` and `auth.Permission`), and Django REST Framework (DRF) Token Authentication to secure agent-to-backend database operations under the Principle of Least Privilege:
+- Pair each of the 5 agent profiles with a dedicated Django `User` (Service Account / Bot User: `bot_<profile_name>`).
+- Define native Django Groups (`Agent_Orchestrator`, `Agent_CostController`, `Agent_QAAuditor`, `Agent_CommsAgent`, `Agent_Archivist`) with fine-grained model permissions (`add`, `change`, `view`, `delete`).
+- Enforce DRF `TokenAuthentication` and model permissions on all database-modifying endpoints.
+- Synchronize API tokens to Hermes Agent profile `.env` runtimes via automated provisioning.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Backend Auth Dependencies & Model Extensions** - COMPLETED (Commit: pending)
+- [/] **Sub-task 2: Automated RBAC Groups, Bot Users & Token Generation (`seed_profiles.py`)** - IN PROGRESS
+- [ ] **Sub-task 3: DRF Views Authorization & Endpoint Security Hardening** - PENDING
+- [ ] **Sub-task 4: Hermes Agent Runtime Token Provisioning (`scripts/provision_profiles.py`)** - PENDING
+- [ ] **Sub-task 5: Comprehensive Unit Testing & End-to-End Verification** - PENDING
+- [ ] **Sub-task 6: Documentation Synchronization (Wiki & Architecture)** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 3)
+- *2026-09-09*: Initialized Phase 3 on branch `feat/agent-rbac-service-accounts`. Standardized bot username prefix `bot_<profile_name>` and group prefix `Agent_<Role>`.
+- *2026-09-09*: Installed `rest_framework.authtoken`, configured TokenAuthentication and SessionAuthentication in `settings.py`, and added `user` OneToOneField to `AgentProfile`, `created_by` ForeignKey to `AgentTask` and `SpendReport`. Applied migration `0004_agentprofile_user_agenttask_created_by_and_more`.
+
 ### 4. Current Focus
-Phase 2 Point 1 completed. Awaiting user directions and requirements for Point 2.
+Sub-task 2: Automated RBAC Groups, Bot Users & Token Generation (`seed_profiles.py`)
+
 

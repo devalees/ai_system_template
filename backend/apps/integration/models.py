@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.contrib.auth.models import User
 
 class HandshakeLog(models.Model):
     """
@@ -63,6 +64,14 @@ class AgentProfile(models.Model):
         default='medium',
         help_text="Reasoning/thinking effort level passed to Hermes Agent runtime (none, low, medium, high, max).",
     )
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='agent_profile',
+        help_text="Underlying Django service account / bot user for RBAC and API authentication."
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -88,6 +97,14 @@ class SpendReport(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile = models.ForeignKey(AgentProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='spend_reports')
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_spend_reports',
+        help_text="User/bot account that submitted this spend report."
+    )
     reported_by = models.CharField(max_length=64, default='cost_controller')
     total_api_calls = models.PositiveIntegerField(default=0)
     total_tokens = models.PositiveBigIntegerField(default=0)
@@ -126,6 +143,14 @@ class AgentTask(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     agent_name = models.CharField(max_length=120, default='hermes-agent')
     assigned_profile = models.ForeignKey(AgentProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_agent_tasks',
+        help_text="User/bot account that created this task."
+    )
     task_name = models.CharField(max_length=200)
     input_payload = models.JSONField(default=dict, blank=True)
     output_result = models.JSONField(default=dict, blank=True)
