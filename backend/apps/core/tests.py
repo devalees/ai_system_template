@@ -122,3 +122,79 @@ class CoreAbstractBaseModelTests(TestCase):
 
         # Outside middleware invocation, context variable must be None
         self.assertIsNone(get_current_authenticated_user())
+
+
+class CryptoSecretTests(TestCase):
+    """Test suite for secret encryption, decryption, and masking."""
+
+    def test_encryption_and_decryption(self):
+        from apps.core.crypto import encrypt_secret, decrypt_secret, mask_secret
+
+        secret = "sk-live-antigravity-998877665544"
+        encrypted = encrypt_secret(secret)
+        self.assertNotEqual(secret, encrypted)
+
+        decrypted = decrypt_secret(encrypted)
+        self.assertEqual(decrypted, secret)
+
+    def test_secret_masking(self):
+        from apps.core.crypto import mask_secret
+
+        secret = "sk-live-antigravity-secret"
+        masked = mask_secret(secret, visible_chars=4)
+        self.assertTrue(masked.startswith("sk-l"))
+        self.assertTrue(masked.endswith("cret"))
+        self.assertIn("•", masked)
+
+
+class SettingsRegistryTests(TestCase):
+    """Test suite verifying setting definitions, type validation, and registry."""
+
+    def test_setting_type_validations(self):
+        from apps.core.settings_registry import Setting
+        from django.core.exceptions import ValidationError
+
+        # int
+        s_int = Setting(data_type="int", default=10)
+        self.assertEqual(s_int.validate("42"), 42)
+        with self.assertRaises(ValidationError):
+            s_int.validate("not_a_number")
+
+        # bool
+        s_bool = Setting(data_type="bool", default=False)
+        self.assertTrue(s_bool.validate("true"))
+        self.assertTrue(s_bool.validate("yes"))
+        self.assertTrue(s_bool.validate("1"))
+        self.assertFalse(s_bool.validate("false"))
+
+        # float
+        s_float = Setting(data_type="float", default=1.5)
+        self.assertEqual(s_float.validate("3.14"), 3.14)
+
+        # choice
+        s_choice = Setting(data_type="choice", default="light", choices=[("light", "Light"), ("dark", "Dark")])
+        self.assertEqual(s_choice.validate("dark"), "dark")
+        with self.assertRaises(ValidationError):
+            s_choice.validate("neon")
+
+        # json
+        s_json = Setting(data_type="json", default={})
+        self.assertEqual(s_json.validate('{"key": "val"}'), {"key": "val"})
+
+    def test_decorator_registration(self):
+        from apps.core.settings_registry import Setting, register_settings_group, settings_registry
+
+        @register_settings_group("test_app", verbose_name="Test Application", icon="🧪", order=15)
+        class TestAppSettings:
+            SAMPLE_KEY = Setting(data_type="str", default="hello_world")
+            NUM_WORKERS = Setting(data_type="int", default=4)
+
+        group = settings_registry.get_group("test_app")
+        self.assertIsNotNone(group)
+        self.assertEqual(group.verbose_name, "Test Application")
+        self.assertEqual(group.icon, "🧪")
+
+        sample_setting = settings_registry.get_setting_definition("test_app", "SAMPLE_KEY")
+        self.assertIsNotNone(sample_setting)
+        self.assertEqual(sample_setting.default, "hello_world")
+
