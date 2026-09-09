@@ -378,27 +378,33 @@ class AuditSignalAndDiffingTests(TestCase):
         self.assertEqual(restore_log.changes["is_deleted"]["new"], False)
 
     def test_model_hard_delete_signal(self):
-        """Verify permanently deleting a model creates a HARD_DELETE audit log."""
+        """Verify permanently deleting an auditable model creates a HARD_DELETE audit log."""
         from apps.audit.context import audit_context
+        from apps.audit.registry import register_auditable, unregister_auditable
+        from apps.core.models import AppSettingValue
 
-        org = Organization.objects.create(
-            name="Doomed Org",
-            slug="doomed-org",
-            created_by=self.user,
-        )
-        org_id = str(org.id)
+        register_auditable(AppSettingValue)
+        try:
+            setting = AppSettingValue.objects.create(
+                app_label="audit_test",
+                key="sample_key",
+                raw_value="sample_val",
+            )
+            setting_id = str(setting.id)
 
-        with audit_context(actor=self.user, request_id="req-del-999"):
-            org.hard_delete()
+            with audit_context(actor=self.user, request_id="req-del-999"):
+                setting.delete()
 
-        log = ActivityLog.objects.filter(
-            object_id=org_id,
-            action=ActivityLog.ACTION_HARD_DELETE,
-        ).first()
+            log = ActivityLog.objects.filter(
+                object_id=setting_id,
+                action=ActivityLog.ACTION_HARD_DELETE,
+            ).first()
 
-        self.assertIsNotNone(log)
-        self.assertEqual(log.actor, self.user)
-        self.assertEqual(log.request_id, "req-del-999")
+            self.assertIsNotNone(log)
+            self.assertEqual(log.actor, self.user)
+            self.assertEqual(log.request_id, "req-del-999")
+        finally:
+            unregister_auditable(AppSettingValue)
 
     def test_auth_security_signals(self):
         """Verify Django auth signals trigger ActivityLog entries."""
