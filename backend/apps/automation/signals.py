@@ -51,11 +51,23 @@ def connect_model_signals(model_class: Type[Model]):
     _CONNECTED_MODELS.add(model_class)
 
 
+def bootstrap_core_signals():
+    """Connects foundation template models at boot without database queries."""
+    for model_str in ['auth.User', 'integration.Profile', 'integration.AgentTask']:
+        try:
+            model_cls = apps.get_model(model_str)
+            if model_cls:
+                connect_model_signals(model_cls)
+        except Exception:
+            pass
+
+
 def sync_automation_signals():
     """
     Scans active AutomationRules and connects signals for all target models.
     Called post-migration and on rule creation/updates.
     """
+    bootstrap_core_signals()
     try:
         from .models import AutomationRule
         target_models = (
@@ -74,7 +86,6 @@ def sync_automation_signals():
             except (LookupError, ValueError):
                 pass
     except Exception:
-        # Avoid crashing if database tables are not ready yet
         pass
 
 

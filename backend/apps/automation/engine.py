@@ -4,10 +4,26 @@ Core Execution Engine & Dispatcher for Centralized Automations.
 
 import time
 import traceback
+import uuid
 from typing import Any, Dict, Optional
 from django.utils import timezone
 from .models import AutomationRule, AutomationLog
 from .registry import ServiceRegistry
+
+
+def make_json_serializable(obj: Any) -> Any:
+    """Recursively converts UUIDs, datetimes, and complex objects to JSON-serializable primitives."""
+    if isinstance(obj, dict):
+        return {str(k): make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple, set)):
+        return [make_json_serializable(v) for v in obj]
+    elif isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+    elif isinstance(obj, uuid.UUID):
+        return str(obj)
+    elif hasattr(obj, 'isoformat'):
+        return obj.isoformat()
+    return str(obj)
 
 
 class AutomationEngine:
@@ -72,12 +88,13 @@ class AutomationEngine:
         if rule.filter_conditions and not cls.evaluate_conditions(context, rule.filter_conditions):
             return {"status": "skipped", "reason": "Trigger conditions did not match"}
 
-        # 2. Initialize Audit Log
+        # 2. Initialize Audit Log (safe serialized context)
+        safe_context = make_json_serializable(context)
         log_entry = AutomationLog.objects.create(
             rule=rule,
             trigger_source=trigger_source,
             status='running',
-            input_context=context,
+            input_context=safe_context,
         )
 
         start_time = time.time()
@@ -111,7 +128,7 @@ class AutomationEngine:
 
         # 4. Finalize Audit Log
         log_entry.status = 'success' if success else 'failed'
-        log_entry.output_result = output_result
+        log_entry.output_result = make_json_serializable(output_result)
         log_entry.error_message = error_msg
         log_entry.duration_ms = duration_ms
         log_entry.save(update_fields=['status', 'output_result', 'error_message', 'duration_ms'])
@@ -155,7 +172,7 @@ class AutomationEngine:
         # Build context snapshot
         context = {
             "model": model_identifier,
-            "pk": instance.pk,
+            "pk": str(instance.pk),
             "event": event_type,
         }
         for field in instance._meta.concrete_fields:
@@ -164,6 +181,11 @@ class AutomationEngine:
                 context[field.name] = val
             elif hasattr(val, 'isoformat'):
                 context[field.name] = val.isoformat()
+            else:
+                context[field.name] = str(val)
+
+        if hasattr(instance, 'username'):
+            context['username'] = instance.username
 
         # If user model, check for attached profile fields
         if hasattr(instance, 'profile') and instance.profile:
@@ -175,6 +197,11 @@ class AutomationEngine:
             context['provider'] = p.provider
             context['model_name'] = p.model_name
             context['reasoning_effort'] = p.reasoning_effort
+
+        # If profile model, check for attached user fields
+        if hasattr(instance, 'user') and instance.user:
+            context['username'] = instance.user.username
+            context['is_agent'] = getattr(instance, 'is_agent', False)
 
         dispatched_count = 0
         from .tasks import execute_automation_rule_task

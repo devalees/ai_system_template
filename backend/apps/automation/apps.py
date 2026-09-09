@@ -14,8 +14,9 @@ class AutomationConfig(AppConfig):
         # Auto-discover actions.py in all installed apps
         autodiscover_modules('actions')
 
-        # Connect targeted signal listeners
+        # Connect targeted signal listeners without database queries
         try:
-            import apps.automation.signals  # noqa: F401
-        except ImportError:
+            from .signals import bootstrap_core_signals
+            bootstrap_core_signals()
+        except Exception:
             pass
