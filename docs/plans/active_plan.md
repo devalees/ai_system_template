@@ -382,26 +382,32 @@ Phase 11 complete, authenticated end-to-end with Hermes Agent runtime, duplicate
 
 ---
 
-## Phase 12: Core Foundations, Abstract Models & Dynamic System Settings (`apps.core`) (PENDING)
+## Phase 12: Core Foundations & Modular App Settings Hub (`apps.core`) (PENDING)
 
 ### 1. Objective & Scope
-Establish cross-cutting abstract models and dynamic configuration infrastructure inherited by all models across the system:
+Establish foundational abstract models and a centralized, Odoo-style modular application settings framework:
 - **Abstract Base Models**:
   - `TimeStampedModel`: Standardized `created_at` and `updated_at` timestamps with database indexing.
   - `UUIDModel`: Distributed, non-enumerable `id = UUIDField(primary_key=True, default=uuid.uuid4)` to prevent ID enumeration vulnerabilities.
-  - `SoftDeleteModel` (Paranoid Model): `is_deleted` and `deleted_at` fields with a custom `SoftDeleteManager` and `.restore()` method to prevent accidental data loss.
+  - `SoftDeleteModel` (Paranoid Model): `is_deleted` and `deleted_at` fields with custom `SoftDeleteManager` and `.restore()` method to prevent accidental data loss.
   - `AuditableModel`: Automatically captures `created_by` and `updated_by` via lightweight request middleware.
-- **Dynamic System Settings (`SystemSetting`)**:
-  - Database-backed key-value store (`key`, `value`, `data_type: string/int/bool/json`, `is_public`, `description`) with Redis caching and single-screen Admin management.
-  - Dynamic getters/setters (`settings.get('MAINTENANCE_MODE', default=False)`).
+- **Odoo-Style Modular Application Settings Framework**:
+  - **App-Scoped Registry Pattern**: Each application declares its own configuration parameters cleanly (`conf.py`) via `@register_settings_group`.
+  - **Rich Typed Parameters**: Supports `string`, `int`, `float`, `bool` (toggle switches), `choice` (dropdowns), `secret` (encrypted/masked credentials), `image/file` (branding assets, logos), and `json`.
+  - **Dual-Layer Resolution with Redis Caching**: Fast runtime access (`get_setting("app.KEY", default=...)`) checking Redis cache first, falling back to PostgreSQL, then to Django `settings.py` or `.env`.
+  - **Instant Cache Invalidation**: Automatic Redis cache invalidation on save ensures zero-downtime updates across all running Django processes and Celery workers.
+  - **Unified Settings Hub in Django Admin**: Single-screen configuration dashboard organized by app tabs/sidebar (General, AI Agents & Hermes, Automation, Reports & Branding, Notifications).
 
 ### 2. Task Checklist & Progress
-- [ ] **Sub-task 1: Abstract Base Models Implementation (`apps.core.models`)** - PENDING
-- [ ] **Sub-task 2: Request User Middleware & Context Tracking** - PENDING
-- [ ] **Sub-task 3: Dynamic SystemSetting Model, Cache Layer & Utilities** - PENDING
-- [ ] **Sub-task 4: Django Admin Integration & Dynamic Field Validators** - PENDING
-- [ ] **Sub-task 5: Automated Testing & Verification** - PENDING
-- [ ] **Sub-task 6: LLM Wiki & Architecture Synchronization** - PENDING
+- [ ] **Sub-task 1: Abstract Base Models (`apps.core.models`) & Request Context Middleware** - PENDING
+- [ ] **Sub-task 2: Dynamic Settings Registry, Type Validators & Secret Encryption** - PENDING
+- [ ] **Sub-task 3: Database Models (`AppSettingValue`) & Redis Caching Layer** - PENDING
+- [ ] **Sub-task 4: Fast Runtime Resolution Service (`get_setting`, `set_setting`) with Code/Env Fallback** - PENDING
+- [ ] **Sub-task 5: Unified Odoo-Style Admin Settings Hub with Categorized App Sidebar** - PENDING
+- [ ] **Sub-task 6: Migrate Existing Hardcoded Constants (Hermes Timeouts, Budget Caps, Defaults) to Settings Registry** - PENDING
+- [ ] **Sub-task 7: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 8: LLM Wiki & Architecture Synchronization** - PENDING
+
 
 ---
 
