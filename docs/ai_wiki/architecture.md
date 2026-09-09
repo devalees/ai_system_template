@@ -377,6 +377,41 @@ When an administrative user or API client creates an AI Agent account (`Profile.
 - Allows operators to configure root triggers and view/edit multi-step action sequences and recent execution audit logs on a single unified screen.
 - Enhanced with `automation_reactive_admin.js` for instant schema introspection pills and visual condition presets.
 
+---
+
+## 12. Interactive Condition Rules Table Builder & Temporal Engine (Phase 8)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 Visual Condition Rules (Trigger Filters)                                            │
+├──────────────────────────┬──────────────────────────┬──────────────────────┬───────────┤
+│ Field (Model-Aware)      │ Operator                 │ Expected Value       │ Actions   │
+├──────────────────────────┼──────────────────────────┼──────────────────────┼───────────┤
+│ [ due_date (Date)      ▼]│ [ > (Greater / After)  ▼]│ [ 2026-09-09       ] │ [ ✕ Del ] │
+│ [ status (Status)      ▼]│ [ == (Equals)          ▼]│ [ completed        ] │ [ ✕ Del ] │
+│ [ notes (Notes)        ▼]│ [ is_empty (Is Null)   ▼]│ [ (disabled)       ] │ [ ✕ Del ] │
+├──────────────────────────┴──────────────────────────┴──────────────────────┴───────────┤
+│ [ + Add Condition ]  [ 🗑️ Clear All ]                                                  │
+│ 💡 Value Formatting & Database Type Guide:                                             │
+│ 📅 Dates (Django Standard): YYYY-MM-DD (e.g. 2026-09-09)                                │
+│ ⏱️ Timestamps: YYYY-MM-DD HH:MM:SS                                                     │
+│ 🔢 Numbers: 10, 3.75, -5.0 | 🔤 Booleans: true / false                                 │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 12.1 Interactive Table Widget in Django Admin
+- Replaces raw JSON editing in `condition_rules` with a responsive spreadsheet-like table.
+- Dynamically discovers all fields from the selected `trigger_model` via the Introspection API (`/api/automation/introspection/?model=...`).
+- Supported Operators: `==`, `!=`, `>`, `>=`, `<`, `<=`, `contains`, `not_contains`, `in`, `not_in`, `is_empty`, `is_not_empty`.
+- Adapts value input dynamically: disables for null checks, provides type badges, and renders date format reminders.
+- Implements continuous two-way synchronization with the underlying Django `JSONField`.
+
+### 12.2 Date Formatting Standard & Engine Temporal Parsing
+- Standardizes date values on the Django / PostgreSQL ISO 8601 standard: `YYYY-MM-DD` (Year-Month-Day).
+- In `AutomationEngine.evaluate_single_condition`, temporal values (`date`, `datetime`, and ISO strings) are parsed via `try_parse_temporal()`.
+- Supports chronological comparisons (`<`, `<=`, `>`, `>=`, `==`, `!=`) directly comparing date and datetime components without failing numeric conversions or relying on lexicographical strings.
+
+
 
 
 

@@ -248,5 +248,35 @@ Evolve the automation platform to a 1-to-N workflow pipeline architecture inspir
 - *2026-09-09*: Verified 100% test pass rate across 35 unit test cases (core registry, 1-to-N pipelines, target CRUD, introspection, celery tasks, and signals).
 
 ### 4. Current Focus
-Phase 7 completed and verified. System is ready for production use or further enhancement.
+Phase 7 completed. Moving into Phase 8.
+
+---
+
+## Phase 8: Interactive Condition Rules Table Builder & Date Formatting Engine (COMPLETED)
+
+### 1. Objective & Scope
+Transform the condition rules interface in Django Admin from a raw JSON textarea into a modern, interactive, spreadsheet-like Table Builder (parity with Odoo Domain Builder / Zapier Filters):
+- **Interactive Table Component**: Editable columns for Field, Operator, Expected Value, and Action (Delete).
+- **Intelligent Field Discovery**: Dynamically populated dropdown matching fields of the selected `trigger_model`.
+- **Date & Temporal Value Helpers**: Explicit helper text and format badges instructing the user on Django/database date syntax: `YYYY-MM-DD` (e.g. `2026-09-09`), with dynamic input placeholders and date pickers.
+- **Engine Date Comparison Capabilities**: Upgrade `AutomationEngine.evaluate_single_condition` to support accurate `<, <=, >, >=` chronological comparisons on dates and datetimes.
+- **Two-Way State Synchronization**: Continuous synchronization between the visual table and the underlying `JSONField` form field.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Engine Temporal & Date Comparison Upgrade (`apps.automation.engine.py`)** - COMPLETED
+- [x] **Sub-task 2: Interactive Condition Rules Table Component (`automation_reactive_admin.js`)** - COMPLETED
+- [x] **Sub-task 3: Date & Syntax Guidance Card in Admin UI** - COMPLETED
+- [x] **Sub-task 4: Automated Testing & Verification for Date Comparisons (36 Tests Passing)** - COMPLETED
+- [x] **Sub-task 5: Documentation & Architecture Synchronization** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 8)
+- *2026-09-09*: Initiated Phase 8 per user directive to replace raw JSON condition editing with a visual table and provide explicit Django database date formatting guidance (`YYYY-MM-DD`).
+- *2026-09-09*: Enhanced `AutomationEngine.evaluate_single_condition` with `try_parse_temporal` to parse pure `YYYY-MM-DD` date strings and ISO datetimes, enabling chronological comparisons (`<`, `<=`, `>`, `>=`, `==`, `!=`) without numeric conversion failures.
+- *2026-09-09*: Implemented `auto-rules-container` with dynamically generated rows, type badges, operator selectors, and two-way JSON serialization in `automation_reactive_admin.js`.
+- *2026-09-09*: Added inline date helper card explicitly documenting the Django ISO date standard `YYYY-MM-DD` (e.g. `2026-09-09`), timestamps (`YYYY-MM-DD HH:MM:SS`), numbers, and boolean formats.
+- *2026-09-09*: Verified 100% test pass rate across 36 unit test cases (including temporal date comparison tests).
+
+### 4. Current Focus
+Phase 8 completed and verified. The system is ready for review or subsequent feature expansion.
+
 

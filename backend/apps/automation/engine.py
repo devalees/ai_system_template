@@ -48,9 +48,81 @@ def get_nested_context_value(context: Dict[str, Any], key: str) -> Any:
     return None
 
 
+from datetime import date, datetime
+
+
+def try_parse_temporal(val: Any):
+    """
+    Attempts to parse a value into a datetime or date object for chronological comparisons.
+    Supports datetime, date, and strings formatted as YYYY-MM-DD or ISO 8601.
+    """
+    if val is None or isinstance(val, (int, float, bool)):
+        return None
+    if isinstance(val, datetime):
+        return val
+    if isinstance(val, date):
+        return val
+    if isinstance(val, str):
+        val_str = val.strip()
+        if len(val_str) < 8:
+            return None
+        # If pure date string e.g. YYYY-MM-DD
+        if re.match(r'^\d{4}-\d{2}-\d{2}$', val_str):
+            try:
+                return date.fromisoformat(val_str)
+            except Exception:
+                pass
+        # Try full ISO datetime first (e.g. 2026-09-09T08:14:26+03:00 or 2026-09-09 14:30:00)
+        try:
+            return datetime.fromisoformat(val_str.replace('Z', '+00:00'))
+        except Exception:
+            pass
+        try:
+            return date.fromisoformat(val_str[:10])
+        except Exception:
+            pass
+    return None
+
+
+
 def evaluate_single_condition(actual: Any, operator: str, expected: Any) -> bool:
     """Evaluates a single comparison between actual context value and expected rule value."""
     op = (operator or '==').strip().lower()
+
+    if op in ('is_empty', 'is_null'):
+        return actual is None or actual == ''
+
+    elif op in ('is_not_empty', 'is_not_null'):
+        return actual is not None and actual != ''
+
+    # Check for temporal / date comparisons
+    actual_temporal = try_parse_temporal(actual)
+    expected_temporal = try_parse_temporal(expected)
+
+    if actual_temporal is not None and expected_temporal is not None:
+        # Normalize if comparing datetime with date
+        if isinstance(actual_temporal, datetime) and isinstance(expected_temporal, date) and not isinstance(expected_temporal, datetime):
+            actual_cmp = actual_temporal.date()
+            expected_cmp = expected_temporal
+        elif isinstance(expected_temporal, datetime) and isinstance(actual_temporal, date) and not isinstance(actual_temporal, datetime):
+            actual_cmp = actual_temporal
+            expected_cmp = expected_temporal.date()
+        else:
+            actual_cmp = actual_temporal
+            expected_cmp = expected_temporal
+
+        if op in ('==', 'eq', 'equals'):
+            return actual_cmp == expected_cmp
+        elif op in ('!=', 'ne', 'not_equals'):
+            return actual_cmp != expected_cmp
+        elif op in ('>', 'gt'):
+            return actual_cmp > expected_cmp
+        elif op in ('>=', 'gte'):
+            return actual_cmp >= expected_cmp
+        elif op in ('<', 'lt'):
+            return actual_cmp < expected_cmp
+        elif op in ('<=', 'lte'):
+            return actual_cmp <= expected_cmp
 
     if op in ('==', 'eq', 'equals'):
         if isinstance(expected, bool):
@@ -108,13 +180,8 @@ def evaluate_single_condition(actual: Any, operator: str, expected: Any) -> bool
     elif op in ('not_in', 'not in'):
         return not evaluate_single_condition(actual, 'in', expected)
 
-    elif op in ('is_empty', 'is_null'):
-        return actual is None or actual == ''
-
-    elif op in ('is_not_empty', 'is_not_null'):
-        return actual is not None and actual != ''
-
     return False
+
 
 
 def resolve_template_value(template: Any, context: Dict[str, Any], field_meta: Any = None) -> Any:

@@ -475,6 +475,46 @@ class Phase7DecoupledPipelineTests(TestCase):
         self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "notes", "operator": "is_empty", "value": ""}]))
         self.assertTrue(AutomationEngine.evaluate_condition_rules(ctx, [{"field": "status", "operator": "is_not_empty", "value": ""}]))
 
+    def test_temporal_date_condition_rules(self):
+        """Tests that condition rules accurately evaluate dates and timestamps."""
+        ctx = {
+            "created_at": "2026-09-09T08:14:26+03:00",
+            "due_date": "2026-09-15",
+            "start_date": "2026-09-01",
+        }
+
+        # Date equality
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(
+            ctx, [{"field": "due_date", "operator": "==", "value": "2026-09-15"}]
+        ))
+        self.assertFalse(AutomationEngine.evaluate_condition_rules(
+            ctx, [{"field": "due_date", "operator": "==", "value": "2026-09-14"}]
+        ))
+
+        # Greater than / After Date
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(
+            ctx, [{"field": "due_date", "operator": ">", "value": "2026-09-10"}]
+        ))
+        self.assertFalse(AutomationEngine.evaluate_condition_rules(
+            ctx, [{"field": "due_date", "operator": ">", "value": "2026-09-20"}]
+        ))
+
+        # Less than / Before Date
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(
+            ctx, [{"field": "start_date", "operator": "<", "value": "2026-09-05"}]
+        ))
+
+        # Datetime comparison against YYYY-MM-DD
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(
+            ctx, [{"field": "created_at", "operator": "==", "value": "2026-09-09"}]
+        ))
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(
+            ctx, [{"field": "created_at", "operator": ">=", "value": "2026-09-01"}]
+        ))
+        self.assertTrue(AutomationEngine.evaluate_condition_rules(
+            ctx, [{"field": "created_at", "operator": "<=", "value": "2026-09-10"}]
+        ))
+
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_target_crud_create(self):
         trigger = AutomationTrigger.objects.create(
