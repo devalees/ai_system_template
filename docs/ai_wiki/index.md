@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 17 Completed (Universal Document & Media Management across SHA-256 Checksums, GenericForeignKey Attachments, Secure Token Signer, REST APIs, and Admin Generic Inlines)
+- **Status**: Phase 18 Completed (Developer API Gateway, Scoped Keys & Inbound Webhooks across hashed secret tokens, HMAC verification, REST API ViewSets, and Admin management)
 
 
 ---
@@ -176,6 +176,21 @@ An extensible, production-grade starter template pairing a **Django** web framew
   - DRF ViewSet (`/api/v1/media/documents/upload/`, `/download/`).
   - `DocumentAdmin` with monospaced SHA-256 badges and human size formatters.
   - Reusable `GenericDocumentInline` component embeddable in any admin model change form.
+
+### 16. Developer API Gateway, Scoped Keys & Inbound Webhooks (`apps.api_gateway`)
+- **Data Models (`models.py`)**:
+  - `APIKey`: Cryptographically hashed secret key model (`prefix`, `hashed_key` SHA-256 digest, `scopes` list, `allowed_ips` list, `expires_at`, `is_active`, `last_used_at`). Raw keys generated once (`agy_live_<hex>`) and never stored in plain text.
+  - `InboundWebhook`: Configurations for third-party SaaS webhook ingestion (`name`, `endpoint_slug`, `secret_token`, `provider: github/stripe/slack/custom`, `is_active`).
+  - `WebhookEvent`: Immutable audit log archiving received payload bodies, headers, status (`pending`, `processed`, `failed`), and error tracebacks.
+- **DRF Authentication Provider (`authentication.py`)**:
+  - `APIKeyAuthentication`: DRF authentication class checking `X-API-Key` or `Authorization: Api-Key <raw_key>` headers, matching 12-char prefix, verifying SHA-256 hash digest, checking expiration and IP allowlists, setting active tenant context on request, and updating `last_used_at`.
+- **HMAC Signature Verification Engine (`signature.py`)**:
+  - `verify_hmac_signature`: Supports GitHub (`X-Hub-Signature-256`), Stripe (`Stripe-Signature` timestamped), Slack (`X-Slack-Signature`), and custom HMAC SHA-256 providers.
+- **REST API Gateway & Django Admin**:
+  - Public Ingestion Endpoint: `POST /api/v1/gateway/webhooks/<slug>/ingest/` (verifies HMAC, parses event type, logs `WebhookEvent`).
+  - Key & Webhook Management ViewSets: `APIKeyViewSet` (`/api/v1/gateway/keys/`), `InboundWebhookViewSet` (`/api/v1/gateway/webhooks/configs/`), `WebhookEventViewSet` (`/api/v1/gateway/webhooks/events/`).
+  - Django Admin integration with prefix search, read-only key hashes, and event payload viewers.
+
 
 
 

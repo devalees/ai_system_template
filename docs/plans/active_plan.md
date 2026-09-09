@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
 - **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `feat/document-media-management`
-- **Last Updated**: 2026-09-09 20:30:00+03:00
+- **Active Branch**: `feat/developer-api-gateway`
+- **Last Updated**: 2026-09-09 20:52:00+03:00
 
 ---
 
@@ -578,7 +578,7 @@ Unified file, document, and media management handling user uploads, generated ag
 
 ---
 
-## Phase 18: Developer API Gateway, Scoped Keys & Inbound Webhooks (`apps.api_gateway`) (PENDING)
+## Phase 18: Developer API Gateway, Scoped Keys & Inbound Webhooks (`apps.api_gateway`) (COMPLETED)
 
 ### 1. Objective & Scope
 Expose secure, programmatic API access and inbound webhook ingestion for third-party SaaS interoperability:
@@ -591,12 +591,21 @@ Expose secure, programmatic API access and inbound webhook ingestion for third-p
   - Bridge into `apps.automation` for automated event dispatching.
 
 ### 2. Task Checklist & Progress
-- [ ] **Sub-task 1: APIKey Model, Hashing & DRF Authentication Backend** - PENDING
-- [ ] **Sub-task 2: InboundWebhook Model & HMAC Signature Verifier** - PENDING
-- [ ] **Sub-task 3: Inbound Webhook Ingestion API & Automation Bridge** - PENDING
-- [ ] **Sub-task 4: Django Admin Key Management & Event Inspector** - PENDING
-- [ ] **Sub-task 5: Automated Testing & Verification** - PENDING
-- [ ] **Sub-task 6: LLM Wiki & Architecture Synchronization** - PENDING
+- [x] **Sub-task 1: APIKey Model, Hashing & DRF Authentication Backend** - COMPLETED (Commit: `fdb1c27`)
+- [x] **Sub-task 2: InboundWebhook Model & HMAC Signature Verifier** - COMPLETED (Commit: `fdb1c27`)
+- [x] **Sub-task 3: Inbound Webhook Ingestion API & Automation Bridge** - COMPLETED (Commit: `fdb1c27`)
+- [x] **Sub-task 4: Django Admin Key Management & Event Inspector** - COMPLETED (Commit: `fdb1c27`)
+- [x] **Sub-task 5: Automated Testing & Verification (184 Tests Passing)** - COMPLETED (Commit: `fdb1c27`)
+- [x] **Sub-task 6: LLM Wiki & Architecture Synchronization** - COMPLETED (Commit: `fdb1c27`)
+
+### 3. Key Decisions & Deviations (Phase 18)
+- *2026-09-09*: Initialized `apps.api_gateway` on branch `feat/developer-api-gateway`.
+- *2026-09-09*: Created `APIKey` model generating 24-byte hex tokens prefixed with `agy_live_`, storing SHA-256 digests in database and returning raw secret key ONCE upon creation. Added granular `scopes` JSON list, IP allowlist, and `expires_at` support.
+- *2026-09-09*: Implemented `APIKeyAuthentication` subclassing DRF `BaseAuthentication`, parsing `X-API-Key` or `Authorization: Api-Key <raw_key>` headers, validating prefix, verifying SHA-256 hash digest, checking expiration and IP allowlists, setting active tenant context on request, and updating `last_used_at`. Added `authenticate_header` returning `Api-Key realm="api"` for proper 401 Unauthorized formatting.
+- *2026-09-09*: Implemented `InboundWebhook` and `WebhookEvent` models supporting GitHub, Stripe, Slack, and Custom HMAC SHA-256 signature verification in `signature.py`.
+- *2026-09-09*: Implemented public ingestion endpoint `POST /api/v1/gateway/webhooks/<slug>/ingest/` (using `InboundWebhook.all_objects` to handle public unauthenticated webhooks) and ViewSets for `APIKey`, `InboundWebhook`, and `WebhookEvent`.
+- *2026-09-09*: Registered models in Django Admin with prefix search, read-only hashes, and event payload inspectors.
+- *2026-09-09*: Added comprehensive unit tests in `tests.py`. Verified 184/184 tests passing across all 18 applications.
 
 ---
 
@@ -630,7 +639,8 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
 ---
 
 ### 4. Current Focus
-Phase 17 (Universal Document & Media Management): COMPLETED. Ready to proceed to Phase 18: Developer API Gateway, Scoped Keys & Inbound Webhooks (`apps.api_gateway`).
+Phase 18 (Developer API Gateway, Scoped Keys & Inbound Webhooks): COMPLETED. Ready to proceed to Phase 19: Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`).
+
 
 
 
