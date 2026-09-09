@@ -512,6 +512,36 @@ Expose secure, programmatic API access and inbound webhook ingestion for third-p
 
 ---
 
+## Phase 18: Dynamic Visual Reporting & PDF Generation Engine (`apps.reports`) (PENDING)
+
+### 1. Objective & Scope
+Implement an enterprise-grade, dynamic reporting engine in Django capable of rendering both interactive HTML views and pixel-perfect vector PDFs:
+- **Dual-Representation Storage**:
+  - `ReportTemplate`: `name`, `slug`, `target_model` (bound via introspection), `page_format` (`A4`, `Letter`, `thermal_80mm`), `orientation` (`portrait`, `landscape`), `layout_schema` (JSON visual coordinate tree for frontend drag-and-drop builder), `compiled_html` (Jinja2/Django HTML+CSS template with `@page` media rules), `is_default`, `is_active`.
+  - `ReportExecutionLog`: Audit log capturing generation duration, requesting actor, output file size, format (HTML/PDF), and status.
+- **Rendering & Conversion Pipeline**:
+  - CSS Paged Media (`@page { size: A4 portrait; margin: 10mm; }`) with header/footer pagination (`counter(page)`).
+  - Python-native WeasyPrint vector PDF rendering backend inside backend container.
+  - Multi-language & RTL Arabic typography support (`Cairo`, `Amiri`, UTF-8).
+- **Frontend Designer Integration API**:
+  - Introspection API bridge exposing dynamic model fields and reverse relationships as draggable tokens.
+  - Preview endpoint (`GET /api/reports/templates/<id>/preview/?record_id=...&format=html`) and binary download endpoint (`GET /api/reports/templates/<id>/render/?record_id=...&format=pdf`).
+- **Automation & Agent Ecosystem Bridge**:
+  - Register `generate_pdf_report` action in `apps.automation` allowing triggers (e.g. Invoice approved, Task completed) to automatically compile reports, attach them to `apps.media`, and dispatch via `apps.notifications`.
+
+### 2. Task Checklist & Progress
+- [ ] **Sub-task 1: ReportTemplate & ReportExecutionLog Data Models (`apps.reports.models`)** - PENDING
+- [ ] **Sub-task 2: WeasyPrint Engine & CSS Paged Media Service Layer** - PENDING
+- [ ] **Sub-task 3: Model Introspection Token Bridge & Template Compiler** - PENDING
+- [ ] **Sub-task 4: REST API Endpoints (Template CRUD, Live HTML Preview, PDF Render)** - PENDING
+- [ ] **Sub-task 5: Automation Engine Action Registration (`generate_pdf_report`)** - PENDING
+- [ ] **Sub-task 6: Django Admin Interface with Live Preview Actions** - PENDING
+- [ ] **Sub-task 7: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 8: LLM Wiki & Architecture Synchronization** - PENDING
+
+---
+
 ### 4. Current Focus
-Awaiting user review and additional feature inputs for Phases 12 through 17 before beginning Phase 12 execution.
+Awaiting user review and additional feature inputs for Phases 12 through 18 before beginning Phase 12 execution.
+
 
