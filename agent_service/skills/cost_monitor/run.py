@@ -121,6 +121,7 @@ def main():
     parser.add_argument("--daily-budget", type=float, default=10.00, help="Daily budget limit in USD.")
     parser.add_argument("--hermes-root", type=str, default="/root/.hermes", help="Path to Hermes root directory.")
     parser.add_argument("--json", action="store_true", help="Output raw JSON.")
+    parser.add_argument("--push", action="store_true", help="Push report to Django backend using DJANGO_API_TOKEN.")
     args = parser.parse_args()
 
     hermes_root = Path(args.hermes_root)
@@ -172,6 +173,47 @@ def main():
         print(f"{bold}Per-Model Consumption:{reset}")
         for m_name, data in metrics["models"].items():
             print(f"  • {m_name:<30}: {data['api_calls']} calls | {data['input_tokens']+data['output_tokens']:,} tokens | ${data['cost_usd']:.4f}")
+
+    if args.push:
+        print(f"───────────────────────────────────────────────────────────────────")
+        api_url = os.getenv("DJANGO_API_URL", "http://host.docker.internal:8000/api").rstrip('/')
+        api_token = os.getenv("DJANGO_API_TOKEN", "")
+        if not api_token:
+            env_path = Path("/root/.hermes/profiles/cost_controller/.env")
+            if env_path.exists():
+                for line in env_path.read_text().splitlines():
+                    if line.startswith("DJANGO_API_TOKEN="):
+                        api_token = line.split("=", 1)[1].strip()
+                    elif line.startswith("DJANGO_API_URL="):
+                        api_url = line.split("=", 1)[1].strip().rstrip('/')
+
+        if not api_token:
+            print(f"  {bold}\033[93m! Cannot push report: DJANGO_API_TOKEN not found.{reset}")
+        else:
+            import urllib.request
+            payload_data = json.dumps({
+                "reported_by": "cost_controller",
+                "total_api_calls": metrics["total_api_calls"],
+                "total_tokens": metrics["total_tokens"],
+                "total_cost_usd": str(round(metrics["total_cost_usd"], 4)),
+                "daily_budget_usd": str(round(metrics["daily_budget_usd"], 2)),
+                "budget_status": metrics["budget_status"],
+                "payload": metrics
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                f"{api_url}/spend-reports/",
+                data=payload_data,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Token {api_token}"
+                }
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    print(f"  {bold}{status_color}✓ Spend report pushed to Django backend (HTTP {resp.status}).{reset}")
+            except Exception as exc:
+                print(f"  {bold}\033[91m! Failed to push report to Django backend: {exc}{reset}")
+
     print(f"{bold}═══════════════════════════════════════════════════════════════════{reset}\n")
 
 

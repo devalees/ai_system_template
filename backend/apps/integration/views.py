@@ -5,7 +5,7 @@ from django.db import connection
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, DjangoModelPermissions, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import HandshakeLog, AgentProfile, SpendReport, AgentTask
@@ -17,6 +17,21 @@ from .serializers import (
     AgentTaskSerializer,
     TaskVerdictSerializer,
 )
+
+class StrictDjangoModelPermissions(DjangoModelPermissions):
+    """
+    Extends DjangoModelPermissions to enforce view_<model> on GET/HEAD/OPTIONS.
+    Ensures complete RBAC coverage across all HTTP verbs.
+    """
+    perms_map = {
+        'GET': ['%(app_label)s.view_%(model_name)s'],
+        'OPTIONS': [],
+        'HEAD': [],
+        'POST': ['%(app_label)s.add_%(model_name)s'],
+        'PUT': ['%(app_label)s.change_%(model_name)s'],
+        'PATCH': ['%(app_label)s.change_%(model_name)s'],
+        'DELETE': ['%(app_label)s.delete_%(model_name)s'],
+    }
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -88,7 +103,7 @@ def agent_handshake(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def list_handshake_logs(request):
     """
     Returns recent handshake logs.
@@ -99,7 +114,7 @@ def list_handshake_logs(request):
 
 
 @api_view(['POST', 'GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def ping_hermes_gateway(request):
     """
     Reverse connectivity test: Django initiates HTTP request to Hermes Gateway.
@@ -131,7 +146,7 @@ class AgentProfileViewSet(viewsets.ModelViewSet):
     """
     queryset = AgentProfile.objects.all()
     serializer_class = AgentProfileSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, StrictDjangoModelPermissions]
     lookup_field = 'name'
 
 
@@ -141,7 +156,10 @@ class SpendReportViewSet(viewsets.ModelViewSet):
     """
     queryset = SpendReport.objects.all()
     serializer_class = SpendReportSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, StrictDjangoModelPermissions]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user if self.request.user.is_authenticated else None)
 
 
 class AgentTaskViewSet(viewsets.ModelViewSet):
@@ -150,13 +168,34 @@ class AgentTaskViewSet(viewsets.ModelViewSet):
     """
     queryset = AgentTask.objects.all()
     serializer_class = AgentTaskSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, StrictDjangoModelPermissions]
 
-    @action(detail=True, methods=['post'], url_path='submit-verdict')
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user if self.request.user.is_authenticated else None)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='submit-verdict',
+        permission_classes=[IsAuthenticated]
+    )
     def submit_verdict(self, request, pk=None):
         """
         Review gate endpoint: allows qa_auditor to submit 'approved' or 'changes_requested'.
         """
+        # Strict RBAC gate: only QA Auditor service account with change_agenttask permission or superuser
+        is_qa_auditor = (
+            request.user.is_superuser or (
+                request.user.has_perm('integration.change_agenttask') and
+                request.user.groups.filter(name='Agent_QAAuditor').exists()
+            )
+        )
+        if not is_qa_auditor:
+            return Response(
+                {"detail": "Only QA Auditor service account (Agent_QAAuditor) is authorized to submit review verdicts."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         task = self.get_object()
         serializer = TaskVerdictSerializer(data=request.data)
         if not serializer.is_valid():

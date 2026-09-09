@@ -66,6 +66,30 @@ def parse_yaml_simple(file_path: Path) -> dict:
     return data
 
 
+def fetch_agent_tokens() -> dict:
+    """Retrieves auth token manifest from Django backend."""
+    repo_root = Path(__file__).resolve().parent.parent
+    backend_compose = repo_root / "backend" / "docker-compose.yml"
+    cmd = [
+        "docker", "compose", "-f", str(backend_compose), "exec", "-T", "backend",
+        "python", "manage.py", "seed_profiles", "--export-tokens", "/tmp/agent_tokens.json"
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    if res.returncode == 0:
+        read_cmd = [
+            "docker", "compose", "-f", str(backend_compose), "exec", "-T", "backend",
+            "cat", "/tmp/agent_tokens.json"
+        ]
+        read_res = subprocess.run(read_cmd, capture_output=True, text=True)
+        if read_res.returncode == 0 and read_res.stdout.strip():
+            import json
+            try:
+                return json.loads(read_res.stdout.strip())
+            except Exception:
+                pass
+    return {}
+
+
 def provision_all():
     """Provisions all profiles found in source_dir into Hermes runtime."""
     source_dir = get_source_dir()
@@ -78,7 +102,15 @@ def provision_all():
         print(f"{RED}Error: Profiles source directory not found at: {source_dir}{RESET}")
         sys.exit(1)
 
-    # 1. Fetch currently registered profiles in Hermes
+    # 1. Fetch tokens manifest from Django
+    print(f"{BLUE}Fetching Service Account RBAC tokens from Django backend...{RESET}")
+    tokens_manifest = fetch_agent_tokens()
+    if tokens_manifest:
+        print(f"{GREEN}✓ Loaded tokens for {len(tokens_manifest)} bot service accounts.{RESET}\n")
+    else:
+        print(f"{YELLOW}! Warning: Could not retrieve tokens from Django backend.{RESET}\n")
+
+    # 2. Fetch currently registered profiles in Hermes
     list_res = run_cmd(["hermes", "profile", "list"])
     existing_profiles = {"default"}
     if list_res.returncode == 0:
@@ -107,6 +139,8 @@ def provision_all():
         meta = parse_yaml_simple(profile_path / "profile.yaml")
         display_name = meta.get("display_name", profile_name)
         description = meta.get("description", "")
+        token_data = tokens_manifest.get(profile_name, {})
+        token_val = token_data.get("token", "")
 
         print(f"{BOLD}▶ Provisioning Profile: {GREEN}{profile_name}{RESET} ({display_name})")
 
@@ -135,10 +169,23 @@ for f in ['SOUL.md', 'config.yaml', 'profile.yaml']:
     s = os.path.join(src, f)
     if os.path.exists(s):
         shutil.copy2(s, os.path.join(dst, f))
+
+# Write profile .env credentials
+token = '{token_val}'
+if token:
+    env_file = os.path.join(dst, '.env')
+    lines = [
+        'DJANGO_API_URL=http://host.docker.internal:8000/api\\n',
+        f'DJANGO_API_TOKEN={{token}}\\n',
+    ]
+    with open(env_file, 'w', encoding='utf-8') as ef:
+        ef.writelines(lines)
 """
         sync_res = run_cmd(["python", "-c", sync_script])
         if sync_res.returncode == 0:
             print(f"    {GREEN}✓ Synced SOUL.md, config.yaml, and profile.yaml.{RESET}")
+            if token_val:
+                print(f"    {GREEN}✓ Injected DJANGO_API_TOKEN into .env ({token_val[:8]}...){RESET}")
         else:
             print(f"    {YELLOW}Warning syncing files: {sync_res.stderr.strip()}{RESET}")
 

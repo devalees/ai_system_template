@@ -24,18 +24,23 @@ class AgentProfileSerializer(serializers.ModelSerializer):
 
 
 class SpendReportSerializer(serializers.ModelSerializer):
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+
     class Meta:
         model = SpendReport
         fields = '__all__'
+        read_only_fields = ('id', 'created_at', 'created_by')
 
 
 class AgentTaskSerializer(serializers.ModelSerializer):
     profile_name = serializers.CharField(source='assigned_profile.name', read_only=True)
     profile_display_name = serializers.CharField(source='assigned_profile.display_name', read_only=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
 
     class Meta:
         model = AgentTask
         fields = '__all__'
+        read_only_fields = ('id', 'created_at', 'updated_at', 'created_by')
 
 
 class TaskVerdictSerializer(serializers.Serializer):
