@@ -1,0 +1,481 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  :root {
+    --hub-bg: var(--body-bg, #f8fafc);
+    --hub-card-bg: var(--darkened-bg, #ffffff);
+    --hub-border: var(--border-color, #e2e8f0);
+    --hub-primary: #0284c7;
+    --hub-primary-hover: #0369a1;
+    --hub-text: var(--body-fg, #1e293b);
+    --hub-muted: var(--body-quiet-color, #64748b);
+  }
+
+  .settings-layout {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    align-items: flex-start;
+  }
+
+  /* Left Sidebar */
+  .settings-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--hub-card-bg);
+    border: 1px solid var(--hub-border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .sidebar-header {
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--hub-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.02);
+  }
+
+  .sidebar-nav {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+  }
+
+  .sidebar-item {
+    margin: 0;
+    padding: 0;
+  }
+
+  .sidebar-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border: none;
+    background: transparent;
+    color: var(--hub-text);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-left: 4px solid transparent;
+  }
+
+  .sidebar-btn:hover {
+    background: rgba(2, 132, 199, 0.08);
+    color: var(--hub-primary);
+  }
+
+  .sidebar-btn.active {
+    background: rgba(2, 132, 199, 0.12);
+    color: var(--hub-primary);
+    border-left-color: var(--hub-primary);
+    font-weight: 700;
+  }
+
+  /* Main Settings Panel */
+  .settings-content {
+    flex-grow: 1;
+    min-width: 0;
+  }
+
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .group-card {
+    background: var(--hub-card-bg);
+    border: 1px solid var(--hub-border);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .group-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--hub-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.02);
+  }
+
+  .group-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .settings-list {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .setting-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--hub-border);
+  }
+
+  .setting-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .setting-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .setting-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--hub-text);
+  }
+
+  .setting-key-badge {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--hub-muted);
+    background: rgba(0,0,0,0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .setting-help {
+    font-size: 12px;
+    color: var(--hub-muted);
+    margin-bottom: 6px;
+  }
+
+  .setting-control-container {
+    max-width: 500px;
+  }
+
+  /* Form Inputs */
+  .hub-input, .hub-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--hub-border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--hub-card-bg);
+    color: var(--hub-text);
+    box-sizing: border-box;
+  }
+
+  .hub-input:focus, .hub-select:focus {
+    outline: none;
+    border-color: var(--hub-primary);
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+  }
+
+  /* Toggle Switch */
+  .switch-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .switch-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .switch-slider {
+    width: 44px;
+    height: 24px;
+    background-color: #cbd5e1;
+    border-radius: 24px;
+    position: relative;
+    transition: background-color 0.2s;
+  }
+
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: white;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+
+  .switch-input:checked + .switch-slider {
+    background-color: #10b981;
+  }
+
+  .switch-input:checked + .switch-slider::before {
+    transform: translateX(20px);
+  }
+
+  .switch-text {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Secret Input with Reveal */
+  .secret-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .secret-toggle-btn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    color: var(--hub-muted);
+  }
+
+  /* Action Bar */
+  .hub-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(0,0,0,0.02);
+    border-top: 1px solid var(--hub-border);
+  }
+
+  .btn-save {
+    background: var(--hub-primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+
+  .btn-save:hover {
+    background: var(--hub-primary-hover);
+  }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label='core' %}">{% translate 'Core' %}</a>
+  &rsaquo; {% translate 'Configuration Hub' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1>⚙️ {% translate "System Configuration Hub" %}</h1>
+  <p style="color: var(--hub-muted); margin-bottom: 20px;">
+    {% translate "Centralized administration for platform and application-level settings. Updates apply immediately with zero server downtime." %}
+  </p>
+
+  <div class="settings-layout">
+    <!-- Sidebar -->
+    <nav class="settings-sidebar">
+      <div class="sidebar-header">
+        <span>📦</span>
+        <span>{% translate "Applications" %}</span>
+      </div>
+      <ul class="sidebar-nav">
+        {% for group in groups %}
+        <li class="sidebar-item">
+          <button type="button" 
+                  class="sidebar-btn {% if active_tab == group.app_label or forloop.first and not active_tab %}active{% endif %}"
+                  data-target="tab-{{ group.app_label }}"
+                  onclick="switchTab('{{ group.app_label }}')">
+            <span>{{ group.icon }}</span>
+            <span>{{ group.verbose_name }}</span>
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <!-- Content Area -->
+    <main class="settings-content">
+      {% for group in groups %}
+      <div id="tab-{{ group.app_label }}" class="tab-pane {% if active_tab == group.app_label or forloop.first and not active_tab %}active{% endif %}">
+        <form method="post" action="">
+          {% csrf_token %}
+          <input type="hidden" name="_app_label" value="{{ group.app_label }}">
+          
+          <div class="group-card">
+            <div class="group-header">
+              <h2 class="group-title">
+                <span>{{ group.icon }}</span>
+                <span>{{ group.verbose_name }} {% translate "Settings" %}</span>
+              </h2>
+              <button type="submit" class="btn-save">💾 {% translate "Save Changes" %}</button>
+            </div>
+
+            <div class="settings-list">
+              {% for item in group.items %}
+              <div class="setting-row">
+                <div class="setting-label-row">
+                  <span class="setting-title">{{ item.setting.verbose_name }}</span>
+                  <span class="setting-key-badge">{{ group.app_label }}.{{ item.key }}</span>
+                </div>
+                
+                {% if item.setting.help_text %}
+                <div class="setting-help">{{ item.setting.help_text }}</div>
+                {% endif %}
+
+                <div class="setting-control-container">
+                  {% if item.setting.data_type == 'bool' %}
+                  <label class="switch-label">
+                    <input type="checkbox" 
+                           class="switch-input" 
+                           name="{{ item.key }}" 
+                           {% if item.current_value %}checked{% endif %}>
+                    <span class="switch-slider"></span>
+                    <span class="switch-text">
+                      {% if item.current_value %}{% translate "Enabled" %}{% else %}{% translate "Disabled" %}{% endif %}
+                    </span>
+                  </label>
+
+                  {% elif item.setting.data_type == 'choice' %}
+                  <select class="hub-select" name="{{ item.key }}">
+                    {% for c_val, c_lbl in item.setting.choices %}
+                    <option value="{{ c_val }}" {% if item.current_value == c_val %}selected{% endif %}>
+                      {{ c_lbl }}
+                    </option>
+                    {% endfor %}
+                  </select>
+
+                  {% elif item.setting.data_type == 'int' %}
+                  <input type="number" 
+                         class="hub-input" 
+                         name="{{ item.key }}" 
+                         value="{{ item.current_value }}">
+
+                  {% elif item.setting.data_type == 'float' %}
+                  <input type="number" 
+                         step="0.01" 
+                         class="hub-input" 
+                         name="{{ item.key }}" 
+                         value="{{ item.current_value }}">
+
+                  {% elif item.setting.data_type == 'secret' %}
+                  <div class="secret-wrapper">
+                    <input type="password" 
+                           class="hub-input secret-input" 
+                           id="secret-{{ item.key }}"
+                           name="{{ item.key }}" 
+                           value="{{ item.current_value }}">
+                    <button type="button" class="secret-toggle-btn" onclick="toggleSecretVisibility('secret-{{ item.key }}')">👁️</button>
+                  </div>
+
+                  {% elif item.setting.data_type == 'json' %}
+                  <textarea class="hub-input" 
+                            name="{{ item.key }}" 
+                            rows="4" 
+                            style="font-family: monospace;">{{ item.current_value_json }}</textarea>
+
+                  {% else %}
+                  <input type="text" 
+                         class="hub-input" 
+                         name="{{ item.key }}" 
+                         value="{{ item.current_value }}">
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="hub-footer">
+              <button type="submit" class="btn-save">💾 {% translate "Save Changes" %}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      {% endfor %}
+    </main>
+  </div>
+</div>
+
+<script>
+  function switchTab(appLabel) {
+    // Hide all panes
+    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+    // Deactivate all nav buttons
+    document.querySelectorAll('.sidebar-btn').forEach(el => el.classList.remove('active'));
+
+    // Show target pane
+    const target = document.getElementById('tab-' + appLabel);
+    if (target) {
+      target.classList.add('active');
+    }
+
+    // Activate button
+    const btn = document.querySelector(`[data-target="tab-${appLabel}"]`);
+    if (btn) {
+      btn.classList.add('active');
+    }
+
+    // Update URL query parameter smoothly
+    const url = new URL(window.location);
+    url.searchParams.set('tab', appLabel);
+    window.history.replaceState({}, '', url);
+  }
+
+  function toggleSecretVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    if (input) {
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+  }
+
+  // Preserve tab on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab');
+    if (activeTab) {
+      switchTab(activeTab);
+    }
+  });
+</script>
+{% endblock %}

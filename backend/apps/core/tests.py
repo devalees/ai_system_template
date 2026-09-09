@@ -278,4 +278,48 @@ class SettingsResolutionServiceTests(TestCase):
             self.assertEqual(val, "ACTIVE_MODE")
 
 
+class SettingsHubAdminTests(TestCase):
+    """Test suite verifying the Django Admin Settings Hub view."""
+
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username="superadmin",
+            password="adminpassword",
+            email="admin@example.com"
+        )
+        self.client.force_login(self.admin_user)
+
+    def test_settings_hub_get(self):
+        from django.urls import reverse
+
+        url = reverse("admin:core_settings_hub")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "System Configuration Hub")
+        self.assertContains(response, "General Platform")
+
+    def test_settings_hub_post(self):
+        from django.urls import reverse
+        from apps.core.config import get_setting
+
+        url = reverse("admin:core_settings_hub")
+        payload = {
+            "_app_label": "general",
+            "SITE_NAME": "My Custom Enterprise Hub",
+            "MAINTENANCE_MODE": "on",
+            "DEFAULT_CURRENCY": "SAR",
+            "ITEMS_PER_PAGE": "50",
+        }
+        response = self.client.post(url, payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Successfully updated")
+
+        # Verify values updated via get_setting
+        self.assertEqual(get_setting("general.SITE_NAME"), "My Custom Enterprise Hub")
+        self.assertTrue(get_setting("general.MAINTENANCE_MODE"))
+        self.assertEqual(get_setting("general.DEFAULT_CURRENCY"), "SAR")
+        self.assertEqual(get_setting("general.ITEMS_PER_PAGE"), 50)
+
+
+
 
