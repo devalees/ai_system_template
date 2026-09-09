@@ -464,8 +464,8 @@ Transform the platform into a high-performance **Metadata-Driven Architecture & 
 - [x] **Sub-task 3: Dynamic PostgreSQL Schema Engine (SchemaEditor DDL, Column Types & Foreign Key Linking)** - COMPLETED (Commit: `81430eb`)
 - [x] **Sub-task 4: Dynamic In-Memory Django Model Factory & Runtime App Registry Injection** - COMPLETED (Commit: `97d117d`)
 - [x] **Sub-task 5: Modular App Manifest & Registry Engine (`SystemModule`, Dependency Sorter & Declarative Ingestion [Models, Views, Menus, Automations, Reports])** - COMPLETED (Commit: `5c4874e`)
-- [/] **Sub-task 6: Safe App Uninstall & Data Policy Engine (Reverse Dependency Check, Snapshot Backup & Safe Purge)** - IN PROGRESS
-- [ ] **Sub-task 7: Universal Declarative REST API Gateway (`/api/v1/entities/<slug>/`)** - PENDING
+- [x] **Sub-task 6: Safe App Uninstall & Data Policy Engine (Reverse Dependency Check, Snapshot Backup & Safe Purge)** - COMPLETED (Commit: `c88f594`)
+- [/] **Sub-task 7: Universal Declarative REST API Gateway (`/api/v1/entities/<slug>/`)** - IN PROGRESS
 - [ ] **Sub-task 8: Odoo-Style Admin App Store & Metadata Studio Interface** - PENDING
 - [ ] **Sub-task 9: Comprehensive Automated Testing & End-to-End Verification** - PENDING
 - [ ] **Sub-task 10: LLM Wiki & Architecture Synchronization** - PENDING
@@ -475,6 +475,7 @@ Transform the platform into a high-performance **Metadata-Driven Architecture & 
 - *2026-09-09*: Unified `AuditableModel` to inherit `TimeStampedModel`, guaranteeing that every dynamic and domain model automatically receives `id` (UUID), `created_at`, `updated_at`, `created_by`, and `updated_by`.
 - *2026-09-09*: Implemented `DynamicModelFactory` in `apps.meta_engine.model_factory` allowing dynamic models to be compiled in-memory as full-fledged Django models inheriting `(UUIDModel, SoftDeleteModel, AuditableModel)` and registered into `django.apps.apps`. Integrated lazy loading, soft deletion, and standard ORM CRUD (Commit: `97d117d`).
 - *2026-09-09*: Implemented Modular App Registry Engine with `SystemModule`, `AppManifestReader`, DAG `DependencyResolver`, and multi-pass `AppInstaller` handling models, foreign keys, views, menus, automations, and reports. Added reference demo apps `contacts` and `crm` (Commit: `5c4874e`).
+- *2026-09-09*: Implemented `AppUninstaller` in `apps.meta_engine.app_uninstaller` featuring reverse dependency validation guard (blocking uninstall of required modules) and 3 pluggable data retention policies: `archive` (soft-deactivation), `snapshot_backup_and_drop` (JSON record export before DDL drop), and `cascade_drop` (immediate purge) (Commit: `c88f594`).
 
 ---
 
@@ -615,7 +616,7 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
 ---
 
 ### 4. Current Focus
-Phase 13 (Metadata Engine, Dynamic Schema & Modular App Runtime): Sub-task 6 (Safe App Uninstall & Data Policy Engine: Reverse Dependency Guard, Data Retention Policies, Backup Dump & Safe Table Purge).
+Phase 13 (Metadata Engine, Dynamic Schema & Modular App Runtime): Sub-task 7 (Universal Declarative REST API Gateway: Dynamic Serializers, Filtering, Pagination, Row-Level MetaRule Permissions).
 
 
 

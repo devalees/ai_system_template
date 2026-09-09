@@ -6,6 +6,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import RequestFactory, TestCase, TransactionTestCase
+from rest_framework.test import APIClient
 
 from apps.core.middleware import CurrentUserMiddleware
 from apps.meta_engine.models import (
@@ -556,5 +557,95 @@ class SafeAppUninstallerTests(TransactionTestCase):
         contacts_table = contacts_meta.table_name
         AppUninstaller.uninstall("contacts", data_policy="cascade_drop")
         self.assertFalse(DynamicSchemaEngine.table_exists(contacts_table))
+
+
+class UniversalEntityAPITests(TransactionTestCase):
+    """
+    Test suite for Sub-task 7: Universal Declarative REST API Gateway.
+    """
+
+    def setUp(self):
+        from apps.meta_engine.app_installer import AppInstaller
+        AppInstaller.install("contacts")
+        self.user = User.objects.create_superuser(username="gateway_admin", password="password123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def tearDown(self):
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+        meta = MetaModel.objects.filter(name="contacts_partner").first()
+        if meta:
+            try:
+                DynamicSchemaEngine.drop_table(meta)
+            except Exception:
+                pass
+            meta.delete()
+        SystemModule.objects.filter(app_id="contacts").delete()
+
+    def test_schema_introspection_endpoint(self):
+        """Verify GET /api/v1/entities/<slug>/schema/ returns full declarative schema."""
+        resp = self.client.get("/api/v1/entities/contacts_partner/schema/")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["model"]["name"], "contacts_partner")
+        field_names = [f["name"] for f in data["fields"]]
+        self.assertIn("name", field_names)
+        self.assertIn("email", field_names)
+        self.assertTrue(len(data["views"]) >= 1)
+        self.assertTrue(len(data["reports"]) >= 1)
+
+    def test_dynamic_entity_crud_lifecycle(self):
+        """Verify standard REST CRUD over dynamic entities."""
+        # 1. CREATE
+        payload = {
+            "name": "Wayne Enterprises",
+            "email": "bruce@wayne.com",
+            "phone": "+1-555-0199",
+            "is_company": True,
+            "city": "Gotham",
+        }
+        create_resp = self.client.post("/api/v1/entities/contacts_partner/", data=payload, format="json")
+        self.assertEqual(create_resp.status_code, 201)
+        record_id = create_resp.json()["id"]
+        self.assertEqual(create_resp.json()["name"], "Wayne Enterprises")
+        self.assertEqual(create_resp.json()["created_by"], self.user.id)
+
+        # 2. LIST
+        list_resp = self.client.get("/api/v1/entities/contacts_partner/")
+        self.assertEqual(list_resp.status_code, 200)
+        self.assertEqual(list_resp.json()["count"], 1)
+
+        # 3. RETRIEVE
+        detail_resp = self.client.get(f"/api/v1/entities/contacts_partner/{record_id}/")
+        self.assertEqual(detail_resp.status_code, 200)
+        self.assertEqual(detail_resp.json()["city"], "Gotham")
+
+        # 4. PARTIAL UPDATE
+        patch_resp = self.client.patch(
+            f"/api/v1/entities/contacts_partner/{record_id}/",
+            data={"city": "Metropolis"},
+            format="json",
+        )
+        self.assertEqual(patch_resp.status_code, 200)
+        self.assertEqual(patch_resp.json()["city"], "Metropolis")
+
+        # 5. DELETE (Soft delete)
+        delete_resp = self.client.delete(f"/api/v1/entities/contacts_partner/{record_id}/")
+        self.assertEqual(delete_resp.status_code, 204)
+
+        # Verify record no longer returned in list
+        list_after = self.client.get("/api/v1/entities/contacts_partner/")
+        self.assertEqual(list_after.json()["count"], 0)
+
+    def test_system_module_store_api(self):
+        """Verify module management actions via /api/v1/modules/."""
+        # List modules
+        list_resp = self.client.get("/api/v1/modules/")
+        self.assertEqual(list_resp.status_code, 200)
+
+        # Test sync discovered
+        sync_resp = self.client.post("/api/v1/modules/sync-discovered/")
+        self.assertEqual(sync_resp.status_code, 200)
+
 
 
