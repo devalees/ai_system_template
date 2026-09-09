@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 4 Completed (Unified Django User-Profile Architecture & Live Hermes Profile Selector)
+- **Status**: Phase 5 Completed (Centralized Automation Engine, Celery Beat & Dynamic Hermes Profile Auto-Provisioning)
 
 ---
 
@@ -57,5 +57,16 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Visual Classification Badges**: User list table features distinct badges: `🤖 Agent (profile_slug)`, `👤 Staff`, `🌐 Client`.
 - **Live Hermes Discovery Service**: Scans mounted declarative profile definitions (`/app/agent_profiles/`) and provides the `GET /api/hermes/profiles/` endpoint.
 - **Dynamic 🔄 Reload Widget**: Admin interface features an asynchronous button that live-refreshes available engine profiles into the `<select>` dropdown without page reload, automatically populating canonical roles and descriptions.
+
+### 8. Centralized Automation Engine & Distributed Task Queue (`apps.automation`)
+- **Distributed Queue**: Celery 5.4+ with Redis 7 message broker and `django-celery-beat` database scheduler running in isolated worker (`celery_worker`) and scheduler (`celery_beat`) containers.
+- **Dynamic Service Registry**: 4 distinct service categories (`hermes_agent`, `internal_app`, `script_service`, `external_webhook`) with decorator-based registration (`@register_action`).
+- **Dynamic Introspection**: Zero-touch App and Model discovery leveraging `django.apps.apps.get_models()`, exposing all installed models and their field choices in automation forms.
+- **Dual Triggers**:
+  - *Model Events*: Dynamic CRUD post_save and post_delete lifecycle triggers with JSON condition evaluation (`field == value`).
+  - *Time-based Schedules*: Dual-mode (`once` one-shot vs `recurring` with intervals `seconds`, `minutes`, `hours`, `days`, `weeks`, `months`) seamlessly synchronized to `django_celery_beat.models.PeriodicTask`.
+- **Dynamic Hermes Profile Auto-Provisioning**: Flagship automation pipeline that detects new agent profiles, auto-generates DRF API tokens, writes declarative files (`SOUL.md`, `config.yaml`, `profile.yaml`) to `/app/agent_profiles/`, and injects runtime `.env` directly into `/app/hermes_runtime_profiles/`, recognized immediately by Hermes Agent.
+- **Automation Admin & Audit Logs**: Interactive Django admin with live status toggles, "▶ Run Now" manual execution actions, dynamic schema-driven action payload forms, and granular execution logs (`AutomationLog`).
+
 
 

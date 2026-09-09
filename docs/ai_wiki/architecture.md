@@ -7,20 +7,22 @@
 - **Database**: PostgreSQL 16
 - **Cache & Broker**: Redis 7
 - **Container Architecture**: **Two Isolated Docker Projects**
-  1. `backend/docker-compose.yml`: Encapsulates Django, PostgreSQL, and Redis in an internal network (`backend_network`).
+  1. `backend/docker-compose.yml`: Encapsulates Django, Celery Worker, Celery Beat, PostgreSQL, and Redis in an internal network (`backend_network`).
   2. `agent_service/docker-compose.yml`: Encapsulates Hermes Agent in an isolated network (`hermes_isolated_network`).
 - **Inter-Service Communication**: Strictly over HTTP REST API (`http://host.docker.internal:8000/api`) with zero shared container networks, storage, or privileges.
 
 ---
 
-## 2. Port Allocation
+## 2. Port Allocation & Containers
 
-| Service | Environment | Host Port | Internal Port | Description |
+| Service | Container Name | Host Port | Internal Port | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `backend` | Django Project | 8000 | 8000 | Django REST API & Admin Portal |
-| `db` | Django Project | 5432 | 5432 | PostgreSQL 16 Relational Store |
-| `redis` | Django Project | 6379 | 6379 | Redis 7 Cache & Message Broker |
-| `hermes` | Hermes Project | 8643 | 8642 | Hermes Agent Gateway daemon |
+| `backend` | `django-template-backend` | 8000 | 8000 | Django REST API & Admin Portal |
+| `celery_worker` | `django-template-celery-worker` | - | - | Celery Distributed Task Worker |
+| `celery_beat` | `django-template-celery-beat` | - | - | Celery Beat Database Scheduler |
+| `db` | `django-template-db` | 5432 | 5432 | PostgreSQL 16 Relational Store |
+| `redis` | `django-template-redis` | 6379 | 6379 | Redis 7 Cache & Celery Broker |
+| `hermes` | `hermes-template-agent` | 8643 | 8642 | Hermes Agent Gateway daemon |
 
 ---
 
@@ -41,6 +43,16 @@ economy_editor/
 │       └── output_validator/        # AST syntax & leak validation
 ├── backend/                         # Django Web Service
 │   ├── apps/
+│   │   ├── automation/              # Centralized Automation Engine & Service Registry
+│   │   │   ├── actions.py           # Registered action handlers (Hermes, webhook, script, internal)
+│   │   │   ├── admin.py             # Automation Admin with live toggles & Run Now action
+│   │   │   ├── engine.py            # Event dispatcher, condition evaluator & Celery worker bridge
+│   │   │   ├── forms.py             # Dynamic App/Model discovery & JSON Schema payload forms
+│   │   │   ├── models.py            # AutomationRule & AutomationLog
+│   │   │   ├── registry.py          # 4-category ServiceRegistry with dynamic introspection
+│   │   │   ├── scheduler.py         # django-celery-beat synchronization engine
+│   │   │   ├── tasks.py             # Celery asynchronous execution tasks
+│   │   │   └── views.py             # REST API endpoints (/api/automation/)
 │   │   └── integration/             # Integration App
 │   │       ├── admin.py             # Admin UI with custom media JS
 │   │       ├── forms.py             # Dependent select forms
@@ -49,7 +61,10 @@ economy_editor/
 │   │       │   └── hermes_catalog.py # models.dev dynamic registry client
 │   │       ├── static/admin/js/     # Dynamic dependent dropdowns & specs card
 │   │       └── views.py             # REST API endpoints & catalog views
-│   └── docker-compose.yml           # Django, DB, and Redis stack
+│   ├── core/                        # Django Project Configuration & Celery Setup
+│   │   ├── celery.py                # Celery application initialization
+│   │   └── settings.py              # Celery & django-celery-beat broker settings
+│   └── docker-compose.yml           # Django, Celery Worker, Celery Beat, DB, and Redis stack
 ├── docs/
 │   ├── ai_wiki/                     # System architecture & documentation wiki
 │   │   ├── index.md                 # System overview & components
@@ -205,5 +220,79 @@ Rather than treating AI agents as an isolated, detached entity, the system follo
 - **`CustomUserAdmin`**: Unregisters Django's default User admin to embed `ProfileInline` directly in the user edit page.
 - **Interactive Selector**: The `hermes_profile_name` input is rendered as a `<select>` dropdown accompanied by an AJAX **🔄 Reload Profiles** button (`hermes_profile_selector.js`).
 - **Dynamic Pre-fill**: Selecting an engine profile automatically pre-populates display name, canonical role, and default inference model while keeping `is_agent=True`.
+
+---
+
+## 10. Centralized Automation Engine & Service Registry Architecture (`apps.automation`)
+
+### 10.1 Service Registry & Action Registration
+The automation framework decouples trigger detection from business execution via a centralized, in-memory `ServiceRegistry` instance (`automation_registry`):
+- **4 Categorized Service Types**:
+  - `hermes_agent`: Actions invoking Hermes Agent profiles or dispatching agent tasks.
+  - `internal_app`: Core domain actions (e.g. Django model updates, state synchronization).
+  - `script_service`: Custom local utility scripts and routines.
+  - `external_webhook`: Outbound HTTP webhook dispatches with customizable headers and payload mapping.
+- **Decorator-Based Registration**: Action handlers are registered cleanly via `@register_action`:
+  ```python
+  @register_action(
+      action_id="auto_provision_hermes_profile",
+      name="Auto-Provision Hermes Profile",
+      category="hermes_agent",
+      description="Generates bot user, DRF token, declarative files, and runtime .env",
+      payload_schema={...}
+  )
+  def auto_provision_hermes_profile(payload, context): ...
+  ```
+- **Dynamic Introspection**: Zero-touch model discovery utilizes `django.apps.apps.get_models()`. Form choices dynamically present all installed models formatted as `<app_label>.<ModelName>` and expose field dictionaries for target conditions.
+
+### 10.2 Triggers: Model Events & Time Schedules
+Each `AutomationRule` is bound to either a `model_event` or `time_based` trigger:
+1. **Model Event Triggers**:
+   - Supported actions: `create` (post_save created=True), `update` (post_save created=False), `delete` (post_delete).
+   - Dynamic lifecycle signals inspect `filter_conditions` (e.g. `{"is_agent": True}`).
+   - Safe signal connection: Core model signals are connected on module import, while dynamic models declared in active rules are connected post-migration and during rule save.
+2. **Time-Based Triggers**:
+   - **Mode: `once`**: One-shot trigger scheduled at a fixed `run_at` ISO datetime. Once fired, the rule automatically transitions `is_active=False`.
+   - **Mode: `recurring`**: Recurring interval or cron-based execution.
+   - **Supported Units**: `seconds`, `minutes`, `hours`, `days`, `weeks`, `months`.
+   - Native integration with `django_celery_beat.models.PeriodicTask`, `IntervalSchedule`, and `CrontabSchedule`.
+
+### 10.3 Celery & Celery Beat Execution Flow
+```
+[Event / Beat Clock]
+         │
+         ▼
+[AutomationEngine.evaluate_and_trigger()] 
+         │ (Applies filter_conditions & creates AutomationLog: pending)
+         ▼
+[Celery Task: run_automation_rule.delay(rule_id, context, log_id)]
+         │
+         ▼
+[Celery Worker: executes action handler]
+         │
+         ├─► [SUCCESS] ──► AutomationLog: status='success', output_data={...}
+         └─► [FAILURE] ──► AutomationLog: status='failed', error_message='...'
+```
+
+### 10.4 Flagship Action: Dynamic Hermes Profile Auto-Provisioning
+When an administrative user or API client creates an AI Agent account (`Profile.is_agent=True`):
+1. **Trigger**: Model event post-save on `integration.Profile` fires matching rule.
+2. **Execution**: Celery worker runs `auto_provision_hermes_profile`:
+   - Ensures an associated `auth.User` and DRF `Token` exist.
+   - Generates declarative profile files in `/app/agent_profiles/<profile_name>/`:
+     - `SOUL.md`: Role-specific system instructions.
+     - `config.yaml`: LLM provider, default model, and reasoning parameters.
+     - `profile.yaml`: Metadata manifest.
+   - Generates runtime environment file `/app/hermes_runtime_profiles/<profile_name>/.env` injecting:
+     - `DJANGO_API_TOKEN`
+     - `HERMES_PROFILE`
+     - `MODEL_NAME`
+     - Provider API keys.
+3. **Immediate Availability**: Hermes Agent detects the profile directory immediately without requiring container restarts.
+
+### 10.5 JSON Serialization & Resilient Architecture
+- **UUID & Datetime Handling**: To prevent database JSONField serialization errors (`TypeError: Object of type UUID is not JSON serializable`), `AutomationEngine` recursively transforms all inputs via `make_json_serializable()`.
+- **Decoupled Bootstrapping**: `AppConfig.ready()` bypasses database queries during initialization, ensuring zero `RuntimeWarning` or migration deadlocks on greenfield database setup.
+
 
 
