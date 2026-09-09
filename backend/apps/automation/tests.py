@@ -666,3 +666,194 @@ class Phase7DecoupledPipelineTests(TestCase):
         self.assertEqual(res["status"], "success")
         self.assertTrue(res["is_agent"])
         self.assertEqual(res["user_type"], "agent")
+
+    def test_boolean_filter_tree_and_logic(self):
+        """Tests root AND combinator with multiple conditions."""
+        ctx = {"status": "review", "cost_usd": 15.0, "role": "admin"}
+        tree = {
+            "combinator": "AND",
+            "rules": [
+                {"field": "status", "operator": "==", "value": "review"},
+                {"field": "cost_usd", "operator": ">", "value": 10.0}
+            ]
+        }
+        self.assertTrue(AutomationEngine.evaluate_filter_tree(ctx, tree))
+        self.assertTrue(AutomationEngine.evaluate_conditions(ctx, tree))
+
+        failing_tree = {
+            "combinator": "AND",
+            "rules": [
+                {"field": "status", "operator": "==", "value": "review"},
+                {"field": "cost_usd", "operator": ">", "value": 20.0}
+            ]
+        }
+        self.assertFalse(AutomationEngine.evaluate_filter_tree(ctx, failing_tree))
+
+    def test_boolean_filter_tree_or_logic(self):
+        """Tests root OR combinator with multiple conditions."""
+        ctx = {"status": "urgent", "cost_usd": 5.0}
+        tree = {
+            "combinator": "OR",
+            "rules": [
+                {"field": "status", "operator": "==", "value": "review"},
+                {"field": "status", "operator": "==", "value": "urgent"}
+            ]
+        }
+        self.assertTrue(AutomationEngine.evaluate_filter_tree(ctx, tree))
+
+        failing_tree = {
+            "combinator": "OR",
+            "rules": [
+                {"field": "status", "operator": "==", "value": "review"},
+                {"field": "status", "operator": "==", "value": "draft"}
+            ]
+        }
+        self.assertFalse(AutomationEngine.evaluate_filter_tree(ctx, failing_tree))
+
+    def test_boolean_filter_tree_nested_parentheses(self):
+        """
+        Tests nested boolean groups: (status == 'review' OR status == 'urgent') AND cost_usd > 10.0
+        """
+        tree = {
+            "combinator": "AND",
+            "rules": [
+                {"field": "cost_usd", "operator": ">", "value": 10.0},
+                {
+                    "combinator": "OR",
+                    "rules": [
+                        {"field": "status", "operator": "==", "value": "review"},
+                        {"field": "status", "operator": "==", "value": "urgent"}
+                    ]
+                }
+            ]
+        }
+
+        # Matches: urgent and cost 15
+        self.assertTrue(AutomationEngine.evaluate_filter_tree({"status": "urgent", "cost_usd": 15.0}, tree))
+        # Matches: review and cost 12
+        self.assertTrue(AutomationEngine.evaluate_filter_tree({"status": "review", "cost_usd": 12.0}, tree))
+        # Fails: status matches but cost is too low
+        self.assertFalse(AutomationEngine.evaluate_filter_tree({"status": "urgent", "cost_usd": 8.0}, tree))
+        # Fails: cost matches but status is draft
+        self.assertFalse(AutomationEngine.evaluate_filter_tree({"status": "draft", "cost_usd": 15.0}, tree))
+
+    def test_boolean_filter_tree_multi_level_nested(self):
+        """
+        Tests multi-level nesting: ((role == 'admin' OR role == 'lead') AND (status == 'pending' OR status == 'review'))
+        """
+        tree = {
+            "combinator": "AND",
+            "rules": [
+                {
+                    "combinator": "OR",
+                    "rules": [
+                        {"field": "role", "operator": "==", "value": "admin"},
+                        {"field": "role", "operator": "==", "value": "lead"}
+                    ]
+                },
+                {
+                    "combinator": "OR",
+                    "rules": [
+                        {"field": "status", "operator": "==", "value": "pending"},
+                        {"field": "status", "operator": "==", "value": "review"}
+                    ]
+                }
+            ]
+        }
+
+        self.assertTrue(AutomationEngine.evaluate_filter_tree({"role": "admin", "status": "pending"}, tree))
+        self.assertTrue(AutomationEngine.evaluate_filter_tree({"role": "lead", "status": "review"}, tree))
+        self.assertFalse(AutomationEngine.evaluate_filter_tree({"role": "viewer", "status": "pending"}, tree))
+        self.assertFalse(AutomationEngine.evaluate_filter_tree({"role": "admin", "status": "completed"}, tree))
+
+    def test_boolean_filter_tree_dates_and_backward_compatibility(self):
+        """Tests temporal date comparisons inside boolean groups and backward-compatibility with flat dicts/lists."""
+        ctx = {
+            "due_date": "2026-09-15",
+            "is_agent": True,
+            "status": "active"
+        }
+
+        # Date in boolean tree
+        date_tree = {
+            "combinator": "AND",
+            "rules": [
+                {"field": "due_date", "operator": ">", "value": "2026-09-10"},
+                {"field": "due_date", "operator": "<=", "value": "2026-09-20"}
+            ]
+        }
+        self.assertTrue(AutomationEngine.evaluate_filter_tree(ctx, date_tree))
+
+        # Backward compatibility: legacy flat dict
+        legacy_dict = {"is_agent": True, "status": "active"}
+        self.assertTrue(AutomationEngine.evaluate_filter_tree(ctx, legacy_dict))
+        self.assertFalse(AutomationEngine.evaluate_filter_tree(ctx, {"is_agent": False}))
+
+        # Backward compatibility: legacy flat list
+        legacy_list = [
+            {"field": "due_date", "operator": ">", "value": "2026-09-10"},
+            {"field": "status", "operator": "==", "value": "active"}
+        ]
+        self.assertTrue(AutomationEngine.evaluate_filter_tree(ctx, legacy_list))
+
+        # Empty / None handling
+        self.assertTrue(AutomationEngine.evaluate_filter_tree(ctx, None))
+        self.assertTrue(AutomationEngine.evaluate_filter_tree(ctx, {}))
+        self.assertTrue(AutomationEngine.evaluate_filter_tree(ctx, {"combinator": "AND", "rules": []}))
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    def test_model_event_dispatch_with_boolean_filter_tree(self):
+        """
+        Verifies that when a model event occurs, the in-flight snapshot context
+        is evaluated against the trigger's boolean filter tree.
+        """
+        task = AgentTask.objects.create(
+            task_name="Boolean Filter Test Task",
+            created_by=self.admin_user,
+            status="draft",
+            cost_usd=15.00
+        )
+
+        boolean_filter = {
+            "combinator": "AND",
+            "rules": [
+                {"field": "cost_usd", "operator": ">", "value": 10.0},
+                {
+                    "combinator": "OR",
+                    "rules": [
+                        {"field": "status", "operator": "==", "value": "review"},
+                        {"field": "status", "operator": "==", "value": "urgent"}
+                    ]
+                }
+            ]
+        }
+
+        trigger = AutomationTrigger.objects.create(
+            name="Boolean Filter Trigger",
+            trigger_type="model_event",
+            trigger_model="integration.AgentTask",
+            event_type="updated",
+            filter_conditions=boolean_filter,
+            is_active=True
+        )
+        action = AutomationAction.objects.create(
+            trigger=trigger,
+            name="Step One Action",
+            sequence=10,
+            action_category="internal_app",
+            action_type="step_one_action",
+            is_active=True
+        )
+
+        initial_count = AutomationLog.objects.filter(action=action).count()
+
+        # Update with cost 15 and status still 'draft' -> Filter condition fails
+        task.task_name = "Updated name"
+        task.save()
+        self.assertEqual(AutomationLog.objects.filter(action=action).count(), initial_count)
+
+        # Update status to 'review' with cost 15 -> Filter condition passes!
+        task.status = "review"
+        task.save()
+        self.assertEqual(AutomationLog.objects.filter(action=action).count(), initial_count + 1)
+

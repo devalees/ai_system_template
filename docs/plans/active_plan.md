@@ -277,6 +277,35 @@ Transform the condition rules interface in Django Admin from a raw JSON textarea
 - *2026-09-09*: Verified 100% test pass rate across 36 unit test cases (including temporal date comparison tests).
 
 ### 4. Current Focus
-Phase 8 completed and verified. The system is ready for review or subsequent feature expansion.
+Phase 8 completed. Transitioning to Phase 9.
+
+---
+
+## Phase 9: Unified Filter Conditions Engine with Boolean Logic (AND/OR) & Visual Group Builder (COMPLETED)
+
+### 1. Objective & Scope
+Unify `filter_conditions` and `condition_rules` into a single, comprehensive Filter Conditions engine supporting full Boolean algebra (`AND`, `OR`, and nested `(...)` condition groups):
+- **Unified Boolean Tree Data Structure**: Tree representation supporting combinators (`AND`, `OR`), leaf rules (`field`, `operator`, `value`), and recursive sub-groups (`(A OR B) AND (C OR D)`).
+- **Recursive Engine Evaluation**: Upgrade `AutomationEngine.evaluate_filter_tree` to recursively resolve leaf rules and combinator groups with short-circuiting and date/temporal comparison support.
+- **Visual Group Builder Component (Option A)**: In `automation_reactive_admin.js`, render indented condition group cards with combinator toggles (`Match ALL (AND)` / `Match ANY (OR)`), `+ Add Condition`, `+ Add Group (...)`, delete buttons, and dynamic field/date helpers.
+- **Full Backward Compatibility**: Seamlessly evaluate legacy flat dicts (`{"is_agent": true}`) and flat lists while synchronizing state into the unified filter field.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Recursive Boolean Engine & Unified Filter Evaluation (`apps.automation.engine.py`)** - COMPLETED
+- [x] **Sub-task 2: Visual Group Builder Component with Indented Cards (`automation_reactive_admin.js`)** - COMPLETED
+- [x] **Sub-task 3: Form & Admin Unification (`forms.py` & `admin.py`)** - COMPLETED
+- [x] **Sub-task 4: Automated Testing for Complex Boolean Trees & Groups (42 Tests Passing)** - COMPLETED
+- [x] **Sub-task 5: Documentation & Architecture Synchronization** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 9)
+- *2026-09-09*: Selected Option A (Visual Group Blocks with Indentation) per user preference, eliminating unmatched parentheses syntax errors.
+- *2026-09-09*: Unified `filter_conditions` and `condition_rules` into a single authoritative filter system with transparent legacy compatibility and two-way JSON synchronization.
+- *2026-09-09*: Verified lifecycle behavior: for database model events (`created`, `updated`, `deleted`), filters run in-memory against in-flight snapshot context, while for time-based triggers they act as query parameters.
+- *2026-09-09*: Expanded test suite with comprehensive tests verifying root AND/OR combinators, nested groups, multi-level nesting, temporal date comparison inside boolean groups, and in-flight model event dispatch.
+
+### 4. Current Focus
+Phase 9 complete and verified across all 42 unit tests. Ready for next phase or instructions.
+
+
 
 

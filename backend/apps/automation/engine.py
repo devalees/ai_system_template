@@ -251,42 +251,78 @@ class AutomationEngine:
     """
 
     @classmethod
-    def evaluate_conditions(cls, context: Dict[str, Any], conditions: Dict[str, Any]) -> bool:
+    def evaluate_filter_tree(cls, context: Dict[str, Any], filter_spec: Any) -> bool:
         """
-        Evaluates filter conditions against execution context.
-        Supports exact match, booleans, nested keys, and string comparisons.
+        Recursively evaluates a unified filter specification supporting full Boolean algebra:
+        - Boolean Groups: {"combinator": "AND"|"OR", "rules": [...]}
+        - Nested Groups (Parentheses): [..., {"combinator": "OR", "rules": [...]}]
+        - Leaf Rules: {"field": "status", "operator": "==", "value": "completed"}
+        - Legacy Flat Dicts: {"is_agent": True, "status": "active"} (evaluated as AND)
+        - Legacy Flat Lists: [{"field": ...}] (evaluated as AND)
         """
-        if not conditions:
+        if not filter_spec:
             return True
 
-        for key, expected_val in conditions.items():
-            actual_val = get_nested_context_value(context, key)
-            if not evaluate_single_condition(actual_val, '==', expected_val):
+        # Case 1: Legacy Flat Dict e.g. {"is_agent": True} (no "combinator" and no "rules")
+        if isinstance(filter_spec, dict) and 'combinator' not in filter_spec and 'rules' not in filter_spec:
+            # Check if it's a single leaf rule dict e.g. {"field": ..., "operator": ...}
+            if 'field' in filter_spec and 'operator' in filter_spec:
+                actual_val = get_nested_context_value(context, filter_spec['field'])
+                return evaluate_single_condition(actual_val, filter_spec['operator'], filter_spec.get('value'))
+            # Otherwise standard dictionary equality map
+            for key, expected_val in filter_spec.items():
+                actual_val = get_nested_context_value(context, key)
+                if not evaluate_single_condition(actual_val, '==', expected_val):
+                    return False
+            return True
+
+        # Case 2: Legacy Flat List of rules e.g. [{"field": ...}, ...]
+        if isinstance(filter_spec, list):
+            for item in filter_spec:
+                if not cls.evaluate_filter_tree(context, item):
+                    return False
+            return True
+
+        # Case 3: Boolean Group Tree e.g. {"combinator": "AND"|"OR", "rules": [...]}
+        if isinstance(filter_spec, dict):
+            # Check if leaf rule
+            if 'field' in filter_spec and 'operator' in filter_spec:
+                actual_val = get_nested_context_value(context, filter_spec['field'])
+                return evaluate_single_condition(actual_val, filter_spec['operator'], filter_spec.get('value'))
+
+            combinator = (filter_spec.get('combinator') or 'AND').strip().upper()
+            rules = filter_spec.get('rules', [])
+            if not rules:
+                return True
+
+            if combinator == 'OR':
+                for rule in rules:
+                    if cls.evaluate_filter_tree(context, rule):
+                        return True
                 return False
+            else:  # Default 'AND'
+                for rule in rules:
+                    if not cls.evaluate_filter_tree(context, rule):
+                        return False
+                return True
 
         return True
 
     @classmethod
+    def evaluate_conditions(cls, context: Dict[str, Any], conditions: Any) -> bool:
+        """
+        Evaluates filter conditions against execution context using the unified boolean engine.
+        Supports exact match, booleans, nested keys, strings, and full boolean group trees.
+        """
+        return cls.evaluate_filter_tree(context, conditions)
+
+    @classmethod
     def evaluate_condition_rules(cls, context: Dict[str, Any], rules: Any) -> bool:
         """
-        Evaluates Odoo-style visual condition rules.
-        Expected format: [{'field': 'status', 'operator': '==', 'value': 'completed'}, ...]
+        Evaluates condition rules against execution context using the unified boolean engine.
         """
-        if not rules or not isinstance(rules, list):
-            return True
+        return cls.evaluate_filter_tree(context, rules)
 
-        for rule in rules:
-            if not isinstance(rule, dict):
-                continue
-            field_name = rule.get('field')
-            operator = rule.get('operator', '==')
-            expected_val = rule.get('value')
-            actual_val = get_nested_context_value(context, field_name)
-
-            if not evaluate_single_condition(actual_val, operator, expected_val):
-                return False
-
-        return True
 
     @classmethod
     def execute_target_crud(cls, action_or_rule: Any, context: Dict[str, Any]) -> Dict[str, Any]:

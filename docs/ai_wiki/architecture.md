@@ -411,6 +411,66 @@ When an administrative user or API client creates an AI Agent account (`Profile.
 - In `AutomationEngine.evaluate_single_condition`, temporal values (`date`, `datetime`, and ISO strings) are parsed via `try_parse_temporal()`.
 - Supports chronological comparisons (`<`, `<=`, `>`, `>=`, `==`, `!=`) directly comparing date and datetime components without failing numeric conversions or relying on lexicographical strings.
 
+---
+
+## 13. Unified Filter Conditions Engine with Boolean Logic (AND/OR) & Visual Group Builder (Phase 9)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 Trigger Filter Conditions (Boolean Rules with AND, OR & Groups)        [🗑️ Reset All]│
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ [Match for Trigger: ALL of the following (AND) ▼]                                      │
+│   ├── [ cost_usd (Decimal) ▼] [ > (Greater Than) ▼] [ 10.0            ] [ ✕ ]          │
+│   │                                                                                    │
+│   └── ┌── [Match: ANY of the following (OR) ▼] ── Sub-Group ( ... )   [✕ Delete Group] │
+│       ├── [ status (Choice)   ▼] [ == (Equals)     ▼] [ review        ] [ ✕ ]          │
+│       ├── [ status (Choice)   ▼] [ == (Equals)     ▼] [ urgent        ] [ ✕ ]          │
+│       └── [ + Add Condition ]  [ + Add Group (...) ]                                   │
+│                                                                                        │
+│   [ + Add Condition ]  [ + Add Group (...) ]                                           │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ 💡 Value Formatting & Database Type Guide:                                             │
+│ 📅 Dates (Django Standard): YYYY-MM-DD (e.g. 2026-09-09)                                │
+│ ⏱️ Timestamps: YYYY-MM-DD HH:MM:SS                                                     │
+│ 🔢 Numbers: 10, 3.75, -5.0 | 🔤 Booleans: true / false                                 │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 13.1 Boolean Algebra & Recursive Evaluation Tree
+The filtering engine unifies trigger condition evaluation into a single authoritative recursive Boolean algebra structure:
+- **Recursive Boolean Specification**:
+  ```json
+  {
+    "combinator": "AND",
+    "rules": [
+      {"field": "cost_usd", "operator": ">", "value": 10.0},
+      {
+        "combinator": "OR",
+        "rules": [
+          {"field": "status", "operator": "==", "value": "review"},
+          {"field": "status", "operator": "==", "value": "urgent"}
+        ]
+      }
+    ]
+  }
+  ```
+- **Evaluation Semantics (`AutomationEngine.evaluate_filter_tree`)**:
+  - `AND`: Short-circuits on the first rule/group returning `False`.
+  - `OR`: Short-circuits on the first rule/group returning `True`.
+  - Leaf Rules: Evaluated via `evaluate_single_condition()`, supporting dot-notation nested attributes (`profile.is_agent`), operators (`==`, `!=`, `>`, `>=`, `<`, `<=`, `contains`, `not_contains`, `in`, `not_in`, `is_empty`, `is_not_empty`), and temporal ISO date comparison.
+- **In-Flight vs. Database Query Lifecycle**:
+  - **Database Model Events (`model_event: created, updated, deleted`)**: The filter runs in-memory against the in-flight snapshot context captured during the signal lifecycle (`post_save`).
+  - **Time-Based Triggers (`time_based`)**: The filter conditions act as database query parameters when querying eligible records for batch processing.
+- **Full Backward Compatibility**: Seamlessly handles legacy flat dictionaries (`{"is_agent": True}`) and flat lists (`[{"field": ...}]`) without requiring database migrations or manual conversion.
+
+### 13.2 Option A Visual Group Builder Component
+- Implemented in `automation_reactive_admin.js` as an interactive, hierarchical card tree.
+- Uses left-border indented card blocks (`.is-nested` with `border-left: 4px solid #0284c7`) to visually represent mathematical parentheses `(...)`.
+- Allows users to nest arbitrary sub-groups (`+ Add Group (...)`) with combinators (`AND` / `OR`).
+- Features real-time two-way JSON synchronization writing to `filter_conditions` and mirroring to `condition_rules`.
+- Displays dynamic model introspection field dropdowns, field type badges, and inline date formatting reminders.
+
+
 
 
 
