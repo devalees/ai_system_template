@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
-- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Status**: PENDING <!-- PENDING | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `main`
-- **Last Updated**: 2026-09-09 15:45:00+03:00
+- **Last Updated**: 2026-09-09 15:58:00+03:00
 
 ---
 
@@ -379,4 +379,139 @@ Provide direct 1-step test execution mechanisms (`▶ Run Pipeline Now` and `▶
 
 ### 4. Current Focus
 Phase 11 complete, authenticated end-to-end with Hermes Agent runtime, duplicate actions reconciled, and empirically validated. All 49 unit tests passing.
+
+---
+
+## Phase 12: Core Foundations, Abstract Models & Dynamic System Settings (`apps.core`) (PENDING)
+
+### 1. Objective & Scope
+Establish cross-cutting abstract models and dynamic configuration infrastructure inherited by all models across the system:
+- **Abstract Base Models**:
+  - `TimeStampedModel`: Standardized `created_at` and `updated_at` timestamps with database indexing.
+  - `UUIDModel`: Distributed, non-enumerable `id = UUIDField(primary_key=True, default=uuid.uuid4)` to prevent ID enumeration vulnerabilities.
+  - `SoftDeleteModel` (Paranoid Model): `is_deleted` and `deleted_at` fields with a custom `SoftDeleteManager` and `.restore()` method to prevent accidental data loss.
+  - `AuditableModel`: Automatically captures `created_by` and `updated_by` via lightweight request middleware.
+- **Dynamic System Settings (`SystemSetting`)**:
+  - Database-backed key-value store (`key`, `value`, `data_type: string/int/bool/json`, `is_public`, `description`) with Redis caching and single-screen Admin management.
+  - Dynamic getters/setters (`settings.get('MAINTENANCE_MODE', default=False)`).
+
+### 2. Task Checklist & Progress
+- [ ] **Sub-task 1: Abstract Base Models Implementation (`apps.core.models`)** - PENDING
+- [ ] **Sub-task 2: Request User Middleware & Context Tracking** - PENDING
+- [ ] **Sub-task 3: Dynamic SystemSetting Model, Cache Layer & Utilities** - PENDING
+- [ ] **Sub-task 4: Django Admin Integration & Dynamic Field Validators** - PENDING
+- [ ] **Sub-task 5: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 6: LLM Wiki & Architecture Synchronization** - PENDING
+
+---
+
+## Phase 13: Multi-Tenancy, Organizations & Workspaces (`apps.tenants`) (PENDING)
+
+### 1. Objective & Scope
+Implement multi-tenant data isolation and workspace management to support B2B SaaS, multi-department enterprise portals, and client workspaces:
+- **Tenant Models**:
+  - `Organization` / `Workspace`: `name`, `slug`, `is_active`, `tier/plan`, `metadata` (JSON).
+  - `OrganizationMembership`: Junction linking `auth.User` to `Organization` with role-based membership (`owner`, `admin`, `member`, `viewer`, `guest`).
+  - `OrganizationInvitation`: Tokenized, expiring email invitations.
+- **Tenant Isolation Architecture**:
+  - `TenantAwareModel` abstract base class with automatic query filtering and active tenant resolution middleware.
+  - Integration with existing `Profile.user_type` and RBAC groups.
+
+### 2. Task Checklist & Progress
+- [ ] **Sub-task 1: Organization, Membership & Invitation Data Models** - PENDING
+- [ ] **Sub-task 2: Tenant Scoping Middleware & Active Workspace Resolver** - PENDING
+- [ ] **Sub-task 3: TenantAwareModel Abstract Base & Filtered Managers** - PENDING
+- [ ] **Sub-task 4: Django Admin & DRF ViewSet Scoping Integration** - PENDING
+- [ ] **Sub-task 5: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 6: LLM Wiki & Architecture Synchronization** - PENDING
+
+---
+
+## Phase 14: Comprehensive Activity Audit Trail (`apps.audit`) (PENDING)
+
+### 1. Objective & Scope
+Build an enterprise-grade, immutable activity audit trail tracking human, bot service account, and system actions for compliance (SOC2, GDPR, ISO 27001):
+- **Universal Audit Log (`ActivityLog`)**:
+  - Fields: `actor` (User/Bot), `action` (`login`, `logout`, `create`, `update`, `delete`, `export`, `impersonate`), `content_type` & `object_id` (Generic Foreign Key to any record), `changes` (structured JSON diff of old vs new values), `ip_address`, `user_agent`, and `timestamp`.
+- **Automatic Lifecycle Auditing**:
+  - Model signal receiver automatically calculating attribute diffs for registered auditable models.
+  - Security event logging (login failures, password resets, permission changes).
+
+### 2. Task Checklist & Progress
+- [ ] **Sub-task 1: ActivityLog Model & Generic Relationship Architecture** - PENDING
+- [ ] **Sub-task 2: Automated Signal-Based Model Diffing & Change Tracker** - PENDING
+- [ ] **Sub-task 3: Authentication & Security Event Logging Middleware** - PENDING
+- [ ] **Sub-task 4: Read-Only Audit Admin Dashboard with JSON Diff Viewer** - PENDING
+- [ ] **Sub-task 5: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 6: LLM Wiki & Architecture Synchronization** - PENDING
+
+---
+
+## Phase 15: Universal Notifications Engine (`apps.notifications`) (PENDING)
+
+### 1. Objective & Scope
+Centralized notification dispatcher connecting human users, administrative teams, and autonomous AI agents:
+- **Notification Infrastructure**:
+  - `Notification`: `recipient`, `actor`, `level` (`info`, `success`, `warning`, `error`), `title`, `message`, `action_url`, `read_at`, `extra_data`.
+  - `NotificationPreference`: Per-user multi-channel toggles (`in_app`, `email`, `webhook`, `slack`).
+- **Real-Time & Background Dispatching**:
+  - Redis-backed unread counter caching.
+  - Celery tasks for asynchronous email and webhook notification delivery.
+  - Integration with `apps.automation` for automated notification triggers.
+
+### 2. Task Checklist & Progress
+- [ ] **Sub-task 1: Notification & NotificationPreference Data Models** - PENDING
+- [ ] **Sub-task 2: Dispatcher Service Layer & Multi-Channel Adapters** - PENDING
+- [ ] **Sub-task 3: Celery Asynchronous Email & Webhook Tasks** - PENDING
+- [ ] **Sub-task 4: REST API Endpoints (Inbox, Mark-as-Read, Unread Count)** - PENDING
+- [ ] **Sub-task 5: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 6: LLM Wiki & Architecture Synchronization** - PENDING
+
+---
+
+## Phase 16: Universal Document & Media Management (`apps.media`) (PENDING)
+
+### 1. Objective & Scope
+Unified file, document, and media management handling user uploads, generated agent reports, exports, PDFs, and attachments:
+- **Attachment & Document Architecture**:
+  - `Document` / `Attachment`: `file`, `filename`, `file_size`, `mime_type`, `uploaded_by`, `organization`, `is_public`, `checksum_sha256` (deduplication and integrity checking).
+  - Generic Foreign Key (`content_type`, `object_id`) allowing documents to be attached to any system record (`AgentTask`, `User`, `Organization`, etc.).
+- **Storage & Security**:
+  - Docker volume local storage with pluggable S3/MinIO cloud storage abstraction.
+  - Secure signed download URLs for private documents.
+
+### 2. Task Checklist & Progress
+- [ ] **Sub-task 1: Document Data Model with SHA-256 Checksums & Generic FK** - PENDING
+- [ ] **Sub-task 2: Pluggable Storage Backend & Secure File Serving Service** - PENDING
+- [ ] **Sub-task 3: Generic Attachment Inline for Django Admin** - PENDING
+- [ ] **Sub-task 4: REST API Endpoints for File Upload & Retrieval** - PENDING
+- [ ] **Sub-task 5: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 6: LLM Wiki & Architecture Synchronization** - PENDING
+
+---
+
+## Phase 17: Developer API Gateway, Scoped Keys & Inbound Webhooks (`apps.api_gateway`) (PENDING)
+
+### 1. Objective & Scope
+Expose secure, programmatic API access and inbound webhook ingestion for third-party SaaS interoperability:
+- **Developer API Keys (`APIKey`)**:
+  - Secure cryptographically hashed keys (e.g. `agy_live_...`) with granular permission scopes (`read`, `write`, `admin`), expiration dates, and IP allowlisting.
+  - DRF authentication backend authenticating API keys on API routes.
+- **Inbound Webhooks (`InboundWebhook` / `WebhookEvent`)**:
+  - Cryptographic HMAC signature verification (Stripe, GitHub, Shopify, Slack, etc.).
+  - Raw payload archival and event status tracking.
+  - Bridge into `apps.automation` for automated event dispatching.
+
+### 2. Task Checklist & Progress
+- [ ] **Sub-task 1: APIKey Model, Hashing & DRF Authentication Backend** - PENDING
+- [ ] **Sub-task 2: InboundWebhook Model & HMAC Signature Verifier** - PENDING
+- [ ] **Sub-task 3: Inbound Webhook Ingestion API & Automation Bridge** - PENDING
+- [ ] **Sub-task 4: Django Admin Key Management & Event Inspector** - PENDING
+- [ ] **Sub-task 5: Automated Testing & Verification** - PENDING
+- [ ] **Sub-task 6: LLM Wiki & Architecture Synchronization** - PENDING
+
+---
+
+### 4. Current Focus
+Awaiting user review and additional feature inputs for Phases 12 through 17 before beginning Phase 12 execution.
 
