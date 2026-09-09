@@ -47,7 +47,7 @@ Design, configure, and integrate 5 universal, domain-agnostic agent profiles int
 - [x] **Sub-task 4: Foundation Skills for Specialist Profiles (`agent_service/skills/`)** - COMPLETED (Commit: `83e6d73`)
 - [x] **Sub-task 5: Django Backend Profile Integration & Task Registry (`backend/apps/integration/`)** - COMPLETED (Commit: `80d4478`)
 - [x] **Sub-task 6: End-to-End Verification & Documentation Synchronization** - COMPLETED (Commit: `c7c2823`)
-- [x] **Sub-task 7: Agent Profile Reasoning Effort Integration & Hermes Runtime Propagation** - COMPLETED (Commit: pending)
+- [x] **Sub-task 7: Agent Profile Reasoning Effort Integration & Hermes Runtime Propagation** - COMPLETED (Commit: `3a73252`)
 
 ### 3. Key Decisions & Deviations (Phase 2)
 - *2026-09-08*: Created branch `feat/core-agent-profiles`.
