@@ -10,6 +10,7 @@ from .views import (
     AgentTaskViewSet,
     list_hermes_providers,
     list_hermes_models,
+    list_hermes_profiles,
 )
 
 router = DefaultRouter()
@@ -24,5 +25,6 @@ urlpatterns = [
     path('ping-hermes/', ping_hermes_gateway, name='api-ping-hermes'),
     path('hermes/providers/', list_hermes_providers, name='hermes-providers'),
     path('hermes/models/', list_hermes_models, name='hermes-models'),
+    path('hermes/profiles/', list_hermes_profiles, name='hermes-profiles'),
     path('', include(router.urls)),
 ]

@@ -248,3 +248,19 @@ def list_hermes_models(request):
         "models": models_data,
     })
 
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_hermes_profiles(request):
+    """
+    Returns available Hermes Agent profiles discovered live from runtime/declarative dirs.
+    Used by Django Admin dropdown and dynamic profile selectors.
+    """
+    from .services.hermes_discovery import HermesDiscoveryService
+    profiles = HermesDiscoveryService.list_available_profiles()
+    return Response({
+        "count": len(profiles),
+        "profiles": profiles
+    })
+
+

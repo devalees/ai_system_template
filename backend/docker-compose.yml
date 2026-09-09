@@ -44,6 +44,8 @@ services:
     working_dir: /app
     volumes:
       - .:/app
+      - ../agent_service/profiles:/app/agent_profiles:ro
+      - ../agent_service/data/profiles:/app/hermes_runtime_profiles:ro
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     extra_hosts:
