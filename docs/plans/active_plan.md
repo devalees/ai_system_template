@@ -466,8 +466,8 @@ Transform the platform into a high-performance **Metadata-Driven Architecture & 
 - [x] **Sub-task 5: Modular App Manifest & Registry Engine (`SystemModule`, Dependency Sorter & Declarative Ingestion [Models, Views, Menus, Automations, Reports])** - COMPLETED (Commit: `5c4874e`)
 - [x] **Sub-task 6: Safe App Uninstall & Data Policy Engine (Reverse Dependency Check, Snapshot Backup & Safe Purge)** - COMPLETED (Commit: `c88f594`)
 - [x] **Sub-task 7: Universal Declarative REST API Gateway (`/api/v1/entities/<slug>/`)** - COMPLETED (Commit: `9ace2c9`)
-- [/] **Sub-task 8: Odoo-Style Admin App Store & Metadata Studio Interface** - IN PROGRESS
-- [ ] **Sub-task 9: Comprehensive Automated Testing & End-to-End Verification** - PENDING
+- [x] **Sub-task 8: Odoo-Style Admin App Store & Metadata Studio Interface** - COMPLETED (Commit: `024563e`)
+- [/] **Sub-task 9: Comprehensive Automated Testing & End-to-End Verification** - IN PROGRESS
 - [ ] **Sub-task 10: LLM Wiki & Architecture Synchronization** - PENDING
 
 ### 3. Key Decisions & Deviations (Phase 13)
@@ -477,6 +477,7 @@ Transform the platform into a high-performance **Metadata-Driven Architecture & 
 - *2026-09-09*: Implemented Modular App Registry Engine with `SystemModule`, `AppManifestReader`, DAG `DependencyResolver`, and multi-pass `AppInstaller` handling models, foreign keys, views, menus, automations, and reports. Added reference demo apps `contacts` and `crm` (Commit: `5c4874e`).
 - *2026-09-09*: Implemented `AppUninstaller` in `apps.meta_engine.app_uninstaller` featuring reverse dependency validation guard (blocking uninstall of required modules) and 3 pluggable data retention policies: `archive` (soft-deactivation), `snapshot_backup_and_drop` (JSON record export before DDL drop), and `cascade_drop` (immediate purge) (Commit: `c88f594`).
 - *2026-09-09*: Implemented Universal Declarative REST API Gateway in `apps.meta_engine.views` exposing polymorphic CRUD operations (`/api/v1/entities/<model_slug>/`), declarative schema introspection (`/schema/`), dynamic serializers via `DynamicEntitySerializerFactory`, and row-level `MetaRule` security filtering (Commit: `9ace2c9`).
+- *2026-09-09*: Implemented Odoo-Style Admin App Store (`/admin/meta_engine/systemmodule/app-store/`) with visual module cards, 1-click install/uninstall buttons, data retention policy selectors, disk synchronization, and live PostgreSQL DDL status badges and API gateway links on `MetaModelAdmin` (Commit: `024563e`).
 
 ---
 
@@ -617,7 +618,7 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
 ---
 
 ### 4. Current Focus
-Phase 13 (Metadata Engine, Dynamic Schema & Modular App Runtime): Sub-task 8 (Odoo-Style Admin App Store & Metadata Studio Interface: 1-Click Install/Uninstall Cards, Metadata Inspector, Visual Schema Summary).
+Phase 13 (Metadata Engine, Dynamic Schema & Modular App Runtime): Sub-task 9 (Comprehensive Automated Testing & End-to-End Verification across all apps).
 
 
 
