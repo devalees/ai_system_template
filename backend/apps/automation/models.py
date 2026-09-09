@@ -141,6 +141,7 @@ class AutomationRule(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        # 1. Connect targeted model signals if model_event
         if self.is_active and self.trigger_type == 'model_event' and self.target_model:
             try:
                 from django.apps import apps
@@ -150,6 +151,21 @@ class AutomationRule(models.Model):
                     connect_model_signals(model_cls)
             except Exception:
                 pass
+
+        # 2. Synchronize with Celery Beat periodic task if time_based
+        try:
+            from .scheduler import sync_rule_to_celery_beat
+            sync_rule_to_celery_beat(self)
+        except Exception:
+            pass
+
+    def delete(self, *args, **kwargs):
+        try:
+            from .scheduler import delete_rule_periodic_task
+            delete_rule_periodic_task(self)
+        except Exception:
+            pass
+        super().delete(*args, **kwargs)
 
     class Meta:
         ordering = ['-created_at']
