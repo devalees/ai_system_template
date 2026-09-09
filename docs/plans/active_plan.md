@@ -465,8 +465,8 @@ Transform the platform into a high-performance **Metadata-Driven Architecture & 
 - [x] **Sub-task 4: Dynamic In-Memory Django Model Factory & Runtime App Registry Injection** - COMPLETED (Commit: `97d117d`)
 - [x] **Sub-task 5: Modular App Manifest & Registry Engine (`SystemModule`, Dependency Sorter & Declarative Ingestion [Models, Views, Menus, Automations, Reports])** - COMPLETED (Commit: `5c4874e`)
 - [x] **Sub-task 6: Safe App Uninstall & Data Policy Engine (Reverse Dependency Check, Snapshot Backup & Safe Purge)** - COMPLETED (Commit: `c88f594`)
-- [/] **Sub-task 7: Universal Declarative REST API Gateway (`/api/v1/entities/<slug>/`)** - IN PROGRESS
-- [ ] **Sub-task 8: Odoo-Style Admin App Store & Metadata Studio Interface** - PENDING
+- [x] **Sub-task 7: Universal Declarative REST API Gateway (`/api/v1/entities/<slug>/`)** - COMPLETED (Commit: `9ace2c9`)
+- [/] **Sub-task 8: Odoo-Style Admin App Store & Metadata Studio Interface** - IN PROGRESS
 - [ ] **Sub-task 9: Comprehensive Automated Testing & End-to-End Verification** - PENDING
 - [ ] **Sub-task 10: LLM Wiki & Architecture Synchronization** - PENDING
 
@@ -476,6 +476,7 @@ Transform the platform into a high-performance **Metadata-Driven Architecture & 
 - *2026-09-09*: Implemented `DynamicModelFactory` in `apps.meta_engine.model_factory` allowing dynamic models to be compiled in-memory as full-fledged Django models inheriting `(UUIDModel, SoftDeleteModel, AuditableModel)` and registered into `django.apps.apps`. Integrated lazy loading, soft deletion, and standard ORM CRUD (Commit: `97d117d`).
 - *2026-09-09*: Implemented Modular App Registry Engine with `SystemModule`, `AppManifestReader`, DAG `DependencyResolver`, and multi-pass `AppInstaller` handling models, foreign keys, views, menus, automations, and reports. Added reference demo apps `contacts` and `crm` (Commit: `5c4874e`).
 - *2026-09-09*: Implemented `AppUninstaller` in `apps.meta_engine.app_uninstaller` featuring reverse dependency validation guard (blocking uninstall of required modules) and 3 pluggable data retention policies: `archive` (soft-deactivation), `snapshot_backup_and_drop` (JSON record export before DDL drop), and `cascade_drop` (immediate purge) (Commit: `c88f594`).
+- *2026-09-09*: Implemented Universal Declarative REST API Gateway in `apps.meta_engine.views` exposing polymorphic CRUD operations (`/api/v1/entities/<model_slug>/`), declarative schema introspection (`/schema/`), dynamic serializers via `DynamicEntitySerializerFactory`, and row-level `MetaRule` security filtering (Commit: `9ace2c9`).
 
 ---
 
@@ -616,7 +617,7 @@ Implement an enterprise-grade, dynamic reporting engine in Django capable of ren
 ---
 
 ### 4. Current Focus
-Phase 13 (Metadata Engine, Dynamic Schema & Modular App Runtime): Sub-task 7 (Universal Declarative REST API Gateway: Dynamic Serializers, Filtering, Pagination, Row-Level MetaRule Permissions).
+Phase 13 (Metadata Engine, Dynamic Schema & Modular App Runtime): Sub-task 8 (Odoo-Style Admin App Store & Metadata Studio Interface: 1-Click Install/Uninstall Cards, Metadata Inspector, Visual Schema Summary).
 
 
 

@@ -648,4 +648,76 @@ class UniversalEntityAPITests(TransactionTestCase):
         self.assertEqual(sync_resp.status_code, 200)
 
 
+class AdminAppStoreTests(TransactionTestCase):
+    """
+    Test suite for Sub-task 8: Odoo-Style Admin App Store & Metadata Studio Interface.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_superuser(username="store_admin", password="password123")
+        self.client = APIClient()
+        self.client.force_login(self.user)
+
+
+    def tearDown(self):
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+        for name in ["contacts_partner", "crm_lead"]:
+            meta = MetaModel.objects.filter(name=name).first()
+            if meta:
+                try:
+                    DynamicSchemaEngine.drop_table(meta)
+                except Exception:
+                    pass
+                meta.delete()
+        SystemModule.objects.filter(app_id__in=["contacts", "crm"]).delete()
+
+    def test_admin_app_store_view_renders(self):
+        """Verify /admin/meta_engine/systemmodule/app-store/ renders HTML with app cards."""
+        resp = self.client.get("/admin/meta_engine/systemmodule/app-store/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Modular App Store")
+        self.assertContains(resp, "Contacts &amp; Address Book")
+
+    def test_admin_app_store_sync_action(self):
+        """Verify POST /admin/meta_engine/systemmodule/app-store/sync/ triggers filesystem sync."""
+        resp = self.client.post("/admin/meta_engine/systemmodule/app-store/sync/")
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(SystemModule.objects.filter(app_id="contacts").exists())
+
+    def test_admin_app_store_install_and_uninstall_actions(self):
+        """Verify 1-click install and uninstall via Django Admin App Store buttons."""
+        # Install contacts
+        install_resp = self.client.post("/admin/meta_engine/systemmodule/app-store/contacts/install/")
+        self.assertEqual(install_resp.status_code, 302)
+        contacts = SystemModule.objects.get(app_id="contacts")
+        self.assertEqual(contacts.status, "installed")
+
+        # Uninstall contacts
+        uninstall_resp = self.client.post(
+            "/admin/meta_engine/systemmodule/app-store/contacts/uninstall/",
+            data={"data_policy": "cascade_drop"},
+        )
+        self.assertEqual(uninstall_resp.status_code, 302)
+        contacts.refresh_from_db()
+        self.assertEqual(contacts.status, "uninstalled")
+
+    def test_admin_metamodel_badges_and_api_links(self):
+        """Verify MetaModelAdmin studio helper methods generate valid HTML."""
+        from apps.meta_engine.admin import MetaModelAdmin
+        from django.contrib.admin.sites import AdminSite
+
+        admin_instance = MetaModelAdmin(MetaModel, AdminSite())
+        meta = MetaModel.objects.create(name="studio_test", label="Studio Test", app_label="studio")
+
+        status_html = admin_instance.table_status_badge(meta)
+        self.assertIn("PostgreSQL DDL", str(status_html))
+
+        links_html = admin_instance.api_links(meta)
+        self.assertIn("/api/v1/entities/studio_test/", str(links_html))
+        self.assertIn("/api/v1/entities/studio_test/schema/", str(links_html))
+
+        meta.delete()
+
+
+
 

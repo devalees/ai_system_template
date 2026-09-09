@@ -67,6 +67,8 @@ class MetaModelAdmin(admin.ModelAdmin):
         "app_label",
         "table_name",
         "fields_count_badge",
+        "table_status_badge",
+        "api_links",
         "is_system",
         "is_auditable",
         "is_active",
@@ -105,6 +107,30 @@ class MetaModelAdmin(admin.ModelAdmin):
             count
         )
     fields_count_badge.short_description = _("Fields")
+
+    def table_status_badge(self, obj):
+        from apps.meta_engine.schema_engine import DynamicSchemaEngine
+        exists = DynamicSchemaEngine.table_exists(obj.table_name)
+        if exists:
+            return format_html(
+                '<span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">✓ PostgreSQL DDL</span>'
+            )
+        return format_html(
+            '<span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">Missing DDL</span>'
+        )
+    table_status_badge.short_description = _("Physical DDL")
+
+    def api_links(self, obj):
+        api_url = f"/api/v1/entities/{obj.name}/"
+        schema_url = f"/api/v1/entities/{obj.name}/schema/"
+        return format_html(
+            '<a href="{}" target="_blank" style="margin-right: 8px; font-weight: 600; color: #4f46e5;">API ↗</a>'
+            '<a href="{}" target="_blank" style="font-weight: 600; color: #0284c7;">Schema ↗</a>',
+            api_url,
+            schema_url,
+        )
+    api_links.short_description = _("Gateway")
+
 
 
 @admin.register(MetaField)
@@ -222,6 +248,7 @@ class MetaReportAdmin(admin.ModelAdmin):
 
 @admin.register(SystemModule)
 class SystemModuleAdmin(admin.ModelAdmin):
+    change_list_template = "admin/meta_engine/systemmodule/change_list.html"
     list_display = (
         "name",
         "app_id",
@@ -249,4 +276,75 @@ class SystemModuleAdmin(admin.ModelAdmin):
             obj.get_status_display()
         )
     status_badge.short_description = _("Status")
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path("app-store/", self.admin_site.admin_view(self.app_store_view), name="meta_engine_app_store"),
+            path("app-store/<str:app_id>/install/", self.admin_site.admin_view(self.install_action), name="meta_engine_install_app"),
+            path("app-store/<str:app_id>/uninstall/", self.admin_site.admin_view(self.uninstall_action), name="meta_engine_uninstall_app"),
+            path("app-store/sync/", self.admin_site.admin_view(self.sync_action), name="meta_engine_sync_apps"),
+        ]
+        return custom_urls + urls
+
+    def app_store_view(self, request):
+        from django.shortcuts import render
+        from apps.meta_engine.manifest_reader import AppManifestReader
+
+        if not SystemModule.objects.exists():
+            try:
+                AppManifestReader.sync_discovered_modules()
+            except Exception:
+                pass
+
+        modules = SystemModule.objects.all().order_by("category", "name")
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Modular App Store"),
+            "modules": modules,
+        }
+        return render(request, "admin/meta_engine/systemmodule/app_store.html", context)
+
+    def install_action(self, request, app_id):
+        from django.contrib import messages
+        from django.shortcuts import redirect
+        from apps.meta_engine.app_installer import AppInstaller
+
+        try:
+            installed = AppInstaller.install(app_id)
+            names = [m.name for m in installed]
+            messages.success(request, f"Successfully installed: {', '.join(names)}.")
+        except Exception as exc:
+            messages.error(request, f"Failed to install module '{app_id}': {exc}")
+
+        return redirect("admin:meta_engine_app_store")
+
+    def uninstall_action(self, request, app_id):
+        from django.contrib import messages
+        from django.shortcuts import redirect
+        from apps.meta_engine.app_uninstaller import AppUninstaller
+
+        policy = request.POST.get("data_policy", AppUninstaller.POLICY_ARCHIVE)
+        try:
+            AppUninstaller.uninstall(app_id, data_policy=policy)
+            messages.success(request, f"Successfully uninstalled '{app_id}' (policy: {policy}).")
+        except Exception as exc:
+            messages.error(request, f"Failed to uninstall '{app_id}': {exc}")
+
+        return redirect("admin:meta_engine_app_store")
+
+    def sync_action(self, request):
+        from django.contrib import messages
+        from django.shortcuts import redirect
+        from apps.meta_engine.manifest_reader import AppManifestReader
+
+        try:
+            synced = AppManifestReader.sync_discovered_modules()
+            messages.success(request, f"Scanned filesystem. Synchronized {len(synced)} modular app packages.")
+        except Exception as exc:
+            messages.error(request, f"Failed to sync modules: {exc}")
+
+        return redirect("admin:meta_engine_app_store")
+
 
