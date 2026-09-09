@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 14 Completed (Multi-Tenancy, Organizations, Workspaces, Row-Level Tenant Isolation, and Declarative MetaEngine Partitioning)
+- **Status**: Phase 15 Completed (Comprehensive Activity Audit Trail across Platform, GenericForeignKey Relations, Immutable ActivityLog, Request Telemetry Middleware, Model Diffing Signals, and Declarative MetaEngine Integration)
 
 
 ---
@@ -127,6 +127,27 @@ An extensible, production-grade starter template pairing a **Django** web framew
   - `OrganizationViewSet` (`/api/v1/organizations/`): CRUD for organizations, member listing/adding, invitation creation, and workspace switching.
   - `InvitationAcceptAPIView` (`/api/v1/invitations/<token>/accept/`): Secure invitation token acceptance endpoint.
   - Full Django Admin with inline member management, active seat counters, and tier badges.
+
+### 13. Comprehensive Activity Audit Trail (`apps.audit`)
+- **Universal Immutable Audit Log (`ActivityLog`)**:
+  - Captures events across human users, bot service accounts, and system background processes for compliance (SOC2, GDPR, ISO 27001).
+  - Built on `GenericForeignKey` (`content_type` and string `object_id`), seamlessly supporting both Integer PK models (`auth.User`, `AppSettingValue`) and UUID PK models (`Organization`, `MetaModel`, dynamic entities).
+  - Multi-tenant scoping with nullable `organization` foreign key, allowing both tenant-isolated and global system events.
+  - Strict immutability: updates and deletes blocked on both instance (`save()`, `delete()`) and bulk QuerySet (`update()`, `delete()`) levels unless explicitly authorized with `allow_purge=True`.
+- **Request Context & Client Telemetry Middleware (`AuditContextMiddleware`)**:
+  - Extracts client IP (`X-Forwarded-For`, `X-Real-IP`, `REMOTE_ADDR`), User-Agent, and correlation ID (`X-Request-ID`).
+  - Binds parameters to Python 3.11 `contextvars` (`apps.audit.context`) with guaranteed token cleanup in a `finally` block and injects `X-Request-ID` into response headers.
+- **Automated Lifecycle Diffing & Security Signals (`apps.audit.signals`)**:
+  - Listens to `pre_save`, `post_save`, and `post_delete` signals to calculate structured attribute diffs (`{"field": {"old": v1, "new": v2}}`).
+  - Smart noise suppression: ignores auto-timestamps (`updated_at`), masks sensitive fields (`password`, `token`, `secret`), and suppresses logs when no attributes actually change.
+  - Tracks state transitions: soft deletes (`ACTION_DELETE`), restores (`ACTION_RESTORE`), and permanent deletions (`ACTION_HARD_DELETE`).
+  - Security authentication event logging: `user_logged_in`, `user_logged_out`, and `user_login_failed`.
+- **Declarative Dynamic Model Integration**:
+  - Seamlessly integrates with `apps.meta_engine` (`meta_model.is_auditable=True`), auto-registering in-memory models and tracking CRUD operations.
+- **Read-Only Admin Dashboard & REST API Gateway**:
+  - Read-only Django Admin (`ActivityLogAdmin`) with formatted visual before/after HTML diff cards and colored status/action badges.
+  - Read-only REST API (`/api/v1/audit/logs/`) with multi-tenant filtering, search, and action parameter filters.
+
 
 
 

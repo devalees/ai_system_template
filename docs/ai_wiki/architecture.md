@@ -854,6 +854,141 @@ The filtering engine unifies trigger condition evaluation into a single authorit
 - **`InvitationAcceptAPIView` (`/api/v1/invitations/<token>/accept/`)**: Self-service invitation token validation and membership activation.
 - **Django Admin**: `OrganizationAdmin` with `OrganizationMembershipInline`, user capacity badges, tier styling, and invitation revocation actions.
 
+---
+
+## 19. Comprehensive Activity Audit Trail Architecture (`apps.audit`) (Phase 15)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│              Enterprise Activity Audit Trail & Compliance Architecture                │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│  [Incoming HTTP Request / REST API]               [Celery Worker / Background Task]    │
+│            │                                                    │                      │
+│            ▼                                                    ▼                      │
+│  [AuditContextMiddleware]                             [with audit_context(...):]       │
+│  • Extracts Client IP (Forwarded/Real/Remote)         • Binds actor, IP, req_id        │
+│  • Extracts User-Agent & Correlation ID               • Binds custom metadata          │
+│  • Binds to contextvars (_client_ip_ctx, etc.)        • Cleans context in finally      │
+│  • Injects X-Request-ID into Response Headers                                          │
+│            │                                                    │                      │
+│            └─────────────────────────┬──────────────────────────┘                      │
+│                                      │                                                 │
+│                                      ▼                                                 │
+│                      ┌───────────────────────────────┐                                 │
+│                      │  Django Model Lifecycle Hooks │                                 │
+│                      │   pre_save, post_save, delete │                                 │
+│                      └───────────────┬───────────────┘                                 │
+│                                      │                                                 │
+│                        ┌─────────────┴─────────────┐                                   │
+│                        ▼                           ▼                                   │
+│             [Static Auditable Models]    [Dynamic MetaEngine Models]                   │
+│             (@register_auditable or      (meta_model.is_auditable=True,                │
+│              _audit_enabled = True)       DynamicModelFactory auto-reg)                │
+│                        │                           │                                   │
+│                        └─────────────┬─────────────┘                                   │
+│                                      │                                                 │
+│                                      ▼                                                 │
+│                      ┌───────────────────────────────┐                                 │
+│                      │   Attribute Diffing Engine    │                                 │
+│                      │   (apps.audit.signals)        │                                 │
+│                      │ • Excludes auto timestamps    │                                 │
+│                      │ • Masks sensitive credentials │                                 │
+│                      │ • Suppresses zero-diff noise  │                                 │
+│                      │ • Maps soft delete / restore  │                                 │
+│                      └───────────────┬───────────────┘                                 │
+│                                      │                                                 │
+│                                      ▼                                                 │
+│                      ┌───────────────────────────────┐                                 │
+│                      │     ActivityLog Repository    │                                 │
+│                      │ • GenericForeignKey target    │                                 │
+│                      │ • Integer & UUID PK support   │                                 │
+│                      │ • Immutable save() & delete() │                                 │
+│                      │ • Immutable QuerySet bulk ops │                                 │
+│                      └───────────────┬───────────────┘                                 │
+│                                      │                                                 │
+│                 ┌────────────────────┴────────────────────┐                            │
+│                 ▼                                         ▼                            │
+│    [Read-Only Django Admin]                  [Read-Only REST API Gateway]              │
+│    • Visual Before/After Diff Table          • GET /api/v1/audit/logs/                 │
+│    • Colored Action & Status Badges          • Scoped to active tenant                 │
+│    • Blocked add/change/delete               • Multi-parameter filter & search         │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 19.1 Immutable Storage & Generic Relationship Schema (`apps.audit.models`)
+- **`ActivityLog`**:
+  - Primary Key: Distributed UUIDv4 (`UUIDModel`).
+  - Actor Types: `user` (human), `bot` (service account), `system` (background daemon), `anonymous`.
+  - Actions: `create`, `update`, `delete` (soft), `restore`, `hard_delete`, `login`, `logout`, `login_failed`, `export`, `custom`.
+  - Status: `success`, `failure`, `warning`.
+  - Polymorphic Target (`GenericForeignKey`):
+    - `content_type`: `ForeignKey(ContentType, on_delete=SET_NULL, null=True, db_index=True)`.
+    - `object_id`: `CharField(max_length=255, null=True, blank=True, db_index=True)`.
+    - Stringified `object_id` seamlessly stores standard integer primary keys (`auth.User`, `AppSettingValue`) and non-enumerable UUID primary keys (`Organization`, `MetaModel`, dynamic models).
+  - Multi-Tenant Scoping:
+    - Nullable `organization` foreign key allowing both tenant-partitioned audit trails and global system-level events (e.g. system bot scheduler boot, platform healthchecks).
+  - Structured Diffs & Telemetry:
+    - `changes`: `JSONField(default=dict)` storing `{"field": {"old": val1, "new": val2}}`.
+    - `ip_address`: `GenericIPAddressField(null=True, blank=True)`.
+    - `user_agent`: `TextField(blank=True)`.
+    - `request_id`: `CharField(max_length=64, blank=True, db_index=True)`.
+    - `metadata`: `JSONField(default=dict)` for contextual trace parameters.
+- **Dual-Layer Immutability Enforcers**:
+  - `ActivityLog.save()`: Raises `ImmutabilityError(PermissionDenied)` if updating an existing persisted record.
+  - `ActivityLog.delete()`: Raises `ImmutabilityError` unless explicitly called with `allow_purge=True`.
+  - `ActivityLogQuerySet.update()`: Disallows bulk SQL updates on QuerySets.
+  - `ActivityLogQuerySet.delete()`: Disallows bulk SQL deletions unless `allow_purge=True` is provided.
+
+### 19.2 Request Context & Client Telemetry Middleware (`apps.audit.context` & `middleware`)
+- **Python 3.11 `contextvars` Engine**:
+  - `_client_ip_ctx`, `_user_agent_ctx`, `_request_id_ctx`, `_audit_actor_ctx`, `_audit_metadata_ctx`.
+  - Functions: `get_audit_ip()`, `get_audit_user_agent()`, `get_audit_request_id()`, `get_audit_actor()`, `get_audit_metadata()`.
+  - Context Manager: `with audit_context(actor=..., ip=..., request_id=...):` for background tasks, celery workers, and test scopes.
+- **`AuditContextMiddleware`**:
+  - Extracts client IP address with proxy / CDN defense (`HTTP_X_FORWARDED_FOR`, `HTTP_X_REAL_IP`, `REMOTE_ADDR`).
+  - Extracts `HTTP_USER_AGENT`.
+  - Resolves or generates correlation ID (`HTTP_X_REQUEST_ID`, `HTTP_X_CORRELATION_ID`, or `req_<hex>`), attaching `request.id` and setting the `X-Request-ID` response header.
+  - Binds contextvars before view processing and guarantees reset in a `finally` block to prevent thread state contamination.
+
+### 19.3 Automated Lifecycle Diffing & Security Signals (`apps.audit.signals`)
+- **Noise Suppression & Hygiene**:
+  - Excludes auto-updating timestamp fields (`updated_at`, `modified_at`).
+  - Masks sensitive credentials (`password`, `token`, `secret`, `api_key`) as `"[PROTECTED]"`.
+  - Suppresses empty audit log generation when `save()` is executed with no attribute changes.
+- **Signal Handlers**:
+  - `pre_save`: Queries database for original record snapshot (using `all_objects` or `_base_manager` to safely inspect soft-deleted records) and caches `_audit_old_snapshot`.
+  - `post_save`:
+    - New record (`created=True`) -> generates `ACTION_CREATE` with initial field values.
+    - Existing record -> compares old vs new values.
+    - Soft-delete detection: if `is_deleted` transitions `False -> True`, records `ACTION_DELETE`; if `True -> False`, records `ACTION_RESTORE`; otherwise `ACTION_UPDATE`.
+  - `post_delete`: Records `ACTION_HARD_DELETE` with snapshot of prior record attributes.
+- **Authentication Security Event Receivers**:
+  - `user_logged_in`: Logs `ACTION_LOGIN` (`STATUS_SUCCESS`) with actor, target user, IP, and User-Agent.
+  - `user_logged_out`: Logs `ACTION_LOGOUT` (`STATUS_SUCCESS`).
+  - `user_login_failed`: Logs `ACTION_LOGIN_FAILED` (`STATUS_FAILURE`) with attempted username and client IP for intrusion detection.
+
+### 19.4 Dynamic MetaEngine Declarative Integration
+- `MetaModel.is_auditable`: Declarative schema flag.
+- When `DynamicModelFactory` compiles an in-memory Django model from a `MetaModel` where `is_auditable=True`:
+  - Injects `_audit_enabled = True` attribute on the dynamic model class.
+  - Registers dynamic class into `apps.audit.registry._AUDITABLE_MODELS`.
+  - Full CRUD operations on dynamic entities automatically emit `ActivityLog` entries with before/after diffs and tenant attribution.
+
+### 19.5 Administrative & REST API Surface (`apps.audit.admin` & `views`)
+- **`ActivityLogAdmin`**:
+  - Strictly read-only: `has_add_permission`, `has_change_permission`, and `has_delete_permission` unconditionally return `False`.
+  - Custom visual diff card (`changes_diff_card`): Renders before/after changes as an HTML comparison table with styled line-through red badges for prior values and green badges for new values.
+  - Colored action badges (`action_badge`): Emerald (create), Blue (update), Amber (soft delete), Cyan (restore), Red (hard delete), Purple (login), Gray (logout), Crimson (login failed).
+  - Colored status badges (`status_badge`): Green (success), Red (failure), Yellow (warning).
+- **`ActivityLogViewSet` (`/api/v1/audit/logs/`)**:
+  - Read-only (`ReadOnlyModelViewSet`) exposing `list` and `retrieve`.
+  - Multi-tenant query scoping: auto-filters by active organization (`get_current_tenant()`) for non-superusers.
+  - Filtering by `action`, `actor_type`, `status`, `request_id`, `object_id`.
+  - Full-text search across `object_repr`, `object_id`, and `actor__username`.
+  - Mutation endpoints (`POST`, `PUT`, `PATCH`, `DELETE`) return `405 Method Not Allowed`.
+
+
 
 
 
