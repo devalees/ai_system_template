@@ -129,3 +129,30 @@ class StorageAndServiceTests(TestCase):
         self.assertTrue(doc.is_public)
         self.assertEqual(len(doc.checksum_sha256), 64)
 
+
+class DocumentAdminTests(TestCase):
+    """Test suite verifying DocumentAdmin custom formatters and inlines."""
+
+    def setUp(self):
+        from apps.media.admin import DocumentAdmin
+        self.admin = DocumentAdmin(Document, None)
+        self.org = Organization.objects.create(name="Admin Org", slug="admin-org")
+        self.test_file = SimpleUploadedFile("admin.txt", b"Admin content", content_type="text/plain")
+        self.doc = Document.objects.create(
+            organization=self.org,
+            file=self.test_file,
+            filename="admin.txt"
+        )
+
+    def test_admin_checksum_badge(self):
+        """Verify checksum_badge produces monospaced HTML representation."""
+        badge = self.admin.checksum_badge(self.doc)
+        self.assertIn("<code", badge)
+        self.assertIn(self.doc.checksum_sha256[:8], badge)
+
+    def test_admin_file_size_display(self):
+        """Verify file_size_display produces formatted string."""
+        size_str = self.admin.file_size_display(self.doc)
+        self.assertIn("B", size_str)
+
+
