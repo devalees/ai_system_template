@@ -574,7 +574,7 @@ Unified file, document, and media management handling user uploads, generated ag
 - [x] **Sub-task 3: Generic Attachment Inline for Django Admin** - COMPLETED (Commit: `b38b55a`)
 - [x] **Sub-task 4: REST API Endpoints for File Upload & Retrieval** - COMPLETED (Commit: `3c46420`)
 - [x] **Sub-task 5: Automated Testing & Verification (175 Tests Passing)** - COMPLETED (Commit: `3c46420`)
-- [x] **Sub-task 6: LLM Wiki & Architecture Synchronization** - COMPLETED (Commit: `docs`)
+- [x] **Sub-task 6: LLM Wiki & Architecture Synchronization** - COMPLETED (Commit: `d897113`)
 
 ---
 
