@@ -64,11 +64,14 @@ economy_editor/
 
 ## 4. Data Models (`backend/apps/integration/models.py`)
 
-### `AgentProfile`
-- `user`: OneToOneField to `auth.User` (dedicated service account `bot_<name>`).
-- `name`: Unique slug (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `archivist`).
+### `Profile` (Aliased as `AgentProfile`)
+- `user`: OneToOneField to `auth.User` via automatic `post_save` lifecycle signals.
+- `is_agent`: Boolean flag indicating whether account acts as an autonomous AI agent.
+- `user_type`: Choice field (`human`, `agent`, `client`) for clear multi-user categorization.
+- `hermes_profile_name`: Hermes runtime folder/profile slug (`orchestrator`, `cost_controller`, etc.).
+- `name`: Profile identifier / alias (backward compatible).
 - `display_name`: Human-readable title (e.g. "Chief of Staff / Orchestrator").
-- `role`: Canonical role choice.
+- `role`: Canonical role choice (`orchestrator`, `finance`, `quality_assurance`, `communications`, `knowledge_management`, `general`).
 - `provider`: Inference provider slug (`openrouter`, `anthropic`, `openai-api`, `gemini`, `deepseek`, etc.).
 - `model_name`: Selected model identifier (e.g. `google/gemini-2.5-flash`, `claude-sonnet-4-6`).
 - `reasoning_effort`: Thinking/reasoning token budget (`none`, `low`, `medium`, `high`, `max`).
@@ -180,4 +183,27 @@ To uphold the Principle of Least Privilege across the multi-agent ecosystem, age
        ▼
 [Hermes Runtime: DJANGO_API_TOKEN] (Sourced on profile execution: hermes -p <profile>)
 ```
+
+---
+
+## 9. Unified User-Profile Architecture & Live Hermes Engine Discovery
+
+### 9.1 Idiomatic 1-to-1 User Profile Lifecycle
+Rather than treating AI agents as an isolated, detached entity, the system follows standard Django best practices:
+- **`auth.User` as Universal Identity**: Every actor—human administrator, client, or autonomous AI agent—is represented by a standard Django `User`.
+- **Automatic Lifecycle Signal**: A `post_save` receiver on `User` automatically provisions or retrieves a linked `Profile` record (`user.profile`), eliminating orphaned records.
+- **Categorization Flags**:
+  - `is_agent`: Determines if the account executes LLM agent tasks.
+  - `user_type`: `human` (staff/internal), `agent` (bot worker), or `client` (external user).
+
+### 9.2 Live Hermes Profile Discovery
+- **Direct Engine Visibility**: The declarative profile definitions directory (`agent_service/profiles/`) is mounted read-only into `/app/agent_profiles/` inside the Django backend container.
+- **Service Layer (`HermesDiscoveryService`)**: Inspects runtime folders, dynamically parses `profile.yaml` and `config.yaml`, and returns structured metadata (display name, canonical role, default model).
+- **REST Discovery API**: `GET /api/hermes/profiles/` exposes available profiles live to client interfaces and Django Admin.
+
+### 9.3 Single-Screen Admin UI & 🔄 Reload Widget
+- **`CustomUserAdmin`**: Unregisters Django's default User admin to embed `ProfileInline` directly in the user edit page.
+- **Interactive Selector**: The `hermes_profile_name` input is rendered as a `<select>` dropdown accompanied by an AJAX **🔄 Reload Profiles** button (`hermes_profile_selector.js`).
+- **Dynamic Pre-fill**: Selecting an engine profile automatically pre-populates display name, canonical role, and default inference model while keeping `is_agent=True`.
+
 

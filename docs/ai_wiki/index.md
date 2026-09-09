@@ -3,10 +3,10 @@
 An extensible, production-grade starter template pairing a **Django** web framework (REST API, Admin, PostgreSQL, Redis) with the autonomous **Nous Research Hermes Agent** execution runtime in Docker, featuring isolated specialist agent profiles, custom skill auditing, and dynamic model catalogs.
 
 - **Repository**: `devalees/ai_system_template`
-- **Active Branch**: `main`
+- **Active Branch**: `feat/unified-user-profile-architecture`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 3 Completed (Django RBAC, Service Accounts & DRF Token Authentication)
+- **Status**: Phase 4 Completed (Unified Django User-Profile Architecture & Live Hermes Profile Selector)
 
 ---
 
@@ -15,10 +15,10 @@ An extensible, production-grade starter template pairing a **Django** web framew
 ### 1. Backend Service (`backend/`)
 - **Framework**: Django 5.x with Django REST Framework on Python 3.11.
 - **Data Persistence**: PostgreSQL 16 relational database with Redis 7 caching and session broker.
-- **Dynamic Administrative Portal**: Django Admin with dynamic, dependent `<select>` dropdowns for provider and model selection.
+- **Dynamic Administrative Portal**: Django Admin with single-screen `CustomUserAdmin` embedding `ProfileInline`, dynamic provider/model dropdowns, and a live 🔄 **Reload Profiles** widget.
 - **Model Catalog Engine**: Powered by `models.dev` dynamic registry and OpenRouter, rendering live context window length and token pricing cards ($/1M tokens).
 - **Core Models**:
-  - `AgentProfile`: Profile registry matching Hermes profiles with providers, model overrides, and reasoning effort levels (`none`, `low`, `medium`, `high`, `max`).
+  - `Profile`: Unified User Profile model attached 1-to-1 to `auth.User` via automatic `post_save` lifecycle signals, categorizing accounts (`is_agent`, `user_type: human/agent/client`) and managing Hermes AI inference configurations.
   - `AgentTask`: Task execution registry with assigned profiles, execution costs, reasoning overrides, and QA review pipelines.
   - `SpendReport`: Structured token usage and budget status reports emitted by the cost controller.
   - `HandshakeLog`: Audit log of agent container boot and lifecycle handshakes.
@@ -51,4 +51,11 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Native Django Groups**: Mapped to granular model permissions (`add`, `change`, `view`, `delete`) enforcing the Principle of Least Privilege.
 - **Strict DRF Authentication**: All data-modifying endpoints require `TokenAuthentication` and `StrictDjangoModelPermissions` (e.g. only `cost_controller` can ingest spend reports; only `qa_auditor` can submit task review verdicts).
 - **Runtime Credential Propagation**: Automatically synced into Hermes profile directories (`/root/.hermes/profiles/<name>/.env`) via `scripts/provision_profiles.py`.
+
+### 7. Unified User Profile & Live Engine Discovery
+- **Single-Screen User Management**: `CustomUserAdmin` embeds `ProfileInline` directly in the `auth.User` change form, managing credentials, RBAC groups, and AI settings seamlessly.
+- **Visual Classification Badges**: User list table features distinct badges: `🤖 Agent (profile_slug)`, `👤 Staff`, `🌐 Client`.
+- **Live Hermes Discovery Service**: Scans mounted declarative profile definitions (`/app/agent_profiles/`) and provides the `GET /api/hermes/profiles/` endpoint.
+- **Dynamic 🔄 Reload Widget**: Admin interface features an asynchronous button that live-refreshes available engine profiles into the `<select>` dropdown without page reload, automatically populating canonical roles and descriptions.
+
 

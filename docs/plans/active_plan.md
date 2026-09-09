@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
 - **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `main`
-- **Last Updated**: 2026-09-09 04:16:00+03:00
+- **Active Branch**: `feat/unified-user-profile-architecture`
+- **Last Updated**: 2026-09-09 05:01:00+03:00
 
 ---
 
@@ -89,6 +89,38 @@ Integrate Django's native authentication framework, Role-Based Access Control (`
 - *2026-09-09*: Synchronized system documentation in `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md`.
 
 ### 4. Current Focus
-Phase 3 fully complete. Ready to push branch to remote repository.
+Phase 3 completed and merged into main (Commit: `a2a6509`).
+
+---
+
+## Phase 4: Unified Django User-Profile Architecture & Live Hermes Profile Selector (IN_PROGRESS)
+
+### 1. Objective & Scope
+Refactor the system template from an isolated, hardcoded `AgentProfile` table into an idiomatic, standard Django `UserProfile` architecture.
+- Every user is an `auth.User` with an automatically created 1-to-1 `Profile` via Django `post_save` signals.
+- Users are categorized with `is_agent` flag and `user_type` choice (`human`, `agent`, `client`).
+- Integrate a live Hermes profile discovery service and endpoint (`GET /api/hermes/profiles/`).
+- Enhance Django Admin with `ProfileInline` on `UserAdmin` featuring an interactive dropdown of Hermes profiles with an asynchronous 🔄 **Reload Profiles** button.
+- Maintain seamless integration with RBAC groups, service accounts, and Hermes profile runtime.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Docker Volume Mount & Live Hermes Discovery Service (`/api/hermes/profiles/`)** - COMPLETED (Commit: `40b4973`)
+- [x] **Sub-task 2: Unified Profile Model & Lifecycle Signal (`User` -> `Profile` 1-to-1)** - COMPLETED (Commit: `0b48728`)
+- [x] **Sub-task 3: Single-Screen Django Admin UI & Live Hermes Reload Widget** - COMPLETED (Commit: `cfaf404`)
+- [x] **Sub-task 4: Update ViewSets, Serializers & Seeding Logic (`seed_profiles.py`)** - COMPLETED (Commit: `1057408`)
+- [x] **Sub-task 5: Empirical Testing & Verification** - COMPLETED (11/11 passing tests & browser verification)
+- [x] **Sub-task 6: Documentation Synchronization (Wiki & Architecture)** - COMPLETED (Commit: `1b4c88c`)
+
+### 3. Key Decisions & Deviations (Phase 4)
+- *2026-09-09*: Initialized Phase 4 on branch `feat/unified-user-profile-architecture` per user's architectural direction to standardize user profiles and implement a live Hermes profiles selector.
+- *2026-09-09*: Mounted `../agent_service/profiles` read-only into `/app/agent_profiles/` in `backend/docker-compose.yml` to give Django real-time visibility into engine profiles without external network dependencies.
+- *2026-09-09*: Built `HermesDiscoveryService` and `GET /api/hermes/profiles/` returning live profile metadata (name, display name, role, default model) directly from the engine (Commit: `40b4973`).
+- *2026-09-09*: Evolved `AgentProfile` to unified `Profile` linked 1-to-1 to `auth.User`, added `is_agent`, `user_type`, and `hermes_profile_name`. Created `signals.py` with `post_save` receiver on `User` to automatically provision profiles. Applied zero-data-loss migrations `0005_unified_user_profile` and `0006_alter_profile_display_name_alter_profile_role` (Commit: `0b48728`).
+- *2026-09-09*: Enhanced Django Admin with single-screen `CustomUserAdmin` embedding `ProfileInline`, visual user classification badges (`🤖 Agent`, `👤 Staff`, `🌐 Client`), and an asynchronous **🔄 Reload Profiles** button powered by `hermes_profile_selector.js` that dynamically populates the `<select>` dropdown and auto-fills role and display name (Commit: `cfaf404`).
+- *2026-09-09*: Updated `ProfileViewSet`, `ProfileSerializer`, and `seed_profiles.py` to target `Profile`, passing 11/11 automated unit tests and visual browser subagent verification (Commit: `1057408`).
+- *2026-09-09*: Synchronized system documentation across `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md`.
+
+### 4. Current Focus
+Phase 4 fully complete and verified. Ready to push branch to remote repository.
 
 
