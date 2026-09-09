@@ -406,4 +406,120 @@ class DynamicModelTenantTests(TestCase):
             self.assertEqual(tasks_y.first().title, "Task for Org Y")
 
 
+from rest_framework.test import APITestCase
+
+
+class OrganizationAPITests(APITestCase):
+    """Verify REST API endpoints for organization lifecycle, memberships, and invitations."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(username="api_owner", email="owner@test.com", password="pw")
+        self.member = User.objects.create_user(username="api_member", email="member@test.com", password="pw")
+        self.outsider = User.objects.create_user(username="api_outsider", email="outsider@test.com", password="pw")
+
+        self.org = Organization.objects.create(name="Starlight Media", slug="starlight", tier="pro")
+        OrganizationMembership.objects.create(
+            organization=self.org,
+            user=self.owner,
+            role=OrganizationMembership.ROLE_OWNER
+        )
+        OrganizationMembership.objects.create(
+            organization=self.org,
+            user=self.member,
+            role=OrganizationMembership.ROLE_MEMBER
+        )
+
+    def test_list_organizations_user_scoping(self):
+        # User is member of starlight
+        self.client.force_authenticate(user=self.owner)
+        resp = self.client.get("/api/v1/organizations/")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.data.get("results", resp.data) if isinstance(resp.data, dict) else resp.data
+        slugs = [item["slug"] for item in data if "slug" in item]
+        self.assertIn("starlight", slugs)
+
+        # Outsider does not see starlight
+        self.client.force_authenticate(user=self.outsider)
+        resp_out = self.client.get("/api/v1/organizations/")
+        self.assertEqual(resp_out.status_code, 200)
+        data_out = resp_out.data.get("results", resp_out.data) if isinstance(resp_out.data, dict) else resp_out.data
+        slugs_out = [item["slug"] for item in data_out if "slug" in item]
+        self.assertNotIn("starlight", slugs_out)
+
+    def test_create_organization_sets_creator_as_owner(self):
+        self.client.force_authenticate(user=self.outsider)
+        payload = {
+            "name": "Outsider Ventures",
+            "slug": "outsider-ventures",
+            "tier": "starter"
+        }
+        resp = self.client.post("/api/v1/organizations/", data=payload, format="json")
+        self.assertEqual(resp.status_code, 201)
+        created_org = Organization.objects.get(slug="outsider-ventures")
+        self.assertEqual(created_org.get_owner(), self.outsider)
+
+    def test_members_list_and_add(self):
+        self.client.force_authenticate(user=self.owner)
+        # List members
+        resp = self.client.get(f"/api/v1/organizations/{self.org.id}/members/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(resp.data), 2)
+
+        # Add member directly
+        new_user = User.objects.create_user(username="newbie", password="pw")
+        add_resp = self.client.post(
+            f"/api/v1/organizations/{self.org.id}/members/",
+            data={"user_id": str(new_user.id), "role": "viewer"},
+            format="json"
+        )
+        self.assertEqual(add_resp.status_code, 201)
+        self.assertTrue(self.org.is_member(new_user))
+
+    def test_member_cannot_invite_only_admin_and_owner(self):
+        # Regular member tries to invite -> 403 Forbidden
+        self.client.force_authenticate(user=self.member)
+        resp = self.client.post(
+            f"/api/v1/organizations/{self.org.id}/invite/",
+            data={"email": "candidate@test.com", "role": "member"},
+            format="json"
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Owner invites -> 201 Created
+        self.client.force_authenticate(user=self.owner)
+        resp_owner = self.client.post(
+            f"/api/v1/organizations/{self.org.id}/invite/",
+            data={"email": "candidate@test.com", "role": "member"},
+            format="json"
+        )
+        self.assertEqual(resp_owner.status_code, 201)
+        self.assertIn("token", resp_owner.data)
+
+    def test_accept_invitation_flow(self):
+        # Create invitation
+        invite = OrganizationInvitation.objects.create(
+            organization=self.org,
+            email="outsider@test.com",
+            role="admin",
+            invited_by=self.owner
+        )
+
+        self.client.force_authenticate(user=self.outsider)
+        resp = self.client.post(
+            f"/api/v1/invitations/{invite.token}/accept/",
+            format="json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(self.org.is_member(self.outsider))
+        membership = OrganizationMembership.objects.get(organization=self.org, user=self.outsider)
+        self.assertEqual(membership.role, "admin")
+
+    def test_switch_workspace_action(self):
+        self.client.force_authenticate(user=self.member)
+        resp = self.client.post(f"/api/v1/organizations/{self.org.id}/switch/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["organization_slug"], "starlight")
+
+
+
 
