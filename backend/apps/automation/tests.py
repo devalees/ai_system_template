@@ -2,18 +2,25 @@
 Automated Unit Tests for apps.automation.
 """
 
+import os
+import shutil
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
+from django.contrib.contenttypes.models import ContentType
+from rest_framework.test import APIClient
+from rest_framework import status
+from rest_framework.authtoken.models import Token
 from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
+
 from apps.automation.models import AutomationRule, AutomationLog
 from apps.automation.registry import ServiceRegistry, register_action
 from apps.automation.engine import AutomationEngine
 from apps.automation.tasks import execute_automation_rule_task, scheduled_automation_task
-from apps.automation.scheduler import sync_rule_to_celery_beat
+from apps.automation.actions import provision_hermes_profile_action
 
 
 class AutomationCoreTests(TestCase):
-    """Tests core registry, condition matching, and engine execution."""
+    """Tests core registry, condition matching, engine execution, and scheduling."""
 
     def setUp(self):
         # Register a test action
@@ -26,6 +33,15 @@ class AutomationCoreTests(TestCase):
         def math_handler(context):
             x = context.get('x', 0)
             return {"result": x * 2}
+
+        # Admin user for API tests
+        self.client = APIClient()
+        self.admin_user = User.objects.create_superuser(
+            username='admin_auto_test',
+            email='admin@example.com',
+            password='admin_password_123'
+        )
+        self.client.force_authenticate(user=self.admin_user)
 
     def test_registry_registration_and_lookup(self):
         action = ServiceRegistry.get_action("test_math_action")
@@ -182,3 +198,53 @@ class AutomationCoreTests(TestCase):
         self.assertIsNotNone(rule.periodic_task)
         self.assertIsNotNone(rule.periodic_task.crontab)
         self.assertEqual(rule.periodic_task.crontab.month_of_year, "*/2")
+
+    def test_provision_hermes_profile_action(self):
+        user = User.objects.create_user(username='bot_unit_tester', password='secure_password_123')
+        res = provision_hermes_profile_action({
+            "username": "bot_unit_tester",
+            "profile_name": "unit_tester",
+            "display_name": "Unit Tester Agent",
+            "role": "testing",
+        })
+
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["profile_slug"], "unit_tester")
+
+        # Verify token generated
+        token = Token.objects.filter(user=user).first()
+        self.assertIsNotNone(token)
+
+        # Clean up files created during test
+        for base_dir in ['/app/agent_profiles/unit_tester', '/app/hermes_runtime_profiles/unit_tester']:
+            if os.path.exists(base_dir):
+                shutil.rmtree(base_dir)
+
+    def test_automation_api_endpoints(self):
+        rule = AutomationRule.objects.create(
+            name="API Test Rule",
+            trigger_type="manual",
+            action_category="internal_app",
+            action_type="test_math_action",
+            action_params={"x": 100},
+            is_active=True,
+        )
+
+        # 1. List rules
+        resp = self.client.get('/api/automation/rules/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # 2. Trigger rule on-demand
+        resp = self.client.post(f'/api/automation/rules/{rule.id}/trigger/', {"x": 50}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_202_ACCEPTED)
+        self.assertIn("task_id", resp.data)
+
+        # 3. List logs
+        resp = self.client.get('/api/automation/logs/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # 4. List registered services
+        resp = self.client.get('/api/automation/services/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn("services", resp.data)
+        self.assertIn("available_models", resp.data)
