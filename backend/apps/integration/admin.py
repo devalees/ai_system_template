@@ -120,7 +120,7 @@ class ProfileAdmin(admin.ModelAdmin):
     )
     list_filter = ('is_agent', 'user_type', 'role', 'reasoning_effort', 'provider', 'is_active')
     search_fields = ('name', 'hermes_profile_name', 'display_name', 'user__username', 'description')
-    ordering = ('user__username',)
+    readonly_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
 
     def user_link(self, obj):
         if not obj.user:
@@ -145,7 +145,7 @@ class HandshakeLogAdmin(admin.ModelAdmin):
     list_display = ('agent_id', 'version', 'status', 'client_ip', 'created_at')
     list_filter = ('status', 'agent_id', 'created_at')
     search_fields = ('agent_id', 'client_ip', 'payload')
-    readonly_fields = ('id', 'agent_id', 'version', 'client_ip', 'payload', 'server_response', 'status', 'created_at')
+    readonly_fields = ('id', 'agent_id', 'version', 'client_ip', 'payload', 'server_response', 'status', 'created_at', 'updated_at')
 
     def has_add_permission(self, request):
         return False
@@ -156,7 +156,7 @@ class SpendReportAdmin(admin.ModelAdmin):
     list_display = ('reported_by', 'created_by', 'total_cost_usd', 'daily_budget_usd', 'budget_status', 'total_tokens', 'total_api_calls', 'created_at')
     list_filter = ('budget_status', 'reported_by', 'created_at')
     search_fields = ('reported_by', 'payload')
-    readonly_fields = ('id', 'created_by', 'created_at')
+    readonly_fields = ('id', 'created_by', 'updated_by', 'created_at', 'updated_at')
 
 
 @admin.register(AgentTask)
@@ -164,4 +164,4 @@ class AgentTaskAdmin(admin.ModelAdmin):
     list_display = ('task_name', 'assigned_profile', 'created_by', 'status', 'review_verdict', 'reasoning_effort', 'cost_usd', 'created_at')
     list_filter = ('status', 'review_verdict', 'reasoning_effort', 'assigned_profile', 'created_at')
     search_fields = ('task_name', 'agent_name', 'reviewer_notes', 'input_payload', 'output_result')
-    readonly_fields = ('id', 'created_by', 'created_at', 'updated_at')
+    readonly_fields = ('id', 'created_by', 'updated_by', 'created_at', 'updated_at')

@@ -174,7 +174,7 @@ class AutomationTriggerAdmin(admin.ModelAdmin):
     )
     list_filter = ('is_system', 'trigger_type', 'is_active', 'execution_mode')
     search_fields = ('name', 'description', 'trigger_model')
-    readonly_fields = ('trigger_count', 'last_triggered_at', 'created_at', 'updated_at')
+    readonly_fields = ('trigger_count', 'last_triggered_at', 'created_by', 'updated_by', 'created_at', 'updated_at')
 
     fieldsets = (
         ("Trigger Event Identification", {
@@ -210,8 +210,8 @@ class AutomationTriggerAdmin(admin.ModelAdmin):
             ),
             "classes": ("collapse",)
         }),
-        ("Execution Metrics & State", {
-            "fields": ("trigger_count", "last_triggered_at", "created_at", "updated_at"),
+        ("Execution Metrics & Audit", {
+            "fields": ("trigger_count", "last_triggered_at", ("created_by", "updated_by"), ("created_at", "updated_at")),
             "classes": ("collapse",)
         }),
     )

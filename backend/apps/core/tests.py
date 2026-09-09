@@ -25,7 +25,7 @@ from apps.core.models import (
 User = get_user_model()
 
 
-class ConcreteSampleModel(UUIDModel, TimeStampedModel, SoftDeleteModel, AuditableModel):
+class ConcreteSampleModel(UUIDModel, SoftDeleteModel, AuditableModel):
     """Concrete model created specifically to verify abstract base models."""
     name = models.CharField(max_length=100)
 
@@ -107,6 +107,51 @@ class CoreAbstractBaseModelTests(TestCase):
 
         self.assertEqual(item.created_by, self.user)
         self.assertEqual(item.updated_by, self.user)
+
+    def test_retrofitted_domain_models_audit_tracking(self):
+        """Verify that retrofitted models (AppSettingValue, AutomationTrigger, Profile) record audit actors."""
+        from apps.core.models import AppSettingValue
+        from apps.automation.models import AutomationTrigger
+        from apps.integration.models import Profile
+
+        request = self.factory.get("/")
+        request.user = self.user
+
+        # 1. Test AppSettingValue
+        mw1 = CurrentUserMiddleware(
+            lambda req: AppSettingValue.objects.create(app_label="test_app", key="param1", raw_value="val1")
+        )
+        setting = mw1(request)
+        self.assertEqual(setting.created_by, self.user)
+        self.assertEqual(setting.updated_by, self.user)
+        self.assertIsNotNone(setting.created_at)
+        self.assertIsNotNone(setting.updated_at)
+
+        # 2. Test AutomationTrigger
+        mw2 = CurrentUserMiddleware(
+            lambda req: AutomationTrigger.objects.create(
+                name="Test Audit Trigger",
+                trigger_type="manual",
+            )
+        )
+        trigger = mw2(request)
+        self.assertEqual(trigger.created_by, self.user)
+        self.assertEqual(trigger.updated_by, self.user)
+        self.assertIsNotNone(trigger.created_at)
+        self.assertIsNotNone(trigger.updated_at)
+
+        # 3. Test Profile
+        mw3 = CurrentUserMiddleware(
+            lambda req: Profile.objects.create(
+                name="test_operator",
+                display_name="Test Operator",
+            )
+        )
+        profile = mw3(request)
+        self.assertEqual(profile.created_by, self.user)
+        self.assertEqual(profile.updated_by, self.user)
+        self.assertIsNotNone(profile.created_at)
+        self.assertIsNotNone(profile.updated_at)
 
     def test_middleware_cleanup(self):
         """Verify context variable is reset after request finishes to prevent leaks."""

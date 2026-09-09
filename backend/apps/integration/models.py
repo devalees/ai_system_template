@@ -1,8 +1,9 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
+from apps.core.models import AuditableModel, TimeStampedModel
 
-class HandshakeLog(models.Model):
+class HandshakeLog(TimeStampedModel):
     """
     Records bidirectional connectivity and handshakes between
     external agent runtimes (e.g., Hermes) and the Django backend.
@@ -19,7 +20,6 @@ class HandshakeLog(models.Model):
     payload = models.JSONField(default=dict, blank=True)
     server_response = models.JSONField(default=dict, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='success')
-    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -30,7 +30,7 @@ class HandshakeLog(models.Model):
         return f"{self.agent_id} ({self.status}) @ {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
-class Profile(models.Model):
+class Profile(AuditableModel):
     """
     Unified User Profile attached 1-to-1 to Django's auth.User.
     Accommodates human staff, autonomous AI agent service accounts, and external clients.
@@ -107,8 +107,6 @@ class Profile(models.Model):
         default='en',
         help_text="User interface language preference (en / ar)."
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['user__username', 'created_at']
@@ -137,7 +135,7 @@ User.agent_profile = property(lambda u: getattr(u, 'profile', None))
 
 
 
-class SpendReport(models.Model):
+class SpendReport(AuditableModel):
     """
     Records token consumption and expenditure reports pushed by the cost_controller profile.
     """
@@ -149,14 +147,6 @@ class SpendReport(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile = models.ForeignKey(AgentProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='spend_reports')
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='created_spend_reports',
-        help_text="User/bot account that submitted this spend report."
-    )
     reported_by = models.CharField(max_length=64, default='cost_controller')
     total_api_calls = models.PositiveIntegerField(default=0)
     total_tokens = models.PositiveBigIntegerField(default=0)
@@ -164,7 +154,6 @@ class SpendReport(models.Model):
     daily_budget_usd = models.DecimalField(max_digits=10, decimal_places=2, default=10.0)
     budget_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OK')
     payload = models.JSONField(default=dict, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -175,7 +164,7 @@ class SpendReport(models.Model):
         return f"Spend ${self.total_cost_usd} USD [{self.budget_status}] @ {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
 
-class AgentTask(models.Model):
+class AgentTask(AuditableModel):
     """
     Represents a task dispatched to or executed by an agent profile.
     Supports implementer -> reviewer verification lifecycle.
@@ -195,14 +184,6 @@ class AgentTask(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     agent_name = models.CharField(max_length=120, default='hermes-agent')
     assigned_profile = models.ForeignKey(AgentProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='created_agent_tasks',
-        help_text="User/bot account that created this task."
-    )
     task_name = models.CharField(max_length=200)
     input_payload = models.JSONField(default=dict, blank=True)
     output_result = models.JSONField(default=dict, blank=True)
@@ -219,8 +200,6 @@ class AgentTask(models.Model):
     )
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
