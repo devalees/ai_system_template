@@ -739,6 +739,38 @@ Unify LLM provider credentials, token accounting, and agent runtime orchestratio
 ### 4. Current Focus
 Phase 22 completed. Provider credentials centralized with zero-downtime hot-syncing, budget governance, calibrated reasoning, and multi-agent handoffs fully operational. Ready to merge into `main`.
 
+---
+
+## Phase 23: Provider Credentials Consolidation, Model Catalog Sorting & Profile Admin Streamlining
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/provider-credentials-consolidation-and-catalog-ux`
+- **Last Updated**: 2026-09-11 06:24:00+03:00
+
+### 1. Objective & Scope
+Consolidate LLM credentials into a single source of truth (`ProviderCredential`), eliminate redundant secret key fields from the Settings Hub, sort and group models by provider using `<optgroup>`, and streamline the `Profile` admin interface:
+- **Single Source of Truth for Credentials**: Remove duplicate API key secrets from `apps.integration.conf` (Settings Hub), leaving only global governance and default parameters (`DEFAULT_PROVIDER`, `DEFAULT_MODEL`, `DEFAULT_REASONING_EFFORT`, `DAILY_BUDGET_CAP_USD`). Update `Profile.resolve_provider_and_key()` and `collect_active_provider_keys()`.
+- **Model Catalog Categorization & Sorting**: Categorize OpenRouter models by vendor prefix (`Google`, `Anthropic`, `OpenAI`, `DeepSeek`, `Meta / LLaMA`, etc.) and sort them alphabetically in `apps.integration.services.hermes_catalog`.
+- **Admin Optgroups & Dynamic JS Support**: Structure `ProfileAdminForm` and update `agent_profile_models.js` to render `<optgroup label="...">` elements for clean, categorized model selection.
+- **Profile Admin UI Fieldsets**: Organize `ProfileAdmin` fieldsets, moving `provider_credential` into a collapsed "Advanced Credential & Endpoint Overrides" section with descriptive guidance.
+- **Automated Verification**: Update test suite to verify consolidation, sorting, optgroups, and run full project tests to ensure 100% pass rate.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Commit: `pending`)
+- [ ] **Sub-task 2: Credentials Consolidation & Settings Hub De-duplication (`conf.py`, `models.py`, `credential_sync.py`)** - PENDING
+- [ ] **Sub-task 3: Model Catalog Vendor Attribution & Alphabetical Sorting (`hermes_catalog.py`)** - PENDING
+- [ ] **Sub-task 4: Admin Form Optgroup Grouping & Dynamic JS Support (`forms.py`, `agent_profile_models.js`)** - PENDING
+- [ ] **Sub-task 5: Profile Admin Fieldset Streamlining (`admin.py`)** - PENDING
+- [ ] **Sub-task 6: Automated Testing & Test Suite Verification** - PENDING
+- [ ] **Sub-task 7: Documentation & LLM Wiki Synchronization** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 23)
+- *2026-09-11*: Initiated Phase 23 per user request to eliminate duplicate API key fields in Settings Hub in favor of `ProviderCredential` as the sole source of truth, sort model choices by provider prefix, and clarify the purpose of `provider_credential` on `Profile`.
+
+### 4. Current Focus
+Sub-task 2: Credentials Consolidation & Settings Hub De-duplication.
+
+
 
 
 
