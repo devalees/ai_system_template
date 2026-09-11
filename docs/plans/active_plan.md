@@ -948,6 +948,39 @@ Harden the `cost_controller` profile and establish automated model benchmark int
 ### 4. Current Focus
 Phase 27 completed and merged into `main`.
 
+---
+
+## Phase 28: QA Auditor Hardening, Skill Pruning & Review Gate Integration
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/qa-auditor-hardening`
+- **Last Updated**: 2026-09-11 10:48:00+03:00
+
+### 1. Objective & Scope
+Harden the `qa_auditor` profile to eliminate prompt token bloat, enforce strict review toolset discipline, and enhance the `output_validator` skill with automated Django review gate verdict submission:
+- **Skill Pruning**: Opt out of 54 irrelevant bundled skills using `.no-bundled-skills` in `agent_service/profiles/qa_auditor/` so it stops inheriting music, games, p5js, media, and unneeded tools.
+- **Toolset Locking**: Lock toolsets strictly to `[kanban, terminal, file_ops]` in both `config.yaml` and `profile.yaml`, maintaining `reasoning_effort: high`.
+- **Review Gate Integration (`output_validator`)**: Upgrade `agent_service/profiles/qa_auditor/skills/output_validator/run.py` to support `--submit` and `--task-id <UUID>` CLI arguments, programmatically sending the audit verdict (`approved` / `changes_requested`), score, and feedback notes to Django's review gate (`POST /api/tasks/<id>/submit-verdict/`) using `bot_qa_auditor`'s API token.
+- **Profile Persona (`SOUL.md`)**: Update `SOUL.md` to reflect the locked toolsets and document the upgraded `--submit` workflow.
+- **Provisioner Synchronization (`scripts/provision_profiles.py`)**: Synchronize `.no-bundled-skills` and the upgraded skill into the container runtime and purge unneeded bundled skills.
+- **Empirical Verification & Testing**: Verify `hermes -p qa_auditor skills list` confirms `0 builtin, 1 local — output_validator`, test `output_validator` end-to-end against a test task, and confirm 100% test pass rate across all backend unit tests.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/qa-auditor-hardening`)
+- [ ] **Sub-task 2: Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update** - PENDING
+- [ ] **Sub-task 3: Upgrade `output_validator` with Direct Review Gate Submission** - PENDING
+- [ ] **Sub-task 4: Profile Provisioning & Empirical CLI Isolation Verification** - PENDING
+- [ ] **Sub-task 5: Comprehensive Automated Testing & End-to-End Task Review Verification** - PENDING
+- [ ] **Sub-task 6: Documentation Synchronization, Test Suite Verification & Merge** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 28)
+- *2026-09-11*: Initialized Phase 28 per user approval. Aligned with the hardening architecture established in Phase 26 (Orchestrator) and Phase 27 (Cost Controller).
+- *2026-09-11*: Upgraded `output_validator` with `--submit --task-id` CLI flags to bridge the Hermes CLI audit with Django's RBAC review gate (`POST /api/tasks/<id>/submit-verdict/`), completing the autonomous review loop.
+
+### 4. Current Focus
+Executing Sub-task 2: Skill Pruning, Toolset Locking & SOUL.md Update.
+
+
 
 
 
