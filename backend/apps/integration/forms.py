@@ -1,7 +1,9 @@
 from django import forms
 from .models import Profile
-from .services import CANONICAL_PROVIDERS, get_models_for_provider
+from .services import CANONICAL_PROVIDERS, get_models_for_provider, format_modality_indicator
 from .services.hermes_discovery import HermesDiscoveryService
+
+
 
 
 class ProfileAdminForm(forms.ModelForm):
@@ -84,7 +86,9 @@ class ProfileAdminForm(forms.ModelForm):
             ctx_k = f"{m.get('context_length', 128000) // 1000}k" if m.get('context_length') else "128k"
             in_c = f"${m.get('cost_input_per_1m', 0):.3f}"
             out_c = f"${m.get('cost_output_per_1m', 0):.3f}"
-            label = f"{m.get('name', m_id)}  ({ctx_k} ctx | in: {in_c} | out: {out_c})"
+            mod_badge = format_modality_indicator(m.get("input_modalities"))
+            label = f"{m.get('name', m_id)}  [{mod_badge}] ({ctx_k} ctx | in: {in_c} | out: {out_c})"
+
 
             group_name = m.get("provider_group") or "Other"
             if group_name not in grouped_choices:
