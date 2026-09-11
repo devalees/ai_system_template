@@ -780,8 +780,9 @@ Phase 23 completed and verified.
 ## Phase 24: LLM Model Modalities, Visual Capability Badges & Dropdown Indicators
 
 - **Status**: COMPLETED
-- **Active Branch**: `feat/model-modalities-and-specs-card`
-- **Last Updated**: 2026-09-11 07:06:00+03:00
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-11 07:07:00+03:00
+
 
 ### 1. Objective & Scope
 Enrich the model catalog and profile administration UI with comprehensive modality specifications (Text, Vision / Image, Document / File / PDF, Audio / Voice, Video) from OpenRouter and `models.dev`:
@@ -808,7 +809,8 @@ Enrich the model catalog and profile administration UI with comprehensive modali
 - *2026-09-11*: Validated 100% test pass rate across 185 unit tests (26 in `apps.integration`, 159 across all other apps).
 
 ### 4. Current Focus
-Phase 24 completed. Ready to merge `feat/model-modalities-and-specs-card` into `main`.
+Phase 24 completed. Merged into `main`.
+
 
 
 
