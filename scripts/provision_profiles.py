@@ -165,7 +165,7 @@ import os, shutil
 src = '/workspace/profiles/{profile_name}'
 dst = '/root/.hermes/profiles/{profile_name}'
 os.makedirs(dst, exist_ok=True)
-for f in ['SOUL.md', 'config.yaml', 'profile.yaml']:
+for f in ['SOUL.md', 'config.yaml', 'profile.yaml', '.no-bundled-skills']:
     s = os.path.join(src, f)
     if os.path.exists(s):
         shutil.copy2(s, os.path.join(dst, f))
@@ -184,6 +184,18 @@ if os.path.exists(skills_src):
                 shutil.rmtree(sk_dst)
             shutil.copytree(sk_src, sk_dst)
             synced_skills.append(sk)
+
+# If opted out of bundled skills, purge any lingering bundled skills from profile
+if os.path.exists(os.path.join(src, '.no-bundled-skills')):
+    if os.path.exists(skills_dst):
+        allowed = set(synced_skills)
+        for existing in os.listdir(skills_dst):
+            if existing not in allowed:
+                target = os.path.join(skills_dst, existing)
+                if os.path.isdir(target):
+                    shutil.rmtree(target)
+                else:
+                    os.remove(target)
 
 # Write profile .env credentials
 token = '{token_val}'
