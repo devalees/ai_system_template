@@ -987,9 +987,9 @@ Phase 28 completed and merged into `main`.
 
 ## Phase 29: Client Service & Communications Coordinator Hardening, Skill Pruning & Budgeted Concierge Bridge
 
-- **Status**: IN_PROGRESS
+- **Status**: COMPLETED
 - **Active Branch**: `feat/client-service-and-budget-bridge`
-- **Last Updated**: 2026-09-11 11:52:00+03:00
+- **Last Updated**: 2026-09-11 12:20:00+03:00
 
 ### 1. Objective & Scope
 Transform and harden `comms_agent` from a narrow communications/scheduler role into an enterprise **Client Service & Communications Coordinator**:
@@ -1012,20 +1012,23 @@ Transform and harden `comms_agent` from a narrow communications/scheduler role i
   - Verify 100% test pass rate across backend test suite.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/client-service-and-budget-bridge`)
-- [ ] **Sub-task 2: Django Backend Client Budgeting & Scoping (`apps.integration`)** - PENDING
-- [ ] **Sub-task 3: Profile Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update** - PENDING
-- [ ] **Sub-task 4: Dedicated `client_service_bridge` Skill Implementation** - PENDING
-- [ ] **Sub-task 5: Profile Provisioning & Empirical CLI Isolation Verification** - PENDING
-- [ ] **Sub-task 6: End-to-End Verification, Automated Testing & Merge** - PENDING
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/client-service-and-budget-bridge`, Commit: `bc19304`)
+- [x] **Sub-task 2: Django Backend Client Budgeting & Scoping (`apps.integration`)** - COMPLETED (Commit: `5ee23aa`)
+- [x] **Sub-task 3: Profile Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update** - COMPLETED (Commit: `57aedaa`)
+- [x] **Sub-task 4: Dedicated `client_service_bridge` Skill Implementation** - COMPLETED (Commit: `5dc1544`)
+- [x] **Sub-task 5: Profile Provisioning & Empirical CLI Isolation Verification** - COMPLETED (Verified `0 hub-installed, 0 builtin, 1 local — client_service_bridge`)
+- [x] **Sub-task 6: End-to-End Verification, Automated Testing & Merge** - COMPLETED (Verified live CLI modes, 188/188 backend tests pass 100% in 117s)
 
 ### 3. Key Decisions & Deviations (Phase 29)
 - *2026-09-11*: Initialized Phase 29 per user approval. Renamed and elevated role to **Client Service & Communications Coordinator**.
 - *2026-09-11*: Rejected shared media volume mount per user's security direction; implemented Zero-Trust REST API file streaming with tenant/client ownership verification and audit trail.
 - *2026-09-11*: Adopted 4-tier percentage dollar milestones (25%, 50%, 75%, 100%) governed by Cost Controller instead of rigid message counts.
+- *2026-09-11*: Added `.no-bundled-skills` to `agent_service/profiles/comms_agent/`, locked toolsets strictly to `[terminal, file_ops]`, and retained `reasoning_effort: none` for zero-latency, lowest-cost external concierge operations.
+- *2026-09-11*: Verified live skill isolation via `docker exec hermes-template-agent hermes -p comms_agent skills list` confirming 0 builtin skills and 1 dedicated local skill (`client_service_bridge`).
+- *2026-09-11*: Verified full backend test suite: 188/188 tests passing in 117.014s with 100% pass rate.
 
 ### 4. Current Focus
-Executing Sub-task 2: Django Backend Client Budgeting & Scoping (`apps.integration`).
+Phase 29 completed and merged into `main`.
 
 
 

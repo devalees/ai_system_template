@@ -129,20 +129,29 @@ agent_service/
 
 ### Agent 4: Comms Agent (`comms_agent`)
 
-- **Role**: Client Communications Coordinator & Meeting Scheduler
+- **Role**: Client Service & Communications Coordinator
 - **Directory**: [`agent_service/profiles/comms_agent/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/comms_agent/)
 - **Service Account**: `bot_comms_agent` | **Django Group**: `Agent_CommsAgent`
-- **Permissions**: `view_agenttask`, `view_agentprofile`
-- **Calibrated Reasoning**: `none` (fast, fluent natural language output)
-- **Default Toolsets**: `file_ops`, `terminal`
+- **Permissions**: `view_agenttask`, `view_agentprofile`, `view_document`
+- **Calibrated Reasoning**: `none` (zero thinking latency and minimal token consumption for real-time client assistance)
+- **Default Toolsets**: `terminal`, `file_ops` (Locked strictly; web and bundled media tools excluded)
+- **Bundled Skills Opt-Out**: `.no-bundled-skills` active (pruned 54 bundled skills to eliminate token overhead)
 
 #### Primary Responsibilities
-- **External Messaging**: Translates technical outputs into clear, professional, client-facing language.
-- **Email & Update Drafting**: Prepares milestone updates, release summaries, and status reports.
-- **Notification Bridging**: Dispatches messages across system channels (Email, Webhook, Slack) via `apps.notifications`.
+- **External Concierge & Intake**: Serves as the primary external touchpoint for clients (`Profile.user_type = 'client'`), answering inquiries and providing structured project visibility.
+- **Zero-Trust Document Streaming**: Strictly requests client-authorized attachments via authenticated Django REST endpoints (`GET /api/v1/media/documents/<id>/download/`) with tenant/client ownership validation and SOC2/GDPR audit logging (`apps.audit`). Never accesses global backend filesystem mounts directly.
+- **Engagement-Budgeted Governance**: Monitors client AI spend against allocated dollar ceilings ($B$) across 4 percentage milestones (25% silent audit, 50% velocity check, 75% proactive advisory notice, 100% quota escalation) via `client_budget_status`.
+- **Notification Bridging**: Dispatches messages across system channels (In-App, Email, Webhook, Slack) via `apps.notifications`.
 
 #### Dedicated Skills & Scripts
-- **Notification Dispatch**: Interfaces with `apps.notifications.dispatcher.NotificationDispatcher` to route updates based on user/client preferences.
+- **Skill**: **`client_service_bridge`** ([`agent_service/profiles/comms_agent/skills/client_service_bridge/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/comms_agent/skills/client_service_bridge/))
+  - **Executable Script**: [`agent_service/profiles/comms_agent/skills/client_service_bridge/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/comms_agent/skills/client_service_bridge/run.py)
+  - **What It Does**:
+    1. **`budget-check`**: Queries Django for the client's current AI spend, allocated dollar budget, percentage tier, and threshold actions; optionally increments spend via `--log-spend`.
+    2. **`status`**: Fetches client account status, active tenant, and engagement progress.
+    3. **`documents`**: Queries accessible document inventory for the authenticated client context.
+    4. **`fetch-doc`**: Securely streams and downloads a document via authenticated REST API, inspects content, and enables immediate transient file unlinking (`os.unlink()`).
+    5. **`notify`**: Dispatches multi-channel client notifications via `apps.notifications.dispatcher.NotificationDispatcher`.
 
 ---
 
