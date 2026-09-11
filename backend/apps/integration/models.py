@@ -30,6 +30,111 @@ class HandshakeLog(TimeStampedModel):
         return f"{self.agent_id} ({self.status}) @ {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
+
+class ProviderCredential(AuditableModel):
+    """
+    Stores encrypted LLM inference provider credentials and custom endpoints.
+    Supports system-wide defaults and multi-tenant workspace isolation.
+    """
+    PROVIDER_CHOICES = [
+        ('openrouter', 'OpenRouter'),
+        ('gemini', 'Google Gemini'),
+        ('openai', 'OpenAI'),
+        ('anthropic', 'Anthropic'),
+        ('groq', 'Groq'),
+        ('deepseek', 'DeepSeek'),
+        ('custom', 'Custom / OpenAI-Compatible Endpoint'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(
+        max_length=100,
+        help_text="Display label for this credential (e.g., 'Primary OpenRouter', 'Gemini Flash Tier')."
+    )
+    provider_type = models.CharField(
+        max_length=50,
+        choices=PROVIDER_CHOICES,
+        default='openrouter',
+        db_index=True,
+        help_text="Underlying LLM provider service."
+    )
+    encrypted_api_key = models.TextField(
+        blank=True,
+        default="",
+        help_text="Encrypted API key stored securely at rest."
+    )
+    base_url = models.URLField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="Optional custom API base URL (e.g. https://openrouter.ai/api/v1, or local Ollama/vLLM)."
+    )
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text="Designates whether this provider credential can be used for inference."
+    )
+    is_default = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Designates this credential as the default for its provider type."
+    )
+    organization = models.ForeignKey(
+        'tenants.Organization',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='provider_credentials',
+        help_text="Optional workspace scoping for multi-tenant isolation."
+    )
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Custom provider parameters, default headers, or rate limits."
+    )
+
+    class Meta:
+        ordering = ['provider_type', '-is_default', 'name']
+        verbose_name = 'Provider Credential'
+        verbose_name_plural = 'Provider Credentials'
+
+    @property
+    def api_key(self) -> str:
+        """Decrypts and returns the plaintext API key."""
+        from apps.core.crypto import decrypt_secret
+        return decrypt_secret(self.encrypted_api_key)
+
+    @api_key.setter
+    def api_key(self, value: str) -> None:
+        """Encrypts plaintext API key before assigning to storage field."""
+        from apps.core.crypto import encrypt_secret
+        self.encrypted_api_key = encrypt_secret(value.strip()) if value else ""
+
+    @property
+    def masked_key(self) -> str:
+        """Returns a masked representation of the API key for secure display."""
+        from apps.core.crypto import mask_secret
+        plain = self.api_key
+        return mask_secret(plain) if plain else "—"
+
+    def save(self, *args, **kwargs):
+        """Enforces a single active default per provider_type and organization."""
+        if self.is_default:
+            qs = ProviderCredential.objects.filter(
+                provider_type=self.provider_type,
+                organization=self.organization,
+                is_default=True
+            )
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            qs.update(is_default=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        default_tag = " [DEFAULT]" if self.is_default else ""
+        return f"{self.name} ({self.get_provider_type_display()}){default_tag}"
+
+
 class Profile(AuditableModel):
     """
     Unified User Profile attached 1-to-1 to Django's auth.User.
@@ -94,6 +199,14 @@ class Profile(AuditableModel):
     description = models.TextField(blank=True)
     model_name = models.CharField(max_length=120, default='google/gemini-2.5-flash')
     provider = models.CharField(max_length=60, default='openrouter')
+    provider_credential = models.ForeignKey(
+        ProviderCredential,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='profiles',
+        help_text="Optional dedicated provider credential assigned to this profile."
+    )
     reasoning_effort = models.CharField(
         max_length=20,
         choices=REASONING_EFFORT_CHOICES,
@@ -112,6 +225,54 @@ class Profile(AuditableModel):
         ordering = ['user__username', 'created_at']
         verbose_name = 'User Profile'
         verbose_name_plural = 'User Profiles'
+
+    def resolve_provider_and_key(self):
+        """
+        Resolves the active LLM provider, plaintext API key, and base URL for this profile.
+        Hierarchy:
+          1. Directly assigned ProviderCredential (if active)
+          2. Default active ProviderCredential for self.provider
+          3. Global SystemSetting from Settings Hub (e.g. integration.OPENROUTER_API_KEY)
+          4. Fallback to settings.py or empty string
+        Returns:
+          tuple: (provider_name: str, api_key: str, base_url: str)
+        """
+        from apps.core.config import get_setting
+
+        # 1. Directly assigned credential
+        if self.provider_credential and self.provider_credential.is_active:
+            return (
+                self.provider_credential.provider_type,
+                self.provider_credential.api_key,
+                self.provider_credential.base_url or ""
+            )
+
+        # 2. Default active ProviderCredential matching self.provider
+        target_provider = self.provider or "openrouter"
+        default_cred = ProviderCredential.objects.filter(
+            provider_type=target_provider,
+            is_active=True,
+            is_default=True
+        ).first()
+        if not default_cred:
+            default_cred = ProviderCredential.objects.filter(
+                provider_type=target_provider,
+                is_active=True
+            ).first()
+
+        if default_cred and default_cred.api_key:
+            return (default_cred.provider_type, default_cred.api_key, default_cred.base_url or "")
+
+        # 3. Settings Hub secret
+        setting_key = f"{target_provider.upper()}_API_KEY"
+        hub_key = get_setting(f"integration.{setting_key}", default="")
+        if hub_key:
+            return (target_provider, str(hub_key), "")
+
+        # 4. Fallback to settings.py
+        from django.conf import settings
+        env_fallback = getattr(settings, setting_key, "") or getattr(settings, f"{target_provider.upper()}_KEY", "")
+        return (target_provider, str(env_fallback) if env_fallback else "", "")
 
     def save(self, *args, **kwargs):
         if not self.hermes_profile_name and self.name:
@@ -132,6 +293,7 @@ class Profile(AuditableModel):
 # Backward-compatible alias
 AgentProfile = Profile
 User.agent_profile = property(lambda u: getattr(u, 'profile', None))
+
 
 
 
