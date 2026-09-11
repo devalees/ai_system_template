@@ -779,21 +779,21 @@ Phase 23 completed and verified.
 
 ## Phase 24: LLM Model Modalities, Visual Capability Badges & Dropdown Indicators
 
-- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Status**: PENDING_REVIEW <!-- PENDING | PENDING_REVIEW | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `feat/model-modalities-and-specs-card`
-- **Last Updated**: 2026-09-11 06:55:00+03:00
+- **Last Updated**: 2026-09-11 06:58:00+03:00
 
 ### 1. Objective & Scope
 Enrich the model catalog and profile administration UI with comprehensive modality specifications (Text, Vision / Image, Document / File / PDF, Audio / Voice, Video) from OpenRouter and `models.dev`:
-- **Catalog Service Modalities Normalization**: Extract `input_modalities` and `output_modalities` across OpenRouter, `models.dev`, and Nous Portal in `apps.integration.services.hermes_catalog`.
-- **Admin Form Initial Choices**: Enhance `ProfileAdminForm` in `forms.py` to include compact modality indicator icons in `<option>` labels.
-- **Dynamic JavaScript & Specifications Card**: Upgrade `agent_profile_models.js` to render a dedicated, stylized **Supported Modalities** section with color-coded badges/chips for input and output capabilities, alongside existing pricing and context window metrics.
-- **Automated Testing & Full Verification**: Add test cases covering modality extraction and form choices, validating 100% test pass rate.
+- **Catalog Service Modalities Normalization**: Extract `input_modalities` and `output_modalities` across OpenRouter (`architecture.input_modalities`), `models.dev` (`modalities.input`), and Nous Portal in `apps.integration.services.hermes_catalog`. Normalize and expose `format_modality_indicator()` helper.
+- **Admin Form Initial Choices**: Enhance `ProfileAdminForm` in `forms.py` to include compact modality indicator emoji badges (e.g. `[🖼️ Vision]`, `[💬 Text]`, `[📁 PDF]`, `[🎙️ Audio]`, `[🎥 Video]`) in `<option>` labels so administrators can identify capabilities at a glance.
+- **Dynamic JavaScript & Specifications Card**: Upgrade `agent_profile_models.js` to render a dedicated, stylized **Supported Modalities** section in `#hermes-model-specs-card` with distinct, color-coded badges/chips for input and output capabilities, alongside existing pricing and context window metrics.
+- **Automated Testing & Full Verification**: Add comprehensive unit tests verifying modality parsing across OpenRouter, `models.dev`, Nous Portal, and the REST API endpoint `/api/hermes/models/`. Ensure 100% test pass rate across the full 181+ test suite.
 - **Documentation Synchronization**: Synchronize `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md`.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/model-modalities-and-specs-card`)
-- [/] **Sub-task 2: Backend Catalog Modalities Normalization (`hermes_catalog.py`)** - IN PROGRESS
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/model-modalities-and-specs-card`, Commit: `30bf0bc`)
+- [ ] **Sub-task 2: Backend Catalog Modalities Normalization (`hermes_catalog.py`)** - PENDING
 - [ ] **Sub-task 3: Django Admin Form Dropdown Modality Indicators (`forms.py`)** - PENDING
 - [ ] **Sub-task 4: Dynamic Admin UI & Visual Metrics Card Badges (`agent_profile_models.js`)** - PENDING
 - [ ] **Sub-task 5: Automated Testing & Comprehensive Verification** - PENDING
@@ -802,9 +802,11 @@ Enrich the model catalog and profile administration UI with comprehensive modali
 ### 3. Key Decisions & Deviations (Phase 24)
 - *2026-09-11*: Initialized Phase 24 per user request to display model input/output modalities (Text, Image/Vision, File/PDF, Audio/Voice, Video) in the Profile admin model selector and specifications card.
 - *2026-09-11*: Leveraged OpenRouter's `architecture.input_modalities` / `architecture.output_modalities` and `models.dev`'s `modalities.input` / `modalities.output`, standardizing keys to `input_modalities` and `output_modalities`.
+- *2026-09-11*: Preserving strict plan-first protocol: no code modifications will execute until the implementation plan is fully recorded in `active_plan.md` and approved by the user.
 
 ### 4. Current Focus
-Proceeding with Sub-task 2: Backend Catalog Modalities Normalization in `hermes_catalog.py`.
+Awaiting user review and approval of the Phase 24 implementation plan before commencing code modifications.
+
 
 
 
