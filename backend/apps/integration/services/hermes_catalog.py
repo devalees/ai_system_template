@@ -63,6 +63,7 @@ PROVIDER_TO_MODELS_DEV = {
 # Mapping of normalized vendor prefixes to clean display names
 VENDOR_DISPLAY_NAMES = {
     "google": "Google",
+    "gemini": "Google",
     "anthropic": "Anthropic",
     "openai": "OpenAI",
     "deepseek": "DeepSeek",
@@ -406,9 +407,10 @@ def _parse_models_dev_provider(provider_key: str, provider_data: Dict[str, Any])
     return results
 
 
-# Ensure Nous models have provider_group assigned
+# Ensure Nous models have provider_group assigned and are sorted
 for _m in _NOUS_MODELS:
     _m.setdefault("provider_group", "Nous Portal")
+_NOUS_MODELS.sort(key=lambda x: (x.get("provider_group", "").lower(), x.get("name", "").lower()))
 
 
 def get_models_for_provider(provider_slug: str) -> List[Dict[str, Any]]:

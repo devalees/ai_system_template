@@ -221,3 +221,51 @@ class MultiAgentHandoffPipelineTests(TestCase):
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["executed_steps"], 2)
         self.assertEqual(res["final_context"]["deliverable"], "QA_APPROVAL_VERDICT")
+
+
+class ModelCatalogSortingAndOptgroupTests(TestCase):
+    """Tests for vendor attribution, alphabetical model catalog sorting, and admin optgroup generation."""
+
+    def test_extract_provider_group_normalization(self):
+        from apps.integration.services.hermes_catalog import extract_provider_group
+        self.assertEqual(extract_provider_group("google/gemini-2.5-flash"), "Google")
+        self.assertEqual(extract_provider_group("anthropic/claude-3.5-sonnet"), "Anthropic")
+        self.assertEqual(extract_provider_group("meta-llama/llama-3.3-70b-instruct"), "Meta / LLaMA")
+        self.assertEqual(extract_provider_group("meta/llama-3.1-8b"), "Meta / LLaMA")
+        self.assertEqual(extract_provider_group("~openai/gpt-4o"), "OpenAI")
+        self.assertEqual(extract_provider_group("deepseek/deepseek-chat"), "DeepSeek")
+        self.assertEqual(extract_provider_group("mistralai/mistral-large"), "Mistral AI")
+        self.assertEqual(extract_provider_group("qwen/qwen-2.5-72b"), "Alibaba / Qwen")
+        self.assertEqual(extract_provider_group("custom-model-id", default_vendor="gemini"), "Google")
+
+    def test_catalog_models_contain_provider_group_and_are_sorted(self):
+        from apps.integration.services.hermes_catalog import get_models_for_provider
+        models = get_models_for_provider("nous")
+        self.assertTrue(len(models) > 0)
+        for m in models:
+            self.assertIn("provider_group", m)
+            self.assertTrue(bool(m["provider_group"]))
+
+        # Check alphabetical sorting by provider_group then name
+        keys = [(m["provider_group"].lower(), m["name"].lower()) for m in models]
+        self.assertEqual(keys, sorted(keys))
+
+    def test_profile_admin_form_generates_optgroups(self):
+        from apps.integration.forms import ProfileAdminForm
+        user = User.objects.create_user(username="bot_test_optgroup")
+        profile = user.profile
+        profile.provider = "nous"
+        profile.save()
+
+        form = ProfileAdminForm(instance=profile)
+        choices = form.fields["model_name"].widget.choices
+        self.assertTrue(len(choices) > 0)
+
+        # Check choices format is [(group_name, [(id, label), ...])]
+        first_group = choices[0]
+        self.assertIsInstance(first_group, tuple)
+        self.assertIsInstance(first_group[0], str)
+        self.assertIsInstance(first_group[1], list)
+        self.assertTrue(len(first_group[1]) > 0)
+        self.assertIsInstance(first_group[1][0], tuple)
+
