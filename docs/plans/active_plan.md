@@ -744,8 +744,8 @@ Phase 22 completed. Provider credentials centralized with zero-downtime hot-sync
 ## Phase 23: Provider Credentials Consolidation, Model Catalog Sorting & Profile Admin Streamlining
 
 - **Status**: COMPLETED
-- **Active Branch**: `feat/provider-credentials-consolidation-and-catalog-ux`
-- **Last Updated**: 2026-09-11 06:38:00+03:00
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-11 06:40:00+03:00
 
 ### 1. Objective & Scope
 Consolidate LLM credentials into a single source of truth (`ProviderCredential`), eliminate redundant secret key fields from the Settings Hub, sort and group models by provider using `<optgroup>`, and streamline the `Profile` admin interface:
