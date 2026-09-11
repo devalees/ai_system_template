@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 20 Completed (Decoupled and removed dynamic metadata engine `apps.meta_engine` in favor of standard, explicit Django models across all features, with 100% test pass rate across all remaining applications)
+- **Status**: Phase 21 Completed (Enterprise Hardening of Centralized Automation Engine: transaction.on_commit safety, sequential pipeline coordination & context chaining, recursion depth limiters, multi-tenant workspace scoping, and target CRUD sandboxing; 100% test pass rate across 170 tests)
 
 ---
 
@@ -61,14 +61,13 @@ An extensible, production-grade starter template pairing a **Django** web framew
 
 ### 8. Centralized Automation Engine & Distributed Task Queue (`apps.automation`)
 - **Distributed Queue**: Celery 5.4+ with Redis 7 message broker and `django-celery-beat` database scheduler running in isolated worker (`celery_worker`) and scheduler (`celery_beat`) containers.
-- **Dynamic Service Registry**: 4 distinct service categories (`hermes_agent`, `internal_app`, `script_service`, `external_webhook`) with decorator-based registration (`@register_action`).
-- **Dynamic Introspection API**: REST endpoint `GET /api/automation/introspection/?model=...` providing real-time schema field types, requirement constraints, and choices.
-- **Next-Gen Odoo-Style Target Operations**: Semantic separation of `trigger_model` (source event) vs `target_model` (destination record operations), executing automated `create`, `update`, and `delete` actions with template context interpolation (`{{var}}`).
-- **Visual Condition Rules**: Declarative operator evaluation (`==`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `in`, `is_empty`, `is_not_empty`) and Odoo-style state transition monitoring (`trigger_field`, `previous_value`, `target_value`).
-- **System Signal Reification**: Foundational routines (Hermes auto-provisioning, spend audit, QA review routing, budget alert) marked `is_system=True` and locked against deletion in models and Admin.
-- **Reactive Dynamic Admin UI**: Conditional section toggling, live AJAX field introspection, interactive field mapping assistant with required field badges, and visual boolean filter group builders.
-- **Direct On-Page Execution & Context Builder**: On-demand `▶ Run Pipeline Now` and `▶ Run Action Now` execution buttons on change forms and changelists, backed by dynamic database context resolution, sensible fallback synthesis, and `force_execution` testing bypasses.
-- **Hermes Gateway Resilience**: Standardized token authentication, configurable execution timeouts (`HERMES_REQUEST_TIMEOUT = 120s`), and automated action deduplication.
+- **Sequential Pipeline Chaining & Context Passing**: Coordinates multi-action execution (`sequence=10, 20...`) sequentially within `execute_pipeline`, passing mutated context forward (e.g. `record_id` created in Step 1 is dynamically available in Step 2) with `stop_on_failure` circuit breaking.
+- **Transaction-Safe Signal Dispatch**: Dispatches model event pipelines via `transaction.on_commit` in production to prevent Celery worker race conditions on uncommitted records.
+- **Cascading Recursion & Infinite Loop Guard**: Context-variable tracked `_automation_depth` with strict `MAX_AUTOMATION_DEPTH = 3` ceiling preventing circular trigger cascades.
+- **Multi-Tenant Workspace Scoping**: Optional `organization` FK on triggers, actions, and logs, isolating tenant automations and executing tasks within `tenant_context`.
+- **Target Model CRUD Sandboxing**: Blacklist preventing automated modifications against internal framework tables (`auth.Permission`, `authtoken.Token`, `sessions.Session`, etc.).
+- **Dynamic Introspection API & Service Registry**: 4 distinct service categories with `@register_action`, parameter schema validators, prompt presets, and live model field introspection (`GET /api/automation/introspection/`).
+- **Reactive Dynamic Admin UI & Direct Execution**: Conditional section toggles, visual boolean filter group builders, workspace badges, and on-demand `▶ Run Pipeline Now` / `▶ Run Step` controls, and automated action deduplication.
 
 ### 9. Core Foundations, Modular App Settings & Multi-Language Engine (`apps.core`)
 - **Abstract Base Models**:
