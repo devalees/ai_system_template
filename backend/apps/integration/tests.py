@@ -267,5 +267,56 @@ class IntegrationAPITests(TestCase):
         self.assertIn("benchmarks", resp.data)
         self.assertGreaterEqual(resp.data["count"], 5)
 
+    def test_client_budget_status_milestones(self):
+        """Verify client AI budget tracking, percentage calculations, and milestone thresholds."""
+        from django.contrib.auth.models import User
+        from .models import Profile
+
+        client_user, _ = User.objects.get_or_create(username='client_acme_corp')
+        client_profile, _ = Profile.objects.get_or_create(
+            user=client_user,
+            defaults={
+                'name': 'acme_corp',
+                'display_name': 'Acme Corp',
+                'user_type': 'client',
+                'ai_budget_usd': 15.00,
+                'ai_spend_usd': 0.0000,
+            }
+        )
+
+        url = reverse('hermes-client-budget-status')
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.comms_token}")
+
+        # 1. Initial GET
+        resp = self.client.get(f"{url}?client_id={client_profile.id}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["percentage_used"], 0.0)
+        self.assertEqual(resp.data["budget_status"], "OK")
+        self.assertFalse(resp.data["milestones"]["silent_check_25_reached"])
+
+
+        # 2. Spend delta reaches 25% milestone ($3.75)
+        resp2 = self.client.post(url, {"client_id": str(client_profile.id), "spend_delta_usd": "3.75"})
+        self.assertEqual(resp2.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp2.data["percentage_used"], 25.0)
+        self.assertEqual(resp2.data["budget_status"], "OK")
+        self.assertTrue(resp2.data["milestones"]["silent_check_25_reached"])
+        self.assertFalse(resp2.data["milestones"]["advisory_75_reached"])
+
+        # 3. Spend reaches 75% advisory milestone ($11.50)
+        resp3 = self.client.post(url, {"client_id": str(client_profile.id), "spend_delta_usd": "7.75"})
+        self.assertEqual(resp3.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(resp3.data["percentage_used"], 75.0)
+        self.assertEqual(resp3.data["budget_status"], "WARNING_75")
+        self.assertTrue(resp3.data["milestones"]["advisory_75_reached"])
+
+        # 4. Spend exceeds 100% boundary ($16.00)
+        resp4 = self.client.post(url, {"client_id": str(client_profile.id), "spend_delta_usd": "5.00"})
+        self.assertEqual(resp4.status_code, status.HTTP_200_OK)
+        self.assertGreater(resp4.data["percentage_used"], 100.0)
+        self.assertEqual(resp4.data["budget_status"], "EXCEEDED_100")
+        self.assertTrue(resp4.data["milestones"]["exceeded_100_reached"])
+
+
 
 

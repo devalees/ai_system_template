@@ -18,10 +18,13 @@ class HandshakeLogSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     task_count = serializers.IntegerField(source='tasks.count', read_only=True)
+    ai_budget_percentage = serializers.FloatField(read_only=True)
+    ai_budget_status = serializers.CharField(read_only=True)
 
     class Meta:
         model = Profile
         fields = '__all__'
+
 
 
 # Backward compatibility alias
