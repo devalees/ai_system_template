@@ -24,7 +24,7 @@ agent_service/
 │   ├── cost_controller/   # 2. Financial Controller & Budget Monitor
 │   │   └── skills/cost_monitor/  # Profile-scoped SQLite spend auditor
 │   ├── qa_auditor/        # 3. QA & Compliance Gatekeeper
-│   │   └── skills/output_validator/ # Profile-scoped AST & security review tool
+│   │   └── skills/output_validator/ # Profile-scoped AST syntax & deliverable hygiene validator
 │   ├── comms_agent/       # 4. Client Communications Coordinator
 │   │   └── skills/client_service_bridge/ # Profile-scoped client concierge bridge
 │   └── security_guard/    # 5. Security & Threat Auditor (SecOps)
@@ -110,18 +110,18 @@ agent_service/
 - **Bundled Skills Opt-Out**: `.no-bundled-skills` active (pruned 54 bundled skills to eliminate token overhead)
 
 #### Primary Responsibilities
-- **Deliverable Gatekeeper**: Serves as the mandatory review checkpoint before any task is marked `completed`.
-- **Syntax & Integrity Checks**: Verifies that generated code, data, and configs compile and parse cleanly.
-- **Hygiene & Security Review**: Catches leftover stub placeholders and hardcoded credentials.
-- **Authoritative Verdicts**: Submits binding decisions (`approved` or `changes_requested`).
+- **Syntactic & Deliverable Gatekeeper**: Serves as the mandatory review checkpoint before any task is marked `completed`.
+- **Syntax & Structural Integrity**: Verifies that generated Python code, JSON/YAML schemas, and documentation compile and parse without syntax errors.
+- **Pre-Commit Hygiene Seatbelt**: Catches leftover stub placeholders (`TODO`, `FIXME`, `CHANGEME`, `NotImplementedError`) and obvious unmasked credentials before deliverables are merged.
+- **Authoritative Review Verdicts**: Submits binding decisions (`approved` or `changes_requested`) to the Django review gate.
 
 #### Dedicated Skills & Scripts
 - **Skill**: **`output_validator`** ([`agent_service/profiles/qa_auditor/skills/output_validator/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/qa_auditor/skills/output_validator/))
   - **Executable Script**: [`agent_service/profiles/qa_auditor/skills/output_validator/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/qa_auditor/skills/output_validator/run.py)
   - **What It Does**:
-    1. **Multi-Format Parsing**: Compiles Python AST to detect syntax errors; parses JSON/YAML schemas; checks Markdown fences and link integrity.
+    1. **Multi-Format Syntax Compilation**: Compiles Python AST (`ast.parse`) to detect syntax errors; decodes JSON/YAML schemas; verifies Markdown code fences and formatting.
     2. **Placeholder Trapping**: Scans files for unfinished markers (`TODO`, `FIXME`, `CHANGEME`, stubbed passes).
-    3. **Security Audit**: Scans for leaked API keys, tokens, or private secrets.
+    3. **Defense-in-Depth Leak Seatbelt**: Performs a fast regex scan for obvious API keys or private keys as a safety net (comprehensive vulnerability auditing, tenant isolation, and gateway threats are governed by `security_guard`).
     4. **Scoring & Verdict**: Generates a 0–100 quality score and emits an authoritative verdict (`APPROVED` vs `CHANGES_REQUESTED`).
     5. **Direct Review Gate Dispatch**: Direct-submits verdict and structured defect notes to Django via `POST /api/tasks/<id>/submit-verdict/` when executed with `--submit --task-id <UUID>` using `bot_qa_auditor`'s API token.
 

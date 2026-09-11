@@ -38,7 +38,7 @@ economy_editor/
 │   │   ├── cost_controller/         # Financial & spend auditor
 │   │   │   └── skills/cost_monitor/ # Profile-scoped token & budget tracking
 │   │   ├── qa_auditor/              # Quality assurance gatekeeper
-│   │   │   └── skills/output_validator/ # Profile-scoped AST & security validator
+│   │   │   └── skills/output_validator/ # Profile-scoped AST syntax & deliverable hygiene validator
 │   │   ├── comms_agent/             # Client communications & intake
 │   │   │   └── skills/client_service_bridge/ # Client concierge & document streaming
 │   │   └── security_guard/          # Security & threat auditor (SecOps)

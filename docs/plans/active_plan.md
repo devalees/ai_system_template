@@ -1121,6 +1121,7 @@ Retire the legacy, redundant `archivist` profile (whose documentation responsibi
 - *2026-09-11*: Upgraded `scripts/provision_profiles.py` with automated container runtime retirement logic, purging `/root/.hermes/profiles/archivist` and provisioning all 5 core profiles.
 - *2026-09-11*: Empirically validated via Hermes CLI: `hermes -p security_guard skills list` confirms `0 hub-installed, 0 builtin, 1 local — security_scanner`. Executed `security_scanner` and `task_decomposer` inside the Hermes container with exit code 0.
 - *2026-09-11*: Validated 100% test pass rate across all 198 unit tests in the entire backend test suite.
+- *2026-09-11*: Clarified functional boundaries between `qa_auditor` and `security_guard` (Option A): `qa_auditor` (`output_validator`) serves as the syntactic compiler and deliverable hygiene gatekeeper with a lightweight pre-commit leak seatbelt; `security_guard` (`security_scanner`) governs enterprise SecOps, multi-tenant boundary isolation, RBAC least privilege, and API gateway threat monitoring. Synchronized documentation across `agent_team.md`, `index.md`, and `architecture.md`.
 
 ### 4. Current Focus
 Phase 31 completed and merged into `main`. Ready for next directives.
