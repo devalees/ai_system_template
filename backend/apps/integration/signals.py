@@ -34,3 +34,48 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         # If user instance exists but has no profile, create it defensively
         if not hasattr(instance, "profile") or instance.profile is None:
             Profile.objects.get_or_create(user=instance)
+
+
+@receiver(post_save, sender=Profile)
+def sync_profile_on_save(sender, instance, **kwargs):
+    """
+    Synchronizes profile runtime .env and config when agent profile is updated.
+    """
+    if instance.is_agent:
+        from apps.integration.services.credential_sync import sync_profile_runtime_env
+        try:
+            sync_profile_runtime_env(instance)
+        except Exception:
+            pass
+
+
+from django.db.models.signals import post_delete
+from .models import ProviderCredential
+from apps.core.models import AppSettingValue
+
+
+@receiver([post_save, post_delete], sender=ProviderCredential)
+def sync_credentials_on_change(sender, instance, **kwargs):
+    """
+    Synchronizes runtime credentials across Hermes .env files whenever
+    a ProviderCredential is created, updated, or removed.
+    """
+    from apps.integration.services.credential_sync import sync_hermes_runtime_credentials
+    try:
+        sync_hermes_runtime_credentials()
+    except Exception:
+        pass
+
+
+@receiver(post_save, sender=AppSettingValue)
+def sync_credentials_on_app_setting_change(sender, instance, **kwargs):
+    """
+    Synchronizes runtime credentials when an integration setting (API key) is changed in Settings Hub.
+    """
+    if instance.app_label == "integration" and instance.key.endswith("_API_KEY"):
+        from apps.integration.services.credential_sync import sync_hermes_runtime_credentials
+        try:
+            sync_hermes_runtime_credentials()
+        except Exception:
+            pass
+
