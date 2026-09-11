@@ -86,9 +86,9 @@ class AutomationActionInline(admin.StackedInline):
     extra = 1
     fk_name = 'trigger'
     fields = (
-        ('name', 'sequence', 'is_active', 'run_inline_button'),
+        ('name', 'sequence', 'is_active', 'stop_on_failure', 'run_inline_button'),
         'description',
-        ('target_model', 'target_operation'),
+        ('organization', 'target_model', 'target_operation'),
         'field_mappings',
         ('action_category', 'action_type'),
         'action_params',
@@ -164,6 +164,7 @@ class AutomationTriggerAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'scope_badge',
+        'organization_badge',
         'trigger_badge',
         'execution_mode',
         'actions_summary',
@@ -172,13 +173,13 @@ class AutomationTriggerAdmin(admin.ModelAdmin):
         'last_triggered_at',
         'run_now_action',
     )
-    list_filter = ('is_system', 'trigger_type', 'is_active', 'execution_mode')
+    list_filter = ('is_system', 'organization', 'trigger_type', 'is_active', 'execution_mode')
     search_fields = ('name', 'description', 'trigger_model')
     readonly_fields = ('trigger_count', 'last_triggered_at', 'created_by', 'updated_by', 'created_at', 'updated_at')
 
     fieldsets = (
         ("Trigger Event Identification", {
-            "fields": ("name", "description", "is_active", "is_system")
+            "fields": ("name", "description", ("is_active", "is_system"), "organization")
         }),
         ("Trigger Configuration (Source Event)", {
             "description": "Configure when this automation is triggered (Model Events, Scheduled Timers, or Webhooks).",
@@ -277,6 +278,12 @@ class AutomationTriggerAdmin(admin.ModelAdmin):
         return format_html('<span style="color:#6c757d; font-weight:bold;">⏸️ Paused</span>')
     status_toggle.short_description = "Status"
 
+    def organization_badge(self, obj):
+        if obj.organization:
+            return format_html('<span style="background-color:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:4px; font-weight:600; font-size:11px;">🏢 {}</span>', obj.organization.name)
+        return format_html('<span style="background-color:#f1f5f9; color:#475569; padding:2px 7px; border-radius:4px; font-size:11px;">🌐 Global</span>')
+    organization_badge.short_description = "Workspace"
+
     def trigger_badge(self, obj):
         icons = {
             'model_event': '📦 Model Event',
@@ -346,15 +353,17 @@ class AutomationActionAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'trigger_link',
+        'organization_badge',
         'sequence',
         'target_badge',
         'is_active',
+        'stop_on_failure',
         'is_system',
         'run_count',
         'last_run_at',
         'run_now_action',
     )
-    list_filter = ('is_system', 'is_active', 'action_category', 'target_operation')
+    list_filter = ('is_system', 'organization', 'is_active', 'stop_on_failure', 'action_category', 'target_operation')
     search_fields = ('name', 'description', 'target_model', 'action_type')
     readonly_fields = ('run_count', 'last_run_at', 'created_at', 'updated_at')
 
@@ -399,6 +408,12 @@ class AutomationActionAdmin(admin.ModelAdmin):
         return format_html('<a href="{}"><strong>{}</strong></a>', url, obj.trigger.name)
     trigger_link.short_description = "Trigger"
 
+    def organization_badge(self, obj):
+        if obj.organization:
+            return format_html('<span style="background-color:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:4px; font-weight:600; font-size:11px;">🏢 {}</span>', obj.organization.name)
+        return format_html('<span style="background-color:#f1f5f9; color:#475569; padding:2px 7px; border-radius:4px; font-size:11px;">🌐 Inherit/Global</span>')
+    organization_badge.short_description = "Workspace"
+
     def target_badge(self, obj):
         cat_badges = {
             'hermes_agent': ('🤖 Hermes', '#0dcaf0', '#000'),
@@ -426,12 +441,14 @@ class AutomationLogAdmin(admin.ModelAdmin):
     list_display = (
         'executed_at',
         'status_badge',
+        'organization_badge',
         'trigger_link',
         'action_display',
+        'depth_badge',
         'trigger_source',
         'duration_display',
     )
-    list_filter = ('status', 'executed_at')
+    list_filter = ('status', 'organization', 'executed_at')
     search_fields = ('trigger_source', 'error_message', 'trigger__name', 'action__name')
     readonly_fields = [f.name for f in AutomationLog._meta.fields]
 
@@ -440,6 +457,18 @@ class AutomationLogAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
+    def organization_badge(self, obj):
+        if obj.organization:
+            return format_html('<span style="background-color:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:4px; font-weight:600; font-size:11px;">🏢 {}</span>', obj.organization.name)
+        return format_html('<span style="background-color:#f1f5f9; color:#475569; padding:2px 7px; border-radius:4px; font-size:11px;">🌐 Global</span>')
+    organization_badge.short_description = "Workspace"
+
+    def depth_badge(self, obj):
+        if obj.execution_depth > 0:
+            return format_html('<span style="background-color:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">Lvl {}</span>', obj.execution_depth)
+        return format_html('<span style="color:#94a3b8; font-size:11px;">Root</span>')
+    depth_badge.short_description = "Depth"
 
     def trigger_link(self, obj):
         if obj.trigger:
