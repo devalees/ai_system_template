@@ -141,6 +141,8 @@ _NOUS_MODELS = [
         "cost_input_per_1m": 3.00,
         "cost_output_per_1m": 15.00,
         "supports_reasoning": True,
+        "input_modalities": ["text", "image", "file"],
+        "output_modalities": ["text"],
         "description": "Nous Portal flagship agent reasoning model.",
     },
     {
@@ -150,6 +152,8 @@ _NOUS_MODELS = [
         "cost_input_per_1m": 3.00,
         "cost_output_per_1m": 15.00,
         "supports_reasoning": True,
+        "input_modalities": ["text", "image", "file"],
+        "output_modalities": ["text"],
         "description": "High-throughput Nous Portal reasoning model.",
     },
     {
@@ -159,6 +163,8 @@ _NOUS_MODELS = [
         "cost_input_per_1m": 5.00,
         "cost_output_per_1m": 25.00,
         "supports_reasoning": True,
+        "input_modalities": ["text", "image", "file"],
+        "output_modalities": ["text"],
         "description": "Ultra-large frontier reasoning model.",
     },
     {
@@ -168,6 +174,8 @@ _NOUS_MODELS = [
         "cost_input_per_1m": 4.50,
         "cost_output_per_1m": 22.50,
         "supports_reasoning": True,
+        "input_modalities": ["text", "image", "file"],
+        "output_modalities": ["text"],
         "description": "Frontier agent model on Nous infrastructure.",
     },
     {
@@ -177,6 +185,8 @@ _NOUS_MODELS = [
         "cost_input_per_1m": 2.80,
         "cost_output_per_1m": 14.00,
         "supports_reasoning": True,
+        "input_modalities": ["text", "image", "file"],
+        "output_modalities": ["text"],
         "description": "High-speed multimodal coding and agent operations.",
     },
     {
@@ -186,9 +196,45 @@ _NOUS_MODELS = [
         "cost_input_per_1m": 1.50,
         "cost_output_per_1m": 3.50,
         "supports_reasoning": True,
+        "input_modalities": ["text"],
+        "output_modalities": ["text"],
         "description": "Nous Research flagship open-weight agent model.",
     },
 ]
+
+
+def format_modality_indicator(input_modalities: Optional[List[str]]) -> str:
+    """
+    Returns a compact indicator string for select dropdowns, e.g.:
+    - Text-only: '💬 Text'
+    - Single capability: '🖼️ Vision', '📁 File', '🎙️ Audio', '🎥 Video'
+    - Combined: '🖼️📁 Multi', '🖼️🎙️ Multi', '🖼️📁🎙️🎥 Multi'
+    """
+    if not input_modalities:
+        return "💬 Text"
+    in_mods = set(str(m).lower() for m in input_modalities)
+    icons = []
+    labels = []
+    if "image" in in_mods:
+        icons.append("🖼️")
+        labels.append("Vision")
+    if "file" in in_mods or "pdf" in in_mods:
+        icons.append("📁")
+        labels.append("File")
+    if "audio" in in_mods:
+        icons.append("🎙️")
+        labels.append("Audio")
+    if "video" in in_mods:
+        icons.append("🎥")
+        labels.append("Video")
+
+    if not icons:
+        return "💬 Text"
+    if len(icons) == 1:
+        return f"{icons[0]} {labels[0]}"
+    return f"{''.join(icons)} Multi"
+
+
 
 # Local cache paths and variables
 _CACHE_FILE = "/tmp/models_dev_cache.json"
@@ -297,6 +343,12 @@ def fetch_openrouter_catalog() -> List[Dict[str, Any]]:
                 )
 
                 group = extract_provider_group(m_id)
+                arch = m.get("architecture") or {}
+                raw_in_mods = arch.get("input_modalities") or ["text"]
+                raw_out_mods = arch.get("output_modalities") or ["text"]
+                in_mods = list(dict.fromkeys([str(item).lower() for item in raw_in_mods])) or ["text"]
+                out_mods = list(dict.fromkeys([str(item).lower() for item in raw_out_mods])) or ["text"]
+
                 formatted.append({
                     "id": m_id,
                     "name": name,
@@ -305,6 +357,8 @@ def fetch_openrouter_catalog() -> List[Dict[str, Any]]:
                     "cost_input_per_1m": round(p_in, 4),
                     "cost_output_per_1m": round(p_out, 4),
                     "supports_reasoning": supports_reasoning,
+                    "input_modalities": in_mods,
+                    "output_modalities": out_mods,
                     "description": m.get("description", "")[:120] or "OpenRouter high-performance model.",
                 })
 
@@ -328,6 +382,9 @@ def fetch_openrouter_catalog() -> List[Dict[str, Any]]:
             "context_length": 1048576,
             "cost_input_per_1m": 0.075,
             "cost_output_per_1m": 0.30,
+            "supports_reasoning": True,
+            "input_modalities": ["text", "image", "file", "audio", "video"],
+            "output_modalities": ["text"],
             "description": "Recommended default for high speed and 1M context.",
         }
     ]
@@ -376,7 +433,19 @@ def _parse_models_dev_provider(provider_key: str, provider_data: Dict[str, Any])
             out_cost = 0.0
 
         modalities = mval.get("modalities") or {}
-        in_mods = modalities.get("input", ["text"])
+        raw_in_mods = modalities.get("input") or ["text"]
+        raw_out_mods = modalities.get("output") or ["text"]
+
+        in_mods = []
+        for mod in raw_in_mods:
+            mod_str = str(mod).lower()
+            if mod_str == "pdf":
+                in_mods.append("file")
+            else:
+                in_mods.append(mod_str)
+        in_mods = list(dict.fromkeys(in_mods)) or ["text"]
+        out_mods = list(dict.fromkeys([str(m).lower() for m in raw_out_mods])) or ["text"]
+
         capabilities = []
         if mval.get("reasoning"):
             capabilities.append("Reasoning")
@@ -384,8 +453,12 @@ def _parse_models_dev_provider(provider_key: str, provider_data: Dict[str, Any])
             capabilities.append("Tools")
         if "image" in in_mods:
             capabilities.append("Vision")
-        if "pdf" in in_mods:
-            capabilities.append("PDF")
+        if "file" in in_mods:
+            capabilities.append("PDF/File")
+        if "audio" in in_mods:
+            capabilities.append("Audio")
+        if "video" in in_mods:
+            capabilities.append("Video")
 
         cap_str = f"Supports {', '.join(capabilities)}." if capabilities else "Standard LLM inference."
         desc = f"{cap_str} Context: {ctx_int:,} tokens."
@@ -399,6 +472,8 @@ def _parse_models_dev_provider(provider_key: str, provider_data: Dict[str, Any])
             "cost_input_per_1m": round(in_cost, 4),
             "cost_output_per_1m": round(out_cost, 4),
             "supports_reasoning": bool(mval.get("reasoning")),
+            "input_modalities": in_mods,
+            "output_modalities": out_mods,
             "description": desc,
         })
 
@@ -442,6 +517,9 @@ def get_models_for_provider(provider_slug: str) -> List[Dict[str, Any]]:
             "context_length": 128000,
             "cost_input_per_1m": 0.0,
             "cost_output_per_1m": 0.0,
+            "supports_reasoning": False,
+            "input_modalities": ["text"],
+            "output_modalities": ["text"],
             "description": "Provider default configuration via Hermes CLI.",
         }
     ]
