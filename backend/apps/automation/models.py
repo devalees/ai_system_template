@@ -67,6 +67,14 @@ class AutomationTrigger(AuditableModel):
         default=False,
         help_text="System-level trigger protecting core workflows from deletion."
     )
+    organization = models.ForeignKey(
+        'tenants.Organization',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='automation_triggers',
+        help_text="Optional workspace tenant for scoped private automations (null for global/system triggers)."
+    )
 
     # Trigger Configuration (Source Event)
     trigger_type = models.CharField(
@@ -219,6 +227,18 @@ class AutomationAction(AuditableModel):
         default=False,
         help_text="Protected system action that cannot be deleted."
     )
+    organization = models.ForeignKey(
+        'tenants.Organization',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='automation_actions',
+        help_text="Optional workspace tenant for scoped private actions (inherits from trigger if omitted)."
+    )
+    stop_on_failure = models.BooleanField(
+        default=True,
+        help_text="Halt subsequent pipeline steps if this action fails."
+    )
 
     # Target Model Record CRUD & Field Mapping (Destination)
     target_model = models.CharField(
@@ -261,6 +281,11 @@ class AutomationAction(AuditableModel):
     # Metrics & State
     last_run_at = models.DateTimeField(null=True, blank=True)
     run_count = models.PositiveIntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if not self.organization and self.trigger and self.trigger.organization:
+            self.organization = self.trigger.organization
+        super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         if self.is_system:
@@ -309,6 +334,18 @@ class AutomationLog(models.Model):
         null=True,
         blank=True,
         related_name='legacy_logs'
+    )
+    organization = models.ForeignKey(
+        'tenants.Organization',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='automation_logs',
+        help_text="Tenant workspace context during execution."
+    )
+    execution_depth = models.PositiveIntegerField(
+        default=0,
+        help_text="Recursion depth level of this automation execution."
     )
     trigger_source = models.CharField(
         max_length=255,
