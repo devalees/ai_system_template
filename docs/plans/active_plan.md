@@ -697,6 +697,41 @@ Harden the centralized automation engine (`apps.automation`) to resolve producti
 - *2026-09-11*: Verified 100% pass rate across 170 unit tests in the entire system test suite.
 
 ### 4. Current Focus
-Phase 21 completed. System hardened, fully verified, and synchronized across LLM Wiki and Git history.
+Phase 21 completed. Proceeding with Phase 22: Centralized Provider Credentials, Zero-Downtime Synchronization, Token Governance & Multi-Agent Handoff.
+
+---
+
+## Phase 22: Centralized Provider Credentials, Zero-Downtime Synchronization, Token Governance & Multi-Agent Handoff
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/provider-credentials-and-agent-governance`
+- **Last Updated**: 2026-09-11 05:40:00+03:00
+
+### 1. Objective & Scope
+Unify LLM provider credentials, token accounting, and agent runtime orchestration inside Django to achieve high security, zero-downtime key rotation, strict cost control, and structured multi-agent collaboration:
+- **Centralized Provider Credentials**: Store encrypted LLM API keys (`OpenRouter`, `Gemini`, `OpenAI`, `Anthropic`, `Groq`, `DeepSeek`) in Django using AES encryption at rest, introducing `ProviderCredential` model and registering typed secrets in `apps.integration.conf`.
+- **Zero-Downtime Hermes Key Sync**: Exploit Hermes's native per-turn dynamic secret scoping (`build_profile_secret_scope`) by mounting runtime volumes and syncing decrypted credentials on `post_save` directly into `/root/.hermes/.env`, per-profile `.env`, and `auth.json`.
+- **Centralized Budget & Token Accounting**: Implement pre-execution budget ceiling checks (`DAILY_BUDGET_CAP_USD`) and parse HTTP response `usage` blocks directly into `SpendReport` and `AgentTask`.
+- **Latency & Reasoning Calibration**: Calibrate persona defaults (`orchestrator` and `communications` to `"none"`, `finance` to `"low"`, `qa_auditor` to `"high"`).
+- **Structured Inter-Agent Handoff**: Support deliverable propagation between sequential agent pipeline steps via Django `AgentTask`.
+- **Django Admin Enhancements**: Expose `ProviderCredentialAdmin` with masked secret input and add a prominent "⚙️ Open Visual Settings Hub" banner to `AppSettingValueAdmin`.
+
+### 2. Task Checklist & Progress
+- [/] **Sub-task 1: Git Branching & Active Plan Initialization** - IN PROGRESS
+- [ ] **Sub-task 2: Provider Credentials Model & Encrypted Storage (`apps.integration.models`, `conf.py`)** - PENDING
+- [ ] **Sub-task 3: Volume Mounts & Zero-Downtime Credential Sync Service (`apps.integration.services`)** - PENDING
+- [ ] **Sub-task 4: Pre-Execution Budget Gates & Direct Token Accounting (`apps.automation.actions`)** - PENDING
+- [ ] **Sub-task 5: Reasoning Calibration & Structured Multi-Agent Handoff** - PENDING
+- [ ] **Sub-task 6: Django Admin UI Refinements & Settings Hub Banner** - PENDING
+- [ ] **Sub-task 7: Automated Testing & Empirical Verification** - PENDING
+- [ ] **Sub-task 8: Documentation & LLM Wiki Synchronization** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 22)
+- *2026-09-11*: Initialized Phase 22 on feature branch `feat/provider-credentials-and-agent-governance`. Designed dual-credential management: typed secrets in `apps.integration.conf` (Settings Hub) for global defaults, and `ProviderCredential` relational model for multi-key pools, custom `base_url` endpoints, and per-profile assignment.
+- *2026-09-11*: Leveraged Hermes's built-in `build_profile_secret_scope` per-turn `.env` loader to achieve zero-downtime key rotation without requiring container restarts.
+
+### 4. Current Focus
+Sub-task 1 completed. Executing Sub-task 2: Provider Credentials Model & Encrypted Storage.
+
 
 
