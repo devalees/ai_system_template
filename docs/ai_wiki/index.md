@@ -7,7 +7,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
 - **Agent Team Reference**: [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md)
-- **Status**: Phase 28 Completed (QA Auditor Hardening, Skill Pruning & Direct Review Gate Integration; 100% test pass rate across 187 tests)
+- **Status**: Phase 29 Completed (Client Service & Communications Coordinator Hardening, Skill Pruning & Budgeted Concierge Bridge; 100% test pass rate across 188 tests)
 
 
 ---
@@ -23,7 +23,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 
 - **Core Models**:
   - `ProviderCredential`: Encrypted storage for LLM provider API keys (OpenRouter, Gemini, OpenAI, Anthropic, Groq, DeepSeek) with multi-tenant scoping and masked admin representation.
-  - `Profile`: Unified User Profile model attached 1-to-1 to `auth.User` via automatic `post_save` lifecycle signals, categorizing accounts (`is_agent`, `user_type: human/agent/client`), managing Hermes AI inference configurations, and hierarchical key resolution (`resolve_provider_and_key()`).
+  - `Profile`: Unified User Profile model attached 1-to-1 to `auth.User` via automatic `post_save` lifecycle signals, categorizing accounts (`is_agent`, `user_type: human/agent/client`), managing Hermes AI inference configurations, dollar-denominated AI budgets (`ai_budget_usd`, `ai_spend_usd`, `ai_budget_percentage`), and hierarchical key resolution (`resolve_provider_and_key()`).
   - `AgentTask`: Task execution registry with assigned profiles, execution costs, reasoning overrides, and QA review pipelines.
   - `SpendReport`: Structured token usage, budget status reports, and model-optimization recommendations emitted by cost controllers.
   - `ModelBenchmark`: Frontier AI coding benchmark catalog (DeepSWE, SWE-bench) tracking model scores, pass rates, and cost-per-task for ROI evaluation.
@@ -36,7 +36,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
   1. `orchestrator`: Request intake, project decomposition, Kanban routing, and response synthesis (Calibrated Effort: `none` for instant triage).
   2. `cost_controller`: Token consumption tracking, budget cap enforcement, and model efficiency advisory via DeepSWE benchmarks (Calibrated Effort: `low`).
   3. `qa_auditor`: Review pipeline gatekeeper, quality control, output verification (Calibrated Effort: `high`).
-  4. `comms_agent`: Customer communications, email drafting, meeting scheduling, client intake (Calibrated Effort: `none` for fast client replies).
+  4. `comms_agent`: Client service concierge, zero-trust document streaming, dollar budget governance, and multi-channel notification dispatch (Calibrated Effort: `none` for zero-latency, lowest-cost replies).
   5. `archivist`: Documentation maintainer, institutional memory, SOPs, wiki indexing (Calibrated Effort: `low`).
 - **Execution Mechanism**: Invoked directly via `hermes -p <profile_name> --reasoning <level>` or over Gateway HTTP `/v1/chat/completions`.
 
@@ -50,6 +50,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
   - `task_decomposer` (scoped to `orchestrator`): Directed acyclic graph (DAG) objective decomposition, dependency validation, cycle detection, and automated Django task submission (`POST /api/tasks/`).
   - `cost_monitor` (scoped to `cost_controller`): Inspects `session_model_usage` across profile SQLite `state.db` files, calculates spend against daily budget caps, evaluates Intelligence-per-Dollar ROI using DeepSWE benchmarks, and pushes optimization recommendations to Django (`POST /api/spend-reports/`).
   - `output_validator` (scoped to `qa_auditor`): Empirical syntax parser (Python AST, JSON, YAML), credential leak detector, and placeholder hygiene reviewer for the QA review gate with direct automated verdict dispatch (`POST /api/tasks/<id>/submit-verdict/`).
+  - `client_service_bridge` (scoped to `comms_agent`): Multi-mode concierge bridging client account status, accessible document queries, authenticated REST streaming downloads (zero-trust file access without filesystem mounts), percentage-based dollar AI budget enforcement (25%, 50%, 75%, 100% milestones), and multi-channel notifications (`POST /api/notifications/`).
 
 - **Skill Pruning & Token Efficiency**:
   - Profiles opt out of Hermes's 54 bundled skills (games, media, audio, deep debugging) via the `.no-bundled-skills` marker, saving thousands of prompt tokens per turn and focusing execution on dedicated capabilities.

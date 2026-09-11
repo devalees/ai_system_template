@@ -150,7 +150,7 @@ class Profile(AuditableModel):
         ('orchestrator', 'Orchestrator / Chief of Staff'),
         ('finance', 'Finance & Cost Control'),
         ('quality_assurance', 'Quality Assurance & Audit'),
-        ('communications', 'Communications & Client Relations'),
+        ('communications', 'Client Service & Communications'),
         ('knowledge_management', 'Knowledge Management & Documentation'),
         ('general', 'General / Custom'),
     ]
@@ -220,6 +220,42 @@ class Profile(AuditableModel):
         default='en',
         help_text="User interface language preference (en / ar)."
     )
+    ai_budget_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=15.00,
+        help_text="Allocated AI assistance dollar budget for this client engagement."
+    )
+    ai_spend_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=0.0000,
+        help_text="Cumulative LLM spend consumed by this client in USD."
+    )
+
+    @property
+    def ai_budget_percentage(self) -> float:
+        """Returns the percentage of the AI budget consumed (0.0 - 100.0+)."""
+        if not self.ai_budget_usd or float(self.ai_budget_usd) <= 0:
+            return 0.0
+        pct = (float(self.ai_spend_usd) / float(self.ai_budget_usd)) * 100.0
+        return round(pct, 2)
+
+    @property
+    def ai_budget_status(self) -> str:
+        """
+        Calculates milestone status:
+        - 'OK': 0.0% - 74.99%
+        - 'WARNING_75': 75.0% - 99.99%
+        - 'EXCEEDED_100': >= 100.0%
+        """
+        pct = self.ai_budget_percentage
+        if pct >= 100.0:
+            return 'EXCEEDED_100'
+        elif pct >= 75.0:
+            return 'WARNING_75'
+        return 'OK'
+
 
     class Meta:
         ordering = ['user__username', 'created_at']
@@ -302,7 +338,16 @@ class SpendReport(AuditableModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile = models.ForeignKey(AgentProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='spend_reports')
+    client_profile = models.ForeignKey(
+        'Profile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='client_spend_reports',
+        help_text="Optional client profile associated with this spend report."
+    )
     reported_by = models.CharField(max_length=64, default='cost_controller')
+
     total_api_calls = models.PositiveIntegerField(default=0)
     total_tokens = models.PositiveBigIntegerField(default=0)
     total_cost_usd = models.DecimalField(max_digits=10, decimal_places=4, default=0.0)

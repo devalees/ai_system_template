@@ -309,4 +309,79 @@ def list_model_benchmarks(request):
     })
 
 
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def client_budget_status(request):
+    """
+    Client AI Budget & Spend Milestone Endpoint.
+    GET /api/hermes/client-budget-status/?client_id=<UUID | username | name>
+    POST /api/hermes/client-budget-status/ (Logs spend delta or updates allocation)
+    """
+    client_id = request.query_params.get('client_id') or request.data.get('client_id')
+    client_profile = None
+
+    if client_id:
+        try:
+            # Check UUID
+            import uuid
+            val_uuid = uuid.UUID(str(client_id))
+            client_profile = Profile.objects.filter(id=val_uuid).first()
+        except (ValueError, AttributeError):
+            pass
+
+        if not client_profile:
+            client_profile = Profile.objects.filter(
+                models.Q(user__username=client_id) | models.Q(name=client_id)
+            ).first()
+    elif request.user.is_authenticated:
+        client_profile = getattr(request.user, 'profile', None)
+
+    if not client_profile:
+        return Response(
+            {"detail": "Client profile not found. Please provide a valid client_id parameter."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if request.method == 'POST':
+        spend_delta = request.data.get('spend_delta_usd')
+        budget_override = request.data.get('ai_budget_usd')
+
+        if spend_delta is not None:
+            try:
+                from decimal import Decimal
+                delta = Decimal(str(spend_delta))
+                client_profile.ai_spend_usd += delta
+            except Exception as e:
+                return Response({"detail": f"Invalid spend_delta_usd value: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if budget_override is not None:
+            try:
+                from decimal import Decimal
+                client_profile.ai_budget_usd = Decimal(str(budget_override))
+            except Exception as e:
+                return Response({"detail": f"Invalid ai_budget_usd value: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        client_profile.save(update_fields=['ai_spend_usd', 'ai_budget_usd'])
+
+    pct = client_profile.ai_budget_percentage
+    return Response({
+        "client_id": str(client_profile.id),
+        "username": client_profile.user.username if client_profile.user else "",
+        "name": client_profile.name,
+        "display_name": client_profile.display_name,
+        "user_type": client_profile.user_type,
+        "ai_budget_usd": str(client_profile.ai_budget_usd),
+        "ai_spend_usd": str(client_profile.ai_spend_usd),
+        "percentage_used": pct,
+        "budget_status": client_profile.ai_budget_status,
+        "milestones": {
+            "silent_check_25_reached": pct >= 25.0,
+            "velocity_check_50_reached": pct >= 50.0,
+            "advisory_75_reached": pct >= 75.0,
+            "exceeded_100_reached": pct >= 100.0,
+        }
+    })
+
+
+
 
