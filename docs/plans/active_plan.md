@@ -1147,7 +1147,7 @@ Transform client document storage from a generic, hash-sharded scheme into a cle
 - [x] **Sub-task 2: Automatic Client Directory Provisioning** - COMPLETED
 - [x] **Sub-task 3: API & Admin Synchronization** - COMPLETED
 - [x] **Sub-task 4: Media Cleanup & Test Suite Isolation** - COMPLETED
-- [x] **Sub-task 5: Empirical Verification & Documentation Synchronization** - COMPLETED
+- [x] **Sub-task 5: Empirical Verification & Documentation Synchronization** - COMPLETED (Commit: `c2f4ea6`)
 
 ### 3. Key Decisions & Deviations
 - *2026-09-11*: Opted for Option A (explicit `client = models.ForeignKey(Client, ...)` on `Document`) with dual-synchronization in `Document.save()` to maintain full backwards compatibility with Django `GenericForeignKey` queries (`content_type` + `object_id`).
