@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
 - **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `feat/orchestrator-hardening`
-- **Last Updated**: 2026-09-11 09:07:00+03:00
+- **Active Branch**: `feat/security-guard-core-profile`
+- **Last Updated**: 2026-09-11 13:05:00+03:00
 
 ---
 
@@ -1071,7 +1071,47 @@ Transform external client management into an independent, dedicated Django appli
 - *2026-09-11*: Verified full backend test suite: 197/197 tests passing in 118.900s with 100% pass rate.
 
 ### 4. Current Focus
-Phase 30 completed and merged into `main`.
+Phase 30 completed and merged into `main`. Transitioning to Phase 31.
+
+---
+
+## Phase 31: Retire Archivist & Promote Security Guard as 5th Core Department Head
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/security-guard-core-profile`
+- **Last Updated**: 2026-09-11 13:05:00+03:00
+
+### 1. Objective & Scope
+Retire the legacy, redundant `archivist` profile (whose documentation responsibilities are already handled automatically by Antigravity IDE agent rules) and establish **Security Guard / Security Auditor (`security_guard`)** as the official 5th core department head across Django and Hermes:
+- **Clean Database & Runtime Retirement of Archivist**:
+  - Safely delete `bot_archivist` user, `Agent_Archivist` group, and legacy `archivist` profile from Django PostgreSQL database.
+  - Delete `agent_service/profiles/archivist/` from the repository and purge `/root/.hermes/profiles/archivist` from Hermes container runtime.
+- **Elevate & Harden `security_guard` as 5th Department Head**:
+  - Add `'security'` to `Profile.ROLE_CHOICES` in `backend/apps/integration/models.py`.
+  - Update `seed_profiles.py` with canonical `security_guard` profile, `Agent_SecurityGuard` group, and permissions (`view_agenttask`, `view_profile`, `view_activitylog`, `view_apikey`, `view_webhookevent`).
+  - Lock toolsets strictly to `[terminal, file_ops]` in `config.yaml` and `profile.yaml`, configure `reasoning_effort: high`, add `.no-bundled-skills` to prune 54 bundled skills, and draft an authoritative zero-trust `SOUL.md`.
+- **Dedicated Profile-Scoped Skill (`security_scanner`)**:
+  - Implement multi-mode CLI script `agent_service/profiles/security_guard/skills/security_scanner/run.py` supporting `secrets-scan`, `tenant-audit`, `rbac-audit`, `gateway-audit`, and structured JSON export.
+  - Document SOP in `SKILL.md`.
+- **Orchestrator Hardening & Automation Presets**:
+  - Update `agent_service/profiles/orchestrator/skills/task_decomposer/run.py` and `SKILL.md` to route security and permission audits to `security_guard`.
+  - Update `backend/apps/automation/registry.py` prompt presets for `security_guard` and triage actions.
+- **Empirical Verification & Testing**:
+  - Verify Hermes CLI profile listing and skill isolation (`0 builtin, 1 local — security_scanner`).
+  - Verify 100% test pass rate across all backend unit tests.
+  - Synchronize `docs/agent_team.md`, `docs/ai_wiki/index.md`, and `docs/ai_wiki/architecture.md`.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Active Plan Initialization & Git Branching** - COMPLETED (Branch: `feat/security-guard-core-profile`)
+- [ ] **Sub-task 2: Django Backend Integration, Model Choices & Clean Retirement of Archivist (`seed_profiles.py` & `models.py`)** - PENDING
+- [ ] **Sub-task 3: Centralized Automation Registry Presets & Triage Updates (`registry.py`)** - PENDING
+- [ ] **Sub-task 4: Profile Hardening, Toolset Locking & Skill Implementation (`security_guard` & `security_scanner`)** - PENDING
+- [ ] **Sub-task 5: Orchestrator Hardening & Task Decomposer Update (`task_decomposer`)** - PENDING
+- [ ] **Sub-task 6: Automated Profile Provisioner Upgrade (`provision_profiles.py`) & Empirical Container Verification** - PENDING
+- [ ] **Sub-task 7: Comprehensive Automated Testing, Documentation Synchronization & Merge** - PENDING
+
+### 3. Current Focus
+Executing Sub-task 2: Django Backend Integration, Model Choices & Clean Retirement of Archivist.
 
 
 

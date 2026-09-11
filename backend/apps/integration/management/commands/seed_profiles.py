@@ -43,13 +43,13 @@ CORE_PROFILES = [
         "reasoning_effort": "none",
     },
     {
-        "name": "archivist",
-        "display_name": "Knowledge & Documentation Archivist",
-        "role": "knowledge_management",
-        "description": "Maintains system documentation, standard operating procedures (SOPs), knowledge bases, and corporate memory.",
+        "name": "security_guard",
+        "display_name": "Security & Threat Auditor",
+        "role": "security",
+        "description": "Audits credential leaks, validates multi-tenant boundaries, monitors API gateway anomalies, and enforces least privilege.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
-        "reasoning_effort": "low",
+        "reasoning_effort": "high",
     },
 ]
 
@@ -86,12 +86,14 @@ ROLE_GROUP_PERMISSIONS = {
             ("integration", "profile", "view_profile"),
         ]
     },
-    "archivist": {
-        "group_name": "Agent_Archivist",
+    "security_guard": {
+        "group_name": "Agent_SecurityGuard",
         "permissions": [
             ("integration", "agenttask", "view_agenttask"),
             ("integration", "profile", "view_profile"),
-            ("integration", "spendreport", "view_spendreport"),
+            ("audit", "activitylog", "view_activitylog"),
+            ("api_gateway", "apikey", "view_apikey"),
+            ("api_gateway", "webhookevent", "view_webhookevent"),
         ]
     },
 }
@@ -110,6 +112,19 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write("Synchronizing RBAC Groups, Permissions, and Core Agent Profiles...")
+
+        # Retire legacy profiles if present
+        retired_profiles = ["archivist"]
+        for retired in retired_profiles:
+            legacy_profile = Profile.objects.filter(hermes_profile_name=retired).first()
+            if legacy_profile:
+                legacy_profile.delete()
+                self.stdout.write(self.style.NOTICE(f"  ✓ Retired legacy Profile: {retired}"))
+            legacy_user = User.objects.filter(username=f"bot_{retired}").first()
+            if legacy_user:
+                legacy_user.delete()
+                self.stdout.write(self.style.NOTICE(f"  ✓ Retired legacy User: bot_{retired}"))
+            Group.objects.filter(name=f"Agent_{retired.capitalize()}").delete()
 
         tokens_manifest = {}
 
