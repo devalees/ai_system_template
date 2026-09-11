@@ -7,7 +7,8 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
 - **Agent Team Reference**: [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md)
-- **Status**: Phase 24 Completed (LLM Model Modalities, Visual Capability Badges & Dropdown Indicators; 100% test pass rate across 185 tests)
+- **Status**: Phase 28 Completed (QA Auditor Hardening, Skill Pruning & Direct Review Gate Integration; 100% test pass rate across 187 tests)
+
 
 ---
 
@@ -48,7 +49,8 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Profile-Scoped Skills (`agent_service/profiles/<name>/skills/`)**:
   - `task_decomposer` (scoped to `orchestrator`): Directed acyclic graph (DAG) objective decomposition, dependency validation, cycle detection, and automated Django task submission (`POST /api/tasks/`).
   - `cost_monitor` (scoped to `cost_controller`): Inspects `session_model_usage` across profile SQLite `state.db` files, calculates spend against daily budget caps, evaluates Intelligence-per-Dollar ROI using DeepSWE benchmarks, and pushes optimization recommendations to Django (`POST /api/spend-reports/`).
-  - `output_validator` (scoped to `qa_auditor`): Empirical syntax parser (Python AST, JSON, YAML), credential leak detector, and placeholder hygiene reviewer for the QA review gate.
+  - `output_validator` (scoped to `qa_auditor`): Empirical syntax parser (Python AST, JSON, YAML), credential leak detector, and placeholder hygiene reviewer for the QA review gate with direct automated verdict dispatch (`POST /api/tasks/<id>/submit-verdict/`).
+
 - **Skill Pruning & Token Efficiency**:
   - Profiles opt out of Hermes's 54 bundled skills (games, media, audio, deep debugging) via the `.no-bundled-skills` marker, saving thousands of prompt tokens per turn and focusing execution on dedicated capabilities.
 - **Shared System Skills (`agent_service/skills/`)**:

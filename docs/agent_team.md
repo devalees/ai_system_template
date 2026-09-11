@@ -105,7 +105,8 @@ agent_service/
 - **Service Account**: `bot_qa_auditor` | **Django Group**: `Agent_QAAuditor`
 - **Permissions**: `view_agenttask`, `change_agenttask`, `view_agentprofile` *(Exclusive authorization to submit review verdicts)*
 - **Calibrated Reasoning**: `high` (deep analytical reasoning for rigorous inspection)
-- **Default Toolsets**: `kanban`, `terminal`, `file_ops`
+- **Default Toolsets**: `kanban`, `terminal`, `file_ops` (Locked strictly; unneeded media/creative tools excluded)
+- **Bundled Skills Opt-Out**: `.no-bundled-skills` active (pruned 54 bundled skills to eliminate token overhead)
 
 #### Primary Responsibilities
 - **Deliverable Gatekeeper**: Serves as the mandatory review checkpoint before any task is marked `completed`.
@@ -121,7 +122,8 @@ agent_service/
     2. **Placeholder Trapping**: Scans files for unfinished markers (`TODO`, `FIXME`, `CHANGEME`, stubbed passes).
     3. **Security Audit**: Scans for leaked API keys, tokens, or private secrets.
     4. **Scoring & Verdict**: Generates a 0–100 quality score and emits an authoritative verdict (`APPROVED` vs `CHANGES_REQUESTED`).
-    5. Submits verdict and reviewer feedback to Django via `POST /api/tasks/<id>/submit-verdict/`.
+    5. **Direct Review Gate Dispatch**: Direct-submits verdict and structured defect notes to Django via `POST /api/tasks/<id>/submit-verdict/` when executed with `--submit --task-id <UUID>` using `bot_qa_auditor`'s API token.
+
 
 ---
 
