@@ -660,4 +660,39 @@ Decouple and remove the dynamic metadata engine (`apps.meta_engine`) and Postgre
 - *2026-09-10*: Successfully unregistered `apps.meta_engine` from settings and routing, removed dynamic model resolution fallback from `apps/reports/engine.py`, cleaned up tests, deleted `apps/meta_engine` module, and verified 100% pass rate across 164 unit tests.
 
 ### 4. Current Focus
-Phase 20 completed. System fully clean, verified, and synchronized with native Django models across all applications.
+Phase 20 completed. Proceeding with Phase 21: Enterprise Hardening of Centralized Automation Engine.
+
+---
+
+## Phase 21: Enterprise Hardening of Centralized Automation Engine (`apps.automation`) (IN_PROGRESS)
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/automation-enterprise-hardening`
+- **Last Updated**: 2026-09-11 04:57:00+03:00
+
+### 1. Objective & Scope
+Harden the centralized automation engine (`apps.automation`) to resolve production race conditions, enhance pipeline execution capabilities, protect against recursion loops, and support multi-tenant workspace isolation:
+- **Transaction Safety**: Guarantee Celery tasks fire only after database transactions commit (`transaction.on_commit`).
+- **Sequential Pipeline Chaining**: Coordinate multi-action pipelines sequentially and propagate accumulated context between steps with `stop_on_failure` support.
+- **Recursion Guard**: Prevent cascading infinite trigger loops with execution depth tracking (`_automation_depth`) and configurable ceiling (`MAX_AUTOMATION_DEPTH`).
+- **Multi-Tenancy Scoping**: Add nullable `organization` FK to `AutomationTrigger`, `AutomationAction`, and `AutomationLog`, executing worker tasks within `tenant_context`.
+- **Target Model CRUD Sandboxing**: Blacklist internal sensitive framework models (`auth.Permission`, `authtoken.Token`, etc.) from automated manipulation.
+- **Failure Resilience**: Support exponential backoff retries for external HTTP integrations.
+- **Admin UI Enhancement**: Expose workspace badges, `stop_on_failure` toggles, and execution depth.
+
+### 2. Task Checklist & Progress
+- [/] **Sub-task 1: Git Branching & Active Plan Initialization** - IN PROGRESS
+- [ ] **Sub-task 2: Data Models & Database Migration (`apps.automation.models`)** - PENDING
+- [ ] **Sub-task 3: Signal Dispatch & Transaction Integrity (`signals.py`)** - PENDING
+- [ ] **Sub-task 4: Execution Engine Hardening (`engine.py`)** - PENDING
+- [ ] **Sub-task 5: Asynchronous Celery Tasks & Resilience (`tasks.py`, `actions.py`)** - PENDING
+- [ ] **Sub-task 6: Django Admin UI Refinement (`admin.py`)** - PENDING
+- [ ] **Sub-task 7: Automated Testing & Verification (`tests.py`)** - PENDING
+- [ ] **Sub-task 8: Documentation & LLM Wiki Synchronization** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 21)
+- *2026-09-11*: Initialized Phase 21 on branch `feat/automation-enterprise-hardening`. Designed nullable `organization` relationship allowing system triggers to remain global while granting organizations private automation pipelines.
+
+### 4. Current Focus
+Sub-task 2: Update models in `apps/automation/models.py` and generate database migrations.
+
