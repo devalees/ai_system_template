@@ -691,6 +691,12 @@ class AutomationEngine:
                 accumulated_context['step_outputs'][str(action.id)] = out
                 accumulated_context['step_outputs'][f"step_{action.sequence}"] = out
 
+                # Propagate agent deliverable / text artifact
+                if 'deliverable' in out and out['deliverable']:
+                    accumulated_context['deliverable'] = out['deliverable']
+                    accumulated_context[f"step_{action.sequence}_deliverable"] = out['deliverable']
+
+
         return {
             "status": "success" if pipeline_success else "failed",
             "trigger_id": trigger.id,

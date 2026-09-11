@@ -175,22 +175,48 @@ Be direct, objective, concise, and rigorous. Execute assigned tasks with empiric
 )
 def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Action Handler: Dispatches prompt or task to Hermes Gateway API.
+    Action Handler: Dispatches prompt or task to Hermes Gateway API with pre-execution
+    budget gating and post-execution direct token spend accounting.
     """
+    from django.utils import timezone
+    from django.db.models import Sum
+    from apps.core.config import get_setting
+    from apps.integration.models import SpendReport, Profile, AgentTask
+
+    # 1. Pre-Execution Budget Ceiling Gate
+    daily_budget = float(get_setting('integration.DAILY_BUDGET_CAP_USD', default=50.0))
+    today = timezone.now().date()
+    today_spend = SpendReport.objects.filter(created_at__date=today).aggregate(total=Sum('total_cost_usd'))['total'] or 0.0
+    if float(today_spend) >= daily_budget:
+        return {
+            "status": "budget_exceeded",
+            "error": f"Daily token budget cap of ${daily_budget:.2f} USD reached (current: ${float(today_spend):.2f} USD). Execution aborted.",
+            "today_spend_usd": float(today_spend),
+            "daily_budget_usd": daily_budget,
+        }
+
     gateway_url = getattr(settings, 'HERMES_GATEWAY_URL', 'http://hermes:8642').rstrip('/')
     prompt = context.get('prompt') or context.get('description', '')
     profile = context.get('profile') or 'orchestrator'
+
+    # Support deliverable fallback from upstream pipeline step
+    if not prompt and context.get('deliverable'):
+        prompt = context['deliverable']
 
     payload = {
         "messages": [{"role": "user", "content": prompt}],
         "profile": profile,
     }
+
+    reasoning_effort = context.get('reasoning_effort')
+    if reasoning_effort and reasoning_effort != "inherit":
+        payload["reasoning_effort"] = reasoning_effort
+
     headers = {"Content-Type": "application/json"}
     api_key = getattr(settings, 'HERMES_API_KEY', '')
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
-    from apps.core.config import get_setting
     timeout_seconds = get_setting('automation.HERMES_REQUEST_TIMEOUT', default=getattr(settings, 'HERMES_REQUEST_TIMEOUT', 120))
     max_retries = int(context.get('max_retries', 2))
     last_resp = None
@@ -201,11 +227,66 @@ def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
             resp = requests.post(f"{gateway_url}/v1/chat/completions", json=payload, headers=headers, timeout=(10, timeout_seconds))
             last_resp = resp
             if resp.status_code < 400:
-                res_data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text[:300]
+                res_data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {"text": resp.text[:500]}
+
+                # 2. Extract Deliverable and Token Accounting
+                assistant_deliverable = ""
+                if isinstance(res_data, dict):
+                    choices = res_data.get("choices", [])
+                    if choices and isinstance(choices, list):
+                        assistant_deliverable = choices[0].get("message", {}).get("content", "")
+
+                usage = res_data.get("usage", {}) if isinstance(res_data, dict) else {}
+                prompt_tokens = usage.get("prompt_tokens", 0)
+                completion_tokens = usage.get("completion_tokens", 0)
+                total_tokens = usage.get("total_tokens", prompt_tokens + completion_tokens)
+                # Standard estimation: $0.15/1M input, $0.60/1M output
+                cost_usd = round((prompt_tokens * 0.00000015) + (completion_tokens * 0.00000060), 6)
+
+                # 3. Post-Execution Direct Spend Tracking into SpendReport
+                profile_obj = Profile.objects.filter(hermes_profile_name=profile).first() or Profile.objects.filter(name=profile).first()
+                new_spend = float(today_spend) + cost_usd
+                budget_status = "EXCEEDED" if new_spend >= daily_budget else ("WARNING" if new_spend >= (daily_budget * 0.8) else "OK")
+
+                SpendReport.objects.create(
+                    profile=profile_obj,
+                    reported_by=profile,
+                    total_api_calls=1,
+                    total_tokens=total_tokens,
+                    total_cost_usd=cost_usd,
+                    daily_budget_usd=daily_budget,
+                    budget_status=budget_status,
+                    payload={
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": total_tokens,
+                        "model": res_data.get("model", "") if isinstance(res_data, dict) else "",
+                    }
+                )
+
+                # 4. Attach to AgentTask if provided
+                task_id = context.get('task_id')
+                if task_id:
+                    try:
+                        task = AgentTask.objects.filter(id=task_id).first()
+                        if task:
+                            task.tokens_used = total_tokens
+                            task.cost_usd = cost_usd
+                            task.output_result = res_data if isinstance(res_data, dict) else {"raw": str(res_data)}
+                            task.status = "completed"
+                            task.completed_at = timezone.now()
+                            task.save(update_fields=['tokens_used', 'cost_usd', 'output_result', 'status', 'completed_at'])
+                    except Exception:
+                        pass
+
                 return {
                     "status": "dispatched",
                     "http_status": resp.status_code,
                     "response": res_data,
+                    "deliverable": assistant_deliverable,
+                    "tokens_used": total_tokens,
+                    "cost_usd": cost_usd,
+                    "budget_status": budget_status,
                     "attempts": attempt + 1,
                 }
             if resp.status_code not in (502, 503, 504):
@@ -239,6 +320,7 @@ def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
         "error": err_detail,
         "attempts": max_retries + 1,
     }
+
 
 
 @register_action(
