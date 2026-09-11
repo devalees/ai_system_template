@@ -129,6 +129,16 @@ economy_editor/
 - `budget_status`: `OK`, `WARNING`, or `EXCEEDED`.
 - `total_tokens`: Token volume tracked across sessions.
 - `total_api_calls`: Total LLM invocations.
+- `recommendations`: Actionable model-efficiency and cost-reduction recommendations derived from benchmark intelligence.
+
+### `ModelBenchmark`
+- `model_identifier`: Canonical model ID (e.g. `google/gemini-2.5-flash`).
+- `benchmark_name`: Benchmark suite (`DeepSWE`, `SWE-bench`).
+- `score`: Primary pass-rate percentage ($0.0 - 100.0$).
+- `avg_cost_per_task`: Measured dollar cost per benchmark task.
+- `tokens_per_task`: Token consumption per task.
+- `agent_steps`: Average agent reasoning/tool steps per task.
+- `last_synced_at`: Synchronization timestamp.
 
 ---
 

@@ -24,7 +24,8 @@ An extensible, production-grade starter template pairing a **Django** web framew
   - `ProviderCredential`: Encrypted storage for LLM provider API keys (OpenRouter, Gemini, OpenAI, Anthropic, Groq, DeepSeek) with multi-tenant scoping and masked admin representation.
   - `Profile`: Unified User Profile model attached 1-to-1 to `auth.User` via automatic `post_save` lifecycle signals, categorizing accounts (`is_agent`, `user_type: human/agent/client`), managing Hermes AI inference configurations, and hierarchical key resolution (`resolve_provider_and_key()`).
   - `AgentTask`: Task execution registry with assigned profiles, execution costs, reasoning overrides, and QA review pipelines.
-  - `SpendReport`: Structured token usage and budget status reports emitted by post-execution hooks and cost controllers.
+  - `SpendReport`: Structured token usage, budget status reports, and model-optimization recommendations emitted by cost controllers.
+  - `ModelBenchmark`: Frontier AI coding benchmark catalog (DeepSWE, SWE-bench) tracking model scores, pass rates, and cost-per-task for ROI evaluation.
   - `HandshakeLog`: Audit log of agent container boot and lifecycle handshakes.
 
 ### 2. Autonomous Agent Engine (`agent_service/` & Hermes Runtime)
@@ -32,7 +33,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Zero-Downtime Credential Sync**: Hermes dynamically loads per-profile secret scopes on each turn (`build_profile_secret_scope`). Django volume-mounts (`/app/hermes_runtime_data` and `/app/hermes_root_env`) allow immediate credential synchronization on `post_save` with 0 downtime and no container restarts.
 - **5 Calibrated Agent Profiles**:
   1. `orchestrator`: Request intake, project decomposition, Kanban routing, and response synthesis (Calibrated Effort: `none` for instant triage).
-  2. `cost_controller`: Token consumption tracking, budget cap enforcement, expense auditing (Calibrated Effort: `low`).
+  2. `cost_controller`: Token consumption tracking, budget cap enforcement, and model efficiency advisory via DeepSWE benchmarks (Calibrated Effort: `low`).
   3. `qa_auditor`: Review pipeline gatekeeper, quality control, output verification (Calibrated Effort: `high`).
   4. `comms_agent`: Customer communications, email drafting, meeting scheduling, client intake (Calibrated Effort: `none` for fast client replies).
   5. `archivist`: Documentation maintainer, institutional memory, SOPs, wiki indexing (Calibrated Effort: `low`).
@@ -46,7 +47,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 ### 4. Specialist Profile Skills & Shared System Skills
 - **Profile-Scoped Skills (`agent_service/profiles/<name>/skills/`)**:
   - `task_decomposer` (scoped to `orchestrator`): Directed acyclic graph (DAG) objective decomposition, dependency validation, cycle detection, and automated Django task submission (`POST /api/tasks/`).
-  - `cost_monitor` (scoped to `cost_controller`): Inspects `session_model_usage` across profile SQLite `state.db` files, aggregating token expenditure and checking daily budget caps.
+  - `cost_monitor` (scoped to `cost_controller`): Inspects `session_model_usage` across profile SQLite `state.db` files, calculates spend against daily budget caps, evaluates Intelligence-per-Dollar ROI using DeepSWE benchmarks, and pushes optimization recommendations to Django (`POST /api/spend-reports/`).
   - `output_validator` (scoped to `qa_auditor`): Empirical syntax parser (Python AST, JSON, YAML), credential leak detector, and placeholder hygiene reviewer for the QA review gate.
 - **Skill Pruning & Token Efficiency**:
   - Profiles opt out of Hermes's 54 bundled skills (games, media, audio, deep debugging) via the `.no-bundled-skills` marker, saving thousands of prompt tokens per turn and focusing execution on dedicated capabilities.

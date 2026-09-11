@@ -917,9 +917,9 @@ Phase 26 completed and merged into `main`.
 
 ## Phase 27: Cost Controller Hardening, Toolset Locking & Frontier Benchmark Intelligence (DeepSWE)
 
-- **Status**: IN_PROGRESS
-- **Active Branch**: `feat/cost-controller-hardening-and-benchmarks`
-- **Last Updated**: 2026-09-11 09:54:00+03:00
+- **Status**: COMPLETED
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-11 10:18:00+03:00
 
 ### 1. Objective & Scope
 Harden the `cost_controller` profile and establish automated model benchmark intelligence:
@@ -931,18 +931,22 @@ Harden the `cost_controller` profile and establish automated model benchmark int
 - **Empirical Verification & Testing**: Verify `hermes -p cost_controller skills list` shows 0 builtin skills, test `cost_monitor` script, and verify 100% test pass rate across all backend unit tests.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/cost-controller-hardening-and-benchmarks`)
-- [ ] **Sub-task 2: Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update** - PENDING
-- [ ] **Sub-task 3: Django ModelBenchmark Model, Migration & Ingestion Service** - PENDING
-- [ ] **Sub-task 4: Upgrade `cost_monitor` with Benchmark Optimization Engine** - PENDING
-- [ ] **Sub-task 5: Profile Provisioning & Empirical CLI Isolation Verification** - PENDING
-- [ ] **Sub-task 6: Documentation Synchronization, Test Suite Verification & Merge** - PENDING
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/cost-controller-hardening-and-benchmarks`, Commit: `fec2ef3`)
+- [x] **Sub-task 2: Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update** - COMPLETED (Commit: `fb3c8aa`)
+- [x] **Sub-task 3: Django ModelBenchmark Model, Migration & Ingestion Service** - COMPLETED (Commit: `3341075`)
+- [x] **Sub-task 4: Upgrade `cost_monitor` with Benchmark Optimization Engine** - COMPLETED (Commit: `ee65926`)
+- [x] **Sub-task 5: Profile Provisioning & Empirical CLI Isolation Verification** - COMPLETED (Verified `0 builtin, 1 local — cost_monitor`, pushed spend report HTTP 201, 187/187 tests passed in 110s)
+- [x] **Sub-task 6: Documentation Synchronization, Test Suite Verification & Merge** - COMPLETED
 
 ### 3. Key Decisions & Deviations (Phase 27)
 - *2026-09-11*: Initialized Phase 27 per user discussion on frontier benchmark tracking (DeepSWE). Agreed on the hybrid architecture: Django handles data plumbing/storage with zero AI overhead (preventing shadow token spend), while `cost_controller` accesses the data to deliver model ROI recommendations. Locked `cost_controller` toolsets to `[terminal, file_ops]`.
+- *2026-09-11*: Added `.no-bundled-skills` to `agent_service/profiles/cost_controller/` pruning 54 bundled Hermes skills, and locked `config.yaml` / `profile.yaml` to `[terminal, file_ops]`.
+- *2026-09-11*: Created `ModelBenchmark` model and `benchmark_sync.py` ingestion service in `apps.integration`, exposed `GET /api/hermes/benchmarks/`, and registered `ModelBenchmarkAdmin`.
+- *2026-09-11*: Upgraded `cost_monitor/run.py` to query Django benchmarks, compute Intelligence-per-Dollar ROI, and format automated model-switching recommendations pushed to Django `SpendReport`.
+- *2026-09-11*: Provisioned profiles, empirically verified CLI isolation with `hermes -p cost_controller skills list` (`0 builtin, 1 local`), and ran full test suite: 187/187 unit tests passing in 110.489s.
 
 ### 4. Current Focus
-Sub-task 2: Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update.
+Phase 27 completed and merged into `main`.
 
 
 

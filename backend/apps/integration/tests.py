@@ -235,4 +235,37 @@ class IntegrationAPITests(TestCase):
         has_bracket_indicator = any("[" in label and "]" in label for label in all_labels)
         self.assertTrue(has_bracket_indicator, "Expected model choice labels to contain modality brackets [..]")
 
+    def test_model_benchmark_model_and_sync_service(self):
+        """Verify ModelBenchmark creation, uniqueness, and sync service."""
+        from .models import ModelBenchmark
+        from .services.benchmark_sync import sync_benchmarks, generate_cost_efficiency_recommendations
+
+        res = sync_benchmarks()
+        self.assertEqual(res["status"], "success")
+        self.assertGreaterEqual(res["synced_count"], 5)
+
+        # Check DB record
+        gemini = ModelBenchmark.objects.filter(model_identifier="google/gemini-2.5-flash").first()
+        self.assertIsNotNone(gemini)
+        self.assertGreater(gemini.score, 70.0)
+
+        # Test recommendation generation
+        recs = generate_cost_efficiency_recommendations(["anthropic/claude-3-5-sonnet"])
+        self.assertGreater(len(recs), 0)
+        self.assertEqual(recs[0]["active_model"], "anthropic/claude-3-5-sonnet")
+        self.assertIn("recommended_model", recs[0])
+
+    def test_hermes_benchmarks_api_endpoint(self):
+        """Verify GET /api/hermes/benchmarks/ endpoint."""
+        from .services.benchmark_sync import sync_benchmarks
+        sync_benchmarks()
+
+        url = reverse('hermes-benchmarks')
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn("count", resp.data)
+        self.assertIn("benchmarks", resp.data)
+        self.assertGreaterEqual(resp.data["count"], 5)
+
+
 

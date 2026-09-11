@@ -74,13 +74,15 @@ agent_service/
 - **Service Account**: `bot_cost_controller` | **Django Group**: `Agent_CostController`
 - **Permissions**: `view_spendreport`, `add_spendreport`, `view_agentprofile` *(Explicitly blocked from creating/modifying tasks)*
 - **Calibrated Reasoning**: `low` (sufficient for calculations without token waste)
-- **Default Toolsets**: `terminal`, `file_ops`, `web`
+- **Default Toolsets**: `terminal`, `file_ops` (Locked; web and bundled media tools excluded)
+- **Bundled Skills Opt-Out**: `.no-bundled-skills` active (pruned 54 bundled skills to eliminate token overhead)
 
 #### Primary Responsibilities
 - **Token Tracking**: Scans LLM token consumption across all agent sessions in real time.
 - **Budget Governance**: Enforces daily expenditure ceilings (`DAILY_BUDGET_CAP_USD`).
 - **Spend Reporting**: Compiles and pushes audit reports to the Django backend.
 - **Overrun Alerts**: Flags anomalous spikes and triggers pause actions if budgets are exceeded.
+- **Model Efficiency Advisory**: Evaluates Intelligence-per-Dollar ROI using frontier benchmarks (DeepSWE) and recommends cheaper, high-accuracy alternatives.
 
 #### Dedicated Skills & Scripts
 - **Skill**: **`cost_monitor`** ([`agent_service/profiles/cost_controller/skills/cost_monitor/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/cost_controller/skills/cost_monitor/))
@@ -90,7 +92,9 @@ agent_service/
     2. Queries the `session_model_usage` table for prompt and completion token counts per model.
     3. Calculates estimated dollar costs using reference pricing tiers.
     4. Evaluates total spend against the `--daily-budget` parameter.
-    5. Dispatches a structured `SpendReport` directly to `POST /api/spend-reports/` when invoked with `--push`.
+    5. Queries Django's model benchmark registry (`GET /api/hermes/benchmarks/`) to calculate Intelligence-to-Cost ratios ($ROI = \text{score} / \text{cost}$).
+    6. Automatically generates cost-efficiency recommendations when alternative models offer equal or higher pass rates at lower cost.
+    7. Dispatches structured `SpendReport` and recommendations directly to `POST /api/spend-reports/` when invoked with `--push`.
 
 ---
 
