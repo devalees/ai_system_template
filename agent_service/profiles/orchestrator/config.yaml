@@ -4,7 +4,7 @@ model:
   provider: "openrouter"
 
 agent:
-  reasoning_effort: "medium"
+  reasoning_effort: "none"
 
 toolsets:
   - "kanban"
