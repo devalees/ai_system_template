@@ -20,7 +20,7 @@ VALID_PROFILES = {
     "cost_controller": "Financial Controller & Budget Monitor",
     "qa_auditor": "Quality Assurance & Compliance Gatekeeper",
     "comms_agent": "Client Communications Coordinator",
-    "archivist": "Knowledge & Documentation Archivist",
+    "security_guard": "Security & Threat Auditor",
 }
 
 DEFAULT_TASK_TEMPLATES = {
@@ -34,15 +34,15 @@ DEFAULT_TASK_TEMPLATES = {
         "profile": "qa_auditor",
         "description": "Execute output_validator skill to compile AST, detect leaked credentials, and emit verdict.",
     },
+    "security_audit": {
+        "title": "Perform Security & Threat Posture Audit",
+        "profile": "security_guard",
+        "description": "Execute security_scanner skill to detect leaked credentials, verify tenant boundaries, and audit permissions.",
+    },
     "client_update": {
         "title": "Draft Client Milestone Progress Update",
         "profile": "comms_agent",
         "description": "Format completed deliverables into professional client-facing summary.",
-    },
-    "archive_docs": {
-        "title": "Archive Learnings & Update Project Wiki",
-        "profile": "archivist",
-        "description": "Extract SOPs and synchronize system architecture documentation in docs/ai_wiki/.",
     },
 }
 
@@ -59,8 +59,11 @@ def topological_sort(tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             raise ValueError(f"Cyclic dependency detected involving task '{node_id}'")
         if node_id not in visited:
             visiting.add(node_id)
-            for dep in task_map.get(node_id, {}).get("dependencies", []):
-                if dep in task_map:
+            node = task_map.get(node_id)
+            if node:
+                for dep in node.get("dependencies", []):
+                    if dep not in task_map:
+                        raise ValueError(f"Task '{node_id}' has unresolved dependency '{dep}'")
                     dfs(dep)
             visiting.remove(node_id)
             visited.add(node_id)
@@ -74,7 +77,7 @@ def topological_sort(tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 
 def build_default_pipeline(goal: str) -> List[Dict[str, Any]]:
-    """Constructs a structured 4-stage department pipeline for a given objective."""
+    """Constructs a structured 5-stage department pipeline for a given objective."""
     return [
         {
             "id": "task_1_execute",
@@ -98,17 +101,17 @@ def build_default_pipeline(goal: str) -> List[Dict[str, Any]]:
             "deliverable": "Token consumption ledger and budget cap verification.",
         },
         {
-            "id": "task_4_archive",
-            "name": f"Document & Archive: {goal}",
-            "assigned_profile": "archivist",
+            "id": "task_4_security",
+            "name": f"Security & Threat Audit: {goal}",
+            "assigned_profile": "security_guard",
             "dependencies": ["task_2_qa"],
-            "deliverable": "Wiki synchronization and SOP extraction in docs/ai_wiki/.",
+            "deliverable": "Zero-trust vulnerability scan, secret checks, and tenant isolation report.",
         },
         {
             "id": "task_5_comms",
             "name": f"Client Notification: {goal}",
             "assigned_profile": "comms_agent",
-            "dependencies": ["task_2_qa", "task_3_cost"],
+            "dependencies": ["task_2_qa", "task_3_cost", "task_4_security"],
             "deliverable": "Executive summary sent to client via active notification channels.",
         },
     ]

@@ -130,6 +130,20 @@ def provision_all():
         if p.is_dir() and (p / "profile.yaml").exists()
     ]
 
+    # Purge retired profiles from Hermes runtime
+    retired_profiles = ["archivist"]
+    for ret in retired_profiles:
+        purge_script = f"""
+import os, shutil
+ret_dir = '/root/.hermes/profiles/{ret}'
+if os.path.exists(ret_dir):
+    shutil.rmtree(ret_dir)
+    print('Purged retired profile: {ret}')
+"""
+        p_res = run_cmd(["python", "-c", purge_script])
+        if p_res.returncode == 0 and p_res.stdout.strip():
+            print(f"  {YELLOW}✓ {p_res.stdout.strip()}{RESET}")
+
     print(f"{BLUE}Found {len(profiles_to_provision)} declarative profile definitions in {source_dir.name}/{RESET}\n")
 
     success_count = 0

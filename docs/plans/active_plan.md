@@ -1103,15 +1103,27 @@ Retire the legacy, redundant `archivist` profile (whose documentation responsibi
 
 ### 2. Task Checklist & Progress
 - [x] **Sub-task 1: Active Plan Initialization & Git Branching** - COMPLETED (Branch: `feat/security-guard-core-profile`)
-- [ ] **Sub-task 2: Django Backend Integration, Model Choices & Clean Retirement of Archivist (`seed_profiles.py` & `models.py`)** - PENDING
-- [ ] **Sub-task 3: Centralized Automation Registry Presets & Triage Updates (`registry.py`)** - PENDING
-- [ ] **Sub-task 4: Profile Hardening, Toolset Locking & Skill Implementation (`security_guard` & `security_scanner`)** - PENDING
-- [ ] **Sub-task 5: Orchestrator Hardening & Task Decomposer Update (`task_decomposer`)** - PENDING
-- [ ] **Sub-task 6: Automated Profile Provisioner Upgrade (`provision_profiles.py`) & Empirical Container Verification** - PENDING
-- [ ] **Sub-task 7: Comprehensive Automated Testing, Documentation Synchronization & Merge** - PENDING
+- [x] **Sub-task 2: Django Backend Integration, Model Choices & Clean Retirement of Archivist (`seed_profiles.py` & `models.py`)** - COMPLETED (Commit: `40f951b`)
+- [x] **Sub-task 3: Centralized Automation Registry Presets & Triage Updates (`registry.py`)** - COMPLETED (Commit: `pending`)
+- [x] **Sub-task 4: Profile Hardening, Toolset Locking & Skill Implementation (`security_guard` & `security_scanner`)** - COMPLETED
+- [x] **Sub-task 5: Orchestrator Hardening & Task Decomposer Update (`task_decomposer`)** - COMPLETED
+- [x] **Sub-task 6: Automated Profile Provisioner Upgrade (`provision_profiles.py`) & Empirical Container Verification** - COMPLETED
+- [x] **Sub-task 7: Comprehensive Automated Testing, Documentation Synchronization & Merge** - COMPLETED (198/198 unit tests passing in 112s)
 
-### 3. Current Focus
-Executing Sub-task 2: Django Backend Integration, Model Choices & Clean Retirement of Archivist.
+### 3. Key Decisions & Deviations (Phase 31)
+- *2026-09-11*: Initialized Phase 31 per user instruction to retire `archivist` (whose responsibilities are already handled by Antigravity IDE rules) and elevate `security_guard` to the official 5th core department head.
+- *2026-09-11*: Added `'security'` to `Profile.ROLE_CHOICES` in `apps.integration.models`, applied migration `0013_alter_profile_role`.
+- *2026-09-11*: Updated `seed_profiles.py` to seed `security_guard` (`Security & Threat Auditor`, role `security`, `reasoning_effort: high`) and create `Agent_SecurityGuard` with permissions (`view_agenttask`, `view_profile`, `view_activitylog`, `view_apikey`, `view_webhookevent`). Added automatic retirement logic that cleanly purged legacy `bot_archivist`, `Agent_Archivist` group, and `archivist` profile from PostgreSQL.
+- *2026-09-11*: Replaced `archivist` prompt presets in `apps.automation.registry` with 4 production SecOps presets for `security_guard` (secrets leak scan, multi-tenant boundary check, webhook/auth threat audit, comprehensive posture scan) and updated `orchestrator`'s triage preset.
+- *2026-09-11*: Hardened `agent_service/profiles/security_guard/` with `.no-bundled-skills` (pruning 54 bundled skills), toolset locking to `[terminal, file_ops]`, calibrated `high` reasoning, and an authoritative zero-trust `SOUL.md`.
+- *2026-09-11*: Implemented dedicated profile-scoped skill `security_scanner` (`run.py` & `SKILL.md`) supporting multi-mode scans: regex-based secret leak detection (OpenAI, OpenRouter, Anthropic, Stripe, SSH/RSA private keys), model tenant isolation checks, RBAC least privilege verification, and API gateway threat posture. Added `--exclude-tests` and `--json` support.
+- *2026-09-11*: Upgraded `task_decomposer` in `orchestrator` (`run.py`, `SKILL.md`, `SOUL.md`) to replace `archivist` with `security_guard` and route security audits as step 4 before client handoff.
+- *2026-09-11*: Upgraded `scripts/provision_profiles.py` with automated container runtime retirement logic, purging `/root/.hermes/profiles/archivist` and provisioning all 5 core profiles.
+- *2026-09-11*: Empirically validated via Hermes CLI: `hermes -p security_guard skills list` confirms `0 hub-installed, 0 builtin, 1 local — security_scanner`. Executed `security_scanner` and `task_decomposer` inside the Hermes container with exit code 0.
+- *2026-09-11*: Validated 100% test pass rate across all 198 unit tests in the entire backend test suite.
+
+### 4. Current Focus
+Phase 31 completed and merged into `main`. Ready for next directives.
 
 
 

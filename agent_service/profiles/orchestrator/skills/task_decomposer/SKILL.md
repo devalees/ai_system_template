@@ -29,7 +29,7 @@ Strictly map tasks according to organizational boundaries:
 | **Financial / Token Audit** | `cost_controller` | Token usage breakdown, budget cap compliance, `SpendReport`. |
 | **Quality & Security Gate** | `qa_auditor` | AST syntax compilation, leak detection, `approved` or `changes_requested` verdict. |
 | **Client Communications** | `comms_agent` | Milestone updates, email drafts, external stakeholder notifications. |
-| **Documentation & SOPs** | `archivist` | Wiki updates in `docs/ai_wiki/`, SOP extraction, institutional logging. |
+| **Security & Threat Audit** | `security_guard` | Zero-trust vulnerability scan, secret checks, and tenant isolation report. |
 | **Parallel General Tasks** | Sub-Agent (`delegate`) | Ephemeral task execution spawned via Hermes `delegate` tool. |
 
 ### 4. Review Gating & Synthesis

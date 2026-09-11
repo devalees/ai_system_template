@@ -1,5 +1,14 @@
-model: "z-ai/glm-5.3-flash"
-provider: "openrouter"
-reasoning_effort: "high"
-temperature: 0.7
-max_tokens: 4096
+# Security Guard Profile Configuration
+model:
+  default: "google/gemini-2.5-flash"
+  provider: "openrouter"
+
+agent:
+  reasoning_effort: "high"
+
+toolsets:
+  - "terminal"
+  - "file_ops"
+
+runtime:
+  nofile_soft_limit: 4096
