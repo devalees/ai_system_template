@@ -981,7 +981,52 @@ Harden the `qa_auditor` profile to eliminate prompt token bloat, enforce strict 
 - *2026-09-11*: Executed complete backend test suite: 187/187 tests passing in 112.692s. Synchronized `docs/agent_team.md`, `docs/ai_wiki/index.md`, and `docs/plans/active_plan.md`.
 
 ### 4. Current Focus
-Phase 28 completed. Ready for merge into `main` and user review.
+Phase 28 completed and merged into `main`.
+
+---
+
+## Phase 29: Client Service & Communications Coordinator Hardening, Skill Pruning & Budgeted Concierge Bridge
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/client-service-and-budget-bridge`
+- **Last Updated**: 2026-09-11 11:52:00+03:00
+
+### 1. Objective & Scope
+Transform and harden `comms_agent` from a narrow communications/scheduler role into an enterprise **Client Service & Communications Coordinator**:
+- **3-Tier Hierarchy & Zero-Trust File Security**:
+  - Firm/Tenant level (`apps.tenants`) $\rightarrow$ Business Module level $\rightarrow$ External Clients (`Profile.user_type = 'client'`).
+  - Strict zero-trust data access: `backend/media` is **never mounted into Hermes**. All file reads occur via authenticated Django REST endpoints (`GET /api/v1/media/documents/<id>/download/`) with tenant/client ownership validation and SOC2/GDPR audit logging (`apps.audit`).
+  - Client uploads use standard `POST /upload/` multipart endpoints, and transient Hermes files are immediately purged (`os.unlink()`).
+- **Percentage-Based Dollar AI Budget Governance (Cost Controller)**:
+  - Replace rigid message counters with dollar-denominated percentage thresholds against each client's allocated budget (25% silent audit, 50% velocity check, 75% proactive advisory notice, 100% quota escalation).
+- **Skill Pruning & Toolset Locking**:
+  - Add `.no-bundled-skills` to `agent_service/profiles/comms_agent/` to prune 54 bundled skills.
+  - Lock toolsets strictly to `[terminal, file_ops]` in `config.yaml` and `profile.yaml`.
+  - Maintain `reasoning_effort: none` for zero thinking latency and lowest-cost execution.
+  - Update `SOUL.md` to establish client concierge principles.
+- **Dedicated Profile Skill (`client_service_bridge`)**:
+  - Implement `client_service_bridge` supporting client status queries, document inventories, secure REST streaming downloads, multi-channel outbound notification dispatches (`apps.notifications`), and budget milestone audits.
+- **Empirical Verification & Testing**:
+  - Verify skill isolation via Hermes CLI (`0 builtin, 1 local — client_service_bridge`).
+  - Verify `client_service_bridge` modes against Django backend.
+  - Verify 100% test pass rate across backend test suite.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/client-service-and-budget-bridge`)
+- [ ] **Sub-task 2: Django Backend Client Budgeting & Scoping (`apps.integration`)** - PENDING
+- [ ] **Sub-task 3: Profile Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update** - PENDING
+- [ ] **Sub-task 4: Dedicated `client_service_bridge` Skill Implementation** - PENDING
+- [ ] **Sub-task 5: Profile Provisioning & Empirical CLI Isolation Verification** - PENDING
+- [ ] **Sub-task 6: End-to-End Verification, Automated Testing & Merge** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 29)
+- *2026-09-11*: Initialized Phase 29 per user approval. Renamed and elevated role to **Client Service & Communications Coordinator**.
+- *2026-09-11*: Rejected shared media volume mount per user's security direction; implemented Zero-Trust REST API file streaming with tenant/client ownership verification and audit trail.
+- *2026-09-11*: Adopted 4-tier percentage dollar milestones (25%, 50%, 75%, 100%) governed by Cost Controller instead of rigid message counts.
+
+### 4. Current Focus
+Executing Sub-task 2: Django Backend Client Budgeting & Scoping (`apps.integration`).
+
 
 
 
