@@ -20,6 +20,7 @@ The autonomous workforce operates under a decentralized division of labor:
 agent_service/
 ├── profiles/
 │   ├── orchestrator/      # 1. Chief of Staff & Kanban Router
+│   │   └── skills/task_decomposer/  # Profile-scoped DAG planner & dependency validator
 │   ├── cost_controller/   # 2. Financial Controller & Budget Monitor
 │   │   └── skills/cost_monitor/  # Profile-scoped SQLite spend auditor
 │   ├── qa_auditor/        # 3. QA & Compliance Gatekeeper
@@ -44,7 +45,8 @@ agent_service/
 - **Service Account**: `bot_orchestrator` | **Django Group**: `Agent_Orchestrator`
 - **Permissions**: `view_agentprofile`, `view_agenttask`, `add_agenttask`, `change_agenttask`
 - **Calibrated Reasoning**: `none` (0-second latency for instant triage and routing)
-- **Default Toolsets**: `kanban`, `delegate`, `terminal`, `file_ops`, `clarify`
+- **Default Toolsets**: `kanban`, `delegate`, `terminal`, `file_ops`, `clarify` (Locked; heavy tools excluded)
+- **Bundled Skills Opt-Out**: `.no-bundled-skills` active (pruned 54 bundled skills to prevent prompt bloat)
 
 #### Primary Responsibilities
 - **Request Intake**: Ingests incoming system prompts, automation triggers, or client requests.
@@ -53,6 +55,13 @@ agent_service/
 - **Deliverable Synthesis**: Aggregates completed outputs into a unified final delivery.
 
 #### Dedicated Skills & Scripts
+- **Skill**: **`task_decomposer`** ([`agent_service/profiles/orchestrator/skills/task_decomposer/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/orchestrator/skills/task_decomposer/))
+  - **Executable Script**: [`agent_service/profiles/orchestrator/skills/task_decomposer/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/orchestrator/skills/task_decomposer/run.py)
+  - **What It Does**:
+    1. Parses high-level objectives into a structured execution pipeline across the 5 department roles (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `archivist`).
+    2. Enforces explicit dependency mapping and sequential DAG validation (cycle detection prevents execution deadlocks).
+    3. Direct-submits decomposed tasks to the Django task queue (`POST /api/tasks/`) using `bot_orchestrator`'s API token when executed with `--submit`.
+    4. Supports `--dry-run` and `--json` export for inspection and dry evaluation before dispatch.
 - **Dynamic Task Delegation**: Uses Hermes native `delegate` tool to spawn ephemeral sub-agents for parallel work.
 - **Kanban Dispatch**: Interacts with the backend task queue via `POST /api/tasks/` to register and reassign workloads.
 

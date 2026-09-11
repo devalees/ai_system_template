@@ -880,9 +880,9 @@ Phase 25 completed and merged into `main`.
 
 ## Phase 26: Orchestrator Hardening, Skill Pruning & Task Decomposer
 
-- **Status**: IN_PROGRESS
-- **Active Branch**: `feat/orchestrator-hardening`
-- **Last Updated**: 2026-09-11 09:07:00+03:00
+- **Status**: COMPLETED
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-11 09:16:00+03:00
 
 ### 1. Objective & Scope
 Streamline the Orchestrator profile for high token efficiency and laser-focused coordination:
@@ -895,18 +895,23 @@ Streamline the Orchestrator profile for high token efficiency and laser-focused 
 - **Documentation Synchronization**: Synchronize `docs/agent_team.md`, `docs/ai_wiki/index.md`, and `docs/ai_wiki/architecture.md`.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/orchestrator-hardening`)
-- [ ] **Sub-task 2: Skill Pruning (`.no-bundled-skills`) & Config Locking** - PENDING
-- [ ] **Sub-task 3: Dedicated `task_decomposer` Skill Implementation (`SKILL.md`, `run.py`)** - PENDING
-- [ ] **Sub-task 4: Profile Persona (`SOUL.md`) Binding & Provisioner Support** - PENDING
-- [ ] **Sub-task 5: Empirical Verification & CLI Isolation Audit** - PENDING
-- [ ] **Sub-task 6: Documentation Synchronization & Test Suite Verification** - PENDING
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/orchestrator-hardening`, Commit: `f96c2ee`)
+- [x] **Sub-task 2: Skill Pruning (`.no-bundled-skills`) & Config Locking** - COMPLETED (Commit: `1bfebe8`)
+- [x] **Sub-task 3: Dedicated `task_decomposer` Skill Implementation (`SKILL.md`, `run.py`)** - COMPLETED (Commit: `d7d80b5`)
+- [x] **Sub-task 4: Profile Persona (`SOUL.md`) Binding & Provisioner Support** - COMPLETED (Commit: `b0744c3`)
+- [x] **Sub-task 5: Empirical Verification & CLI Isolation Audit** - COMPLETED (Verified `0 builtin, 1 local — task_decomposer`; passed 185/185 unit tests in 110s)
+- [x] **Sub-task 6: Documentation Synchronization & Test Suite Verification** - COMPLETED
 
 ### 3. Key Decisions & Deviations (Phase 26)
 - *2026-09-11*: Initialized Phase 26 per user discussion regarding Orchestrator's role, token efficiency, and toolsets. Confirmed that enabling all toolsets is an anti-pattern and that Orchestrator should only have the 5 core toolsets and planning skills.
+- *2026-09-11*: Added `.no-bundled-skills` marker in `agent_service/profiles/orchestrator/` to prune 54 built-in bundled Hermes skills, saving thousands of tokens per prompt turn. Locked `config.yaml` and `profile.yaml` to the 5 core toolsets (`kanban`, `delegate`, `clarify`, `file_ops`, `terminal`).
+- *2026-09-11*: Implemented `task_decomposer` profile skill in `agent_service/profiles/orchestrator/skills/task_decomposer/` with DAG cycle validation, department pipeline sequencing, and Django REST API task submission (`POST /api/tasks/`).
+- *2026-09-11*: Updated `SOUL.md` with explicit tool bindings and updated `scripts/provision_profiles.py` to sync `.no-bundled-skills` and purge unassigned bundled skills from profile runtimes.
+- *2026-09-11*: Empirically validated with Hermes CLI: `hermes -p orchestrator skills list` confirms `0 hub-installed, 0 builtin, 1 local — 1 enabled, 0 disabled` (only `task_decomposer`). Ran `task_decomposer` dry-run successfully.
+- *2026-09-11*: Executed complete backend test suite: 185/185 tests passing in 110.497s. Synchronized `docs/agent_team.md`, `docs/ai_wiki/index.md`, and `docs/ai_wiki/architecture.md`.
 
 ### 4. Current Focus
-Sub-task 2: Skill Pruning (`.no-bundled-skills`) & Config Locking.
+Phase 26 completed and merged into `main`.
 
 
 

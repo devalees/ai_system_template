@@ -34,6 +34,7 @@ economy_editor/
 │   ├── docker-compose.yml           # Hermes isolated container definition
 │   ├── profiles/                    # Declarative profile configurations
 │   │   ├── orchestrator/            # Chief of Staff (intake & triage)
+│   │   │   └── skills/task_decomposer/ # Profile-scoped DAG planner & dependency validator
 │   │   ├── cost_controller/         # Financial & spend auditor
 │   │   │   └── skills/cost_monitor/ # Profile-scoped token & budget tracking
 │   │   ├── qa_auditor/              # Quality assurance gatekeeper

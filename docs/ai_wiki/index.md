@@ -45,8 +45,11 @@ An extensible, production-grade starter template pairing a **Django** web framew
 
 ### 4. Specialist Profile Skills & Shared System Skills
 - **Profile-Scoped Skills (`agent_service/profiles/<name>/skills/`)**:
+  - `task_decomposer` (scoped to `orchestrator`): Directed acyclic graph (DAG) objective decomposition, dependency validation, cycle detection, and automated Django task submission (`POST /api/tasks/`).
   - `cost_monitor` (scoped to `cost_controller`): Inspects `session_model_usage` across profile SQLite `state.db` files, aggregating token expenditure and checking daily budget caps.
   - `output_validator` (scoped to `qa_auditor`): Empirical syntax parser (Python AST, JSON, YAML), credential leak detector, and placeholder hygiene reviewer for the QA review gate.
+- **Skill Pruning & Token Efficiency**:
+  - Profiles opt out of Hermes's 54 bundled skills (games, media, audio, deep debugging) via the `.no-bundled-skills` marker, saving thousands of prompt tokens per turn and focusing execution on dedicated capabilities.
 - **Shared System Skills (`agent_service/skills/`)**:
   - `django_handshake`: System bootstrap skill verifying cross-container reachability, handshake registration (`POST /api/handshake/`), and database audit persistence.
 
