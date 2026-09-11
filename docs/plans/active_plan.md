@@ -743,9 +743,9 @@ Phase 22 completed. Provider credentials centralized with zero-downtime hot-sync
 
 ## Phase 23: Provider Credentials Consolidation, Model Catalog Sorting & Profile Admin Streamlining
 
-- **Status**: IN_PROGRESS
+- **Status**: COMPLETED
 - **Active Branch**: `feat/provider-credentials-consolidation-and-catalog-ux`
-- **Last Updated**: 2026-09-11 06:24:00+03:00
+- **Last Updated**: 2026-09-11 06:38:00+03:00
 
 ### 1. Objective & Scope
 Consolidate LLM credentials into a single source of truth (`ProviderCredential`), eliminate redundant secret key fields from the Settings Hub, sort and group models by provider using `<optgroup>`, and streamline the `Profile` admin interface:
@@ -756,19 +756,24 @@ Consolidate LLM credentials into a single source of truth (`ProviderCredential`)
 - **Automated Verification**: Update test suite to verify consolidation, sorting, optgroups, and run full project tests to ensure 100% pass rate.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Commit: `pending`)
-- [ ] **Sub-task 2: Credentials Consolidation & Settings Hub De-duplication (`conf.py`, `models.py`, `credential_sync.py`)** - PENDING
-- [ ] **Sub-task 3: Model Catalog Vendor Attribution & Alphabetical Sorting (`hermes_catalog.py`)** - PENDING
-- [ ] **Sub-task 4: Admin Form Optgroup Grouping & Dynamic JS Support (`forms.py`, `agent_profile_models.js`)** - PENDING
-- [ ] **Sub-task 5: Profile Admin Fieldset Streamlining (`admin.py`)** - PENDING
-- [ ] **Sub-task 6: Automated Testing & Test Suite Verification** - PENDING
-- [ ] **Sub-task 7: Documentation & LLM Wiki Synchronization** - PENDING
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Commit: `3291dfa`)
+- [x] **Sub-task 2: Credentials Consolidation & Settings Hub De-duplication (`conf.py`, `models.py`, `credential_sync.py`)** - COMPLETED (Commit: `c5bb10f`)
+- [x] **Sub-task 3: Model Catalog Vendor Attribution & Alphabetical Sorting (`hermes_catalog.py`)** - COMPLETED (Commit: `60ef1e4`)
+- [x] **Sub-task 4: Admin Form Optgroup Grouping & Dynamic JS Support (`forms.py`, `agent_profile_models.js`)** - COMPLETED (Commit: `6166286`)
+- [x] **Sub-task 5: Profile Admin Fieldset Streamlining (`admin.py`)** - COMPLETED (Commit: `1b6678f`)
+- [x] **Sub-task 6: Automated Testing & Test Suite Verification** - COMPLETED (Commit: `96905cb`)
+- [x] **Sub-task 7: Documentation & LLM Wiki Synchronization** - COMPLETED
 
 ### 3. Key Decisions & Deviations (Phase 23)
 - *2026-09-11*: Initiated Phase 23 per user request to eliminate duplicate API key fields in Settings Hub in favor of `ProviderCredential` as the sole source of truth, sort model choices by provider prefix, and clarify the purpose of `provider_credential` on `Profile`.
+- *2026-09-11*: Consolidated all credentials into `ProviderCredential`. Removed 6 duplicate secret settings from `apps.integration.conf`. Preserved global governance settings (`DEFAULT_PROVIDER`, `DEFAULT_MODEL`, `DEFAULT_REASONING_EFFORT`, `DAILY_BUDGET_CAP_USD`) in Settings Hub.
+- *2026-09-11*: Normalized vendor prefixes in `hermes_catalog.py` (stripping symbols, mapping aliases like `meta`, `gemini`, `zai`, etc.), sorting models alphabetically by vendor group and model name.
+- *2026-09-11*: Implemented `<optgroup>` rendering in `ProfileAdminForm` and `agent_profile_models.js`.
+- *2026-09-11*: Streamlined `ProfileAdmin` and `ProfileInline` fieldsets, moving `provider_credential` into a collapsed "Advanced Credential & Endpoint Overrides" fieldset with clear guidance.
+- *2026-09-11*: Executed complete test suite: 100% pass rate across 181 unit tests.
 
 ### 4. Current Focus
-Sub-task 2: Credentials Consolidation & Settings Hub De-duplication.
+Phase 23 completed. Ready to merge into `main`.
 
 
 

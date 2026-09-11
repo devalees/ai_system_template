@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 22 Completed (Centralized Provider Credentials, Zero-Downtime Hermes Key Sync, Pre-Execution Budget Gates, Direct Token Accounting, Calibrated Reasoning, and Multi-Agent Pipeline Handoff; 100% test pass rate across 178 tests)
+- **Status**: Phase 23 Completed (Provider Credentials Consolidation, Model Catalog Sorting & Optgroup UX, Profile Admin Streamlining; 100% test pass rate across 181 tests)
 
 ---
 

@@ -1178,6 +1178,38 @@ The filtering engine unifies trigger condition evaluation into a single authorit
 - Calibrates default profile reasoning budgets (`orchestrator` & `comms_agent` = `none`, `cost_controller` & `archivist` = `low`, `qa_auditor` = `high`) eliminating 10–15s latency on operational workflows.
 - Accumulates step deliverables (`deliverable`) in `execute_pipeline`, allowing downstream steps to consume outputs via `{{deliverable}}` or `{{step_outputs}}`.
 
+---
+
+## 24. Provider Credentials Consolidation, Model Catalog Vendor Categorization & Profile Admin UX (Phase 23)
+
+### 24.1 Credentials Consolidation & Settings Hub De-duplication
+- **Single Source of Truth**: All LLM API keys and custom inference endpoints reside exclusively in the `ProviderCredential` relational model (`apps.integration.models`).
+- **De-duplication**: Removed redundant secret settings (`OPENROUTER_API_KEY`, `GEMINI_API_KEY`, etc.) from the Visual Settings Hub (`apps.integration.conf`), eliminating administrator confusion over competing configuration layers.
+- **Settings Hub Focus**: Settings Hub retains only global operational governance parameters:
+  - `DEFAULT_PROVIDER` (e.g. `openrouter`)
+  - `DEFAULT_MODEL` (e.g. `google/gemini-2.5-flash`)
+  - `DEFAULT_REASONING_EFFORT` (e.g. `medium`)
+  - `DAILY_BUDGET_CAP_USD` (e.g. `50.0`)
+- **Updated Resolution Hierarchy**: `Profile.resolve_provider_and_key()` resolves:
+  1. Direct `profile.provider_credential` (if assigned and active).
+  2. Default active `ProviderCredential` for the profile's provider (`is_default=True`).
+  3. Environment variables fallback (`settings.py` / `os.environ`).
+
+### 24.2 Model Catalog Vendor Attribution & Alphabetical Sorting (`hermes_catalog.py`)
+- **Vendor Normalization**: Extracts vendor prefixes from model IDs (`google/`, `anthropic/`, `meta-llama/`, `deepseek/`, `openai/`, etc.) and maps them to clean display labels via `VENDOR_DISPLAY_NAMES` and `extract_provider_group`.
+- **Alphabetical Sorting**: OpenRouter and canonical models are sorted primarily by `provider_group` alphabetically, and secondarily by model name.
+- **Optgroup Grouping in Django Admin**:
+  - `ProfileAdminForm` generates grouped choice tuples: `[(group_name, [(model_id, label), ...])]`.
+  - Django Admin automatically renders `<optgroup label="Google">`, `<optgroup label="Anthropic">`, etc.
+  - Dynamic JavaScript (`agent_profile_models.js`) creates matching `<optgroup>` elements on client-side provider changes while preserving model pricing/context cards.
+
+### 24.3 Profile Admin Fieldset Streamlining (`admin.py`)
+- **Visual De-cluttering**: Reorganized `ProfileAdmin` and `ProfileInline` into clear logical fieldsets:
+  - `Profile & Classification`
+  - `LLM Inference & Model Selection`
+  - `Advanced Credential & Endpoint Overrides` (collapsed)
+- **Clear Guidance on `provider_credential`**: Positioned inside the collapsed advanced section with explicit help text clarifying that leaving it blank automatically inherits the global default credential for the provider.
+
 
 
 
