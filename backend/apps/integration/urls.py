@@ -11,6 +11,7 @@ from .views import (
     list_hermes_providers,
     list_hermes_models,
     list_hermes_profiles,
+    list_model_benchmarks,
 )
 
 router = DefaultRouter()
@@ -26,5 +27,7 @@ urlpatterns = [
     path('hermes/providers/', list_hermes_providers, name='hermes-providers'),
     path('hermes/models/', list_hermes_models, name='hermes-models'),
     path('hermes/profiles/', list_hermes_profiles, name='hermes-profiles'),
+    path('hermes/benchmarks/', list_model_benchmarks, name='hermes-benchmarks'),
+    path('models/benchmarks/', list_model_benchmarks, name='model-benchmarks'),
     path('', include(router.urls)),
 ]

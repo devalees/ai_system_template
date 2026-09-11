@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import HandshakeLog, Profile, SpendReport, AgentTask
+from .models import HandshakeLog, Profile, SpendReport, AgentTask, ModelBenchmark
 
 class HandshakeRequestSerializer(serializers.Serializer):
     agent_id = serializers.CharField(max_length=120, default='hermes-agent')
@@ -52,3 +52,10 @@ class TaskVerdictSerializer(serializers.Serializer):
     verdict = serializers.ChoiceField(choices=['approved', 'changes_requested'])
     notes = serializers.CharField(required=False, allow_blank=True, default='')
     reviewer_profile = serializers.CharField(required=False, default='qa_auditor')
+
+
+class ModelBenchmarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModelBenchmark
+        fields = '__all__'
+

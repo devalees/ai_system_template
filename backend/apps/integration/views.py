@@ -279,3 +279,34 @@ def list_hermes_profiles(request):
     })
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_model_benchmarks(request):
+    """
+    Returns frontier model benchmark scores (e.g. DeepSWE) with intelligence scores and costs.
+    Accepts optional ?benchmark=DeepSWE or ?model=google/gemini-2.5-flash filters.
+    """
+    from .models import ModelBenchmark
+    from .serializers import ModelBenchmarkSerializer
+    from .services.benchmark_sync import sync_benchmarks
+
+    # Auto-seed reference baseline if table is empty
+    if not ModelBenchmark.objects.exists():
+        sync_benchmarks()
+
+    qs = ModelBenchmark.objects.all()
+    benchmark_name = request.query_params.get('benchmark')
+    if benchmark_name:
+        qs = qs.filter(benchmark_name__iexact=benchmark_name)
+    model_id = request.query_params.get('model')
+    if model_id:
+        qs = qs.filter(model_identifier__iexact=model_id)
+
+    serializer = ModelBenchmarkSerializer(qs, many=True)
+    return Response({
+        "count": qs.count(),
+        "benchmarks": serializer.data,
+    })
+
+
+

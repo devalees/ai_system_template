@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 
-from .models import HandshakeLog, Profile, SpendReport, AgentTask, ProviderCredential
+from .models import HandshakeLog, Profile, SpendReport, AgentTask, ProviderCredential, ModelBenchmark
 from .forms import ProfileAdminForm, ProviderCredentialAdminForm
 
 
@@ -273,3 +273,41 @@ class AgentTaskAdmin(admin.ModelAdmin):
     list_filter = ('status', 'review_verdict', 'reasoning_effort', 'assigned_profile', 'created_at')
     search_fields = ('task_name', 'agent_name', 'reviewer_notes', 'input_payload', 'output_result')
     readonly_fields = ('id', 'created_by', 'updated_by', 'created_at', 'updated_at')
+
+
+@admin.register(ModelBenchmark)
+class ModelBenchmarkAdmin(admin.ModelAdmin):
+    list_display = (
+        'model_identifier',
+        'benchmark_name',
+        'score_badge',
+        'cost_display',
+        'tokens_per_task',
+        'agent_steps',
+        'last_synced_at',
+    )
+    list_filter = ('benchmark_name', 'last_synced_at')
+    search_fields = ('model_identifier', 'benchmark_name')
+    readonly_fields = ('id', 'created_by', 'updated_by', 'created_at', 'updated_at', 'last_synced_at')
+    actions = ['sync_benchmarks_now']
+
+    def score_badge(self, obj):
+        color = '#059669' if obj.score >= 70 else ('#d97706' if obj.score >= 60 else '#dc2626')
+        return format_html(
+            '<span style="background: {}18; color: {}; border: 1px solid {}44; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 12px;">{:.1f}%</span>',
+            color, color, color, obj.score
+        )
+    score_badge.short_description = 'Benchmark Score'
+
+    def cost_display(self, obj):
+        if obj.avg_cost_per_task is not None:
+            return f"${obj.avg_cost_per_task:.4f}"
+        return "—"
+    cost_display.short_description = 'Cost / Task'
+
+    def sync_benchmarks_now(self, request, queryset):
+        from apps.integration.services.benchmark_sync import sync_benchmarks
+        res = sync_benchmarks()
+        self.message_user(request, f"Successfully synchronized {res.get('synced_count', 0)} model benchmark records.")
+    sync_benchmarks_now.short_description = "🔄 Synchronize frontier benchmarks from registry"
+

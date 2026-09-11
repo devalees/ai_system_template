@@ -308,6 +308,11 @@ class SpendReport(AuditableModel):
     total_cost_usd = models.DecimalField(max_digits=10, decimal_places=4, default=0.0)
     daily_budget_usd = models.DecimalField(max_digits=10, decimal_places=2, default=10.0)
     budget_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OK')
+    recommendations = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Cost efficiency and model optimization recommendations generated during spend audit."
+    )
     payload = models.JSONField(default=dict, blank=True)
 
     class Meta:
@@ -317,6 +322,68 @@ class SpendReport(AuditableModel):
 
     def __str__(self):
         return f"Spend ${self.total_cost_usd} USD [{self.budget_status}] @ {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+class ModelBenchmark(AuditableModel):
+    """
+    Stores frontier AI model benchmark scores (e.g. DeepSWE, SWE-bench) and task efficiency metrics.
+    Used by Cost Controller and Orchestrator to evaluate Intelligence-per-Dollar ROI.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    model_identifier = models.CharField(
+        max_length=120,
+        db_index=True,
+        help_text="Full model identifier (e.g. google/gemini-2.5-flash, anthropic/claude-3-5-sonnet)."
+    )
+    benchmark_name = models.CharField(
+        max_length=60,
+        default='DeepSWE',
+        db_index=True,
+        help_text="Name of benchmark suite (e.g. DeepSWE, SWE-bench)."
+    )
+    score = models.FloatField(
+        help_text="Primary benchmark pass rate / score percentage (0.0 - 100.0)."
+    )
+    avg_cost_per_task = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        help_text="Measured average cost per benchmark task in USD."
+    )
+    tokens_per_task = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Average output or total tokens per task."
+    )
+    agent_steps = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Average agent reasoning/tool steps per task."
+    )
+    source_url = models.URLField(
+        default='https://deepswe.datacurve.ai/',
+        blank=True,
+        help_text="Origin leaderboard or reference URL."
+    )
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Additional benchmark dimensions (context window, framework, raw metrics)."
+    )
+    last_synced_at = models.DateTimeField(
+        auto_now=True,
+        help_text="Timestamp when benchmark record was last updated."
+    )
+
+    class Meta:
+        ordering = ['-score', 'avg_cost_per_task']
+        unique_together = [('model_identifier', 'benchmark_name')]
+        verbose_name = 'Model Benchmark'
+        verbose_name_plural = 'Model Benchmarks'
+
+    def __str__(self):
+        return f"{self.model_identifier} — {self.benchmark_name}: {self.score}%"
 
 
 class AgentTask(AuditableModel):
