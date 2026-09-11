@@ -50,6 +50,12 @@ class ProfileInline(admin.StackedInline):
         }),
     )
 
+    class Media:
+        js = (
+            '/static/admin/js/agent_profile_models.js?v=24.1',
+            '/static/admin/js/hermes_profile_selector.js?v=24.1',
+        )
+
 
 
 # Unregister default UserAdmin and register enhanced CustomUserAdmin
@@ -107,8 +113,8 @@ class CustomUserAdmin(BaseUserAdmin):
 
     class Media:
         js = (
-            'admin/js/agent_profile_models.js',
-            'admin/js/hermes_profile_selector.js',
+            '/static/admin/js/agent_profile_models.js?v=24.1',
+            '/static/admin/js/hermes_profile_selector.js?v=24.1',
         )
 
 
@@ -184,8 +190,8 @@ class ProfileAdmin(admin.ModelAdmin):
 
     class Media:
         js = (
-            'admin/js/agent_profile_models.js',
-            'admin/js/hermes_profile_selector.js',
+            '/static/admin/js/agent_profile_models.js?v=24.1',
+            '/static/admin/js/hermes_profile_selector.js?v=24.1',
         )
 
 

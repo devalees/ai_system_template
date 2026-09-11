@@ -1,35 +1,13 @@
 /**
  * Dynamic Provider & Model Selector for Hermes Agent Profiles in Django Admin.
- * Handles dependent dropdown loading, token pricing display, and context window metrics.
+ * Handles dependent dropdown loading, token pricing display, context window metrics,
+ * and supported input/output modality badges.
+ * Supports both standalone ProfileAdmin and ProfileInline inside CustomUserAdmin.
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-    const providerSelect = document.getElementById('id_provider');
-    const modelSelect = document.getElementById('id_model_name');
-
-    if (!providerSelect || !modelSelect) {
-        return;
-    }
-
-    // Cache of fetched models per provider
+    // Shared cache of fetched models per provider across all form instances
     const modelsCache = {};
-
-    // Create and inject the live metrics card container below modelSelect
-    const card = document.createElement('div');
-    card.id = 'hermes-model-specs-card';
-    card.style.marginTop = '10px';
-    card.style.padding = '12px 16px';
-    card.style.borderRadius = '8px';
-    card.style.background = '#1e293b';
-    card.style.color = '#f8fafc';
-    card.style.border = '1px solid #334155';
-    card.style.fontSize = '13px';
-    card.style.lineHeight = '1.5';
-    card.style.maxWidth = '750px';
-    card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-    card.style.display = 'none';
-
-    modelSelect.parentNode.appendChild(card);
 
     function formatNumber(num) {
         return num ? Number(num).toLocaleString() : 'N/A';
@@ -85,157 +63,262 @@ document.addEventListener('DOMContentLoaded', function () {
         </span>`;
     }
 
-    function updateCard(modelData) {
-        if (!modelData) {
-            card.style.display = 'none';
+    function initProviderModelWidget(providerSelect) {
+        if (!providerSelect || providerSelect.dataset.modelsWidgetInitialized) return;
+        providerSelect.dataset.modelsWidgetInitialized = 'true';
+
+        // Derive name prefix to match companion model_name select (e.g. 'profile-0-' in ProfileInline or '' in standalone)
+        const providerName = providerSelect.name || '';
+        let prefix = '';
+        if (providerName.endsWith('-provider')) {
+            prefix = providerName.slice(0, -'provider'.length);
+        } else if (providerName.endsWith('provider') && providerName !== 'provider') {
+            prefix = providerName.slice(0, -'provider'.length);
+        }
+
+        // Scope lookup to parent container (fieldset / inline row / form)
+        const formContainer = providerSelect.closest('.inline-related, fieldset, form') || document;
+        const modelSelect = (prefix ? formContainer.querySelector(`select[name="${prefix}model_name"]`) : null) ||
+                            formContainer.querySelector('select.hermes-model-select') ||
+                            document.getElementById(`id_${prefix}model_name`) ||
+                            document.getElementById('id_model_name') ||
+                            formContainer.querySelector('select[name$="model_name"]');
+
+        if (!modelSelect) {
             return;
         }
 
-        const ctx = modelData.context_length ? `${formatNumber(modelData.context_length)} tokens` : '128,000 tokens';
-        const inCost = modelData.cost_input_per_1m !== undefined ? `$${Number(modelData.cost_input_per_1m).toFixed(3)}` : 'N/A';
-        const outCost = modelData.cost_output_per_1m !== undefined ? `$${Number(modelData.cost_output_per_1m).toFixed(3)}` : 'N/A';
-        const desc = modelData.description || 'Standard inference model.';
-        const reasoningBadge = modelData.supports_reasoning 
-            ? `<span style="background: #065f46; color: #6ee7b7; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px; font-weight: 600;">🧠 Reasoning Supported</span>`
-            : `<span style="background: #334155; color: #94a3b8; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px;">Standard Inference</span>`;
+        // Create specifications card styled for full-width responsive layout (no horizontal overflow)
+        const card = document.createElement('div');
+        card.className = 'hermes-model-specs-card';
+        card.style.display = 'none';
+        card.style.width = '100%';
+        card.style.maxWidth = '100%';
+        card.style.minWidth = '0';
+        card.style.boxSizing = 'border-box';
+        card.style.clear = 'both';
+        card.style.marginTop = '12px';
+        card.style.marginBottom = '6px';
+        card.style.padding = '14px 18px';
+        card.style.borderRadius = '8px';
+        card.style.background = '#1e293b';
+        card.style.color = '#f8fafc';
+        card.style.border = '1px solid #334155';
+        card.style.fontSize = '13px';
+        card.style.lineHeight = '1.5';
+        card.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
 
-        const inMods = modelData.input_modalities && modelData.input_modalities.length > 0 ? modelData.input_modalities : ['text'];
-        const outMods = modelData.output_modalities && modelData.output_modalities.length > 0 ? modelData.output_modalities : ['text'];
-
-        const inBadgesHtml = inMods.map(m => renderModalityBadge(m)).join('');
-        const outBadgesHtml = outMods.map(m => renderModalityBadge(m)).join('');
-        const hasSpecialOutput = outMods.some(m => m.toLowerCase() !== 'text');
-
-        card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #475569; padding-bottom: 6px;">
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
-                    <span style="font-weight: 600; color: #38bdf8; font-size: 14px;">⚡ Model Specifications & Pricing</span>
-                    ${reasoningBadge}
-                </div>
-                <span style="background: #0f172a; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #94a3b8;">${providerSelect.value.toUpperCase()}</span>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 10px;">
-                <div>
-                    <span style="color: #94a3b8; display: block; font-size: 11px;">CONTEXT WINDOW</span>
-                    <strong style="color: #f1f5f9; font-size: 13px;">${ctx}</strong>
-                </div>
-                <div>
-                    <span style="color: #94a3b8; display: block; font-size: 11px;">INPUT COST (/1M)</span>
-                    <strong style="color: #4ade80; font-size: 13px;">${inCost}</strong>
-                </div>
-                <div>
-                    <span style="color: #94a3b8; display: block; font-size: 11px;">OUTPUT COST (/1M)</span>
-                    <strong style="color: #fb923c; font-size: 13px;">${outCost}</strong>
-                </div>
-            </div>
-            <div style="margin-bottom: 10px; padding: 8px 10px; background: rgba(15, 23, 42, 0.6); border-radius: 6px; border: 1px solid #334155;">
-                <div style="display: flex; align-items: flex-start; margin-bottom: ${hasSpecialOutput ? '6px' : '0'};">
-                    <span style="color: #94a3b8; font-size: 11px; font-weight: 600; min-width: 95px; text-transform: uppercase; padding-top: 3px;">📥 Accepted:</span>
-                    <div style="display: flex; flex-wrap: wrap; align-items: center;">${inBadgesHtml}</div>
-                </div>
-                ${hasSpecialOutput ? `
-                <div style="display: flex; align-items: flex-start;">
-                    <span style="color: #94a3b8; font-size: 11px; font-weight: 600; min-width: 95px; text-transform: uppercase; padding-top: 3px;">📤 Generated:</span>
-                    <div style="display: flex; flex-wrap: wrap; align-items: center;">${outBadgesHtml}</div>
-                </div>` : ''}
-            </div>
-            <div style="color: #cbd5e1; font-size: 12px; font-style: italic;">${desc}</div>
-        `;
-        card.style.display = 'block';
-    }
-
-    async function loadModelsForProvider(provider, selectedModelId = null) {
-        if (!provider) return;
-
-        let models = modelsCache[provider];
-        if (!models) {
-            modelSelect.disabled = true;
-            try {
-                const res = await fetch(`/api/hermes/models/?provider=${encodeURIComponent(provider)}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    models = data.models || [];
-                    modelsCache[provider] = models;
-                }
-            } catch (err) {
-                console.error('Failed to load models for provider:', err);
-            } finally {
-                modelSelect.disabled = false;
-            }
+        // Locate form row container and ensure it supports block flow beneath the select
+        const formRow = modelSelect.closest('.form-row') || modelSelect.closest('.fieldBox') || modelSelect.closest('p') || modelSelect.parentNode;
+        if (formRow) {
+            formRow.style.display = 'block';
+            formRow.style.width = '100%';
+            formRow.style.boxSizing = 'border-box';
+            // Clean up any stale card instance
+            const oldCard = formRow.querySelector('.hermes-model-specs-card');
+            if (oldCard) oldCard.remove();
+            formRow.appendChild(card);
+        } else {
+            modelSelect.parentNode.appendChild(card);
         }
 
-        if (!models || models.length === 0) {
-            card.style.display = 'none';
-            return;
+        function updateCard(modelData) {
+            if (!modelData) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const ctx = modelData.context_length ? `${formatNumber(modelData.context_length)} tokens` : '128,000 tokens';
+            const inCost = modelData.cost_input_per_1m !== undefined ? `$${Number(modelData.cost_input_per_1m).toFixed(3)}` : 'N/A';
+            const outCost = modelData.cost_output_per_1m !== undefined ? `$${Number(modelData.cost_output_per_1m).toFixed(3)}` : 'N/A';
+            const desc = modelData.description || 'Standard inference model.';
+            const reasoningBadge = modelData.supports_reasoning 
+                ? `<span style="background: #065f46; color: #6ee7b7; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">🧠 Reasoning Supported</span>`
+                : `<span style="background: #334155; color: #94a3b8; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Standard Inference</span>`;
+
+            const inMods = modelData.input_modalities && modelData.input_modalities.length > 0 ? modelData.input_modalities : ['text'];
+            const outMods = modelData.output_modalities && modelData.output_modalities.length > 0 ? modelData.output_modalities : ['text'];
+
+            const inBadgesHtml = inMods.map(m => renderModalityBadge(m)).join('');
+            const outBadgesHtml = outMods.map(m => renderModalityBadge(m)).join('');
+            const hasSpecialOutput = outMods.some(m => m.toLowerCase() !== 'text');
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 8px;">
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <span style="font-weight: 700; color: #38bdf8; font-size: 14px; letter-spacing: 0.2px;">⚡ Model Specifications & Pricing</span>
+                        ${reasoningBadge}
+                    </div>
+                    <span style="background: #0f172a; border: 1px solid #334155; padding: 2px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase;">${providerSelect.value}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 12px; border-radius: 6px; border: 1px solid #334155;">
+                        <span style="color: #94a3b8; display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Context Window</span>
+                        <strong style="color: #f1f5f9; font-size: 14px;">${ctx}</strong>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 12px; border-radius: 6px; border: 1px solid #334155;">
+                        <span style="color: #94a3b8; display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Input Cost (/1M tokens)</span>
+                        <strong style="color: #4ade80; font-size: 14px;">${inCost}</strong>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 12px; border-radius: 6px; border: 1px solid #334155;">
+                        <span style="color: #94a3b8; display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Output Cost (/1M tokens)</span>
+                        <strong style="color: #fb923c; font-size: 14px;">${outCost}</strong>
+                    </div>
+                </div>
+                <div style="margin-bottom: 12px; padding: 10px 12px; background: rgba(15, 23, 42, 0.6); border-radius: 6px; border: 1px solid #334155;">
+                    <div style="display: flex; align-items: flex-start; margin-bottom: ${hasSpecialOutput ? '6px' : '0'};">
+                        <span style="color: #94a3b8; font-size: 11px; font-weight: 600; min-width: 95px; text-transform: uppercase; padding-top: 3px;">📥 Accepted:</span>
+                        <div style="display: flex; flex-wrap: wrap; align-items: center;">${inBadgesHtml}</div>
+                    </div>
+                    ${hasSpecialOutput ? `
+                    <div style="display: flex; align-items: flex-start;">
+                        <span style="color: #94a3b8; font-size: 11px; font-weight: 600; min-width: 95px; text-transform: uppercase; padding-top: 3px;">📤 Generated:</span>
+                        <div style="display: flex; flex-wrap: wrap; align-items: center;">${outBadgesHtml}</div>
+                    </div>` : ''}
+                </div>
+                <div style="color: #cbd5e1; font-size: 12px; font-style: italic; line-height: 1.4;">${desc}</div>
+            `;
+            card.style.display = 'block';
         }
 
-        const currentVal = selectedModelId || modelSelect.value;
-        modelSelect.innerHTML = '';
+        async function loadModelsForProvider(provider, selectedModelId = null) {
+            if (!provider) return;
 
-        let activeModelData = null;
+            let models = modelsCache[provider];
+            if (!models) {
+                modelSelect.disabled = true;
+                // Show subtle loading indication inside specs card
+                card.style.display = 'block';
+                card.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 12px; padding: 4px 0;">
+                        <span>⏳</span>
+                        <span>Loading specifications for <strong>${provider.toUpperCase()}</strong> models...</span>
+                    </div>
+                `;
 
-        // Group models by provider_group
-        const groups = {};
-        models.forEach(m => {
-            const groupName = m.provider_group || 'Other';
-            if (!groups[groupName]) {
-                groups[groupName] = [];
-            }
-            groups[groupName].push(m);
-        });
-
-        const sortedGroupNames = Object.keys(groups).sort((a, b) => a.localeCompare(b));
-
-        sortedGroupNames.forEach(groupName => {
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = groupName;
-
-            groups[groupName].forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m.id;
-                const ctxK = m.context_length ? `${Math.round(m.context_length / 1000)}k` : '128k';
-                const inC = `$${(m.cost_input_per_1m || 0).toFixed(3)}`;
-                const outC = `$${(m.cost_output_per_1m || 0).toFixed(3)}`;
-                const modBadge = formatModalityIndicator(m.input_modalities);
-                opt.textContent = `${m.name || m.id}  [${modBadge}] (${ctxK} ctx | in: ${inC} | out: ${outC})`;
-
-                if (m.id === currentVal) {
-                    opt.selected = true;
-                    activeModelData = m;
+                try {
+                    const res = await fetch(`/api/hermes/models/?provider=${encodeURIComponent(provider)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        models = data.models || [];
+                        modelsCache[provider] = models;
+                    }
+                } catch (err) {
+                    console.error('Failed to load models for provider:', err);
+                } finally {
+                    modelSelect.disabled = false;
                 }
-                optgroup.appendChild(opt);
+            }
+
+            if (!models || models.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const currentVal = selectedModelId || modelSelect.value;
+            modelSelect.innerHTML = '';
+
+            let activeModelData = null;
+
+            // Group models by provider_group
+            const groups = {};
+            models.forEach(m => {
+                const groupName = m.provider_group || 'Other';
+                if (!groups[groupName]) {
+                    groups[groupName] = [];
+                }
+                groups[groupName].push(m);
             });
 
-            modelSelect.appendChild(optgroup);
+            const sortedGroupNames = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+
+            sortedGroupNames.forEach(groupName => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = groupName;
+
+                groups[groupName].forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.id;
+                    const ctxK = m.context_length ? `${Math.round(m.context_length / 1000)}k` : '128k';
+                    const inC = `$${(m.cost_input_per_1m || 0).toFixed(3)}`;
+                    const outC = `$${(m.cost_output_per_1m || 0).toFixed(3)}`;
+                    const modBadge = formatModalityIndicator(m.input_modalities);
+                    opt.textContent = `${m.name || m.id}  [${modBadge}] (${ctxK} ctx | in: ${inC} | out: ${outC})`;
+
+                    if (m.id === currentVal) {
+                        opt.selected = true;
+                        activeModelData = m;
+                    }
+                    optgroup.appendChild(opt);
+                });
+
+                modelSelect.appendChild(optgroup);
+            });
+
+            // Preserve currentVal if it was custom/unlisted
+            if (currentVal && !activeModelData) {
+                const customOpt = document.createElement('option');
+                customOpt.value = currentVal;
+                customOpt.textContent = `${currentVal} (Current / Custom)`;
+                customOpt.selected = true;
+                modelSelect.insertBefore(customOpt, modelSelect.firstChild);
+                activeModelData = {
+                    id: currentVal,
+                    name: currentVal,
+                    provider: provider,
+                    description: 'Custom or uncataloged model ID.',
+                    context_length: 128000,
+                    cost_input_per_1m: 0,
+                    cost_output_per_1m: 0,
+                    supports_reasoning: false,
+                    input_modalities: ['text'],
+                    output_modalities: ['text']
+                };
+            }
+
+            // If no active model matched and no custom option, default to first option
+            if (!activeModelData && models.length > 0) {
+                modelSelect.selectedIndex = 0;
+                activeModelData = models[0];
+            }
+
+            updateCard(activeModelData);
+        }
+
+        // Provider change event
+        providerSelect.addEventListener('change', function () {
+            loadModelsForProvider(this.value);
         });
 
-        // If current value wasn't found in list, default to first option
-        if (!activeModelData && models.length > 0) {
-            modelSelect.selectedIndex = 0;
-            activeModelData = models[0];
-        }
+        // Model selection change event
+        modelSelect.addEventListener('change', function () {
+            const provider = providerSelect.value;
+            const models = modelsCache[provider] || [];
+            const selected = models.find(m => m.id === this.value);
+            if (selected) {
+                updateCard(selected);
+            }
+        });
 
-        updateCard(activeModelData);
+        // Initial trigger on page load
+        if (providerSelect.value) {
+            loadModelsForProvider(providerSelect.value, modelSelect.value);
+        }
     }
 
+    // Initialize all matching provider select elements (standalone Profile form and User ProfileInline)
+    function initAll() {
+        document.querySelectorAll('select.hermes-provider-select, select[name="provider"], select[name$="-provider"], select#id_provider').forEach(initProviderModelWidget);
+    }
 
-    // Provider change event
-    providerSelect.addEventListener('change', function () {
-        loadModelsForProvider(this.value);
-    });
+    initAll();
 
-    // Model selection change event
-    modelSelect.addEventListener('change', function () {
-        const provider = providerSelect.value;
-        const models = modelsCache[provider] || [];
-        const selected = models.find(m => m.id === this.value);
-        if (selected) {
-            updateCard(selected);
-        }
-    });
-
-    // Initial trigger on page load
-    if (providerSelect.value) {
-        loadModelsForProvider(providerSelect.value, modelSelect.value);
+    // Support dynamically added inlines (e.g. via Django Admin inline formset events)
+    if (window.django && window.django.jQuery) {
+        window.django.jQuery(document).on('formset:added', function (event, $row) {
+            if ($row && $row.length) {
+                $row[0].querySelectorAll('select.hermes-provider-select, select[name$="provider"]').forEach(initProviderModelWidget);
+            }
+        });
     }
 });
