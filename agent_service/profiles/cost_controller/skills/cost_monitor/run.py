@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Cost Monitor Skill Runner.
+Cost Monitor Skill Runner with Frontier Benchmark Intelligence.
 
 Scans Hermes SQLite databases (`state.db`) across all profiles and the root environment
 to aggregate LLM token usage, calculate estimated expenditure, and enforce budget thresholds.
+Fetches frontier benchmark data (DeepSWE) from Django REST API to generate data-driven
+cost-efficiency and model-switching recommendations.
 """
 
 import argparse
@@ -12,17 +14,24 @@ import json
 import os
 import sqlite3
 import sys
+import urllib.request
+import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
 
-# Default pricing per 1M tokens if estimated_cost_usd is missing or zero
+# Default reference pricing per 1M tokens if estimated_cost_usd is missing or zero
 DEFAULT_PRICING = {
     "google/gemini-2.5-flash": {"input": 0.075, "output": 0.30},
     "anthropic/claude-3-5-sonnet": {"input": 3.00, "output": 15.00},
+    "anthropic/claude-3-7-sonnet": {"input": 3.00, "output": 15.00},
     "anthropic/claude-opus": {"input": 15.00, "output": 75.00},
     "openai/gpt-4o": {"input": 2.50, "output": 10.00},
     "openai/gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "openai/o3-mini": {"input": 1.10, "output": 4.40},
+    "deepseek/deepseek-chat": {"input": 0.14, "output": 0.28},
+    "z-ai/glm-5.3-flash": {"input": 0.10, "output": 0.20},
+    "meta-llama/llama-3.3-70b-instruct": {"input": 0.40, "output": 0.80},
     "default": {"input": 0.50, "output": 1.50},
 }
 
@@ -116,8 +125,87 @@ def collect_metrics(hermes_root: Path) -> dict:
     }
 
 
+def fetch_benchmark_recommendations(api_url: str, api_token: str, active_models: list[str]) -> list[dict]:
+    """
+    Fetches frontier model benchmarks from Django and generates cost-efficiency recommendations.
+    Compares active models against the benchmark registry to suggest high-ROI alternatives.
+    """
+    benchmarks_url = f"{api_url}/hermes/benchmarks/"
+    req = urllib.request.Request(
+        benchmarks_url,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Token {api_token}" if api_token else ""
+        }
+    )
+    benchmarks = {}
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            for b in data.get("benchmarks", []):
+                benchmarks[b["model_identifier"]] = b
+    except Exception:
+        # Graceful fallback to static reference set if network or endpoint is unreachable
+        return []
+
+    recommendations = []
+    for active_model in active_models:
+        curr = benchmarks.get(active_model)
+        if not curr:
+            continue
+
+        curr_cost = float(curr.get("avg_cost_per_task") or 0.0)
+        curr_score = float(curr.get("score") or 0.0)
+
+        for alt_id, alt in benchmarks.items():
+            if alt_id == active_model:
+                continue
+
+            alt_cost = float(alt.get("avg_cost_per_task") or 0.0)
+            alt_score = float(alt.get("score") or 0.0)
+
+            # Suggest alternative if score is comparable (>= curr - 2%) and at least 35% cheaper
+            if curr_cost > 0 and alt_cost > 0:
+                cost_saving_pct = round(((curr_cost - alt_cost) / curr_cost) * 100, 1)
+                if alt_score >= (curr_score - 2.0) and cost_saving_pct >= 35.0:
+                    score_diff = round(alt_score - curr_score, 1)
+                    score_txt = f"+{score_diff}%" if score_diff > 0 else f"{score_diff}%"
+                    recommendations.append({
+                        "active_model": active_model,
+                        "active_score": curr_score,
+                        "active_cost_per_task": curr_cost,
+                        "recommended_model": alt_id,
+                        "recommended_score": alt_score,
+                        "recommended_cost_per_task": alt_cost,
+                        "estimated_savings_pct": cost_saving_pct,
+                        "score_variance": score_diff,
+                        "message": (
+                            f"Active model '{active_model}' (${curr_cost:.2f}/task, DeepSWE: {curr_score}%) "
+                            f"can be substituted by '{alt_id}' (${alt_cost:.2f}/task, DeepSWE: {alt_score}%), "
+                            f"saving ~{cost_saving_pct}% cost ({score_txt} pass rate)."
+                        )
+                    })
+
+    return recommendations
+
+
+def resolve_django_credentials():
+    """Resolves Django API URL and bot token from env or profile files."""
+    api_url = os.getenv("DJANGO_API_URL", "http://host.docker.internal:8000/api").rstrip('/')
+    api_token = os.getenv("DJANGO_API_TOKEN", "")
+    if not api_token:
+        env_path = Path("/root/.hermes/profiles/cost_controller/.env")
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                if line.startswith("DJANGO_API_TOKEN="):
+                    api_token = line.split("=", 1)[1].strip()
+                elif line.startswith("DJANGO_API_URL="):
+                    api_url = line.split("=", 1)[1].strip().rstrip('/')
+    return api_url, api_token
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Audit Hermes token spend and costs.")
+    parser = argparse.ArgumentParser(description="Audit Hermes token spend, costs, and model efficiency.")
     parser.add_argument("--daily-budget", type=float, default=10.00, help="Daily budget limit in USD.")
     parser.add_argument("--hermes-root", type=str, default="/root/.hermes", help="Path to Hermes root directory.")
     parser.add_argument("--json", action="store_true", help="Output raw JSON.")
@@ -127,7 +215,7 @@ def main():
     hermes_root = Path(args.hermes_root)
     if not hermes_root.exists():
         # Fallback for host execution
-        host_fallback = Path(__file__).resolve().parent.parent.parent / "data"
+        host_fallback = Path(__file__).resolve().parent.parent.parent.parent.parent / "data"
         if host_fallback.exists():
             hermes_root = host_fallback
 
@@ -142,6 +230,16 @@ def main():
     else:
         metrics["budget_status"] = "OK"
 
+    # Fetch benchmark optimization recommendations
+    api_url, api_token = resolve_django_credentials()
+    active_models = list(metrics["models"].keys())
+    # If no models consumed yet, include default configured models
+    if not active_models:
+        active_models = ["anthropic/claude-3-5-sonnet", "google/gemini-2.5-flash"]
+    
+    recommendations = fetch_benchmark_recommendations(api_url, api_token, active_models)
+    metrics["recommendations"] = recommendations
+
     if args.json:
         print(json.dumps(metrics, indent=2))
         return
@@ -150,9 +248,11 @@ def main():
     status_color = "\033[92m" if metrics["budget_status"] == "OK" else "\033[91m"
     reset = "\033[0m"
     bold = "\033[1m"
+    cyan = "\033[96m"
+    yellow = "\033[93m"
 
     print(f"\n{bold}═══════════════════════════════════════════════════════════════════{reset}")
-    print(f"{bold}        Hermes Cost Controller: Financial Audit Report             {reset}")
+    print(f"{bold}        Hermes Cost Controller: Financial & Efficiency Audit       {reset}")
     print(f"{bold}═══════════════════════════════════════════════════════════════════{reset}")
     print(f"Timestamp:          {metrics['timestamp']}")
     print(f"Total API Calls:    {metrics['total_api_calls']:,}")
@@ -174,23 +274,17 @@ def main():
         for m_name, data in metrics["models"].items():
             print(f"  • {m_name:<30}: {data['api_calls']} calls | {data['input_tokens']+data['output_tokens']:,} tokens | ${data['cost_usd']:.4f}")
 
+    if recommendations:
+        print(f"───────────────────────────────────────────────────────────────────")
+        print(f"{bold}{cyan}💡 Frontier Benchmark & Model Optimization Recommendations:{reset}")
+        for rec in recommendations:
+            print(f"  {yellow}•{reset} {rec['message']}")
+
     if args.push:
         print(f"───────────────────────────────────────────────────────────────────")
-        api_url = os.getenv("DJANGO_API_URL", "http://host.docker.internal:8000/api").rstrip('/')
-        api_token = os.getenv("DJANGO_API_TOKEN", "")
-        if not api_token:
-            env_path = Path("/root/.hermes/profiles/cost_controller/.env")
-            if env_path.exists():
-                for line in env_path.read_text().splitlines():
-                    if line.startswith("DJANGO_API_TOKEN="):
-                        api_token = line.split("=", 1)[1].strip()
-                    elif line.startswith("DJANGO_API_URL="):
-                        api_url = line.split("=", 1)[1].strip().rstrip('/')
-
         if not api_token:
             print(f"  {bold}\033[93m! Cannot push report: DJANGO_API_TOKEN not found.{reset}")
         else:
-            import urllib.request
             payload_data = json.dumps({
                 "reported_by": "cost_controller",
                 "total_api_calls": metrics["total_api_calls"],
@@ -198,6 +292,7 @@ def main():
                 "total_cost_usd": str(round(metrics["total_cost_usd"], 4)),
                 "daily_budget_usd": str(round(metrics["daily_budget_usd"], 2)),
                 "budget_status": metrics["budget_status"],
+                "recommendations": metrics.get("recommendations", []),
                 "payload": metrics
             }).encode("utf-8")
             req = urllib.request.Request(
@@ -210,7 +305,7 @@ def main():
             )
             try:
                 with urllib.request.urlopen(req, timeout=5) as resp:
-                    print(f"  {bold}{status_color}✓ Spend report pushed to Django backend (HTTP {resp.status}).{reset}")
+                    print(f"  {bold}{status_color}✓ Spend report & recommendations pushed to Django backend (HTTP {resp.status}).{reset}")
             except Exception as exc:
                 print(f"  {bold}\033[91m! Failed to push report to Django backend: {exc}{reset}")
 
