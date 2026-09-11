@@ -138,16 +138,16 @@ agent_service/
 - **Bundled Skills Opt-Out**: `.no-bundled-skills` active (pruned 54 bundled skills to eliminate token overhead)
 
 #### Primary Responsibilities
-- **External Concierge & Intake**: Serves as the primary external touchpoint for clients (`Profile.user_type = 'client'`), answering inquiries and providing structured project visibility.
+- **External Concierge & Intake**: Serves as the primary external touchpoint for external clients ([`apps.clients.models.Client`](file:///home/ehab/Desktop/economy_editor/backend/apps/clients/models.py)) and their associated representative users (`Profile.client`), answering inquiries and providing structured project visibility. External clients interact exclusively with `comms_agent`.
 - **Zero-Trust Document Streaming**: Strictly requests client-authorized attachments via authenticated Django REST endpoints (`GET /api/v1/media/documents/<id>/download/`) with tenant/client ownership validation and SOC2/GDPR audit logging (`apps.audit`). Never accesses global backend filesystem mounts directly.
-- **Engagement-Budgeted Governance**: Monitors client AI spend against allocated dollar ceilings ($B$) across 4 percentage milestones (25% silent audit, 50% velocity check, 75% proactive advisory notice, 100% quota escalation) via `client_budget_status`.
+- **Engagement-Budgeted Governance**: Enforces the client's `is_ai_enabled` permission and monitors dollar spend against allocated ceilings (`Client.ai_budget_usd`) across 4 percentage milestones (25% silent audit, 50% velocity check, 75% proactive advisory notice, 100% quota escalation) via `client_budget_status`.
 - **Notification Bridging**: Dispatches messages across system channels (In-App, Email, Webhook, Slack) via `apps.notifications`.
 
 #### Dedicated Skills & Scripts
 - **Skill**: **`client_service_bridge`** ([`agent_service/profiles/comms_agent/skills/client_service_bridge/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/comms_agent/skills/client_service_bridge/))
   - **Executable Script**: [`agent_service/profiles/comms_agent/skills/client_service_bridge/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/comms_agent/skills/client_service_bridge/run.py)
   - **What It Does**:
-    1. **`budget-check`**: Queries Django for the client's current AI spend, allocated dollar budget, percentage tier, and threshold actions; optionally increments spend via `--log-spend`.
+    1. **`budget-check`**: Queries Django for the client's active entitlement (`is_ai_enabled`), current AI spend, allocated dollar budget, percentage tier, and threshold actions; optionally increments spend via `--log-spend`.
     2. **`status`**: Fetches client account status, active tenant, and engagement progress.
     3. **`documents`**: Queries accessible document inventory for the authenticated client context.
     4. **`fetch-doc`**: Securely streams and downloads a document via authenticated REST API, inspects content, and enables immediate transient file unlinking (`os.unlink()`).
