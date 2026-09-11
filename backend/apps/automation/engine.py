@@ -3,6 +3,8 @@ Core Execution Engine & Dispatcher for Centralized Automations.
 Unified Asynchronous Celery Execution Pipeline for 1-to-N Decoupled Triggers and Actions.
 """
 
+import contextvars
+import logging
 import re
 import time
 import traceback
@@ -11,6 +13,25 @@ from typing import Any, Dict, List, Optional
 from django.utils import timezone
 from .models import AutomationTrigger, AutomationAction, AutomationLog, AutomationRule
 from .registry import ServiceRegistry
+
+logger = logging.getLogger(__name__)
+
+# Context variable to track active automation recursion depth across thread lifecycle
+_current_automation_depth: contextvars.ContextVar[int] = contextvars.ContextVar('_current_automation_depth', default=0)
+
+# Maximum cascading recursion depth for model event triggers
+MAX_AUTOMATION_DEPTH = 3
+
+# Framework models protected against automated target CRUD operations
+RESTRICTED_TARGET_MODELS = {
+    'auth.permission',
+    'auth.group',
+    'contenttypes.contenttype',
+    'authtoken.token',
+    'sessions.session',
+    'admin.logentry',
+    'automation.automationlog',
+}
 
 
 def make_json_serializable(obj: Any) -> Any:
@@ -353,6 +374,10 @@ class AutomationEngine:
         if not target_model:
             raise ValueError("Target model is not specified for CRUD operation.")
 
+        target_model_clean = target_model.strip().lower()
+        if target_model_clean in RESTRICTED_TARGET_MODELS:
+            raise PermissionError(f"Target model '{target_model}' is protected and restricted from automated CRUD operations.")
+
         try:
             target_cls = apps.get_model(target_model)
             if not target_cls:
@@ -432,7 +457,8 @@ class AutomationEngine:
         cls,
         action_id: int,
         trigger_context: Optional[Dict[str, Any]] = None,
-        trigger_source: str = "celery_async"
+        trigger_source: str = "celery_async",
+        depth: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Executes a single AutomationAction step.
@@ -445,12 +471,34 @@ class AutomationEngine:
 
         trigger = action.trigger
 
+        # Determine execution depth
+        if depth is not None:
+            exec_depth = depth
+        elif trigger_context and '_automation_depth' in trigger_context:
+            exec_depth = int(trigger_context['_automation_depth'])
+        else:
+            exec_depth = _current_automation_depth.get(0)
+
+        depth_token = _current_automation_depth.set(exec_depth + 1)
+
         # 1. Check if action or trigger is paused
         if not action.is_active:
+            _current_automation_depth.reset(depth_token)
             return {"status": "skipped", "reason": f"Action '{action.name}' is inactive"}
+
         context = dict(trigger_context or {})
         if trigger and not trigger.is_active and not context.get('force_execution', False):
+            _current_automation_depth.reset(depth_token)
             return {"status": "skipped", "reason": f"Parent trigger '{trigger.name}' is inactive"}
+
+        # Resolve Tenant Organization
+        org = getattr(action, 'organization', None) or (trigger and getattr(trigger, 'organization', None))
+        if not org and context.get('organization_id'):
+            from apps.tenants.models import Organization
+            try:
+                org = Organization.objects.filter(id=context['organization_id']).first()
+            except Exception:
+                pass
 
         if action.action_params:
             for k, v in action.action_params.items():
@@ -463,6 +511,8 @@ class AutomationEngine:
             trigger=trigger,
             action=action,
             rule=trigger,
+            organization=org,
+            execution_depth=exec_depth,
             trigger_source=trigger_source,
             status='running',
             input_context=safe_context,
@@ -473,44 +523,50 @@ class AutomationEngine:
         error_msg = ""
         success = False
 
+        from apps.tenants.context import tenant_context, bypass_tenant_isolation
+        tenant_cm = tenant_context(org) if org else bypass_tenant_isolation()
+
         try:
-            crud_result = None
-            if action.target_model and action.target_operation:
-                crud_result = cls.execute_target_crud(action, context)
+            with tenant_cm:
+                crud_result = None
+                if action.target_model and action.target_operation:
+                    crud_result = cls.execute_target_crud(action, context)
 
-            action_result = None
-            action_type = action.action_type
-            if action_type and action_type not in ('', 'none', 'target_crud'):
-                if action_type.startswith("hermes_profile:"):
-                    profile_slug = action_type.removeprefix("hermes_profile:")
-                    from .actions import dispatch_hermes_prompt_action
-                    context['profile'] = profile_slug
-                    action_result = dispatch_hermes_prompt_action(context)
-                    success = action_result.get('status') not in ('error', 'failed')
-                    if not success and not error_msg:
-                        error_msg = action_result.get('error') or f"Hermes Gateway returned HTTP {action_result.get('http_status')}"
-                else:
-                    action_def = ServiceRegistry.get_action(action_type)
-                    if not action_def or not action_def.handler:
-                        raise ValueError(f"Action '{action_type}' has no registered handler.")
-                    action_result = action_def.handler(context) or {}
+                action_result = None
+                action_type = action.action_type
+                if action_type and action_type not in ('', 'none', 'target_crud'):
+                    if action_type.startswith("hermes_profile:"):
+                        profile_slug = action_type.removeprefix("hermes_profile:")
+                        from .actions import dispatch_hermes_prompt_action
+                        context['profile'] = profile_slug
+                        action_result = dispatch_hermes_prompt_action(context)
+                        success = action_result.get('status') not in ('error', 'failed')
+                        if not success and not error_msg:
+                            error_msg = action_result.get('error') or f"Hermes Gateway returned HTTP {action_result.get('http_status')}"
+                    else:
+                        action_def = ServiceRegistry.get_action(action_type)
+                        if not action_def or not action_def.handler:
+                            raise ValueError(f"Action '{action_type}' has no registered handler.")
+                        action_result = action_def.handler(context) or {}
+                        success = True
+                elif crud_result:
                     success = True
-            elif crud_result:
-                success = True
-            else:
-                raise ValueError(f"Action '{action.name}' has no defined target operation or handler.")
+                else:
+                    raise ValueError(f"Action '{action.name}' has no defined target operation or handler.")
 
-            if crud_result and action_result:
-                output_result = {"crud": crud_result, "action": action_result}
-            elif crud_result:
-                output_result = crud_result
-            else:
-                output_result = action_result or {}
+                if crud_result and action_result:
+                    output_result = {"crud": crud_result, "action": action_result}
+                elif crud_result:
+                    output_result = crud_result
+                else:
+                    output_result = action_result or {}
 
         except Exception as exc:
             error_msg = f"{type(exc).__name__}: {str(exc)}\n{traceback.format_exc()}"
             success = False
             output_result = {"error": str(exc)}
+        finally:
+            _current_automation_depth.reset(depth_token)
 
         duration_ms = int((time.time() - start_time) * 1000)
 
@@ -544,14 +600,16 @@ class AutomationEngine:
         }
 
     @classmethod
-    def execute_trigger(
+    def execute_pipeline(
         cls,
         trigger_id: int,
         trigger_context: Optional[Dict[str, Any]] = None,
-        trigger_source: str = "manual"
+        trigger_source: str = "pipeline"
     ) -> Dict[str, Any]:
         """
-        Evaluates an AutomationTrigger and dispatches all attached active actions sequentially via Celery.
+        Coordinates sequential execution of all actions attached to an AutomationTrigger.
+        Chains context across steps (e.g. step 1's created record_id becomes available to step 2).
+        Respects action.stop_on_failure to halt execution on error.
         """
         try:
             trigger = AutomationTrigger.objects.prefetch_related('actions').get(id=trigger_id)
@@ -559,9 +617,26 @@ class AutomationEngine:
             return {"status": "error", "error": f"Trigger {trigger_id} not found"}
 
         context = dict(trigger_context or {})
+        exec_depth = int(context.get('_automation_depth', 0))
 
         if not trigger.is_active and not context.get('force_execution'):
             return {"status": "skipped", "reason": f"Trigger '{trigger.name}' is paused (is_active=False)"}
+
+        # Check recursion depth guard
+        if exec_depth >= MAX_AUTOMATION_DEPTH:
+            err_msg = f"Recursion depth limit ({MAX_AUTOMATION_DEPTH}) exceeded for trigger '{trigger.name}'. Halting pipeline."
+            logger.warning(err_msg)
+            AutomationLog.objects.create(
+                trigger=trigger,
+                rule=trigger,
+                organization=trigger.organization,
+                execution_depth=exec_depth,
+                trigger_source=trigger_source,
+                status='failed',
+                input_context=make_json_serializable(context),
+                error_message=err_msg
+            )
+            return {"status": "failed", "error": err_msg}
 
         # Condition checks (skipped on manual on-demand test execution)
         if not context.get('force_execution') and not context.get('manual_trigger'):
@@ -575,19 +650,72 @@ class AutomationEngine:
         if not actions:
             return {"status": "skipped", "reason": f"Trigger '{trigger.name}' has no active actions"}
 
-        from .tasks import execute_automation_action_task
+        step_results = []
+        pipeline_success = True
+        accumulated_context = dict(context)
+        accumulated_context['_automation_depth'] = exec_depth
 
-        dispatched_task_ids = []
         for action in actions:
-            task_res = execute_automation_action_task.delay(action.id, context, trigger_source)
-            dispatched_task_ids.append(task_res.id if hasattr(task_res, 'id') else str(task_res))
+            action_res = cls.execute_action(
+                action_id=action.id,
+                trigger_context=accumulated_context,
+                trigger_source=f"{trigger_source}:step#{action.sequence}",
+                depth=exec_depth
+            )
+            step_results.append({
+                "action_id": action.id,
+                "action_name": action.name,
+                "sequence": action.sequence,
+                "result": action_res,
+            })
+
+            # Check for failure
+            is_failed = action_res.get('status') in ('error', 'failed')
+            if is_failed:
+                pipeline_success = False
+                if getattr(action, 'stop_on_failure', True):
+                    logger.warning(f"Pipeline stopped on failure at action #{action.sequence} '{action.name}': {action_res.get('error')}")
+                    break
+
+            # Propagate output context to next steps
+            out = action_res.get('output', {})
+            if isinstance(out, dict):
+                crud_out = out.get('crud', out) if 'crud' in out else out
+                if isinstance(crud_out, dict) and 'record_id' in crud_out:
+                    accumulated_context['record_id'] = crud_out['record_id']
+                    accumulated_context['target_record_id'] = crud_out['record_id']
+                    accumulated_context[f"step_{action.sequence}_record_id"] = crud_out['record_id']
+
+                if 'step_outputs' not in accumulated_context:
+                    accumulated_context['step_outputs'] = {}
+                accumulated_context['step_outputs'][str(action.id)] = out
+                accumulated_context['step_outputs'][f"step_{action.sequence}"] = out
 
         return {
-            "status": "success",
+            "status": "success" if pipeline_success else "failed",
             "trigger_id": trigger.id,
-            "dispatched_actions": len(actions),
-            "celery_tasks": dispatched_task_ids,
+            "dispatched_actions": len(step_results),
+            "executed_steps": len(step_results),
+            "step_results": step_results,
+            "final_context": make_json_serializable(accumulated_context),
         }
+
+    @classmethod
+    def execute_trigger(
+        cls,
+        trigger_id: int,
+        trigger_context: Optional[Dict[str, Any]] = None,
+        trigger_source: str = "manual"
+    ) -> Dict[str, Any]:
+        """
+        Evaluates an AutomationTrigger and coordinates execution of its action pipeline.
+        Delegates to execute_pipeline for sequential context propagation.
+        """
+        return cls.execute_pipeline(
+            trigger_id=trigger_id,
+            trigger_context=trigger_context,
+            trigger_source=trigger_source
+        )
 
     @classmethod
     def execute_rule(
@@ -614,23 +742,47 @@ class AutomationEngine:
         old_values: Optional[Dict[str, Any]] = None
     ) -> int:
         """
-        Finds matching AutomationTriggers for a model instance event and dispatches their actions via Celery.
-        Returns total count of actions dispatched.
+        Finds matching AutomationTriggers for a model instance event and dispatches their action pipelines via Celery.
+        Returns total count of triggers dispatched.
         """
         app_label = instance._meta.app_label
         model_name = instance._meta.model_name
         model_identifier = f"{app_label}.{instance.__class__.__name__}"
 
+        # Recursion depth guard
+        current_depth = _current_automation_depth.get(0)
+        if current_depth >= MAX_AUTOMATION_DEPTH:
+            logger.warning(
+                f"Automation cascading depth limit ({MAX_AUTOMATION_DEPTH}) reached for {model_identifier}#{getattr(instance, 'pk', '?')}. "
+                f"Halting cascade to prevent infinite recursion loop."
+            )
+            return 0
+
         matching_event_types = [event_type, 'any']
         if event_type == 'updated':
             matching_event_types.append('field_changed')
 
-        matching_triggers = AutomationTrigger.objects.filter(
+        # Check tenant organization scoping
+        org_id = None
+        if hasattr(instance, 'organization_id') and instance.organization_id:
+            org_id = instance.organization_id
+        elif hasattr(instance, 'organization') and instance.organization:
+            org_id = instance.organization.id
+
+        from django.db.models import Q
+        trigger_filter = Q(
             is_active=True,
             trigger_type='model_event',
             trigger_model=model_identifier,
             event_type__in=matching_event_types
-        ).prefetch_related('actions')
+        )
+        if org_id:
+            # Allow global triggers (organization is null) OR triggers belonging specifically to this organization
+            trigger_filter &= (Q(organization__isnull=True) | Q(organization_id=org_id))
+        else:
+            trigger_filter &= Q(organization__isnull=True)
+
+        matching_triggers = AutomationTrigger.objects.filter(trigger_filter).prefetch_related('actions')
 
         if not matching_triggers.exists():
             return 0
@@ -640,7 +792,10 @@ class AutomationEngine:
             "model": model_identifier,
             "pk": str(instance.pk),
             "event": event_type,
+            "_automation_depth": current_depth,
         }
+        if org_id:
+            context["organization_id"] = str(org_id)
 
         changed_fields = []
         for field in instance._meta.concrete_fields:
@@ -681,7 +836,7 @@ class AutomationEngine:
             context['is_agent'] = getattr(instance, 'is_agent', False)
 
         dispatched_count = 0
-        from .tasks import execute_automation_action_task
+        from .tasks import execute_automation_trigger_task
 
         for trigger in matching_triggers:
             # 1. State transition / Field change evaluation
@@ -711,16 +866,14 @@ class AutomationEngine:
                 continue
 
             # Find active actions attached to this trigger
-            actions = list(trigger.actions.filter(is_active=True).order_by('sequence', 'created_at'))
-            if not actions:
+            if not trigger.actions.filter(is_active=True).exists():
                 continue
 
             trigger_source = f"model_event:{model_identifier}#{instance.pk}:{event_type}"
             if trigger.trigger_field:
                 trigger_source += f":{trigger.trigger_field}"
 
-            for action in actions:
-                execute_automation_action_task.delay(action.id, context, trigger_source)
-                dispatched_count += 1
+            execute_automation_trigger_task.delay(trigger.id, context, trigger_source)
+            dispatched_count += 1
 
         return dispatched_count

@@ -4,6 +4,7 @@ Pre-Registered Flagship Action Handlers for Automation Engine.
 
 import os
 import shutil
+import time
 from pathlib import Path
 from typing import Any, Dict
 import requests
@@ -191,29 +192,53 @@ def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
 
     from apps.core.config import get_setting
     timeout_seconds = get_setting('automation.HERMES_REQUEST_TIMEOUT', default=getattr(settings, 'HERMES_REQUEST_TIMEOUT', 120))
-    try:
-        resp = requests.post(f"{gateway_url}/v1/chat/completions", json=payload, headers=headers, timeout=(10, timeout_seconds))
-        is_error = resp.status_code >= 400
-        res_data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text[:300]
-        err_detail = ""
-        if is_error:
-            if isinstance(res_data, dict):
-                err_detail = res_data.get("error", {}).get("message") or str(res_data.get("error")) or f"HTTP {resp.status_code}"
-            else:
-                err_detail = str(res_data)
+    max_retries = int(context.get('max_retries', 2))
+    last_resp = None
+    last_exc = None
 
-        return {
-            "status": "error" if is_error else "dispatched",
-            "http_status": resp.status_code,
-            "response": res_data,
-            "error": err_detail,
-        }
-    except Exception as exc:
+    for attempt in range(max_retries + 1):
+        try:
+            resp = requests.post(f"{gateway_url}/v1/chat/completions", json=payload, headers=headers, timeout=(10, timeout_seconds))
+            last_resp = resp
+            if resp.status_code < 400:
+                res_data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text[:300]
+                return {
+                    "status": "dispatched",
+                    "http_status": resp.status_code,
+                    "response": res_data,
+                    "attempts": attempt + 1,
+                }
+            if resp.status_code not in (502, 503, 504):
+                break
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
+            last_exc = exc
+
+        if attempt < max_retries:
+            time.sleep(1 * (2 ** attempt))
+
+    if last_exc and not last_resp:
         return {
             "status": "error",
-            "error": str(exc),
+            "error": str(last_exc),
             "gateway_url": gateway_url,
+            "attempts": max_retries + 1,
         }
+
+    status_code = last_resp.status_code if last_resp else 500
+    res_data = last_resp.json() if last_resp and last_resp.headers.get("content-type", "").startswith("application/json") else (last_resp.text[:300] if last_resp else "")
+    err_detail = ""
+    if isinstance(res_data, dict):
+        err_detail = res_data.get("error", {}).get("message") or str(res_data.get("error")) or f"HTTP {status_code}"
+    else:
+        err_detail = str(res_data)
+
+    return {
+        "status": "error",
+        "http_status": status_code,
+        "response": res_data,
+        "error": err_detail,
+        "attempts": max_retries + 1,
+    }
 
 
 @register_action(
@@ -243,7 +268,7 @@ def dispatch_hermes_prompt_action(context: Dict[str, Any]) -> Dict[str, Any]:
 )
 def generic_webhook_action(context: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Action Handler: Dispatches an outbound webhook.
+    Action Handler: Dispatches an outbound webhook with automatic retries on transient errors.
     """
     url = context.get('url')
     if not url:
@@ -251,12 +276,43 @@ def generic_webhook_action(context: Dict[str, Any]) -> Dict[str, Any]:
 
     payload = context.get('payload', {})
     headers = context.get('headers', {"Content-Type": "application/json"})
+    max_retries = int(context.get('max_retries', 2))
 
-    resp = requests.post(url, json=payload, headers=headers, timeout=15)
+    last_resp = None
+    last_exc = None
+
+    for attempt in range(max_retries + 1):
+        try:
+            resp = requests.post(url, json=payload, headers=headers, timeout=15)
+            last_resp = resp
+            if resp.status_code < 400:
+                return {
+                    "status": "success",
+                    "status_code": resp.status_code,
+                    "response_text": resp.text[:300],
+                    "attempts": attempt + 1,
+                }
+            if resp.status_code not in (502, 503, 504):
+                break
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
+            last_exc = exc
+
+        if attempt < max_retries:
+            time.sleep(1 * (2 ** attempt))
+
+    if last_exc and not last_resp:
+        return {
+            "status": "failed",
+            "error": str(last_exc),
+            "attempts": max_retries + 1,
+        }
+
+    status_code = last_resp.status_code if last_resp else 500
     return {
-        "status": "success" if resp.status_code < 400 else "failed",
-        "status_code": resp.status_code,
-        "response_text": resp.text[:300],
+        "status": "success" if status_code < 400 else "failed",
+        "status_code": status_code,
+        "response_text": last_resp.text[:300] if last_resp else "",
+        "attempts": max_retries + 1,
     }
 
 

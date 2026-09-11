@@ -7,7 +7,12 @@ from typing import Any, Dict, Optional
 from celery import shared_task
 
 
-@shared_task(bind=True, name="apps.automation.tasks.execute_action")
+@shared_task(
+    bind=True,
+    name="apps.automation.tasks.execute_action",
+    max_retries=3,
+    default_retry_delay=5
+)
 def execute_automation_action_task(
     self,
     action_id: int,
@@ -25,7 +30,12 @@ def execute_automation_action_task(
     )
 
 
-@shared_task(bind=True, name="apps.automation.tasks.execute_trigger")
+@shared_task(
+    bind=True,
+    name="apps.automation.tasks.execute_trigger",
+    max_retries=3,
+    default_retry_delay=5
+)
 def execute_automation_trigger_task(
     self,
     trigger_id: int,
@@ -33,10 +43,10 @@ def execute_automation_trigger_task(
     trigger_source: str = "celery_async"
 ) -> Dict[str, Any]:
     """
-    Celery task to evaluate an AutomationTrigger and enqueue its sequenced AutomationActions.
+    Celery task to evaluate an AutomationTrigger and execute its sequenced action pipeline.
     """
     from .engine import AutomationEngine
-    return AutomationEngine.execute_trigger(
+    return AutomationEngine.execute_pipeline(
         trigger_id=trigger_id,
         trigger_context=trigger_context,
         trigger_source=trigger_source
@@ -53,7 +63,7 @@ def scheduled_automation_task(self, trigger_id: int) -> Dict[str, Any]:
     Celery Beat task triggered on scheduled intervals for an AutomationTrigger.
     """
     from .engine import AutomationEngine
-    return AutomationEngine.execute_trigger(
+    return AutomationEngine.execute_pipeline(
         trigger_id=trigger_id,
         trigger_context={"scheduled": True},
         trigger_source=f"celery_beat:trigger#{trigger_id}"
