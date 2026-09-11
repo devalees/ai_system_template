@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 21 Completed (Enterprise Hardening of Centralized Automation Engine: transaction.on_commit safety, sequential pipeline coordination & context chaining, recursion depth limiters, multi-tenant workspace scoping, and target CRUD sandboxing; 100% test pass rate across 170 tests)
+- **Status**: Phase 22 Completed (Centralized Provider Credentials, Zero-Downtime Hermes Key Sync, Pre-Execution Budget Gates, Direct Token Accounting, Calibrated Reasoning, and Multi-Agent Pipeline Handoff; 100% test pass rate across 178 tests)
 
 ---
 
@@ -16,27 +16,30 @@ An extensible, production-grade starter template pairing a **Django** web framew
 ### 1. Backend Service (`backend/`)
 - **Framework**: Django 5.x with Django REST Framework on Python 3.11.
 - **Data Persistence**: PostgreSQL 16 relational database with Redis 7 caching and session broker.
-- **Dynamic Administrative Portal**: Django Admin with single-screen `CustomUserAdmin` embedding `ProfileInline`, dynamic provider/model dropdowns, and a live 🔄 **Reload Profiles** widget.
+- **Dynamic Administrative Portal**: Django Admin with single-screen `CustomUserAdmin` embedding `ProfileInline`, `ProviderCredentialAdmin` with masked secret widgets, visual Settings Hub banner in `AppSettingValue`, dynamic provider/model dropdowns, and a live 🔄 **Reload Profiles** widget.
 - **Model Catalog Engine**: Powered by `models.dev` dynamic registry and OpenRouter, rendering live context window length and token pricing cards ($/1M tokens).
 - **Core Models**:
-  - `Profile`: Unified User Profile model attached 1-to-1 to `auth.User` via automatic `post_save` lifecycle signals, categorizing accounts (`is_agent`, `user_type: human/agent/client`) and managing Hermes AI inference configurations.
+  - `ProviderCredential`: Encrypted storage for LLM provider API keys (OpenRouter, Gemini, OpenAI, Anthropic, Groq, DeepSeek) with multi-tenant scoping and masked admin representation.
+  - `Profile`: Unified User Profile model attached 1-to-1 to `auth.User` via automatic `post_save` lifecycle signals, categorizing accounts (`is_agent`, `user_type: human/agent/client`), managing Hermes AI inference configurations, and hierarchical key resolution (`resolve_provider_and_key()`).
   - `AgentTask`: Task execution registry with assigned profiles, execution costs, reasoning overrides, and QA review pipelines.
-  - `SpendReport`: Structured token usage and budget status reports emitted by the cost controller.
+  - `SpendReport`: Structured token usage and budget status reports emitted by post-execution hooks and cost controllers.
   - `HandshakeLog`: Audit log of agent container boot and lifecycle handshakes.
 
 ### 2. Autonomous Agent Engine (`agent_service/` & Hermes Runtime)
 - **Engine**: Nous Research `hermes-agent` running in an isolated Docker container (`hermes-template-agent`).
-- **5 Universal Agent Profiles**:
-  1. `orchestrator`: Request intake, project decomposition, Kanban routing, and response synthesis (Effort: `medium`).
-  2. `cost_controller`: Token consumption tracking, budget cap enforcement, expense auditing (Effort: `low`).
-  3. `qa_auditor`: Review pipeline gatekeeper, quality control, output verification (Effort: `high`).
-  4. `comms_agent`: Customer communications, email drafting, meeting scheduling, client intake (Effort: `low`).
-  5. `archivist`: Documentation maintainer, institutional memory, SOPs, wiki indexing (Effort: `medium`).
-- **Execution Mechanism**: Invoked directly via `hermes -p <profile_name> --reasoning <level>`.
+- **Zero-Downtime Credential Sync**: Hermes dynamically loads per-profile secret scopes on each turn (`build_profile_secret_scope`). Django volume-mounts (`/app/hermes_runtime_data` and `/app/hermes_root_env`) allow immediate credential synchronization on `post_save` with 0 downtime and no container restarts.
+- **5 Calibrated Agent Profiles**:
+  1. `orchestrator`: Request intake, project decomposition, Kanban routing, and response synthesis (Calibrated Effort: `none` for instant triage).
+  2. `cost_controller`: Token consumption tracking, budget cap enforcement, expense auditing (Calibrated Effort: `low`).
+  3. `qa_auditor`: Review pipeline gatekeeper, quality control, output verification (Calibrated Effort: `high`).
+  4. `comms_agent`: Customer communications, email drafting, meeting scheduling, client intake (Calibrated Effort: `none` for fast client replies).
+  5. `archivist`: Documentation maintainer, institutional memory, SOPs, wiki indexing (Calibrated Effort: `low`).
+- **Execution Mechanism**: Invoked directly via `hermes -p <profile_name> --reasoning <level>` or over Gateway HTTP `/v1/chat/completions`.
 
 ### 3. Declarative Profile Provisioning (`scripts/provision_profiles.py`)
 - Declarative source definitions in `agent_service/profiles/<name>/` containing `SOUL.md`, `config.yaml`, and `profile.yaml`.
 - Automated idempotent provisioning script that registers profiles in Hermes runtime, creates aliases, symlinks personas, and sets default models.
+
 
 ### 4. Custom Foundation Skills (`agent_service/skills/`)
 - `cost_monitor`: Directly inspects `session_model_usage` across all profile SQLite `state.db` files, aggregating token expenditure and checking against daily budget caps.

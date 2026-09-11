@@ -701,11 +701,12 @@ Phase 21 completed. Proceeding with Phase 22: Centralized Provider Credentials, 
 
 ---
 
-## Phase 22: Centralized Provider Credentials, Zero-Downtime Synchronization, Token Governance & Multi-Agent Handoff
+## Phase 22: Centralized Provider Credentials, Zero-Downtime Synchronization, Token Governance & Multi-Agent Handoff (COMPLETED)
 
-- **Status**: IN_PROGRESS
+- **Status**: COMPLETED
 - **Active Branch**: `feat/provider-credentials-and-agent-governance`
-- **Last Updated**: 2026-09-11 05:40:00+03:00
+- **Last Updated**: 2026-09-11 05:55:00+03:00
+
 
 ### 1. Objective & Scope
 Unify LLM provider credentials, token accounting, and agent runtime orchestration inside Django to achieve high security, zero-downtime key rotation, strict cost control, and structured multi-agent collaboration:
@@ -717,21 +718,27 @@ Unify LLM provider credentials, token accounting, and agent runtime orchestratio
 - **Django Admin Enhancements**: Expose `ProviderCredentialAdmin` with masked secret input and add a prominent "⚙️ Open Visual Settings Hub" banner to `AppSettingValueAdmin`.
 
 ### 2. Task Checklist & Progress
-- [/] **Sub-task 1: Git Branching & Active Plan Initialization** - IN PROGRESS
-- [ ] **Sub-task 2: Provider Credentials Model & Encrypted Storage (`apps.integration.models`, `conf.py`)** - PENDING
-- [ ] **Sub-task 3: Volume Mounts & Zero-Downtime Credential Sync Service (`apps.integration.services`)** - PENDING
-- [ ] **Sub-task 4: Pre-Execution Budget Gates & Direct Token Accounting (`apps.automation.actions`)** - PENDING
-- [ ] **Sub-task 5: Reasoning Calibration & Structured Multi-Agent Handoff** - PENDING
-- [ ] **Sub-task 6: Django Admin UI Refinements & Settings Hub Banner** - PENDING
-- [ ] **Sub-task 7: Automated Testing & Empirical Verification** - PENDING
-- [ ] **Sub-task 8: Documentation & LLM Wiki Synchronization** - PENDING
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Commit: `b7e8167`)
+- [x] **Sub-task 2: Provider Credentials Model & Encrypted Storage (`apps.integration.models`, `conf.py`)** - COMPLETED (Commit: `c7b091f`)
+- [x] **Sub-task 3: Volume Mounts & Zero-Downtime Credential Sync Service (`apps.integration.services`)** - COMPLETED (Commit: `1b336db`)
+- [x] **Sub-task 4: Pre-Execution Budget Gates & Direct Token Accounting (`apps.automation.actions`)** - COMPLETED (Commit: `b169013`)
+- [x] **Sub-task 5: Reasoning Calibration & Structured Multi-Agent Handoff** - COMPLETED (Commit: `699efd9`)
+- [x] **Sub-task 6: Django Admin UI Refinements & Settings Hub Banner** - COMPLETED (Commit: `6539001`)
+- [x] **Sub-task 7: Automated Testing & Empirical Verification** - COMPLETED (Commit: `702a8ae`)
+- [x] **Sub-task 8: Documentation & LLM Wiki Synchronization** - COMPLETED
 
 ### 3. Key Decisions & Deviations (Phase 22)
 - *2026-09-11*: Initialized Phase 22 on feature branch `feat/provider-credentials-and-agent-governance`. Designed dual-credential management: typed secrets in `apps.integration.conf` (Settings Hub) for global defaults, and `ProviderCredential` relational model for multi-key pools, custom `base_url` endpoints, and per-profile assignment.
-- *2026-09-11*: Leveraged Hermes's built-in `build_profile_secret_scope` per-turn `.env` loader to achieve zero-downtime key rotation without requiring container restarts.
+- *2026-09-11*: Implemented `ProviderCredential` with AES encrypted `encrypted_api_key` via `apps.core.crypto` and masked secret property. Added `resolve_provider_and_key()` on `Profile` with hierarchical resolution (Direct -> Default Credential -> Settings Hub -> Fallback).
+- *2026-09-11*: Implemented `credential_sync` service with volume mounts (`/app/hermes_runtime_data` and `/app/hermes_root_env`). Connected signals so saving a `ProviderCredential` or updating an API key in Settings Hub automatically updates `/root/.hermes/.env`, per-profile `.env` files, and `config.yaml` with zero service downtime.
+- *2026-09-11*: Implemented pre-execution budget ceiling gate in `dispatch_hermes_prompt_action` halting requests before dispatch when `DAILY_BUDGET_CAP_USD` is exceeded. Built post-execution direct spend tracking parsing OpenAI-compatible `usage` blocks atomically into `SpendReport` and updating `AgentTask` token/cost fields.
+- *2026-09-11*: Calibrated default agent persona reasoning budgets (`orchestrator` & `comms_agent` = `none`, `cost_controller` & `archivist` = `low`, `qa_auditor` = `high`) eliminating 10–15s latency on operational workflows. Enhanced `execute_pipeline` context chaining with `deliverable` propagation.
+- *2026-09-11*: Registered `ProviderCredentialAdmin` with masked password widget and manual runtime sync action. Added custom `change_list.html` to `AppSettingValue` with prominent banner button directing to `/admin/core/appsettingvalue/hub/`.
+- *2026-09-11*: Created `tests_credentials.py` testing encryption, default constraints, hierarchical key resolution, runtime file sync, budget gates, direct spend recording, and multi-agent pipeline handoff. Verified 100% test pass rate across all 178 tests.
 
 ### 4. Current Focus
-Sub-task 1 completed. Executing Sub-task 2: Provider Credentials Model & Encrypted Storage.
+Phase 22 completed. Provider credentials centralized with zero-downtime hot-syncing, budget governance, calibrated reasoning, and multi-agent handoffs fully operational. Ready to merge into `main`.
+
 
 
 

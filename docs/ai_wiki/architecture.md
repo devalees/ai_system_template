@@ -1143,6 +1143,42 @@ The filtering engine unifies trigger condition evaluation into a single authorit
 - Outbound webhooks and Hermes Agent Gateway requests feature automated retries with exponential backoff on transient network errors (connection resets, timeouts, HTTP 502/503/504).
 - Celery tasks configured with `max_retries=3`, `default_retry_delay=5`.
 
+---
+
+## 23. Centralized Provider Credentials, Zero-Downtime Sync & Agent Governance (Phase 22)
+
+### 23.1 Encrypted Provider Credential Management (`apps.integration.models`)
+- Introduces `ProviderCredential` storing LLM inference credentials (`openrouter`, `gemini`, `openai`, `anthropic`, `groq`, `deepseek`, `custom`).
+- AES-256 / SHA-256 tamper-proof signing and encryption at rest using `apps.core.crypto.encrypt_secret` and `decrypt_secret`.
+- Masked property `masked_key` (e.g. `sk-or-••••••••c9f0`) for safe administrative rendering.
+- `Profile.resolve_provider_and_key()` implements clear hierarchical resolution:
+  1. Profile-assigned dedicated `ProviderCredential`
+  2. Default active `ProviderCredential` matching profile's provider
+  3. Settings Hub secret (`integration.<PROVIDER>_API_KEY`)
+  4. Platform settings fallback
+
+### 23.2 Zero-Downtime Hermes Runtime Synchronization (`apps.integration.services.credential_sync`)
+- Exploits Hermes Agent's native per-turn dynamic secret scoping (`build_profile_secret_scope` and `_reload_runtime_env_preserving_config_authority`).
+- Shares volumes between Django and Hermes:
+  - `- ../agent_service/data:/app/hermes_runtime_data:rw`
+  - `- ../agent_service/.env:/app/hermes_root_env:rw`
+- On `ProviderCredential` or `AppSettingValue` `post_save` signals, Django atomically updates `/root/.hermes/.env`, per-profile `.env`, and `config.yaml`.
+- Hermes reads updated credentials on the very next prompt turn with **zero container restarts and zero downtime**.
+
+### 23.3 Pre-Execution Budget Gates & Direct Token Accounting (`apps.automation.actions`)
+- **Pre-Execution Ceiling Gate**:
+  - In `dispatch_hermes_prompt_action`, sums today's spend from `SpendReport` before dispatch.
+  - If `today_spend >= DAILY_BUDGET_CAP_USD`, execution halts with `"status": "budget_exceeded"`, preventing unexpected token overrun.
+- **Post-Execution Direct Accounting**:
+  - Parses OpenAI-compatible `usage` blocks (`prompt_tokens`, `completion_tokens`, `total_tokens`) returned by Hermes Gateway.
+  - Automatically records cost and token consumption into `SpendReport` and attaches to `AgentTask.tokens_used` / `AgentTask.cost_usd`.
+  - Eliminates reliance on Hermes agents self-scanning disk SQLite databases (`state.db`).
+
+### 23.4 Calibrated Reasoning Budgets & Multi-Agent Pipeline Handoff
+- Calibrates default profile reasoning budgets (`orchestrator` & `comms_agent` = `none`, `cost_controller` & `archivist` = `low`, `qa_auditor` = `high`) eliminating 10–15s latency on operational workflows.
+- Accumulates step deliverables (`deliverable`) in `execute_pipeline`, allowing downstream steps to consume outputs via `{{deliverable}}` or `{{step_outputs}}`.
+
+
 
 
 
