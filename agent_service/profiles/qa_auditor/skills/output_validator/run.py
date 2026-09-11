@@ -3,7 +3,8 @@
 Output Validator Skill Runner.
 
 Empirical verification engine used by `qa_auditor` to audit code, schemas,
-and documentation prior to signing off on Kanban deliverables.
+and documentation prior to signing off on deliverables, with direct Django
+review gate submission (`POST /api/tasks/<id>/submit-verdict/`).
 """
 
 import argparse
@@ -12,6 +13,8 @@ import json
 import os
 import re
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 # Patterns for sensitive leaks and placeholders
@@ -144,9 +147,86 @@ def audit_target(target_path: Path) -> dict:
     }
 
 
+def resolve_django_credentials() -> tuple[str, str]:
+    """Resolves Django API URL and bot token from env or profile files."""
+    api_url = os.getenv("DJANGO_API_URL", "http://host.docker.internal:8000/api").rstrip('/')
+    api_token = os.getenv("DJANGO_API_TOKEN", "")
+    if not api_token:
+        # Check container location first, then home dir fallback
+        env_paths = [
+            Path("/root/.hermes/profiles/qa_auditor/.env"),
+            Path.home() / ".hermes/profiles/qa_auditor/.env",
+        ]
+        for env_path in env_paths:
+            if env_path.exists():
+                for line in env_path.read_text().splitlines():
+                    if line.startswith("DJANGO_API_TOKEN="):
+                        api_token = line.split("=", 1)[1].strip()
+                    elif line.startswith("DJANGO_API_URL="):
+                        api_url = line.split("=", 1)[1].strip().rstrip('/')
+                if api_token:
+                    break
+    return api_url, api_token
+
+
+def format_review_notes(result: dict, user_notes: str = "") -> str:
+    """Formats structured review notes from audit results."""
+    lines = [
+        f"Empirical QA Audit: {result['verdict']} (Score: {result['quality_score']}/100)",
+        f"Files Inspected: {result['files_inspected']}",
+    ]
+    if result["security_violations"]:
+        lines.append("\nSecurity Violations:")
+        for v in result["security_violations"]:
+            lines.append(f"  ✗ {v}")
+    if result["defects"]:
+        lines.append("\nDefects & Incomplete Items:")
+        for d in result["defects"][:10]:
+            lines.append(f"  • {d}")
+        if len(result["defects"]) > 10:
+            lines.append(f"  ... and {len(result['defects']) - 10} more.")
+    if not result["security_violations"] and not result["defects"]:
+        lines.append("\n✓ All files passed syntax, hygiene, and security checks.")
+    if user_notes:
+        lines.append(f"\nReviewer Notes:\n{user_notes}")
+    return "\n".join(lines)
+
+
+def submit_verdict_to_django(
+    task_id: str,
+    verdict: str,
+    notes: str,
+    api_url: str,
+    api_token: str
+) -> dict:
+    """Submits verdict and notes to Django /api/tasks/<task_id>/submit-verdict/."""
+    url = f"{api_url}/tasks/{task_id}/submit-verdict/"
+    drf_verdict = "approved" if verdict.upper() == "APPROVED" else "changes_requested"
+    payload = json.dumps({
+        "verdict": drf_verdict,
+        "notes": notes,
+        "reviewer_profile": "qa_auditor"
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Token {api_token}"
+        },
+        method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Empirical QA & Compliance Validator.")
+    parser = argparse.ArgumentParser(description="Empirical QA & Compliance Validator with Django Review Gate.")
     parser.add_argument("--target", type=str, required=True, help="File or directory path to audit.")
+    parser.add_argument("--task-id", type=str, default="", help="UUID of Django AgentTask to review.")
+    parser.add_argument("--submit", action="store_true", help="Submit verdict directly to Django REST review gate.")
+    parser.add_argument("--notes", type=str, default="", help="Additional reviewer notes to include with submission.")
     parser.add_argument("--json", action="store_true", help="Output raw JSON.")
     args = parser.parse_args()
 
@@ -158,6 +238,17 @@ def main():
     result = audit_target(target_path)
 
     if args.json:
+        if args.submit:
+            if not args.task_id:
+                print(json.dumps({"error": "--submit requires --task-id <UUID>"}), file=sys.stderr)
+                sys.exit(1)
+            api_url, api_token = resolve_django_credentials()
+            notes = format_review_notes(result, args.notes)
+            try:
+                sub_res = submit_verdict_to_django(args.task_id, result["verdict"], notes, api_url, api_token)
+                result["submission"] = sub_res
+            except Exception as exc:
+                result["submission"] = {"error": str(exc)}
         print(json.dumps(result, indent=2))
         return
 
@@ -190,6 +281,30 @@ def main():
 
     if not result["security_violations"] and not result["defects"]:
         print(f"\033[92m✓ All files passed syntax, hygiene, and security checks.{reset}")
+
+    if args.submit:
+        print(f"───────────────────────────────────────────────────────────────────")
+        if not args.task_id:
+            print(f"\033[91m{bold}! Error: --submit requires --task-id <UUID> to identify the target task in Django.{reset}")
+            sys.exit(1)
+
+        api_url, api_token = resolve_django_credentials()
+        if not api_token:
+            print(f"\033[93m{bold}! Cannot submit verdict: DJANGO_API_TOKEN not found.{reset}")
+        else:
+            notes = format_review_notes(result, args.notes)
+            try:
+                sub_res = submit_verdict_to_django(args.task_id, result["verdict"], notes, api_url, api_token)
+                drf_status = sub_res.get("new_task_status", "unknown")
+                print(f"  {bold}\033[92m✓ Review verdict recorded in Django REST API:{reset}")
+                print(f"    • Task ID:        {sub_res.get('task_id', args.task_id)}")
+                print(f"    • Recorded Verdict: {sub_res.get('verdict')}")
+                print(f"    • New Task Status:  {drf_status}")
+            except urllib.error.HTTPError as exc:
+                err_body = exc.read().decode("utf-8")
+                print(f"  {bold}\033[91m! Failed submitting review verdict (HTTP {exc.code}): {err_body}{reset}")
+            except Exception as exc:
+                print(f"  {bold}\033[91m! Failed submitting review verdict: {exc}{reset}")
 
     print(f"{bold}═══════════════════════════════════════════════════════════════════{reset}\n")
 

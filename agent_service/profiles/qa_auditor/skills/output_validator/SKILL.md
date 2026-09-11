@@ -15,12 +15,20 @@ Used by the `qa_auditor` profile during the Kanban review stage (`hermes kanban 
 2. **Defect & Placeholder Trapping**:
    - Scans for unfinished placeholders (`TODO`, `FIXME`, `CHANGEME`, stubbed passes).
    - Scans for hardcoded credential leaks (API keys, secret tokens, private keys).
-3. **Automated Verdict Generation**:
+3. **Automated Verdict Generation & Django Review Gate**:
    - Scores deliverable quality on a 0-100 scale.
    - Emits an authoritative verdict (`APPROVED` vs `CHANGES_REQUESTED`).
-   - Generates formatted action commands for the Kanban review pipeline.
+   - Transmits verdict, quality score, and defect notes directly to Django REST review gate (`POST /api/tasks/<id>/submit-verdict/`) when invoked with `--submit --task-id <UUID>`.
 
 ## Usage
 ```bash
-python /workspace/profiles/qa_auditor/skills/output_validator/run.py --target /workspace/path/to/file_or_dir [--json]
+# Dry-run audit of file or directory
+python /workspace/profiles/qa_auditor/skills/output_validator/run.py --target /workspace/path/to/file_or_dir
+
+# Output raw JSON
+python /workspace/profiles/qa_auditor/skills/output_validator/run.py --target /workspace/path/to/file_or_dir --json
+
+# Direct review submission to Django review gate
+python /workspace/profiles/qa_auditor/skills/output_validator/run.py --target /workspace/path/to/file_or_dir --task-id <TASK_UUID> --submit [--notes "Custom feedback"]
 ```
+
