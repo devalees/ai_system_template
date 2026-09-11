@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
 - **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `feat/profile-scoped-skills`
-- **Last Updated**: 2026-09-11 08:17:00+03:00
+- **Active Branch**: `feat/orchestrator-hardening`
+- **Last Updated**: 2026-09-11 09:07:00+03:00
 
 ---
 
@@ -874,7 +874,39 @@ Restructure the Hermes Agent skill layout from a flat global directory into a na
 - *2026-09-11*: Empirically validated skill isolation using `hermes -p <profile> skills list`: verified `cost_controller` only sees `cost_monitor`, `qa_auditor` only sees `output_validator`, and neither profile clutters other profiles or root. Executed both skills successfully and verified 100% test pass rate across 185 tests.
 
 ### 4. Current Focus
-Phase 25 completed and verified. Ready to merge into `main`.
+Phase 25 completed and merged into `main`.
+
+---
+
+## Phase 26: Orchestrator Hardening, Skill Pruning & Task Decomposer
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/orchestrator-hardening`
+- **Last Updated**: 2026-09-11 09:07:00+03:00
+
+### 1. Objective & Scope
+Streamline the Orchestrator profile for high token efficiency and laser-focused coordination:
+- **Skill Pruning**: Opt out of 50+ irrelevant bundled skills using the `.no-bundled-skills` marker in `agent_service/profiles/orchestrator/` so it stops inheriting music, games, video, and deep-debugging tools.
+- **Dedicated Profile Skill (`task_decomposer`)**: Package a dedicated profile-scoped skill under `agent_service/profiles/orchestrator/skills/task_decomposer/` with an SOP (`SKILL.md`) and CLI helper (`run.py`) to parse goals, decompose into sub-tasks, map dependencies, and assign to our 4 department heads (`cost_controller`, `qa_auditor`, `comms_agent`, `archivist`).
+- **Core Toolset Discipline**: Verify that `config.yaml` locks toolsets to the essential 5 (`kanban`, `delegate`, `clarify`, `file_ops`, `terminal`), excluding heavy media/browser tools.
+- **Profile Persona (`SOUL.md`)**: Bind the `task_decomposer` skill directly in `SOUL.md`.
+- **Provisioner Update (`provision_profiles.py`)**: Ensure `.no-bundled-skills` is respected and bundled skills are cleaned from the profile runtime.
+- **Empirical CLI Verification**: Verify `hermes -p orchestrator skills list` shows ONLY `task_decomposer` and 0 bundled skills.
+- **Documentation Synchronization**: Synchronize `docs/agent_team.md`, `docs/ai_wiki/index.md`, and `docs/ai_wiki/architecture.md`.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/orchestrator-hardening`)
+- [ ] **Sub-task 2: Skill Pruning (`.no-bundled-skills`) & Config Locking** - PENDING
+- [ ] **Sub-task 3: Dedicated `task_decomposer` Skill Implementation (`SKILL.md`, `run.py`)** - PENDING
+- [ ] **Sub-task 4: Profile Persona (`SOUL.md`) Binding & Provisioner Support** - PENDING
+- [ ] **Sub-task 5: Empirical Verification & CLI Isolation Audit** - PENDING
+- [ ] **Sub-task 6: Documentation Synchronization & Test Suite Verification** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 26)
+- *2026-09-11*: Initialized Phase 26 per user discussion regarding Orchestrator's role, token efficiency, and toolsets. Confirmed that enabling all toolsets is an anti-pattern and that Orchestrator should only have the 5 core toolsets and planning skills.
+
+### 4. Current Focus
+Sub-task 2: Skill Pruning (`.no-bundled-skills`) & Config Locking.
 
 
 
