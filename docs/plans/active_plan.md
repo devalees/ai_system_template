@@ -913,6 +913,38 @@ Streamline the Orchestrator profile for high token efficiency and laser-focused 
 ### 4. Current Focus
 Phase 26 completed and merged into `main`.
 
+---
+
+## Phase 27: Cost Controller Hardening, Toolset Locking & Frontier Benchmark Intelligence (DeepSWE)
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/cost-controller-hardening-and-benchmarks`
+- **Last Updated**: 2026-09-11 09:54:00+03:00
+
+### 1. Objective & Scope
+Harden the `cost_controller` profile and establish automated model benchmark intelligence:
+- **Skill Pruning & Toolset Locking**: Add `.no-bundled-skills` to `agent_service/profiles/cost_controller/`, locking toolsets strictly to `[terminal, file_ops]` in `config.yaml` and `profile.yaml`.
+- **ModelBenchmark Relational Model (`apps.integration`)**: Create `ModelBenchmark` table and add `recommendations` field to `SpendReport` to store data-driven model switching advice.
+- **Automated Benchmark Ingestion Service**: Build `benchmark_sync.py` to ingest DeepSWE scores and pricing into PostgreSQL with fail-safe caching and zero shadow AI.
+- **REST API & Admin Portal**: Expose `GET /api/hermes/benchmarks/` and register `ModelBenchmarkAdmin` with colored pass-rate badges and manual sync action.
+- **Upgrade `cost_monitor` Skill**: Enhance `run.py` to evaluate Intelligence-per-Dollar ROI ($ROI = \text{score} / \text{cost}$), print optimization suggestions, and push them to Django `SpendReport`.
+- **Empirical Verification & Testing**: Verify `hermes -p cost_controller skills list` shows 0 builtin skills, test `cost_monitor` script, and verify 100% test pass rate across all backend unit tests.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/cost-controller-hardening-and-benchmarks`)
+- [ ] **Sub-task 2: Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update** - PENDING
+- [ ] **Sub-task 3: Django ModelBenchmark Model, Migration & Ingestion Service** - PENDING
+- [ ] **Sub-task 4: Upgrade `cost_monitor` with Benchmark Optimization Engine** - PENDING
+- [ ] **Sub-task 5: Profile Provisioning & Empirical CLI Isolation Verification** - PENDING
+- [ ] **Sub-task 6: Documentation Synchronization, Test Suite Verification & Merge** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 27)
+- *2026-09-11*: Initialized Phase 27 per user discussion on frontier benchmark tracking (DeepSWE). Agreed on the hybrid architecture: Django handles data plumbing/storage with zero AI overhead (preventing shadow token spend), while `cost_controller` accesses the data to deliver model ROI recommendations. Locked `cost_controller` toolsets to `[terminal, file_ops]`.
+
+### 4. Current Focus
+Sub-task 2: Skill Pruning (`.no-bundled-skills`), Toolset Locking & SOUL.md Update.
+
+
 
 
 
