@@ -182,6 +182,14 @@ class Profile(AuditableModel):
         default='human',
         help_text="User classification across the ecosystem."
     )
+    client = models.ForeignKey(
+        'clients.Client',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        help_text="The client company/account this user belongs to."
+    )
     name = models.CharField(
         max_length=64,
         blank=True,
@@ -234,11 +242,25 @@ class Profile(AuditableModel):
     )
 
     @property
+    def effective_ai_budget_usd(self):
+        if self.client:
+            return self.client.ai_budget_usd
+        return self.ai_budget_usd
+
+    @property
+    def effective_ai_spend_usd(self):
+        if self.client:
+            return self.client.ai_spend_usd
+        return self.ai_spend_usd
+
+    @property
     def ai_budget_percentage(self) -> float:
         """Returns the percentage of the AI budget consumed (0.0 - 100.0+)."""
-        if not self.ai_budget_usd or float(self.ai_budget_usd) <= 0:
+        budget = self.effective_ai_budget_usd
+        spend = self.effective_ai_spend_usd
+        if not budget or float(budget) <= 0:
             return 0.0
-        pct = (float(self.ai_spend_usd) / float(self.ai_budget_usd)) * 100.0
+        pct = (float(spend) / float(budget)) * 100.0
         return round(pct, 2)
 
     @property
@@ -345,6 +367,14 @@ class SpendReport(AuditableModel):
         blank=True,
         related_name='client_spend_reports',
         help_text="Optional client profile associated with this spend report."
+    )
+    client = models.ForeignKey(
+        'clients.Client',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='spend_reports',
+        help_text="Optional client entity associated with this spend report."
     )
     reported_by = models.CharField(max_length=64, default='cost_controller')
 

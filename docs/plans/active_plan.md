@@ -1030,6 +1030,50 @@ Transform and harden `comms_agent` from a narrow communications/scheduler role i
 ### 4. Current Focus
 Phase 29 completed and merged into `main`.
 
+---
+
+## Phase 30: Dedicated Client Management Module (`apps.clients`), 1-to-Many Users & AI Service Governance
+
+- **Status**: COMPLETED
+- **Active Branch**: `feat/client-management-module`
+- **Last Updated**: 2026-09-11 12:48:00+03:00
+
+### 1. Objective & Scope
+Transform external client management into an independent, dedicated Django application (`apps.clients`) fulfilling the enterprise 3-tier hierarchy (Tenant $\rightarrow$ Client $\rightarrow$ Users):
+- **Tenant Isolation**: Each `Client` strictly belongs to an `Organization` (`apps.tenants`).
+- **1-to-Many User Association**: A single `Client` represents an external business account and links multiple user profiles (`Profile.client`).
+- **AI Service Gatekeeper & Dollar Budget**:
+  - `is_ai_enabled`: Master boolean flag controlling whether the client is authorized for AI assistance.
+  - `ai_budget_usd` & `ai_spend_usd`: Dollar budget ceiling and real-time usage tracking.
+  - Computed milestones: `healthy`, `velocity_check` (50%), `warning` (75%), `exceeded` (100%).
+- **Dedicated Standalone Django Admin Dashboard**:
+  - Top-level sidebar entry: **CLIENT MANAGEMENT $\rightarrow$ Clients**.
+  - Dynamic visual CSS progress gauge (Green $\rightarrow$ Yellow $\rightarrow$ Red).
+  - Inlines: `ClientUserInline` (manage client users directly on the client page) and `GenericDocumentInline` (attachments via `apps.media`).
+- **Bridge & Coordinator Alignment**:
+  - Update `client_budget_status` and `client_service_bridge` to evaluate against `apps.clients.models.Client`.
+  - Reaffirm single-agent touchpoint: Clients interact exclusively through `comms_agent`.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/client-management-module`, Commit: `7c6199d`)
+- [x] **Sub-task 2: Create `apps.clients` App, Data Models & Database Migrations** - COMPLETED (Commit: `828a7ce`)
+- [x] **Sub-task 3: Link `Profile.client` in `apps.integration` & Migration** - COMPLETED (Commit: `2e02d28`)
+- [x] **Sub-task 4: Dedicated Standalone Django Admin Dashboard (`apps.clients.admin`)** - COMPLETED (Commit: `d2d9bd3`)
+- [x] **Sub-task 5: REST APIs, Serializers & Views (`/api/v1/clients/` & updated budget endpoint)** - COMPLETED (Commit: `1e249dc`)
+- [x] **Sub-task 6: Update `client_service_bridge` Skill & Comprehensive Automated Testing** - COMPLETED (Commit: `a399096`)
+- [x] **Sub-task 7: Documentation Synchronization, Full Test Suite Verification & Merge** - COMPLETED (197/197 tests passing in 118.9s)
+
+### 3. Key Decisions & Deviations (Phase 30)
+- *2026-09-11*: Initialized Phase 30 per user direction. Extracted clients from a generic user profile attribute into a standalone first-class `apps.clients` app.
+- *2026-09-11*: Enforced 1-to-many relationship: an Organization has multiple Clients, and each Client can have multiple Users (`Profile.client`).
+- *2026-09-11*: Implemented dynamic visual CSS progress gauge in Django Admin sidebar for `ClientAdmin`, with embedded `ClientUserInline` and `GenericDocumentInline`.
+- *2026-09-11*: Upgraded `client_service_bridge` and `client_budget_status` API to resolve directly against `Client` with `is_ai_enabled` gatekeeper verification.
+- *2026-09-11*: Verified full backend test suite: 197/197 tests passing in 118.900s with 100% pass rate.
+
+### 4. Current Focus
+Phase 30 completed and merged into `main`.
+
+
 
 
 

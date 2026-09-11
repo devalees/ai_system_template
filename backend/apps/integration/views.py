@@ -319,10 +319,74 @@ def client_budget_status(request):
     """
     client_id = request.query_params.get('client_id') or request.data.get('client_id')
     client_profile = None
+    client_obj = None
 
     if client_id:
         try:
-            # Check UUID
+            import uuid
+            val_uuid = uuid.UUID(str(client_id))
+            from apps.clients.models import Client
+            client_obj = Client.objects.filter(id=val_uuid, is_deleted=False).first()
+        except (ValueError, AttributeError):
+            pass
+
+        if not client_obj:
+            from apps.clients.models import Client
+            client_obj = Client.objects.filter(
+                models.Q(slug=client_id) | models.Q(name=client_id),
+                is_deleted=False
+            ).first()
+
+    elif request.user.is_authenticated:
+        user_profile = getattr(request.user, 'profile', None)
+        if user_profile and user_profile.client:
+            client_obj = user_profile.client
+
+    if client_obj:
+        if request.method == 'POST':
+            spend_delta = request.data.get('spend_delta_usd')
+            budget_override = request.data.get('ai_budget_usd')
+
+            if spend_delta is not None:
+                try:
+                    from decimal import Decimal
+                    delta = Decimal(str(spend_delta))
+                    client_obj.ai_spend_usd += delta
+                except Exception as e:
+                    return Response({"detail": f"Invalid spend_delta_usd value: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            if budget_override is not None:
+                try:
+                    from decimal import Decimal
+                    client_obj.ai_budget_usd = Decimal(str(budget_override))
+                except Exception as e:
+                    return Response({"detail": f"Invalid ai_budget_usd value: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            client_obj.save(update_fields=['ai_spend_usd', 'ai_budget_usd'])
+
+        pct = client_obj.ai_budget_percentage
+        return Response({
+            "client_id": str(client_obj.id),
+            "slug": client_obj.slug,
+            "name": client_obj.name,
+            "organization_name": client_obj.organization.name if client_obj.organization else "",
+            "is_ai_enabled": client_obj.is_ai_enabled,
+            "can_use_ai": client_obj.can_use_ai(),
+            "ai_budget_usd": str(client_obj.ai_budget_usd),
+            "ai_spend_usd": str(client_obj.ai_spend_usd),
+            "percentage_used": pct,
+            "budget_status": client_obj.ai_budget_status,
+            "milestones": {
+                "silent_check_25_reached": pct >= 25.0,
+                "velocity_check_50_reached": pct >= 50.0,
+                "advisory_75_reached": pct >= 75.0,
+                "exceeded_100_reached": pct >= 100.0,
+            }
+        })
+
+    # Fallback to Profile model lookup for legacy compatibility
+    if client_id:
+        try:
             import uuid
             val_uuid = uuid.UUID(str(client_id))
             client_profile = Profile.objects.filter(id=val_uuid).first()
@@ -338,7 +402,7 @@ def client_budget_status(request):
 
     if not client_profile:
         return Response(
-            {"detail": "Client profile not found. Please provide a valid client_id parameter."},
+            {"detail": "Client entity or profile not found. Please provide a valid client_id parameter."},
             status=status.HTTP_404_NOT_FOUND
         )
 

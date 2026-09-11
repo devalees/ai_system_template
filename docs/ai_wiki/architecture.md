@@ -57,6 +57,12 @@ economy_editor/
 │   │   ├── api_gateway/             # Developer API Gateway, Scoped Keys & Webhooks
 │   │   ├── audit/                   # Immutable Activity Audit Trail & Context Middleware
 │   │   ├── automation/              # Centralized Automation Engine & Service Registry
+│   │   ├── clients/                 # Client Management, 1-to-Many Users & AI Service Governance
+│   │   │   ├── admin.py             # ClientAdmin with dynamic CSS spend gauges & User inlines
+│   │   │   ├── models.py            # Client model (tenant-scoped, is_ai_enabled, dollar budgets)
+│   │   │   ├── serializers.py       # Client entity and budget status serializers
+│   │   │   ├── urls.py              # REST routing for /api/v1/clients/
+│   │   │   └── views.py             # ClientViewSet with /budget-status/ actions
 │   │   ├── core/                    # Core foundations, base models, settings hub & i18n
 │   │   ├── integration/             # Integration App & Hermes catalog
 │   │   ├── media/                   # Document & Media Management

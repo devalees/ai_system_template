@@ -23,6 +23,7 @@ class ProfileInline(admin.StackedInline):
         ('Profile & Classification', {
             'fields': (
                 ('user_type', 'is_agent'),
+                'client',
                 ('hermes_profile_name', 'display_name'),
                 ('role', 'preferred_language'),
                 'description',
@@ -128,6 +129,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'display_name',
         'user_link',
         'user_type',
+        'client',
         'is_agent',
         'hermes_profile_name',
         'role',
@@ -138,7 +140,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'is_active',
         'created_at',
     )
-    list_filter = ('is_agent', 'user_type', 'role', 'reasoning_effort', 'provider', 'provider_credential', 'is_active')
+    list_filter = ('is_agent', 'user_type', 'client', 'role', 'reasoning_effort', 'provider', 'provider_credential', 'is_active')
     search_fields = ('name', 'hermes_profile_name', 'display_name', 'user__username', 'description')
     readonly_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
 
@@ -147,6 +149,7 @@ class ProfileAdmin(admin.ModelAdmin):
             'fields': (
                 'user',
                 ('user_type', 'is_agent'),
+                'client',
                 ('name', 'hermes_profile_name'),
                 ('display_name', 'role'),
                 'description',

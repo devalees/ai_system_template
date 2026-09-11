@@ -193,16 +193,30 @@ def main():
             return
 
         pct = data.get("percentage_used", 0.0)
-        status_label = data.get("budget_status", "OK")
-        status_color = green if status_label == "OK" else (yellow if status_label == "WARNING_75" else red)
+        status_label = data.get("budget_status", "healthy")
+        is_ai_enabled = data.get("is_ai_enabled", True)
+        can_use_ai = data.get("can_use_ai", True)
+
+        if status_label in ("OK", "healthy"):
+            status_color = green
+        elif status_label in ("WARNING_75", "warning", "velocity_check"):
+            status_color = yellow
+        else:
+            status_color = red
+
+        client_display = data.get("name") or data.get("display_name") or "Client"
+        client_code = data.get("slug") or data.get("client_id")
 
         print(f"\n{bold}{cyan}═══════════════════════════════════════════════════════════════════{reset}")
         print(f"{bold}    Client Service: Engagement AI Budget & Milestone Audit         {reset}")
         print(f"{bold}{cyan}═══════════════════════════════════════════════════════════════════{reset}")
-        print(f"Client:          {data.get('display_name')} ({data.get('client_id')})")
+        print(f"Client Account:   {bold}{client_display}{reset} ({client_code})")
+        print(f"Organization:     {data.get('organization_name', 'N/A')}")
+        ai_tag = f"{green}Active (Authorized){reset}" if can_use_ai else f"{red}Blocked / Disabled{reset}"
+        print(f"AI Service Gate:  {ai_tag}")
         print(f"Allocated Budget: ${data.get('ai_budget_usd')} USD")
         print(f"Cumulative Spend: ${data.get('ai_spend_usd')} USD ({pct}%)")
-        print(f"Budget Status:    {status_color}{bold}{status_label}{reset}")
+        print(f"Budget Status:    {status_color}{bold}{status_label.upper()}{reset}")
         print(f"───────────────────────────────────────────────────────────────────")
         milestones = data.get("milestones", {})
         m25 = "✓ Reached" if milestones.get("silent_check_25_reached") else "— Pending"
