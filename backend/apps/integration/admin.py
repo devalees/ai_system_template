@@ -31,10 +31,21 @@ class ProfileInline(admin.StackedInline):
         ('AI Engine & Inference Configuration', {
             'description': 'Configure LLM inference, models, and reasoning budgets for this account.',
             'fields': (
-                ('provider', 'provider_credential'),
+                'provider',
                 'model_name',
                 'reasoning_effort',
                 'is_active',
+            )
+        }),
+        ('Advanced Credential & Endpoint Overrides', {
+            'classes': ('collapse',),
+            'description': (
+                'Optional override: Leave blank to automatically inherit the global default credential '
+                'for the selected provider. Select a credential only if this profile requires a dedicated '
+                'API key, custom base_url (e.g. local Ollama/vLLM), or isolated tenant billing.'
+            ),
+            'fields': (
+                'provider_credential',
             )
         }),
     )
@@ -124,6 +135,45 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = ('is_agent', 'user_type', 'role', 'reasoning_effort', 'provider', 'provider_credential', 'is_active')
     search_fields = ('name', 'hermes_profile_name', 'display_name', 'user__username', 'description')
     readonly_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
+
+    fieldsets = (
+        ('Profile & Identity', {
+            'fields': (
+                'user',
+                ('user_type', 'is_agent'),
+                ('name', 'hermes_profile_name'),
+                ('display_name', 'role'),
+                'description',
+            )
+        }),
+        ('LLM Inference & Model Selection', {
+            'description': 'Configure the inference provider, foundation model, and thinking budget.',
+            'fields': (
+                'provider',
+                'model_name',
+                'reasoning_effort',
+                'is_active',
+            )
+        }),
+        ('Advanced Credential & Endpoint Overrides', {
+            'classes': ('collapse',),
+            'description': (
+                'Optional override: Leave blank to automatically inherit the global default credential '
+                'for the selected provider. Select a credential only if this profile requires a dedicated '
+                'API key, custom base_url (e.g. local Ollama/vLLM), or isolated tenant billing.'
+            ),
+            'fields': (
+                'provider_credential',
+            )
+        }),
+        ('Metadata & Audit', {
+            'classes': ('collapse',),
+            'fields': (
+                ('created_by', 'updated_by'),
+                ('created_at', 'updated_at'),
+            )
+        }),
+    )
 
     def user_link(self, obj):
         if not obj.user:

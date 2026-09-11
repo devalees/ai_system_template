@@ -205,7 +205,7 @@ class Profile(AuditableModel):
         null=True,
         blank=True,
         related_name='profiles',
-        help_text="Optional dedicated provider credential assigned to this profile."
+        help_text="Optional override: Leave blank to automatically use the default credential for the selected provider. Specify only for dedicated keys or custom endpoints (e.g. Ollama/vLLM)."
     )
     reasoning_effort = models.CharField(
         max_length=20,
