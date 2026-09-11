@@ -815,30 +815,32 @@ Phase 24 completed and merged into `main`.
 
 ## Phase 24.1: Profile Inline Compatibility, Full-Width Card Layout & Cache Busting
 
-- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `feat/profile-inline-model-card-fix`
-- **Last Updated**: 2026-09-11 07:18:00+03:00
+- **Status**: COMPLETED
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-11 07:37:00+03:00
 
 ### 1. Objective & Scope
 Fix the client-side model selector and specifications card layout in Django Admin:
-- **Support Inlines & Standalone Selectors (`agent_profile_models.js`)**: Replace rigid `id_provider` / `id_model_name` lookups with dynamic pattern matching (`select[name$="provider"]`, `select[name$="model_name"]`) so the script initializes seamlessly inside `ProfileInline` on `CustomUserAdmin` (`/admin/auth/user/`) and standalone `ProfileAdmin`.
-- **Full-Width Responsive Card Layout (`agent_profile_models.js`)**: Fix the horizontal flex clipping bug by setting `flex: 1 1 100%`, `width: 100%`, `max-width: 100%`, `box-sizing: border-box`, `clear: both`, and adding `flex-wrap: wrap !important` to the parent `.form-row`. This guarantees the card always renders on its own full-width line directly beneath the model selector with zero horizontal cut-off.
-- **Browser Cache Busting (`admin.py`)**: Append `?v=24.1` query strings to `Media.js` in `CustomUserAdmin` and `ProfileAdmin` so browsers immediately load the latest script without requiring manual cache clears.
-- **Visual & Automated Verification**: Verify via automated tests and browser inspection that the card and dropdown modality badges render properly inside both User Profile inlines and standalone Profile admin forms.
+- **Support Inlines & Standalone Selectors (`agent_profile_models.js`)**: Replace rigid `id_provider` / `id_model_name` lookups with dynamic pattern matching (`select.hermes-provider-select`, `select[name$="provider"]`, `select[name$="-provider"]`) so the script initializes seamlessly inside `ProfileInline` on `CustomUserAdmin` (`/admin/auth/user/`) and standalone `ProfileAdmin`.
+- **Full-Width Responsive Card Layout (`agent_profile_models.js`)**: Fix the horizontal flex clipping bug where `.flex-container` pushed the card to the right by attaching the card directly to the outer `.form-row` / `.field-model_name` container with `display: block`, `width: 100%`, `box-sizing: border-box`, `clear: both`, and `margin-top: 12px`. This guarantees the card always renders on its own full-width line directly beneath the model selector with zero horizontal cut-off.
+- **Browser Cache Busting (`admin.py`)**: Register absolute static paths (`/static/admin/js/agent_profile_models.js?v=24.1` and `/static/admin/js/hermes_profile_selector.js?v=24.1`) in `ProfileInline.Media`, `CustomUserAdmin.Media`, and `ProfileAdmin.Media` to bust stale browser caches without Django URL-encoding the question mark.
+- **Visual & Automated Verification**: Verify via automated tests across the entire test suite (185/185 tests passing) and inspect rendered HTML outputs for both User Profile inlines and standalone Profile admin forms.
 
 ### 2. Task Checklist & Progress
 - [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/profile-inline-model-card-fix`)
-- [/] **Sub-task 2: Dynamic Inline Selector Pattern & Full-Width Card CSS (`agent_profile_models.js`)** - IN PROGRESS
-- [ ] **Sub-task 3: Cache-Busting Versioning in Admin Media (`admin.py`)** - PENDING
-- [ ] **Sub-task 4: Automated Testing & Visual Verification** - PENDING
-- [ ] **Sub-task 5: Merge into Main & Documentation Synchronization** - PENDING
+- [x] **Sub-task 2: Dynamic Inline Selector Pattern & Full-Width Card CSS (`agent_profile_models.js`)** - COMPLETED (Commit: `ab15edf`)
+- [x] **Sub-task 3: Cache-Busting Versioning in Admin Media (`admin.py`)** - COMPLETED (Commit: `ab15edf`)
+- [x] **Sub-task 4: Automated Testing & Visual Verification** - COMPLETED (Ran 185 tests in 112s, 100% pass rate)
+- [x] **Sub-task 5: Merge into Main & Documentation Synchronization** - COMPLETED
 
 ### 3. Key Decisions & Deviations (Phase 24.1)
-- *2026-09-11*: Identified that `ProfileInline` on `/admin/auth/user/` uses prefixed IDs (`id_profile-0-provider`, `id_profile-0-model_name`), which caused the previous script to exit early.
-- *2026-09-11*: Diagnosed that Django 5's flexbox `.form-row` placed the card alongside the input instead of wrapping underneath it. Added `flex-wrap: wrap` and `flex: 1 1 100%` on the card.
+- *2026-09-11*: Diagnosed that `ProfileInline` on `/admin/auth/user/<id>/change/` generates IDs like `id_profile-0-provider` and `id_profile-0-model_name`. Added dynamic prefix resolution and class-based selector targeting (`.hermes-provider-select` and `.hermes-model-select`).
+- *2026-09-11*: Discovered that in Django Admin, `modelSelect.parentNode` is `<div class="flex-container">`, which is a flex row. Appending `card` inside it caused the card to render side-by-side on the far right and get clipped by `.form-row`'s `overflow: hidden`. Solved by appending `card` to the outer `.form-row` container with `display: block; width: 100%; box-sizing: border-box;`, so it sits on its own row directly below the select box and help text.
+- *2026-09-11*: Discovered empirically that passing relative paths with query strings (e.g. `'admin/js/agent_profile_models.js?v=24.1'`) to Django `Media.js` caused Django's `static()` helper to URL-encode `?` into `%3F`, resulting in HTTP 404. Resolved by specifying absolute paths `'/static/admin/js/agent_profile_models.js?v=24.1'`, which Django serves directly with HTTP 200 OK.
+- *2026-09-11*: Added custom model preservation logic in `agent_profile_models.js`: if an existing profile has a model ID not in the catalog, it is preserved as `(Current / Custom)` rather than silently resetting to the first option.
 
 ### 4. Current Focus
-Executing Sub-task 2: Dynamic Inline Selector Pattern & Full-Width Card CSS in `agent_profile_models.js`.
+Phase 24.1 completed and merged into `main`. Ready for final user validation.
 
 
 

@@ -57,11 +57,15 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Strict DRF Authentication**: All data-modifying endpoints require `TokenAuthentication` and `StrictDjangoModelPermissions` (e.g. only `cost_controller` can ingest spend reports; only `qa_auditor` can submit task review verdicts).
 - **Runtime Credential Propagation**: Automatically synced into Hermes profile directories (`/root/.hermes/profiles/<name>/.env`) via `scripts/provision_profiles.py`.
 
-### 7. Unified User Profile & Live Engine Discovery
+### 7. Unified User Profile, Live Engine Discovery & Dynamic Model Specifications
 - **Single-Screen User Management**: `CustomUserAdmin` embeds `ProfileInline` directly in the `auth.User` change form, managing credentials, RBAC groups, and AI settings seamlessly.
 - **Visual Classification Badges**: User list table features distinct badges: `🤖 Agent (profile_slug)`, `👤 Staff`, `🌐 Client`.
 - **Live Hermes Discovery Service**: Scans mounted declarative profile definitions (`/app/agent_profiles/`) and provides the `GET /api/hermes/profiles/` endpoint.
 - **Dynamic 🔄 Reload Widget**: Admin interface features an asynchronous button that live-refreshes available engine profiles into the `<select>` dropdown without page reload, automatically populating canonical roles and descriptions.
+- **Dynamic Modality Badges & Specifications Card (`agent_profile_models.js`)**:
+  - Live model dropdowns grouped by vendor (`<optgroup>`) with compact modality indicators (`[🖼️ Vision]`, `[💬 Text]`, `[📁 PDF]`, `[🎙️ Audio]`, `[🎥 Video]`).
+  - Interactive, full-width specifications card (`.hermes-model-specs-card`) displaying context window, token input/output pricing, accepted input and generated output modality badges, and reasoning badges directly below the model selector without clipping.
+  - Compatible with both `CustomUserAdmin` (inline) and standalone `ProfileAdmin`, with cache-busting query strings (`?v=24.1`).
 
 ### 8. Centralized Automation Engine & Distributed Task Queue (`apps.automation`)
 - **Distributed Queue**: Celery 5.4+ with Redis 7 message broker and `django-celery-beat` database scheduler running in isolated worker (`celery_worker`) and scheduler (`celery_beat`) containers.
