@@ -26,8 +26,9 @@ agent_service/
 │   ├── qa_auditor/        # 3. QA & Compliance Gatekeeper
 │   │   └── skills/output_validator/ # Profile-scoped AST & security review tool
 │   ├── comms_agent/       # 4. Client Communications Coordinator
-│   ├── archivist/         # 5. Knowledge & Documentation Archivist
-│   └── security_guard/    # 6. Dynamically Provisioned Specialist
+│   │   └── skills/client_service_bridge/ # Profile-scoped client concierge bridge
+│   └── security_guard/    # 5. Security & Threat Auditor (SecOps)
+│       └── skills/security_scanner/ # Profile-scoped zero-trust security auditor
 └── skills/
     └── django_handshake/  # Shared system connectivity & health skill
 ```
@@ -58,7 +59,7 @@ agent_service/
 - **Skill**: **`task_decomposer`** ([`agent_service/profiles/orchestrator/skills/task_decomposer/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/orchestrator/skills/task_decomposer/))
   - **Executable Script**: [`agent_service/profiles/orchestrator/skills/task_decomposer/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/orchestrator/skills/task_decomposer/run.py)
   - **What It Does**:
-    1. Parses high-level objectives into a structured execution pipeline across the 5 department roles (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `archivist`).
+    1. Parses high-level objectives into a structured execution pipeline across the 5 department roles (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `security_guard`).
     2. Enforces explicit dependency mapping and sequential DAG validation (cycle detection prevents execution deadlocks).
     3. Direct-submits decomposed tasks to the Django task queue (`POST /api/tasks/`) using `bot_orchestrator`'s API token when executed with `--submit`.
     4. Supports `--dry-run` and `--json` export for inspection and dry evaluation before dispatch.
@@ -155,31 +156,31 @@ agent_service/
 
 ---
 
-### Agent 5: Archivist (`archivist`)
+### Agent 5: Security Guard (`security_guard`)
 
-- **Role**: Knowledge Archivist & Institutional Memory Custodian
-- **Directory**: [`agent_service/profiles/archivist/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/archivist/)
-- **Service Account**: `bot_archivist` | **Django Group**: `Agent_Archivist`
-- **Permissions**: `view_agentprofile`, `view_agenttask`
-- **Calibrated Reasoning**: `low` (straightforward indexing and synthesis)
-- **Default Toolsets**: `file_ops`, `terminal`, `web`
+- **Role**: Security & Threat Auditor (SecOps)
+- **Directory**: [`agent_service/profiles/security_guard/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/security_guard/)
+- **Service Account**: `bot_security_guard` | **Django Group**: `Agent_SecurityGuard`
+- **Permissions**: `view_agenttask`, `view_profile`, `view_activitylog`, `view_apikey`, `view_webhookevent`
+- **Calibrated Reasoning**: `high` (deep analytical reasoning for strict security, access boundary, and leak audits)
+- **Default Toolsets**: `terminal`, `file_ops` (Locked strictly; media/creative tools excluded)
+- **Bundled Skills Opt-Out**: `.no-bundled-skills` active (pruned 54 bundled skills to eliminate token overhead)
 
 #### Primary Responsibilities
-- **Documentation Maintenance**: Updates project documentation and system wikis ([`docs/ai_wiki/`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/)).
-- **SOP Extraction**: Extracts reusable standard operating procedures from completed task histories.
-- **Institutional Memory**: Indexes key architectural decisions, resolved issues, and patterns for future reference.
+- **Zero-Trust Sentinel**: Enforces a strict Zero-Trust philosophy across all deliverables, client interactions, and backend data flows (*Never trust, always verify*).
+- **Credential & Secret Leak Prevention**: Scans deliverables, configuration files, and `.env` runtimes for leaked API keys (OpenAI, OpenRouter, Anthropic, Stripe), tokens, and private cryptographic certificates.
+- **Tenant Boundary & Least Privilege Auditing**: Verifies that ORM queries and REST views strictly enforce `TenantAwareModel` or `tenant_context`, ensuring no cross-tenant leakage. Audits service accounts (`bot_*`) to prevent privilege escalation.
+- **API Gateway & Webhook Threat Monitoring**: Audits `WebhookEvent` logs for failed HMAC signature verifications and inspects `ActivityLog` for anomalous login bursts or suspicious IP spikes.
 
 #### Dedicated Skills & Scripts
-- **Wiki Synchronization**: Uses `file_ops` and Markdown tooling to maintain [`docs/ai_wiki/index.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/index.md) and [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md).
-
----
-
-### Dynamic / Specialized Profiles (e.g. `security_guard`)
-
-- **Provisioning Engine**: `apps.automation` via `auto_provision_hermes_profile` action.
-- **Example Profile**: [`agent_service/profiles/security_guard/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/security_guard/)
-- **Role**: `general` (Security Auditor)
-- **Mechanism**: Dynamically creates declarative profile folders, generates a bot user in Django, issues a DRF token, and writes the runtime `.env` file without container restarts.
+- **Skill**: **`security_scanner`** ([`agent_service/profiles/security_guard/skills/security_scanner/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/security_guard/skills/security_scanner/))
+  - **Executable Script**: [`agent_service/profiles/security_guard/skills/security_scanner/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/security_guard/skills/security_scanner/run.py)
+  - **What It Does**:
+    1. **`secrets-scan`**: Scans target directories or files for unmasked credentials, tokens, and private keys with severity ratings (`CRITICAL`, `HIGH`, `MEDIUM`). Supports `--exclude-tests` to focus strictly on production code.
+    2. **`tenant-audit`**: Introspects Django model inheritance to ensure domain models inherit `TenantAwareModel`.
+    3. **`rbac-audit`**: Verifies that active service accounts adhere to Principle of Least Privilege matrices.
+    4. **`gateway-audit`**: Checks active security posture: HMAC signature enforcement, SHA-256 hashed API keys, and IP allowlist guards.
+    5. **`--json`**: Emits structured JSON reports for automated pipeline processing and alert dispatch.
 
 ---
 
@@ -227,11 +228,11 @@ flowchart TD
         CostScript -->|Post SpendReport| SpendDB[(PostgreSQL SpendReport)]
     end
     
-    subgraph S5 ["Stage 5: Delivery & Archival"]
+    subgraph S5 ["Stage 5: Security & Client Handoff"]
+        ApprovedState --> Sec[Security Guard]
+        Sec -->|Run security_scanner| SecScript[skills/security_scanner/run.py]
         ApprovedState --> Comms[Comms Agent]
         Comms -->|Draft & Send Update| Stakeholder([Client / Channel Notification])
-        ApprovedState --> Arch[Archivist]
-        Arch -->|Update Docs & Wikis| WikiDocs[(docs/ai_wiki/)]
     end
 ```
 
@@ -240,8 +241,8 @@ flowchart TD
 2. **Execution (Specialist / Sub-Agent)**: The executing agent works on the task and transitions status from `pending` ➔ `in_progress` ➔ `review`.
 3. **QA Review Gate (`qa_auditor`)**: `qa_auditor` inspects deliverables using `output_validator`. If clean, it marks `approved`. If defective, it submits `changes_requested` with structured notes and loops back to the executor.
 4. **Spend Audit (`cost_controller`)**: Evaluates token consumption and updates `SpendReport`. If spend exceeds budget thresholds, alerts are triggered.
-5. **Client Handoff (`comms_agent`)**: Composes external-facing summaries and notifies stakeholders.
-6. **Archival (`archivist`)**: Indexes deliverables, extracts SOPs, and synchronizes documentation in `docs/ai_wiki/`.
+5. **Security & Threat Audit (`security_guard`)**: Evaluates deliverables for credential leaks, validates multi-tenant isolation, and audits access permissions.
+6. **Client Handoff (`comms_agent`)**: Composes external-facing summaries and notifies stakeholders.
 
 ---
 

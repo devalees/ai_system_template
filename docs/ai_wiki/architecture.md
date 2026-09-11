@@ -40,7 +40,9 @@ economy_editor/
 │   │   ├── qa_auditor/              # Quality assurance gatekeeper
 │   │   │   └── skills/output_validator/ # Profile-scoped AST & security validator
 │   │   ├── comms_agent/             # Client communications & intake
-│   │   └── archivist/               # Documentation & institutional memory
+│   │   │   └── skills/client_service_bridge/ # Client concierge & document streaming
+│   │   └── security_guard/          # Security & threat auditor (SecOps)
+│   │       └── skills/security_scanner/ # Secret leak detection & boundary audit
 │   └── skills/                      # Shared system & infrastructure skills
 │       └── django_handshake/        # Container connectivity & handshake bootstrap
 ├── backend/                         # Django Web Service
@@ -209,7 +211,7 @@ To uphold the Principle of Least Privilege across the multi-agent ecosystem, age
 | `cost_controller` | `bot_cost_controller` | `Agent_CostController` | `view_spendreport`, `add_spendreport`, `view_agentprofile` | POST/GET `/api/spend-reports/`, GET `/api/profiles/` |
 | `qa_auditor` | `bot_qa_auditor` | `Agent_QAAuditor` | `view_agenttask`, `change_agenttask`, `view_agentprofile` | GET `/api/tasks/`, POST `/api/tasks/<id>/submit-verdict/` |
 | `comms_agent` | `bot_comms_agent` | `Agent_CommsAgent` | `view_agenttask`, `view_agentprofile` | GET `/api/tasks/`, GET `/api/profiles/` |
-| `archivist` | `bot_archivist` | `Agent_Archivist` | `view_agentprofile`, `view_agenttask` | GET `/api/profiles/`, GET `/api/tasks/` |
+| `security_guard` | `bot_security_guard` | `Agent_SecurityGuard` | `view_agenttask`, `view_agentprofile`, `view_activitylog`, `view_apikey`, `view_webhookevent` | GET `/api/tasks/`, GET `/api/profiles/`, GET `/api/v1/audit/logs/`, GET `/api/v1/api-keys/` |
 
 ### 8.2 Endpoint Authorization & Defense-in-Depth
 
@@ -542,7 +544,7 @@ The filtering engine unifies trigger condition evaluation into a single authorit
   - **`qa_auditor`**: Review task output deliverables & submit verdict, scan for hardcoded secrets and unfinished placeholders.
   - **`orchestrator`**: Triage & decompose new intake tasks, synthesize deliverables across sub-tasks.
   - **`comms_agent`**: Draft professional client milestone and progress updates.
-  - **`archivist`**: Extract institutional knowledge and SOPs into project documentation.
+  - **`security_guard`**: Run zero-trust secret leak checks, tenant boundary isolation audits, and API gateway threat scans.
   - **System Handlers**: Generic webhook payload dispatches, user profile auto-provisioning.
 
 ### 14.3 Recursive Template Variable Resolution (`engine.py`)
@@ -1197,7 +1199,7 @@ The filtering engine unifies trigger condition evaluation into a single authorit
   - Eliminates reliance on Hermes agents self-scanning disk SQLite databases (`state.db`).
 
 ### 23.4 Calibrated Reasoning Budgets & Multi-Agent Pipeline Handoff
-- Calibrates default profile reasoning budgets (`orchestrator` & `comms_agent` = `none`, `cost_controller` & `archivist` = `low`, `qa_auditor` = `high`) eliminating 10–15s latency on operational workflows.
+- Calibrates default profile reasoning budgets (`orchestrator` & `comms_agent` = `none`, `cost_controller` = `low`, `qa_auditor` & `security_guard` = `high`) eliminating 10–15s latency on operational workflows.
 - Accumulates step deliverables (`deliverable`) in `execute_pipeline`, allowing downstream steps to consume outputs via `{{deliverable}}` or `{{step_outputs}}`.
 
 ---

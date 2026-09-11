@@ -151,6 +151,7 @@ class Profile(AuditableModel):
         ('finance', 'Finance & Cost Control'),
         ('quality_assurance', 'Quality Assurance & Audit'),
         ('communications', 'Client Service & Communications'),
+        ('security', 'Security & Access Control (SecOps)'),
         ('knowledge_management', 'Knowledge Management & Documentation'),
         ('general', 'General / Custom'),
     ]

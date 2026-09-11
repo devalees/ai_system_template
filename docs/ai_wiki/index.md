@@ -7,7 +7,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
 - **Agent Team Reference**: [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md)
-- **Status**: Phase 30 Completed (Dedicated Client Management Module (`apps.clients`), 1-to-Many Users & AI Service Governance; 100% test pass rate across 197 tests)
+- **Status**: Phase 31 Completed (Retire Archivist & Promote Security Guard as 5th Core Department Head; 100% test pass rate across 198 tests)
 
 
 ---
@@ -39,7 +39,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
   2. `cost_controller`: Token consumption tracking, budget cap enforcement, and model efficiency advisory via DeepSWE benchmarks (Calibrated Effort: `low`).
   3. `qa_auditor`: Review pipeline gatekeeper, quality control, output verification (Calibrated Effort: `high`).
   4. `comms_agent`: Client service concierge, zero-trust document streaming, dollar budget governance, and multi-channel notification dispatch (Calibrated Effort: `none` for zero-latency, lowest-cost replies).
-  5. `archivist`: Documentation maintainer, institutional memory, SOPs, wiki indexing (Calibrated Effort: `low`).
+  5. `security_guard`: Security & threat auditor, secret leak detection, tenant boundary verification, and RBAC guard (Calibrated Effort: `high`).
 - **Execution Mechanism**: Invoked directly via `hermes -p <profile_name> --reasoning <level>` or over Gateway HTTP `/v1/chat/completions`.
 
 ### 3. Declarative Profile Provisioning (`scripts/provision_profiles.py`)
@@ -53,6 +53,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
   - `cost_monitor` (scoped to `cost_controller`): Inspects `session_model_usage` across profile SQLite `state.db` files, calculates spend against daily budget caps, evaluates Intelligence-per-Dollar ROI using DeepSWE benchmarks, and pushes optimization recommendations to Django (`POST /api/spend-reports/`).
   - `output_validator` (scoped to `qa_auditor`): Empirical syntax parser (Python AST, JSON, YAML), credential leak detector, and placeholder hygiene reviewer for the QA review gate with direct automated verdict dispatch (`POST /api/tasks/<id>/submit-verdict/`).
   - `client_service_bridge` (scoped to `comms_agent`): Multi-mode concierge bridging client account status, accessible document queries, authenticated REST streaming downloads (zero-trust file access without filesystem mounts), percentage-based dollar AI budget enforcement (25%, 50%, 75%, 100% milestones), and multi-channel notifications (`POST /api/notifications/`).
+  - `security_scanner` (scoped to `security_guard`): Multi-mode SecOps scanner for secret leak detection, multi-tenant isolation verification, RBAC permission auditing, and API gateway threat monitoring.
 
 - **Skill Pruning & Token Efficiency**:
   - Profiles opt out of Hermes's 54 bundled skills (games, media, audio, deep debugging) via the `.no-bundled-skills` marker, saving thousands of prompt tokens per turn and focusing execution on dedicated capabilities.
@@ -65,7 +66,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Review Pipeline**: Tasks transition across `pending` → `in_progress` → `review` → `completed` / `failed`, reviewed by `qa_auditor` via `POST /api/tasks/<id>/submit-verdict/`.
 
 ### 6. Role-Based Access Control (RBAC) & Service Accounts
-- **Dedicated Bot Users**: Each profile is linked to a dedicated Django service account (`bot_orchestrator`, `bot_cost_controller`, `bot_qa_auditor`, `bot_comms_agent`, `bot_archivist`) with unusable passwords.
+- **Dedicated Bot Users**: Each profile is linked to a dedicated Django service account (`bot_orchestrator`, `bot_cost_controller`, `bot_qa_auditor`, `bot_comms_agent`, `bot_security_guard`) with unusable passwords.
 - **Native Django Groups**: Mapped to granular model permissions (`add`, `change`, `view`, `delete`) enforcing the Principle of Least Privilege.
 - **Strict DRF Authentication**: All data-modifying endpoints require `TokenAuthentication` and `StrictDjangoModelPermissions` (e.g. only `cost_controller` can ingest spend reports; only `qa_auditor` can submit task review verdicts).
 - **Runtime Credential Propagation**: Automatically synced into Hermes profile directories (`/root/.hermes/profiles/<name>/.env`) via `scripts/provision_profiles.py`.

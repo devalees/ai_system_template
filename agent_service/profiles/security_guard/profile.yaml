@@ -1,7 +1,6 @@
 name: security_guard
-display_name: "Security Auditor"
-role: "general"
-description: "Dynamically provisioned agent profile for Security Auditor."
-default_model: "z-ai/glm-5.3-flash"
+display_name: "Security & Threat Auditor"
+role: "security"
+description: "Audits credential leaks, validates multi-tenant boundaries, monitors API gateway anomalies, and enforces least privilege."
+default_model: "google/gemini-2.5-flash"
 default_provider: "openrouter"
-created_by: "apps.automation"

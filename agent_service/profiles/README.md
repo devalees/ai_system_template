@@ -22,10 +22,12 @@ agent_service/profiles/
 │   ├── SOUL.md
 │   ├── config.yaml
 │   └── profile.yaml
-└── archivist/             # Knowledge archivist & documentation maintainer
+└── security_guard/        # Security & threat auditor (SecOps)
     ├── SOUL.md
     ├── config.yaml
-    └── profile.yaml
+    ├── profile.yaml
+    └── skills/
+        └── security_scanner/
 ```
 
 ## Profile Roles Summary
@@ -33,10 +35,10 @@ agent_service/profiles/
 | Profile | Role Name | Primary Responsibility | Core Toolsets |
 | :--- | :--- | :--- | :--- |
 | `orchestrator` | Chief of Staff | Request intake, goal decomposition, Kanban dispatch | `kanban`, `delegate`, `terminal`, `file_ops`, `clarify` |
-| `cost_controller` | Financial Controller | Token usage tracking, budget caps, expense auditing | `terminal`, `file_ops`, `web` |
+| `cost_controller` | Financial Controller | Token usage tracking, budget caps, expense auditing | `terminal`, `file_ops` |
 | `qa_auditor` | QA & Compliance | Output validation, review gate, `request-changes` | `kanban`, `terminal`, `file_ops` |
-| `comms_agent` | Client Coordinator | External messaging, email drafts, scheduling | `file_ops`, `terminal` |
-| `archivist` | Knowledge Archivist | System documentation, wiki sync, SOP retrieval | `file_ops`, `terminal`, `web` |
+| `comms_agent` | Client Coordinator | External messaging, email drafts, zero-trust streaming | `terminal`, `file_ops` |
+| `security_guard` | Security Auditor | Secret leak detection, tenant boundary audit, RBAC guard | `terminal`, `file_ops` |
 
 ## Provisioning
 These definitions are synchronized into the running Hermes container (`/root/.hermes/profiles/<name>/`) via `scripts/provision_profiles.py`.

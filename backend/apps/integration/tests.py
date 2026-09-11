@@ -17,10 +17,11 @@ class IntegrationAPITests(TestCase):
         self.cost_token = Token.objects.get(user__username='bot_cost_controller').key
         self.qa_token = Token.objects.get(user__username='bot_qa_auditor').key
         self.comms_token = Token.objects.get(user__username='bot_comms_agent').key
-        self.archivist_token = Token.objects.get(user__username='bot_archivist').key
+        self.security_guard_token = Token.objects.get(user__username='bot_security_guard').key
 
         self.orchestrator_profile = AgentProfile.objects.get(name='orchestrator')
         self.qa_profile = AgentProfile.objects.get(name='qa_auditor')
+        self.security_guard_profile = AgentProfile.objects.get(name='security_guard')
 
     def test_health_check_endpoint_is_public(self):
         """Verify that GET /api/health/ is publicly accessible."""
@@ -152,6 +153,24 @@ class IntegrationAPITests(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data['reasoning_effort'], 'high')
+
+    def test_security_guard_profile_and_rbac(self):
+        """Verify security_guard core profile metadata and Agent_SecurityGuard group permissions."""
+        self.assertEqual(self.security_guard_profile.role, 'security')
+        self.assertEqual(self.security_guard_profile.reasoning_effort, 'high')
+        self.assertTrue(self.security_guard_profile.is_agent)
+
+        user = User.objects.get(username='bot_security_guard')
+        group_names = list(user.groups.values_list('name', flat=True))
+        self.assertIn('Agent_SecurityGuard', group_names)
+
+        # Verify assigned permissions
+        perms = set(user.get_group_permissions())
+        self.assertIn('integration.view_agenttask', perms)
+        self.assertIn('integration.view_profile', perms)
+        self.assertIn('audit.view_activitylog', perms)
+        self.assertIn('api_gateway.view_apikey', perms)
+        self.assertIn('api_gateway.view_webhookevent', perms)
 
     def test_user_post_save_signal_creates_profile(self):
         """Verify standard Django lifecycle: creating User auto-generates linked Profile."""

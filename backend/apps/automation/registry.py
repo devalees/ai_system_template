@@ -65,7 +65,7 @@ HERMES_PROFILE_PRESETS: Dict[str, List[Dict[str, Any]]] = {
             "name": "📋 Triage & Decompose Task",
             "description": "Analyzes an incoming task and decomposes it into specialist sub-tasks.",
             "params": {
-                "prompt": "Analyze incoming task #{{pk}} ('{{task_name}}'). Decompose into specialist sub-tasks and assign to respective agent profiles (cost_controller, qa_auditor, comms_agent, archivist)."
+                "prompt": "Analyze incoming task #{{pk}} ('{{task_name}}'). Decompose into specialist sub-tasks and assign to respective agent profiles (cost_controller, qa_auditor, comms_agent, security_guard)."
             }
         },
         {
@@ -85,12 +85,33 @@ HERMES_PROFILE_PRESETS: Dict[str, List[Dict[str, Any]]] = {
             }
         }
     ],
-    "archivist": [
+    "security_guard": [
         {
-            "name": "📚 Archive Task Documentation & SOP",
-            "description": "Extracts institutional knowledge and updates project documentation.",
+            "name": "🛡️ Secret & Credential Leak Audit",
+            "description": "Scans task deliverables, configs, and diffs for leaked API keys, tokens, or private secrets.",
             "params": {
-                "prompt": "Extract institutional knowledge and SOPs from completed task #{{pk}} ('{{task_name}}') and update project documentation."
+                "prompt": "Execute security_scanner in secrets-scan mode on deliverables for task #{{pk}} ('{{task_name}}'). Identify unmasked API keys, tokens, or private certificates and report severity ratings."
+            }
+        },
+        {
+            "name": "🔐 Multi-Tenant & RBAC Boundary Check",
+            "description": "Audits model definitions and endpoint permissions to verify tenant isolation and least privilege.",
+            "params": {
+                "prompt": "Audit tenant isolation and RBAC group permissions for task #{{pk}} ('{{task_name}}'). Verify TenantAwareModel usage and ensure no unauthorized data cross-contamination."
+            }
+        },
+        {
+            "name": "🚨 Webhook & Auth Threat Audit",
+            "description": "Inspects recent webhook events and activity logs for invalid signatures, replay attacks, or login failures.",
+            "params": {
+                "prompt": "Audit recent WebhookEvents and ActivityLogs for failed HMAC signature verifications, invalid token attempts, or authentication anomalies."
+            }
+        },
+        {
+            "name": "🔍 Comprehensive Security Posture Scan",
+            "description": "Performs an end-to-end security audit across secrets, permissions, and runtime sandboxing.",
+            "params": {
+                "prompt": "Conduct a comprehensive security posture audit for task #{{pk}} ('{{task_name}}') across credentials, permissions, and zero-trust file access rules."
             }
         }
     ]
