@@ -32,6 +32,7 @@ hermes_data/sessions/
 hermes_data/logs/
 hermes_data/*.db
 data/
+backend/hermes_root_env
 
 # IDE & OS
 .idea/
