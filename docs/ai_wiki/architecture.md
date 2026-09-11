@@ -35,12 +35,13 @@ economy_editor/
 │   ├── profiles/                    # Declarative profile configurations
 │   │   ├── orchestrator/            # Chief of Staff (intake & triage)
 │   │   ├── cost_controller/         # Financial & spend auditor
+│   │   │   └── skills/cost_monitor/ # Profile-scoped token & budget tracking
 │   │   ├── qa_auditor/              # Quality assurance gatekeeper
+│   │   │   └── skills/output_validator/ # Profile-scoped AST & security validator
 │   │   ├── comms_agent/             # Client communications & intake
 │   │   └── archivist/               # Documentation & institutional memory
-│   └── skills/                      # Custom specialist skills
-│       ├── cost_monitor/            # SQLite token & spend aggregation
-│       └── output_validator/        # AST syntax & leak validation
+│   └── skills/                      # Shared system & infrastructure skills
+│       └── django_handshake/        # Container connectivity & handshake bootstrap
 ├── backend/                         # Django Web Service
 │   ├── apps/
 │   │   ├── automation/              # Centralized Automation Engine & Service Registry

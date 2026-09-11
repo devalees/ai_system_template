@@ -17,13 +17,18 @@ The autonomous workforce operates under a decentralized division of labor:
 - Tasks are tracked in the PostgreSQL `AgentTask` registry and orchestrated through `apps.automation` Celery pipelines.
 
 ```
-agent_service/profiles/
-├── orchestrator/      # 1. Chief of Staff & Kanban Router
-├── cost_controller/   # 2. Financial Controller & Budget Monitor
-├── qa_auditor/        # 3. QA & Compliance Gatekeeper
-├── comms_agent/       # 4. Client Communications Coordinator
-├── archivist/         # 5. Knowledge & Documentation Archivist
-└── security_guard/    # 6. Dynamically Provisioned Specialist
+agent_service/
+├── profiles/
+│   ├── orchestrator/      # 1. Chief of Staff & Kanban Router
+│   ├── cost_controller/   # 2. Financial Controller & Budget Monitor
+│   │   └── skills/cost_monitor/  # Profile-scoped SQLite spend auditor
+│   ├── qa_auditor/        # 3. QA & Compliance Gatekeeper
+│   │   └── skills/output_validator/ # Profile-scoped AST & security review tool
+│   ├── comms_agent/       # 4. Client Communications Coordinator
+│   ├── archivist/         # 5. Knowledge & Documentation Archivist
+│   └── security_guard/    # 6. Dynamically Provisioned Specialist
+└── skills/
+    └── django_handshake/  # Shared system connectivity & health skill
 ```
 
 ---
@@ -69,8 +74,8 @@ agent_service/profiles/
 - **Overrun Alerts**: Flags anomalous spikes and triggers pause actions if budgets are exceeded.
 
 #### Dedicated Skills & Scripts
-- **Skill**: **`cost_monitor`** ([`agent_service/skills/cost_monitor/`](file:///home/ehab/Desktop/economy_editor/agent_service/skills/cost_monitor/))
-  - **Executable Script**: [`agent_service/skills/cost_monitor/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/skills/cost_monitor/run.py)
+- **Skill**: **`cost_monitor`** ([`agent_service/profiles/cost_controller/skills/cost_monitor/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/cost_controller/skills/cost_monitor/))
+  - **Executable Script**: [`agent_service/profiles/cost_controller/skills/cost_monitor/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/cost_controller/skills/cost_monitor/run.py)
   - **What It Does**:
     1. Scans SQLite databases (`state.db`) across all profiles in `/root/.hermes/profiles/`.
     2. Queries the `session_model_usage` table for prompt and completion token counts per model.
@@ -96,8 +101,8 @@ agent_service/profiles/
 - **Authoritative Verdicts**: Submits binding decisions (`approved` or `changes_requested`).
 
 #### Dedicated Skills & Scripts
-- **Skill**: **`output_validator`** ([`agent_service/skills/output_validator/`](file:///home/ehab/Desktop/economy_editor/agent_service/skills/output_validator/))
-  - **Executable Script**: [`agent_service/skills/output_validator/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/skills/output_validator/run.py)
+- **Skill**: **`output_validator`** ([`agent_service/profiles/qa_auditor/skills/output_validator/`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/qa_auditor/skills/output_validator/))
+  - **Executable Script**: [`agent_service/profiles/qa_auditor/skills/output_validator/run.py`](file:///home/ehab/Desktop/economy_editor/agent_service/profiles/qa_auditor/skills/output_validator/run.py)
   - **What It Does**:
     1. **Multi-Format Parsing**: Compiles Python AST to detect syntax errors; parses JSON/YAML schemas; checks Markdown fences and link integrity.
     2. **Placeholder Trapping**: Scans files for unfinished markers (`TODO`, `FIXME`, `CHANGEME`, stubbed passes).

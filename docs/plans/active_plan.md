@@ -846,9 +846,9 @@ Phase 24.1 completed and merged into `main`. Ready for final user validation.
 
 ## Phase 25: Profile-Scoped Skills Architecture & Hermes Isolation
 
-- **Status**: IN_PROGRESS
+- **Status**: COMPLETED
 - **Active Branch**: `feat/profile-scoped-skills`
-- **Last Updated**: 2026-09-11 08:17:00+03:00
+- **Last Updated**: 2026-09-11 08:37:00+03:00
 
 ### 1. Objective & Scope
 Restructure the Hermes Agent skill layout from a flat global directory into a native profile-scoped architecture, placing specialist skills directly inside each profile's directory (`agent_service/profiles/<name>/skills/`), updating the profile provisioner, and enforcing strict skill isolation:
@@ -859,18 +859,22 @@ Restructure the Hermes Agent skill layout from a flat global directory into a na
 - **Documentation Synchronization**: Update [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md), [`docs/ai_wiki/index.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/index.md), and [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md).
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/profile-scoped-skills`)
-- [ ] **Sub-task 2: Relocate Skills to Profile Directories & Update SKILL.md Paths** - PENDING
-- [ ] **Sub-task 3: Upgrade Profile Provisioner (`scripts/provision_profiles.py`)** - PENDING
-- [ ] **Sub-task 4: Update Profile Personas (`SOUL.md`) with Explicit Tool Bindings** - PENDING
-- [ ] **Sub-task 5: Empirical Verification & CLI Isolation Audit** - PENDING
-- [ ] **Sub-task 6: Documentation Synchronization & Test Suite Verification** - PENDING
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/profile-scoped-skills`, Commit: `0bf4d36`)
+- [x] **Sub-task 2: Relocate Skills to Profile Directories & Update SKILL.md Paths** - COMPLETED (Commit: `5d189c2`)
+- [x] **Sub-task 3: Upgrade Profile Provisioner (`scripts/provision_profiles.py`)** - COMPLETED (Commit: `4b33e66`)
+- [x] **Sub-task 4: Update Profile Personas (`SOUL.md`) with Explicit Tool Bindings** - COMPLETED (Commit: `b26dc3e`)
+- [x] **Sub-task 5: Empirical Verification & CLI Isolation Audit** - COMPLETED (Audited with Hermes CLI, verified 100% skill isolation and script executions)
+- [x] **Sub-task 6: Documentation Synchronization & Test Suite Verification** - COMPLETED (185/185 tests passing in 112s; docs/agent_team.md, index.md, and architecture.md synchronized)
 
 ### 3. Key Decisions & Deviations (Phase 25)
 - *2026-09-11*: Initialized Phase 25 per user feedback regarding the separation between profiles and skills in `agent_service/`. Aligned with Hermes Agent's native design where profiles support profile-level skills under `/root/.hermes/profiles/<name>/skills/`.
+- *2026-09-11*: Relocated `cost_monitor` into `agent_service/profiles/cost_controller/skills/` and `output_validator` into `agent_service/profiles/qa_auditor/skills/`. Updated usage documentation in both `SKILL.md` files (Commit: `5d189c2`).
+- *2026-09-11*: Upgraded `scripts/provision_profiles.py` to recursively synchronize `agent_service/profiles/<name>/skills/` into `/root/.hermes/profiles/<name>/skills/`, purge migrated custom skills from root `/root/.hermes/skills/custom/`, and verified profile-scoped skill isolation across profiles (Commit: `4b33e66`).
+- *2026-09-11*: Updated `SOUL.md` for `cost_controller` and `qa_auditor` to explicitly declare dedicated skills and execution paths (Commit: `b26dc3e`).
+- *2026-09-11*: Empirically validated skill isolation using `hermes -p <profile> skills list`: verified `cost_controller` only sees `cost_monitor`, `qa_auditor` only sees `output_validator`, and neither profile clutters other profiles or root. Executed both skills successfully and verified 100% test pass rate across 185 tests.
 
 ### 4. Current Focus
-Sub-task 2: Relocate Skills to Profile Directories & Update SKILL.md Paths.
+Phase 25 completed and verified. Ready to merge into `main`.
 
 
 
