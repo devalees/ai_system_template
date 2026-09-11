@@ -60,6 +60,56 @@ PROVIDER_TO_MODELS_DEV = {
     "ollama": "ollama-cloud",
 }
 
+# Mapping of normalized vendor prefixes to clean display names
+VENDOR_DISPLAY_NAMES = {
+    "google": "Google",
+    "anthropic": "Anthropic",
+    "openai": "OpenAI",
+    "deepseek": "DeepSeek",
+    "meta-llama": "Meta / LLaMA",
+    "meta": "Meta / LLaMA",
+    "mistralai": "Mistral AI",
+    "mistral": "Mistral AI",
+    "qwen": "Alibaba / Qwen",
+    "alibaba": "Alibaba / Qwen",
+    "cohere": "Cohere",
+    "x-ai": "xAI (Grok)",
+    "xai": "xAI (Grok)",
+    "nousresearch": "Nous Research",
+    "nous": "Nous Research",
+    "amazon": "Amazon",
+    "microsoft": "Microsoft",
+    "nvidia": "NVIDIA",
+    "databricks": "Databricks",
+    "gryphe": "Gryphe",
+    "sao10k": "Sao10K",
+    "perplexity": "Perplexity",
+    "together": "Together AI",
+    "bytedance": "ByteDance",
+    "bytedance-seed": "ByteDance",
+    "moonshotai": "Moonshot AI",
+    "moonshot": "Moonshot AI",
+    "ibm-granite": "IBM Granite",
+    "z-ai": "Z.AI (GLM)",
+    "zai": "Z.AI (GLM)",
+    "minimax": "MiniMax",
+}
+
+
+def extract_provider_group(model_id: str, default_vendor: str = "") -> str:
+    """Extracts a normalized, human-friendly vendor/provider group name from a model ID."""
+    if "/" in model_id:
+        raw_prefix = model_id.split("/")[0].lower().lstrip("~").strip()
+        if raw_prefix in VENDOR_DISPLAY_NAMES:
+            return VENDOR_DISPLAY_NAMES[raw_prefix]
+        return raw_prefix.replace("-", " ").replace("_", " ").title()
+    elif default_vendor:
+        raw_vendor = default_vendor.lower().lstrip("~").strip()
+        if raw_vendor in VENDOR_DISPLAY_NAMES:
+            return VENDOR_DISPLAY_NAMES[raw_vendor]
+        return raw_vendor.replace("-", " ").replace("_", " ").title()
+    return "General / Other"
+
 # Patterns to filter non-agentic noise (TTS, embeddings, live-stream, image-only)
 _NOISE_PATTERNS = re.compile(
     r"-tts\b|embedding|live-|-(preview|exp)-\d{2,4}[-_]|"
@@ -245,9 +295,11 @@ def fetch_openrouter_catalog() -> List[Dict[str, Any]]:
                     any(term in m_id.lower() for term in ["deepseek-r1", "o1", "o3", "thinking", "gemini-2.5", "gemini-3", "sonnet-3.7", "sonnet-4", "opus-5", "fable-5"])
                 )
 
+                group = extract_provider_group(m_id)
                 formatted.append({
                     "id": m_id,
                     "name": name,
+                    "provider_group": group,
                     "context_length": ctx,
                     "cost_input_per_1m": round(p_in, 4),
                     "cost_output_per_1m": round(p_out, 4),
@@ -255,6 +307,7 @@ def fetch_openrouter_catalog() -> List[Dict[str, Any]]:
                     "description": m.get("description", "")[:120] or "OpenRouter high-performance model.",
                 })
 
+            formatted.sort(key=lambda x: (x.get("provider_group", "").lower(), x.get("name", "").lower()))
             _OPENROUTER_CACHE = formatted
             _OPENROUTER_CACHE_TIME = now
             return formatted
@@ -270,6 +323,7 @@ def fetch_openrouter_catalog() -> List[Dict[str, Any]]:
         {
             "id": "google/gemini-2.5-flash",
             "name": "Google: Gemini 2.5 Flash",
+            "provider_group": "Google",
             "context_length": 1048576,
             "cost_input_per_1m": 0.075,
             "cost_output_per_1m": 0.30,
@@ -334,24 +388,27 @@ def _parse_models_dev_provider(provider_key: str, provider_data: Dict[str, Any])
 
         cap_str = f"Supports {', '.join(capabilities)}." if capabilities else "Standard LLM inference."
         desc = f"{cap_str} Context: {ctx_int:,} tokens."
+        group = extract_provider_group(mid, default_vendor=provider_key)
 
         results.append({
             "id": mid,
             "name": mval.get("name", mid),
+            "provider_group": group,
             "context_length": ctx_int,
             "cost_input_per_1m": round(in_cost, 4),
             "cost_output_per_1m": round(out_cost, 4),
             "supports_reasoning": bool(mval.get("reasoning")),
             "description": desc,
-            "_raw_order": mval.get("release_date", ""),
         })
 
-    # Sort: models with release_date or higher versioning first
-    results.sort(key=lambda x: (x["cost_output_per_1m"] > 0, x["context_length"] >= 200000, x["_raw_order"]), reverse=True)
-    for r in results:
-        r.pop("_raw_order", None)
-
+    # Sort primarily by provider_group (alphabetical), secondarily by model name
+    results.sort(key=lambda x: (x.get("provider_group", "").lower(), x.get("name", "").lower()))
     return results
+
+
+# Ensure Nous models have provider_group assigned
+for _m in _NOUS_MODELS:
+    _m.setdefault("provider_group", "Nous Portal")
 
 
 def get_models_for_provider(provider_slug: str) -> List[Dict[str, Any]]:
@@ -379,6 +436,7 @@ def get_models_for_provider(provider_slug: str) -> List[Dict[str, Any]]:
         {
             "id": "default",
             "name": f"Default {provider_slug.capitalize()} Model",
+            "provider_group": provider_slug.title(),
             "context_length": 128000,
             "cost_input_per_1m": 0.0,
             "cost_output_per_1m": 0.0,
