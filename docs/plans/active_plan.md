@@ -773,7 +773,39 @@ Consolidate LLM credentials into a single source of truth (`ProviderCredential`)
 - *2026-09-11*: Executed complete test suite: 100% pass rate across 181 unit tests.
 
 ### 4. Current Focus
-Phase 23 completed. Ready to merge into `main`.
+Phase 23 completed and verified.
+
+---
+
+## Phase 24: LLM Model Modalities, Visual Capability Badges & Dropdown Indicators
+
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `feat/model-modalities-and-specs-card`
+- **Last Updated**: 2026-09-11 06:55:00+03:00
+
+### 1. Objective & Scope
+Enrich the model catalog and profile administration UI with comprehensive modality specifications (Text, Vision / Image, Document / File / PDF, Audio / Voice, Video) from OpenRouter and `models.dev`:
+- **Catalog Service Modalities Normalization**: Extract `input_modalities` and `output_modalities` across OpenRouter, `models.dev`, and Nous Portal in `apps.integration.services.hermes_catalog`.
+- **Admin Form Initial Choices**: Enhance `ProfileAdminForm` in `forms.py` to include compact modality indicator icons in `<option>` labels.
+- **Dynamic JavaScript & Specifications Card**: Upgrade `agent_profile_models.js` to render a dedicated, stylized **Supported Modalities** section with color-coded badges/chips for input and output capabilities, alongside existing pricing and context window metrics.
+- **Automated Testing & Full Verification**: Add test cases covering modality extraction and form choices, validating 100% test pass rate.
+- **Documentation Synchronization**: Synchronize `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md`.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/model-modalities-and-specs-card`)
+- [/] **Sub-task 2: Backend Catalog Modalities Normalization (`hermes_catalog.py`)** - IN PROGRESS
+- [ ] **Sub-task 3: Django Admin Form Dropdown Modality Indicators (`forms.py`)** - PENDING
+- [ ] **Sub-task 4: Dynamic Admin UI & Visual Metrics Card Badges (`agent_profile_models.js`)** - PENDING
+- [ ] **Sub-task 5: Automated Testing & Comprehensive Verification** - PENDING
+- [ ] **Sub-task 6: Documentation & LLM Wiki Synchronization** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 24)
+- *2026-09-11*: Initialized Phase 24 per user request to display model input/output modalities (Text, Image/Vision, File/PDF, Audio/Voice, Video) in the Profile admin model selector and specifications card.
+- *2026-09-11*: Leveraged OpenRouter's `architecture.input_modalities` / `architecture.output_modalities` and `models.dev`'s `modalities.input` / `modalities.output`, standardizing keys to `input_modalities` and `output_modalities`.
+
+### 4. Current Focus
+Proceeding with Sub-task 2: Backend Catalog Modalities Normalization in `hermes_catalog.py`.
+
 
 
 
