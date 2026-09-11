@@ -231,11 +231,16 @@ def sync_profile_runtime_env(profile: Any) -> Optional[Path]:
         try:
             content = config_file.read_text(encoding="utf-8")
             # Update model, provider, and reasoning_effort lines
-            content = re.sub(r'model:\s*".*?"', f'model: "{profile.model_name}"', content)
-            content = re.sub(r'provider:\s*".*?"', f'provider: "{profile.provider}"', content)
-            content = re.sub(r'reasoning_effort:\s*".*?"', f'reasoning_effort: "{profile.reasoning_effort}"', content)
+            if "default:" in content:
+                content = re.sub(r'(\bdefault:\s*)["\']?.*?["\']?(\s*)$', rf'\g<1>"{profile.model_name}"\g<2>', content, flags=re.MULTILINE)
+            else:
+                content = re.sub(r'(\bmodel:\s*)["\']?.*?["\']?(\s*)$', rf'\g<1>"{profile.model_name}"\g<2>', content, flags=re.MULTILINE)
+
+            content = re.sub(r'(\bprovider:\s*)["\']?.*?["\']?(\s*)$', rf'\g<1>"{profile.provider}"\g<2>', content, flags=re.MULTILINE)
+            content = re.sub(r'(\breasoning_effort:\s*)["\']?.*?["\']?(\s*)$', rf'\g<1>"{profile.reasoning_effort}"\g<2>', content, flags=re.MULTILINE)
             config_file.write_text(content, encoding="utf-8")
         except Exception as exc:
             logger.warning(f"Could not update config.yaml for {slug}: {exc}")
+
 
     return env_file

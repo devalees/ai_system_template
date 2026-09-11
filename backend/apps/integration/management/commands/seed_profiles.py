@@ -13,7 +13,7 @@ CORE_PROFILES = [
         "description": "Primary request intake, goal decomposition, Kanban workstream routing, and final executive synthesis.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
-        "reasoning_effort": "medium",
+        "reasoning_effort": "none",
     },
     {
         "name": "cost_controller",
@@ -40,7 +40,7 @@ CORE_PROFILES = [
         "description": "Manages customer interactions, drafts professional client emails and proposals, and coordinates schedules.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
-        "reasoning_effort": "low",
+        "reasoning_effort": "none",
     },
     {
         "name": "archivist",
@@ -49,7 +49,7 @@ CORE_PROFILES = [
         "description": "Maintains system documentation, standard operating procedures (SOPs), knowledge bases, and corporate memory.",
         "model_name": "google/gemini-2.5-flash",
         "provider": "openrouter",
-        "reasoning_effort": "medium",
+        "reasoning_effort": "low",
     },
 ]
 
