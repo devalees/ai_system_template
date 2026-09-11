@@ -3,8 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 
-from .models import HandshakeLog, Profile, SpendReport, AgentTask
-from .forms import ProfileAdminForm
+from .models import HandshakeLog, Profile, SpendReport, AgentTask, ProviderCredential
+from .forms import ProfileAdminForm, ProviderCredentialAdminForm
 
 
 class ProfileInline(admin.StackedInline):
@@ -31,12 +31,14 @@ class ProfileInline(admin.StackedInline):
         ('AI Engine & Inference Configuration', {
             'description': 'Configure LLM inference, models, and reasoning budgets for this account.',
             'fields': (
-                ('provider', 'model_name'),
+                ('provider', 'provider_credential'),
+                'model_name',
                 'reasoning_effort',
                 'is_active',
             )
         }),
     )
+
 
 
 # Unregister default UserAdmin and register enhanced CustomUserAdmin
@@ -113,12 +115,13 @@ class ProfileAdmin(admin.ModelAdmin):
         'hermes_profile_name',
         'role',
         'provider',
+        'provider_credential',
         'model_name',
         'reasoning_effort',
         'is_active',
         'created_at',
     )
-    list_filter = ('is_agent', 'user_type', 'role', 'reasoning_effort', 'provider', 'is_active')
+    list_filter = ('is_agent', 'user_type', 'role', 'reasoning_effort', 'provider', 'provider_credential', 'is_active')
     search_fields = ('name', 'hermes_profile_name', 'display_name', 'user__username', 'description')
     readonly_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
 
@@ -136,8 +139,57 @@ class ProfileAdmin(admin.ModelAdmin):
         )
 
 
+@admin.register(ProviderCredential)
+class ProviderCredentialAdmin(admin.ModelAdmin):
+    """
+    Administration of encrypted LLM inference provider credentials.
+    """
+    form = ProviderCredentialAdminForm
+    list_display = (
+        'name',
+        'provider_type_badge',
+        'masked_key_display',
+        'is_default',
+        'is_active',
+        'organization',
+        'updated_at',
+    )
+    list_filter = ('provider_type', 'is_default', 'is_active', 'organization')
+    search_fields = ('name', 'base_url')
+    readonly_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
+    actions = ['sync_to_hermes']
+
+    def provider_type_badge(self, obj):
+        colors = {
+            'openrouter': '#0284c7',
+            'gemini': '#059669',
+            'openai': '#10b981',
+            'anthropic': '#d97706',
+            'groq': '#ea580c',
+            'deepseek': '#4f46e5',
+            'custom': '#64748b',
+        }
+        color = colors.get(obj.provider_type, '#64748b')
+        return format_html(
+            '<span style="background: {}18; color: {}; border: 1px solid {}33; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">{}</span>',
+            color, color, color, obj.get_provider_type_display()
+        )
+    provider_type_badge.short_description = 'Provider'
+
+    def masked_key_display(self, obj):
+        return format_html('<code style="font-family: monospace; font-size: 11px; background: #f8fafc; padding: 2px 6px; border-radius: 3px; border: 1px solid #e2e8f0;">{}</code>', obj.masked_key)
+    masked_key_display.short_description = 'API Key (Masked)'
+
+    def sync_to_hermes(self, request, queryset):
+        from apps.integration.services.credential_sync import sync_hermes_runtime_credentials
+        res = sync_hermes_runtime_credentials()
+        self.message_user(request, f"Successfully synchronized {res.get('synced_keys_count', 0)} credentials across Hermes Agent runtime.")
+    sync_to_hermes.short_description = "⚡ Synchronize active credentials to Hermes Agent runtime"
+
+
 # Backward compatibility alias
 AgentProfileAdmin = ProfileAdmin
+
 
 
 @admin.register(HandshakeLog)

@@ -35,6 +35,7 @@ class ProfileAdminForm(forms.ModelForm):
             'display_name',
             'role',
             'provider',
+            'provider_credential',
             'model_name',
             'reasoning_effort',
             'is_active',
@@ -94,3 +95,52 @@ class ProfileAdminForm(forms.ModelForm):
 
 # Backward compatibility alias
 AgentProfileAdminForm = ProfileAdminForm
+
+
+from .models import ProviderCredential
+
+class ProviderCredentialAdminForm(forms.ModelForm):
+    """
+    Admin form for ProviderCredential with masked password widget for API keys.
+    """
+    api_key = forms.CharField(
+        widget=forms.PasswordInput(render_value=False, attrs={
+            'placeholder': 'Enter new or updated API Key...',
+            'autocomplete': 'new-password',
+            'style': 'width: 380px;'
+        }),
+        required=False,
+        help_text="Enter the secret API key. Leave blank to retain existing key."
+    )
+
+    class Meta:
+        model = ProviderCredential
+        fields = [
+            'name',
+            'provider_type',
+            'api_key',
+            'base_url',
+            'is_default',
+            'is_active',
+            'organization',
+            'metadata',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk and self.instance.encrypted_api_key:
+            self.fields['api_key'].help_text = (
+                f"Current key: <code>{self.instance.masked_key}</code>. "
+                "Enter a new key here only if you want to rotate/change it."
+            )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        raw_key = self.cleaned_data.get('api_key')
+        if raw_key:
+            instance.api_key = raw_key
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
