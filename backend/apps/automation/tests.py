@@ -1084,3 +1084,233 @@ class AutomationDirectExecutionTests(TestCase):
         self.assertIn("▶ Run Step #1", inline_btn_html)
 
 
+class Phase21EnterpriseHardeningTests(TestCase):
+    """
+    Tests for Phase 21: Enterprise Hardening of Centralized Automation Engine.
+    Covers transaction safety, context chaining, recursion limits, sandboxing, and tenant isolation.
+    """
+
+    def setUp(self):
+        from apps.tenants.models import Organization
+        self.org_a = Organization.objects.create(name="Tenant Alpha", slug="tenant-alpha")
+        self.org_b = Organization.objects.create(name="Tenant Beta", slug="tenant-beta")
+        self.user = User.objects.create_user(username="phase21_user", password="password")
+
+    def test_target_crud_sandboxing_restricted_models(self):
+        """Tests that attempting CRUD on restricted framework models raises PermissionError."""
+        trigger = AutomationTrigger.objects.create(
+            name="Malicious Target Trigger",
+            trigger_type="manual",
+            is_active=True,
+        )
+        action = AutomationAction.objects.create(
+            trigger=trigger,
+            name="Exploit Action",
+            target_model="auth.Permission",
+            target_operation="create",
+            field_mappings={"name": "Fake Permission", "codename": "fake_perm"},
+        )
+        with self.assertRaises(PermissionError) as ctx:
+            AutomationEngine.execute_target_crud(action, {})
+        self.assertIn("protected and restricted", str(ctx.exception))
+
+    def test_sequential_context_chaining(self):
+        """Tests that Step 2 in a pipeline receives output and record_id from Step 1."""
+        captured_contexts = []
+
+        @register_action(
+            name="phase21_step2_receiver",
+            category="internal_app",
+            description="Receives chained context from Step 1",
+            schema={}
+        )
+        def receiver_action(context):
+            captured_contexts.append(dict(context))
+            return {"received_record_id": context.get("record_id")}
+
+        trigger = AutomationTrigger.objects.create(
+            name="Chained Context Pipeline",
+            trigger_type="manual",
+            is_active=True,
+        )
+        # Step 1: creates an AgentTask
+        AutomationAction.objects.create(
+            trigger=trigger,
+            name="Step 1: Create Task",
+            sequence=10,
+            target_model="integration.AgentTask",
+            target_operation="create",
+            field_mappings={
+                "task_name": "Pipeline Generated Task",
+                "cost_usd": 12.50,
+            }
+        )
+        # Step 2: calls receiver_action
+        AutomationAction.objects.create(
+            trigger=trigger,
+            name="Step 2: Inspect Chained Context",
+            sequence=20,
+            action_category="internal_app",
+            action_type="phase21_step2_receiver",
+        )
+
+        res = AutomationEngine.execute_pipeline(trigger.id, {"initial_var": "hello"})
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["executed_steps"], 2)
+
+        self.assertTrue(len(captured_contexts) > 0)
+        self.assertIn("record_id", captured_contexts[0])
+        self.assertEqual(captured_contexts[0]["initial_var"], "hello")
+
+        # Verify created record in DB
+        from apps.integration.models import AgentTask
+        created_task = AgentTask.objects.get(id=captured_contexts[0]["record_id"])
+        self.assertEqual(created_task.task_name, "Pipeline Generated Task")
+
+    def test_pipeline_stop_on_failure(self):
+        """Tests that subsequent pipeline steps are aborted when an action fails with stop_on_failure=True."""
+        step2_ran = []
+
+        @register_action(
+            name="phase21_failing_step",
+            category="internal_app",
+            description="Intentionally fails",
+            schema={}
+        )
+        def failing_action(ctx):
+            raise RuntimeError("Step 1 failed intentionally")
+
+        @register_action(
+            name="phase21_step2_never_called",
+            category="internal_app",
+            description="Should not run",
+            schema={}
+        )
+        def never_called(ctx):
+            step2_ran.append(True)
+            return {"ran": True}
+
+        trigger = AutomationTrigger.objects.create(
+            name="Stop on Failure Trigger",
+            trigger_type="manual",
+            is_active=True,
+        )
+        AutomationAction.objects.create(
+            trigger=trigger,
+            name="Failing Step 1",
+            sequence=10,
+            action_category="internal_app",
+            action_type="phase21_failing_step",
+            stop_on_failure=True,
+        )
+        AutomationAction.objects.create(
+            trigger=trigger,
+            name="Step 2",
+            sequence=20,
+            action_category="internal_app",
+            action_type="phase21_step2_never_called",
+        )
+
+        res = AutomationEngine.execute_pipeline(trigger.id)
+        self.assertEqual(res["status"], "failed")
+        self.assertEqual(len(step2_ran), 0)
+
+    def test_recursion_depth_guard(self):
+        """Tests that execution depth limit prevents cascading infinite recursion."""
+        from apps.automation.engine import MAX_AUTOMATION_DEPTH
+
+        trigger = AutomationTrigger.objects.create(
+            name="Recursive Loop Trigger",
+            trigger_type="manual",
+            is_active=True,
+        )
+        action = AutomationAction.objects.create(
+            trigger=trigger,
+            name="Recursive Action",
+            action_category="internal_app",
+            action_type="step_one_action",
+        )
+
+        # Context already at MAX_AUTOMATION_DEPTH
+        res = AutomationEngine.execute_pipeline(
+            trigger.id,
+            trigger_context={"_automation_depth": MAX_AUTOMATION_DEPTH}
+        )
+        self.assertEqual(res["status"], "failed")
+        self.assertIn("Recursion depth limit", res["error"])
+
+        # Check log entry
+        log = AutomationLog.objects.filter(trigger=trigger, status="failed").first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.execution_depth, MAX_AUTOMATION_DEPTH)
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False)
+    def test_multi_tenant_workspace_scoping(self):
+        """Tests that triggers scoped to Tenant Alpha do not fire for events in Tenant Beta."""
+        trigger_alpha = AutomationTrigger.objects.create(
+            name="Alpha Private Trigger",
+            trigger_type="model_event",
+            trigger_model="reports.ReportTemplate",
+            event_type="created",
+            organization=self.org_a,
+            is_active=True,
+        )
+        act_alpha = AutomationAction.objects.create(
+            trigger=trigger_alpha,
+            name="Alpha Action",
+            action_category="internal_app",
+            action_type="step_one_action",
+        )
+
+        from apps.reports.models import ReportTemplate
+        from unittest.mock import patch
+
+        # Create template belonging to Org B
+        with patch("apps.automation.tasks.execute_automation_trigger_task.delay") as mock_delay:
+            with self.captureOnCommitCallbacks(execute=True):
+                ReportTemplate.objects.create(
+                    name="Beta Template",
+                    slug="beta-template-unique",
+                    target_model="auth.User",
+                    organization=self.org_b,
+                )
+            # Should NOT dispatch trigger_alpha because it belongs to org_a
+            mock_delay.assert_not_called()
+
+        # Create template belonging to Org A
+        with patch("apps.automation.tasks.execute_automation_trigger_task.delay") as mock_delay:
+            with self.captureOnCommitCallbacks(execute=True):
+                ReportTemplate.objects.create(
+                    name="Alpha Template",
+                    slug="alpha-template-unique",
+                    target_model="auth.User",
+                    organization=self.org_a,
+                )
+            # Should dispatch trigger_alpha
+            mock_delay.assert_called_once()
+            args, _ = mock_delay.call_args
+            self.assertEqual(args[0], trigger_alpha.id)
+
+    def test_generic_webhook_retry_on_502(self):
+        """Tests that generic_webhook retries on 502 Bad Gateway and succeeds on subsequent attempt."""
+        from apps.automation.actions import generic_webhook_action
+        from unittest.mock import patch, MagicMock
+
+        # Mock first response 502, second response 200
+        resp_502 = MagicMock(status_code=502, text="Bad Gateway")
+        resp_200 = MagicMock(status_code=200, text="OK")
+
+        with patch("requests.post", side_effect=[resp_502, resp_200]) as mock_post:
+            with patch("time.sleep") as mock_sleep:
+                res = generic_webhook_action({
+                    "url": "https://example.com/webhook",
+                    "payload": {"ping": "pong"},
+                    "max_retries": 2,
+                })
+                self.assertEqual(res["status"], "success")
+                self.assertEqual(res["status_code"], 200)
+                self.assertEqual(res["attempts"], 2)
+                mock_sleep.assert_called_once()
+
+
+

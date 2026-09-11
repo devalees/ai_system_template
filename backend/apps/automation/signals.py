@@ -31,6 +31,7 @@ def automation_post_save_handler(sender: Type[Model], instance: Model, created: 
     if raw or not hasattr(instance, 'pk') or instance.pk is None:
         return
 
+    from django.conf import settings
     from django.db import transaction
     from .engine import AutomationEngine
 
@@ -43,7 +44,10 @@ def automation_post_save_handler(sender: Type[Model], instance: Model, created: 
         except Exception:
             pass
 
-    transaction.on_commit(_dispatch)
+    if getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', False):
+        _dispatch()
+    else:
+        transaction.on_commit(_dispatch)
 
 
 def automation_post_delete_handler(sender: Type[Model], instance: Model, **kwargs):
@@ -51,6 +55,7 @@ def automation_post_delete_handler(sender: Type[Model], instance: Model, **kwarg
     if not hasattr(instance, 'pk'):
         return
 
+    from django.conf import settings
     from django.db import transaction
     from .engine import AutomationEngine
 
@@ -60,7 +65,10 @@ def automation_post_delete_handler(sender: Type[Model], instance: Model, **kwarg
         except Exception:
             pass
 
-    transaction.on_commit(_dispatch)
+    if getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', False):
+        _dispatch()
+    else:
+        transaction.on_commit(_dispatch)
 
 
 def connect_model_signals(model_class: Type[Model]):
