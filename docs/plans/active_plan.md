@@ -773,7 +773,45 @@ Consolidate LLM credentials into a single source of truth (`ProviderCredential`)
 - *2026-09-11*: Executed complete test suite: 100% pass rate across 181 unit tests.
 
 ### 4. Current Focus
-Phase 23 completed. Ready to merge into `main`.
+Phase 23 completed and verified.
+
+---
+
+## Phase 24: LLM Model Modalities, Visual Capability Badges & Dropdown Indicators
+
+- **Status**: COMPLETED
+- **Active Branch**: `feat/model-modalities-and-specs-card`
+- **Last Updated**: 2026-09-11 07:06:00+03:00
+
+### 1. Objective & Scope
+Enrich the model catalog and profile administration UI with comprehensive modality specifications (Text, Vision / Image, Document / File / PDF, Audio / Voice, Video) from OpenRouter and `models.dev`:
+- **Catalog Service Modalities Normalization**: Extract `input_modalities` and `output_modalities` across OpenRouter (`architecture.input_modalities`), `models.dev` (`modalities.input`), and Nous Portal in `apps.integration.services.hermes_catalog`. Normalize and expose `format_modality_indicator()` helper.
+- **Admin Form Initial Choices**: Enhance `ProfileAdminForm` in `forms.py` to include compact modality indicator emoji badges (e.g. `[🖼️ Vision]`, `[💬 Text]`, `[📁 PDF]`, `[🎙️ Audio]`, `[🎥 Video]`) in `<option>` labels so administrators can identify capabilities at a glance.
+- **Dynamic JavaScript & Specifications Card**: Upgrade `agent_profile_models.js` to render a dedicated, stylized **Supported Modalities** section in `#hermes-model-specs-card` with distinct, color-coded badges/chips for input and output capabilities, alongside existing pricing and context window metrics.
+- **Automated Testing & Full Verification**: Add comprehensive unit tests verifying modality parsing across OpenRouter, `models.dev`, Nous Portal, and the REST API endpoint `/api/hermes/models/`. Ensure 100% test pass rate across the full 181+ test suite.
+- **Documentation Synchronization**: Synchronize `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md`.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/model-modalities-and-specs-card`, Commit: `30bf0bc`)
+- [x] **Sub-task 2: Backend Catalog Modalities Normalization (`hermes_catalog.py`)** - COMPLETED (Commit: `864537b`)
+- [x] **Sub-task 3: Django Admin Form Dropdown Modality Indicators (`forms.py`)** - COMPLETED (Commit: `26aa1e0`)
+- [x] **Sub-task 4: Dynamic Admin UI & Visual Metrics Card Badges (`agent_profile_models.js`)** - COMPLETED (Commit: `411d77d`)
+- [x] **Sub-task 5: Automated Testing & Comprehensive Verification** - COMPLETED (Commit: `b9bd919`)
+- [x] **Sub-task 6: Documentation & LLM Wiki Synchronization** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 24)
+- *2026-09-11*: Initialized Phase 24 per user request to display model input/output modalities (Text, Image/Vision, File/PDF, Audio/Voice, Video) in the Profile admin model selector and specifications card.
+- *2026-09-11*: Leveraged OpenRouter's `architecture.input_modalities` / `architecture.output_modalities` and `models.dev`'s `modalities.input` / `modalities.output`, standardizing keys to `input_modalities` and `output_modalities`.
+- *2026-09-11*: Implemented `format_modality_indicator()` helper in `hermes_catalog.py` generating compact badges (e.g. `[🖼️ Vision]`, `[💬 Text]`, `[🖼️📁 Multi]`) for select dropdowns.
+- *2026-09-11*: Integrated `format_modality_indicator` into `ProfileAdminForm` option labels with empirical verification.
+- *2026-09-11*: Upgraded `#hermes-model-specs-card` in `agent_profile_models.js` to render a dedicated, stylized **Accepted** and **Generated** input/output modality badge section.
+- *2026-09-11*: Validated 100% test pass rate across 185 unit tests (26 in `apps.integration`, 159 across all other apps).
+
+### 4. Current Focus
+Phase 24 completed. Ready to merge `feat/model-modalities-and-specs-card` into `main`.
+
+
+
 
 
 

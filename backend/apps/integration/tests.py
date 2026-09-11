@@ -173,3 +173,66 @@ class IntegrationAPITests(TestCase):
         self.assertIn("cost_controller", names)
         self.assertIn("qa_auditor", names)
 
+    def test_format_modality_indicator(self):
+        """Verify format_modality_indicator helper generates expected compact labels."""
+        from .services.hermes_catalog import format_modality_indicator
+
+        self.assertEqual(format_modality_indicator([]), "💬 Text")
+        self.assertEqual(format_modality_indicator(["text"]), "💬 Text")
+        self.assertEqual(format_modality_indicator(["text", "image"]), "🖼️ Vision")
+        self.assertEqual(format_modality_indicator(["text", "audio"]), "🎙️ Audio")
+        self.assertEqual(format_modality_indicator(["text", "file"]), "📁 File")
+        self.assertEqual(format_modality_indicator(["text", "video"]), "🎥 Video")
+        self.assertEqual(format_modality_indicator(["text", "image", "file"]), "🖼️📁 Multi")
+        self.assertEqual(format_modality_indicator(["text", "image", "audio", "video"]), "🖼️🎙️🎥 Multi")
+
+    def test_model_catalog_includes_modalities(self):
+        """Verify get_models_for_provider returns structured input_modalities and output_modalities."""
+        from .services.hermes_catalog import get_models_for_provider
+
+        nous_models = get_models_for_provider("nous")
+        self.assertGreater(len(nous_models), 0)
+        for m in nous_models:
+            self.assertIn("input_modalities", m)
+            self.assertIn("output_modalities", m)
+            self.assertIsInstance(m["input_modalities"], list)
+            self.assertIsInstance(m["output_modalities"], list)
+
+        # Fallback provider
+        custom_models = get_models_for_provider("custom")
+        self.assertGreater(len(custom_models), 0)
+        self.assertIn("input_modalities", custom_models[0])
+        self.assertIn("output_modalities", custom_models[0])
+
+    def test_hermes_models_api_endpoint_returns_modalities(self):
+        """Verify GET /api/hermes/models/ exposes input_modalities and output_modalities in JSON."""
+        url = reverse('hermes-models')
+        resp = self.client.get(url, {"provider": "nous"})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn("models", resp.data)
+        self.assertGreater(len(resp.data["models"]), 0)
+
+        first_model = resp.data["models"][0]
+        self.assertIn("input_modalities", first_model)
+        self.assertIn("output_modalities", first_model)
+
+    def test_profile_admin_form_model_choices_include_modality_badges(self):
+        """Verify ProfileAdminForm populates choices with formatted modality indicator badges."""
+        from .forms import ProfileAdminForm
+
+        form = ProfileAdminForm()
+        choices = form.fields['model_name'].widget.choices
+        self.assertGreater(len(choices), 0)
+
+        # Find any choices list
+        all_labels = []
+        for group_label, group_choices in choices:
+            for val, label in group_choices:
+                all_labels.append(label)
+
+        self.assertGreater(len(all_labels), 0)
+        # Verify labels have modality bracket indicators
+        has_bracket_indicator = any("[" in label and "]" in label for label in all_labels)
+        self.assertTrue(has_bracket_indicator, "Expected model choice labels to contain modality brackets [..]")
+
+

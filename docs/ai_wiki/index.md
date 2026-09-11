@@ -6,7 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
-- **Status**: Phase 23 Completed (Provider Credentials Consolidation, Model Catalog Sorting & Optgroup UX, Profile Admin Streamlining; 100% test pass rate across 181 tests)
+- **Status**: Phase 24 Completed (LLM Model Modalities, Visual Capability Badges & Dropdown Indicators; 100% test pass rate across 185 tests)
 
 ---
 
@@ -16,8 +16,9 @@ An extensible, production-grade starter template pairing a **Django** web framew
 ### 1. Backend Service (`backend/`)
 - **Framework**: Django 5.x with Django REST Framework on Python 3.11.
 - **Data Persistence**: PostgreSQL 16 relational database with Redis 7 caching and session broker.
-- **Dynamic Administrative Portal**: Django Admin with single-screen `CustomUserAdmin` embedding `ProfileInline`, `ProviderCredentialAdmin` with masked secret widgets, visual Settings Hub banner in `AppSettingValue`, dynamic provider/model dropdowns, and a live 🔄 **Reload Profiles** widget.
-- **Model Catalog Engine**: Powered by `models.dev` dynamic registry and OpenRouter, rendering live context window length and token pricing cards ($/1M tokens).
+- **Dynamic Administrative Portal**: Django Admin with single-screen `CustomUserAdmin` embedding `ProfileInline`, `ProviderCredentialAdmin` with masked secret widgets, visual Settings Hub banner in `AppSettingValue`, dynamic provider/model dropdowns with compact modality badges (`[🖼️ Vision]`, `[📁 PDF]`, `[🎙️ Audio]`, `[🎥 Video]`, `[💬 Text]`), and a live 🔄 **Reload Profiles** widget.
+- **Model Catalog Engine**: Powered by `models.dev` dynamic registry and OpenRouter, rendering live context window length, token pricing cards ($/1M tokens), and normalized input/output modality chips (`Text`, `Vision/Image`, `Document/PDF`, `Audio/Voice`, `Video`).
+
 - **Core Models**:
   - `ProviderCredential`: Encrypted storage for LLM provider API keys (OpenRouter, Gemini, OpenAI, Anthropic, Groq, DeepSeek) with multi-tenant scoping and masked admin representation.
   - `Profile`: Unified User Profile model attached 1-to-1 to `auth.User` via automatic `post_save` lifecycle signals, categorizing accounts (`is_agent`, `user_type: human/agent/client`), managing Hermes AI inference configurations, and hierarchical key resolution (`resolve_provider_and_key()`).

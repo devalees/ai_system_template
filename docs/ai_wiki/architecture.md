@@ -142,15 +142,19 @@ economy_editor/
 
 ---
 
-## 6. Dynamic Model Catalog Engine (`models.dev`)
+## 6. Dynamic Model Catalog Engine (`models.dev` & OpenRouter)
 
-- **Live Registry**: Integrates `models.dev/api.json` — the same universal registry powering Hermes Agent CLI — with automatic in-memory and disk caching (`/tmp/models_dev_cache.json`, 4-hour TTL).
+- **Live Registry**: Integrates `models.dev/api.json` — the same universal registry powering Hermes Agent CLI — alongside OpenRouter (`https://openrouter.ai/api/v1/models`), with automatic in-memory and disk caching (`/tmp/models_dev_cache.json`, 4-hour TTL).
 - **Noise Suppression**: Applies Hermes' native regex filters (`_NOISE_PATTERNS`, `_GOOGLE_HIDDEN_MODELS`) to eliminate audio, TTS, embeddings, and deprecated models.
-- **Dynamic Admin Form**: In Django Admin, selecting a `provider` triggers an asynchronous client fetch to `/api/hermes/models/?provider=<slug>`, populating modern models and rendering a live **Model Specifications & Pricing Card** displaying:
+- **Normalized Input/Output Modalities**: Extracts and standardizes `input_modalities` and `output_modalities` lists across OpenRouter (`architecture.input_modalities`) and `models.dev` (`modalities.input`). Supports `text`, `image`, `file` / `pdf`, `audio`, and `video`.
+- **Dynamic Admin Form & Specifications Card**: In Django Admin, selecting a `provider` triggers an asynchronous client fetch to `/api/hermes/models/?provider=<slug>`, populating `<optgroup>`-sorted models and rendering a live **Model Specifications & Pricing Card** displaying:
   - Context Window length (e.g. 1,000,000 tokens)
   - Input Token Cost ($ / 1M tokens)
   - Output Token Cost ($ / 1M tokens)
-  - Modalities and reasoning capabilities
+  - **Supported Modalities**: Color-coded pill badges for **Accepted Inputs** (`💬 Text`, `🖼️ Vision / Image`, `📁 Document / File`, `🎙️ Audio / Voice`, `🎥 Video`) and **Generated Outputs** (e.g. `🎙️ Audio`).
+  - Reasoning capabilities (`🧠 Reasoning Supported` badge).
+  - Compact option labels in the model dropdown containing quick capability badges, e.g. `[🖼️ Vision]`, `[📁 File]`, `[🖼️📁 Multi]`, or `[💬 Text]`.
+
 
 ---
 
