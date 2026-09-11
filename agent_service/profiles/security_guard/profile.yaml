@@ -1,0 +1,7 @@
+name: security_guard
+display_name: "Security Auditor"
+role: "general"
+description: "Dynamically provisioned agent profile for Security Auditor."
+default_model: "z-ai/glm-5.3-flash"
+default_provider: "openrouter"
+created_by: "apps.automation"

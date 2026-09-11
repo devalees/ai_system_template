@@ -6,6 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
+- **Agent Team Reference**: [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md)
 - **Status**: Phase 24 Completed (LLM Model Modalities, Visual Capability Badges & Dropdown Indicators; 100% test pass rate across 185 tests)
 
 ---
@@ -42,9 +43,12 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - Automated idempotent provisioning script that registers profiles in Hermes runtime, creates aliases, symlinks personas, and sets default models.
 
 
-### 4. Custom Foundation Skills (`agent_service/skills/`)
-- `cost_monitor`: Directly inspects `session_model_usage` across all profile SQLite `state.db` files, aggregating token expenditure and checking against daily budget caps.
-- `output_validator`: Empirical syntax parser (Python AST, JSON), credential leak detector, and placeholder hygiene reviewer for QA gatekeeping.
+### 4. Specialist Profile Skills & Shared System Skills
+- **Profile-Scoped Skills (`agent_service/profiles/<name>/skills/`)**:
+  - `cost_monitor` (scoped to `cost_controller`): Inspects `session_model_usage` across profile SQLite `state.db` files, aggregating token expenditure and checking daily budget caps.
+  - `output_validator` (scoped to `qa_auditor`): Empirical syntax parser (Python AST, JSON, YAML), credential leak detector, and placeholder hygiene reviewer for the QA review gate.
+- **Shared System Skills (`agent_service/skills/`)**:
+  - `django_handshake`: System bootstrap skill verifying cross-container reachability, handshake registration (`POST /api/handshake/`), and database audit persistence.
 
 ### 5. Bidirectional API Contract & Review Pipeline
 - **Handshake & Health**: Standardized REST endpoints (`POST /api/handshake/`, `GET /api/ping-hermes/`, `GET /api/health/`).
