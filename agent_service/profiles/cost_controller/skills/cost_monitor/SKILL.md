@@ -17,5 +17,5 @@ Used by the `cost_controller` agent to monitor token consumption, calculate expe
 ## Usage
 Execute directly via Python or within the agent session:
 ```bash
-python /workspace/skills/cost_monitor/run.py [--daily-budget 10.00] [--json]
+python /workspace/profiles/cost_controller/skills/cost_monitor/run.py [--daily-budget 10.00] [--json]
 ```

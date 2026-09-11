@@ -22,5 +22,5 @@ Used by the `qa_auditor` profile during the Kanban review stage (`hermes kanban 
 
 ## Usage
 ```bash
-python /workspace/skills/output_validator/run.py --target /workspace/path/to/file_or_dir [--json]
+python /workspace/profiles/qa_auditor/skills/output_validator/run.py --target /workspace/path/to/file_or_dir [--json]
 ```
