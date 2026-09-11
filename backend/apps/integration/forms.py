@@ -73,7 +73,7 @@ class ProfileAdminForm(forms.ModelForm):
             active_provider = self.data["provider"]
 
         models = get_models_for_provider(active_provider)
-        choices = []
+        grouped_choices = {}
         model_found = False
         current_val = self.instance.model_name if (self.instance and self.instance.pk) else ""
 
@@ -85,10 +85,18 @@ class ProfileAdminForm(forms.ModelForm):
             in_c = f"${m.get('cost_input_per_1m', 0):.3f}"
             out_c = f"${m.get('cost_output_per_1m', 0):.3f}"
             label = f"{m.get('name', m_id)}  ({ctx_k} ctx | in: {in_c} | out: {out_c})"
-            choices.append((m_id, label))
 
+            group_name = m.get("provider_group") or "Other"
+            if group_name not in grouped_choices:
+                grouped_choices[group_name] = []
+            grouped_choices[group_name].append((m_id, label))
+
+        choices = []
         if current_val and not model_found:
-            choices.insert(0, (current_val, f"{current_val} (Current Selection)"))
+            choices.append(("", [(current_val, f"{current_val} (Current Selection)")]))
+
+        for group_name in sorted(grouped_choices.keys()):
+            choices.append((group_name, grouped_choices[group_name]))
 
         self.fields['model_name'].widget.choices = choices
 

@@ -106,19 +106,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let activeModelData = null;
 
+        // Group models by provider_group
+        const groups = {};
         models.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m.id;
-            const ctxK = m.context_length ? `${Math.round(m.context_length / 1000)}k` : '128k';
-            const inC = `$${(m.cost_input_per_1m || 0).toFixed(3)}`;
-            const outC = `$${(m.cost_output_per_1m || 0).toFixed(3)}`;
-            opt.textContent = `${m.name || m.id} (${ctxK} ctx | in: ${inC} | out: ${outC})`;
-
-            if (m.id === currentVal) {
-                opt.selected = true;
-                activeModelData = m;
+            const groupName = m.provider_group || 'Other';
+            if (!groups[groupName]) {
+                groups[groupName] = [];
             }
-            modelSelect.appendChild(opt);
+            groups[groupName].push(m);
+        });
+
+        const sortedGroupNames = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+
+        sortedGroupNames.forEach(groupName => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = groupName;
+
+            groups[groupName].forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                const ctxK = m.context_length ? `${Math.round(m.context_length / 1000)}k` : '128k';
+                const inC = `$${(m.cost_input_per_1m || 0).toFixed(3)}`;
+                const outC = `$${(m.cost_output_per_1m || 0).toFixed(3)}`;
+                opt.textContent = `${m.name || m.id} (${ctxK} ctx | in: ${inC} | out: ${outC})`;
+
+                if (m.id === currentVal) {
+                    opt.selected = true;
+                    activeModelData = m;
+                }
+                optgroup.appendChild(opt);
+            });
+
+            modelSelect.appendChild(optgroup);
         });
 
         // If current value wasn't found in list, default to first option
