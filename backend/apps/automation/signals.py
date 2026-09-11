@@ -31,13 +31,19 @@ def automation_post_save_handler(sender: Type[Model], instance: Model, created: 
     if raw or not hasattr(instance, 'pk') or instance.pk is None:
         return
 
+    from django.db import transaction
     from .engine import AutomationEngine
+
     event_type = 'created' if created else 'updated'
     old_values = getattr(instance, '_automation_old_values', {})
-    try:
-        AutomationEngine.dispatch_model_event(instance, event_type, old_values=old_values)
-    except Exception:
-        pass
+
+    def _dispatch():
+        try:
+            AutomationEngine.dispatch_model_event(instance, event_type, old_values=old_values)
+        except Exception:
+            pass
+
+    transaction.on_commit(_dispatch)
 
 
 def automation_post_delete_handler(sender: Type[Model], instance: Model, **kwargs):
@@ -45,11 +51,16 @@ def automation_post_delete_handler(sender: Type[Model], instance: Model, **kwarg
     if not hasattr(instance, 'pk'):
         return
 
+    from django.db import transaction
     from .engine import AutomationEngine
-    try:
-        AutomationEngine.dispatch_model_event(instance, 'deleted')
-    except Exception:
-        pass
+
+    def _dispatch():
+        try:
+            AutomationEngine.dispatch_model_event(instance, 'deleted')
+        except Exception:
+            pass
+
+    transaction.on_commit(_dispatch)
 
 
 def connect_model_signals(model_class: Type[Model]):
