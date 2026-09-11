@@ -6,6 +6,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
+- **Agent Team Reference**: [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md)
 - **Status**: Phase 24 Completed (LLM Model Modalities, Visual Capability Badges & Dropdown Indicators; 100% test pass rate across 185 tests)
 
 ---

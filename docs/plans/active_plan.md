@@ -1,8 +1,8 @@
 # Implementation Plan: Universal AI System Template & Agent Ecosystem
 
 - **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
-- **Active Branch**: `feat/developer-api-gateway`
-- **Last Updated**: 2026-09-09 20:52:00+03:00
+- **Active Branch**: `feat/profile-scoped-skills`
+- **Last Updated**: 2026-09-11 08:17:00+03:00
 
 ---
 
@@ -841,6 +841,36 @@ Fix the client-side model selector and specifications card layout in Django Admi
 
 ### 4. Current Focus
 Phase 24.1 completed and merged into `main`. Ready for final user validation.
+
+---
+
+## Phase 25: Profile-Scoped Skills Architecture & Hermes Isolation
+
+- **Status**: IN_PROGRESS
+- **Active Branch**: `feat/profile-scoped-skills`
+- **Last Updated**: 2026-09-11 08:17:00+03:00
+
+### 1. Objective & Scope
+Restructure the Hermes Agent skill layout from a flat global directory into a native profile-scoped architecture, placing specialist skills directly inside each profile's directory (`agent_service/profiles/<name>/skills/`), updating the profile provisioner, and enforcing strict skill isolation:
+- **Relocate Specialist Skills**: Move `cost_monitor` to `agent_service/profiles/cost_controller/skills/` and `output_validator` to `agent_service/profiles/qa_auditor/skills/`. Keep `django_handshake` in `agent_service/skills/` as shared infrastructure.
+- **Upgrade Provisioner (`scripts/provision_profiles.py`)**: Recursively synchronize `agent_service/profiles/<name>/skills/` into `/root/.hermes/profiles/<name>/skills/` and remove obsolete custom skills from the root environment so profiles strictly see only their designated skills.
+- **Update Profile Personas & Skill Configs**: Declare the colocated skills in `SOUL.md` and update execution paths in `SKILL.md`.
+- **Empirical Verification**: Verify with `hermes -p <profile> skills list` that `cost_controller` has `cost_monitor`, `qa_auditor` has `output_validator`, and neither can see the other's skills. Verify 100% test pass rate across the test suite.
+- **Documentation Synchronization**: Update [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md), [`docs/ai_wiki/index.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/index.md), and [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md).
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Git Branching & Active Plan Initialization** - COMPLETED (Branch: `feat/profile-scoped-skills`)
+- [ ] **Sub-task 2: Relocate Skills to Profile Directories & Update SKILL.md Paths** - PENDING
+- [ ] **Sub-task 3: Upgrade Profile Provisioner (`scripts/provision_profiles.py`)** - PENDING
+- [ ] **Sub-task 4: Update Profile Personas (`SOUL.md`) with Explicit Tool Bindings** - PENDING
+- [ ] **Sub-task 5: Empirical Verification & CLI Isolation Audit** - PENDING
+- [ ] **Sub-task 6: Documentation Synchronization & Test Suite Verification** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 25)
+- *2026-09-11*: Initialized Phase 25 per user feedback regarding the separation between profiles and skills in `agent_service/`. Aligned with Hermes Agent's native design where profiles support profile-level skills under `/root/.hermes/profiles/<name>/skills/`.
+
+### 4. Current Focus
+Sub-task 2: Relocate Skills to Profile Directories & Update SKILL.md Paths.
 
 
 
