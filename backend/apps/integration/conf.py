@@ -51,40 +51,4 @@ class IntegrationSettings:
         verbose_name=_("Daily Token Budget Cap ($)"),
         help_text=_("Global daily token expenditure ceiling across all agent executions.")
     )
-    OPENROUTER_API_KEY = Setting(
-        data_type="secret",
-        default="",
-        verbose_name=_("OpenRouter API Key"),
-        help_text=_("Global default API key for OpenRouter inference.")
-    )
-    GEMINI_API_KEY = Setting(
-        data_type="secret",
-        default="",
-        verbose_name=_("Google Gemini API Key"),
-        help_text=_("Global default API key for Google Gemini inference.")
-    )
-    OPENAI_API_KEY = Setting(
-        data_type="secret",
-        default="",
-        verbose_name=_("OpenAI API Key"),
-        help_text=_("Global default API key for OpenAI inference.")
-    )
-    ANTHROPIC_API_KEY = Setting(
-        data_type="secret",
-        default="",
-        verbose_name=_("Anthropic Claude API Key"),
-        help_text=_("Global default API key for Anthropic Claude inference.")
-    )
-    GROQ_API_KEY = Setting(
-        data_type="secret",
-        default="",
-        verbose_name=_("Groq API Key"),
-        help_text=_("Global default API key for Groq fast inference.")
-    )
-    DEEPSEEK_API_KEY = Setting(
-        data_type="secret",
-        default="",
-        verbose_name=_("DeepSeek API Key"),
-        help_text=_("Global default API key for DeepSeek inference.")
-    )
 

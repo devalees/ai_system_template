@@ -57,12 +57,12 @@ def get_hermes_runtime_profiles_dir() -> Path:
 
 def collect_active_provider_keys() -> Dict[str, str]:
     """
-    Collects all active provider API keys across ProviderCredential and Settings Hub.
+    Collects all active provider API keys from ProviderCredential models
+    with fallback to environment variables.
 
     Returns:
         Dict[str, str]: Mapping of ENV_VAR_NAME -> plaintext_api_key.
     """
-    from apps.core.config import get_setting
     from apps.integration.models import ProviderCredential
 
     keys: Dict[str, str] = {}
@@ -75,14 +75,7 @@ def collect_active_provider_keys() -> Dict[str, str]:
             if env_var not in keys or cred.is_default:
                 keys[env_var] = cred.api_key
 
-    # 2. Check Settings Hub defaults for any remaining missing providers
-    for provider, env_var in PROVIDER_ENV_MAP.items():
-        if env_var not in keys or not keys[env_var]:
-            hub_val = get_setting(f"integration.{env_var}", default="")
-            if hub_val:
-                keys[env_var] = str(hub_val).strip()
-
-    # 3. Fallback to settings.py or process environment if defined
+    # 2. Fallback to settings.py or process environment if defined
     for provider, env_var in PROVIDER_ENV_MAP.items():
         if env_var not in keys or not keys[env_var]:
             env_val = getattr(settings, env_var, None) or os.environ.get(env_var, "")

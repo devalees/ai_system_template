@@ -57,45 +57,49 @@ class ProviderCredentialModelTests(TestCase):
         profile.provider = "gemini"
         profile.save()
 
-        # Tier 3: Settings Hub fallback
-        set_setting("integration.GEMINI_API_KEY", "gemini-hub-secret-key")
-        prov, key, url = profile.resolve_provider_and_key()
-        self.assertEqual(prov, "gemini")
-        self.assertEqual(key, "gemini-hub-secret-key")
+        # Tier 3: Process environment fallback
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "gemini-env-fallback-key"}):
+            prov, key, url = profile.resolve_provider_and_key()
+            self.assertEqual(prov, "gemini")
+            self.assertEqual(key, "gemini-env-fallback-key")
 
-        # Tier 2: Default ProviderCredential overrides Settings Hub
-        cred_default = ProviderCredential(name="Gemini Default", provider_type="gemini", is_default=True)
-        cred_default.api_key = "gemini-default-cred-key"
-        cred_default.save()
+            # Tier 2: Default ProviderCredential overrides environment fallback
+            cred_default = ProviderCredential(name="Gemini Default", provider_type="gemini", is_default=True)
+            cred_default.api_key = "gemini-default-cred-key"
+            cred_default.save()
 
-        prov, key, url = profile.resolve_provider_and_key()
-        self.assertEqual(key, "gemini-default-cred-key")
+            prov, key, url = profile.resolve_provider_and_key()
+            self.assertEqual(key, "gemini-default-cred-key")
 
-        # Tier 1: Direct assigned ProviderCredential overrides Default
-        cred_direct = ProviderCredential(name="Gemini Direct", provider_type="gemini", is_default=False)
-        cred_direct.api_key = "gemini-direct-override-key"
-        cred_direct.save()
+            # Tier 1: Direct assigned ProviderCredential overrides Default
+            cred_direct = ProviderCredential(name="Gemini Direct", provider_type="gemini", is_default=False)
+            cred_direct.api_key = "gemini-direct-override-key"
+            cred_direct.save()
 
-        profile.provider_credential = cred_direct
-        profile.save()
+            profile.provider_credential = cred_direct
+            profile.save()
 
-        prov, key, url = profile.resolve_provider_and_key()
-        self.assertEqual(key, "gemini-direct-override-key")
+            prov, key, url = profile.resolve_provider_and_key()
+            self.assertEqual(key, "gemini-direct-override-key")
 
 
 class CredentialSyncServiceTests(TestCase):
     """Tests for zero-downtime credential collection and runtime sync."""
 
     def test_collect_active_provider_keys(self):
-        cred = ProviderCredential(name="OpenRouter Test", provider_type="openrouter", is_default=True)
-        cred.api_key = "sk-or-v1-collected-key"
-        cred.save()
+        cred1 = ProviderCredential(name="OpenRouter Test", provider_type="openrouter", is_default=True)
+        cred1.api_key = "sk-or-v1-collected-key"
+        cred1.save()
 
-        set_setting("integration.GROQ_API_KEY", "gsk_groq_hub_key")
+        cred2 = ProviderCredential(name="Groq Test", provider_type="groq", is_default=True)
+        cred2.api_key = "gsk_groq_cred_key"
+        cred2.save()
 
-        collected = collect_active_provider_keys()
-        self.assertEqual(collected.get("OPENROUTER_API_KEY"), "sk-or-v1-collected-key")
-        self.assertEqual(collected.get("GROQ_API_KEY"), "gsk_groq_hub_key")
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-ant-env-key"}):
+            collected = collect_active_provider_keys()
+            self.assertEqual(collected.get("OPENROUTER_API_KEY"), "sk-or-v1-collected-key")
+            self.assertEqual(collected.get("GROQ_API_KEY"), "gsk_groq_cred_key")
+            self.assertEqual(collected.get("ANTHROPIC_API_KEY"), "sk-ant-env-key")
 
     def test_sync_hermes_runtime_credentials(self):
         cred = ProviderCredential(name="Anthropic Test", provider_type="anthropic", is_default=True)

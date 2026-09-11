@@ -232,13 +232,10 @@ class Profile(AuditableModel):
         Hierarchy:
           1. Directly assigned ProviderCredential (if active)
           2. Default active ProviderCredential for self.provider
-          3. Global SystemSetting from Settings Hub (e.g. integration.OPENROUTER_API_KEY)
-          4. Fallback to settings.py or empty string
+          3. Fallback to settings.py or process environment variables (e.g. OPENROUTER_API_KEY)
         Returns:
           tuple: (provider_name: str, api_key: str, base_url: str)
         """
-        from apps.core.config import get_setting
-
         # 1. Directly assigned credential
         if self.provider_credential and self.provider_credential.is_active:
             return (
@@ -263,15 +260,11 @@ class Profile(AuditableModel):
         if default_cred and default_cred.api_key:
             return (default_cred.provider_type, default_cred.api_key, default_cred.base_url or "")
 
-        # 3. Settings Hub secret
-        setting_key = f"{target_provider.upper()}_API_KEY"
-        hub_key = get_setting(f"integration.{setting_key}", default="")
-        if hub_key:
-            return (target_provider, str(hub_key), "")
-
-        # 4. Fallback to settings.py
+        # 3. Fallback to settings.py / environment
         from django.conf import settings
-        env_fallback = getattr(settings, setting_key, "") or getattr(settings, f"{target_provider.upper()}_KEY", "")
+        import os
+        setting_key = f"{target_provider.upper()}_API_KEY"
+        env_fallback = getattr(settings, setting_key, "") or os.environ.get(setting_key, "") or getattr(settings, f"{target_provider.upper()}_KEY", "")
         return (target_provider, str(env_fallback) if env_fallback else "", "")
 
     def save(self, *args, **kwargs):
