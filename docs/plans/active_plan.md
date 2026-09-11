@@ -725,7 +725,7 @@ Unify LLM provider credentials, token accounting, and agent runtime orchestratio
 - [x] **Sub-task 5: Reasoning Calibration & Structured Multi-Agent Handoff** - COMPLETED (Commit: `699efd9`)
 - [x] **Sub-task 6: Django Admin UI Refinements & Settings Hub Banner** - COMPLETED (Commit: `6539001`)
 - [x] **Sub-task 7: Automated Testing & Empirical Verification** - COMPLETED (Commit: `702a8ae`)
-- [x] **Sub-task 8: Documentation & LLM Wiki Synchronization** - COMPLETED
+- [x] **Sub-task 8: Documentation & LLM Wiki Synchronization** - COMPLETED (Commit: `5dc4178`)
 
 ### 3. Key Decisions & Deviations (Phase 22)
 - *2026-09-11*: Initialized Phase 22 on feature branch `feat/provider-credentials-and-agent-governance`. Designed dual-credential management: typed secrets in `apps.integration.conf` (Settings Hub) for global defaults, and `ProviderCredential` relational model for multi-key pools, custom `base_url` endpoints, and per-profile assignment.
