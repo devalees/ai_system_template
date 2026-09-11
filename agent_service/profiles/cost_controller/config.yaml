@@ -9,7 +9,6 @@ agent:
 toolsets:
   - "terminal"
   - "file_ops"
-  - "web"
 
 runtime:
   nofile_soft_limit: 4096
