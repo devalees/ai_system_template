@@ -1,5 +1,7 @@
 name: comms_agent
-display_name: Communications & Client Coordinator
+display_name: Client Service & Communications Coordinator
 role: communications
-reasoning_effort: low
-description: Manages customer interactions, drafts professional client emails and proposals, and coordinates schedules.
+reasoning_effort: none
+tools: [terminal, file_ops]
+description: Enterprise client portal concierge, handling client inquiries, status checks, document guidance, and outbound milestone notifications under zero-trust security.
+
