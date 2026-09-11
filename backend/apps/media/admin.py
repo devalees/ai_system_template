@@ -23,6 +23,16 @@ class GenericDocumentInline(GenericTabularInline):
     readonly_fields = ["file_size_human"]
 
 
+class ClientDocumentInline(admin.TabularInline):
+    """
+    Direct TabularInline component for managing Document entities belonging to a Client.
+    """
+    model = Document
+    extra = 1
+    fields = ["file", "filename", "file_size_human", "mime_type", "is_public", "uploaded_by", "created_at"]
+    readonly_fields = ["file_size_human", "created_at"]
+
+
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
     """
@@ -30,6 +40,7 @@ class DocumentAdmin(admin.ModelAdmin):
     """
     list_display = [
         "filename",
+        "client",
         "file_size_display",
         "mime_type",
         "checksum_badge",
@@ -38,8 +49,8 @@ class DocumentAdmin(admin.ModelAdmin):
         "uploaded_by",
         "created_at",
     ]
-    list_filter = ["is_public", "mime_type", "organization", "created_at"]
-    search_fields = ["filename", "checksum_sha256", "uploaded_by__username"]
+    list_filter = ["is_public", "mime_type", "organization", "client", "created_at"]
+    search_fields = ["filename", "checksum_sha256", "client__name", "uploaded_by__username"]
     readonly_fields = ["id", "file_size", "checksum_sha256", "created_at", "updated_at"]
 
     def file_size_display(self, obj: Document) -> str:

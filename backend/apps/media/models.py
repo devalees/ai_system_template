@@ -23,12 +23,24 @@ from apps.tenants.base_models import TenantAwareModel
 
 def document_upload_to_path(instance, filename: str) -> str:
     """
-    Partitioned upload path: documents/<org_slug>/<sha256[:2]>/<sha256>_<filename>
+    Partitioned upload path:
+    - If associated with a Client: documents/clients/<client_id>/<filename>
+    - System/Other fallback: documents/<org_slug>/<sha256[:2]>/<sha256>_<filename>
     """
+    base_filename = os.path.basename(filename)
+
+    client_id = None
+    if getattr(instance, "client_id", None):
+        client_id = str(instance.client_id)
+    elif getattr(instance, "content_type", None) and getattr(instance.content_type, "model", None) == "client" and instance.object_id:
+        client_id = str(instance.object_id)
+
+    if client_id:
+        return f"documents/clients/{client_id}/{base_filename}"
+
     org_slug = instance.organization.slug if instance.organization else "global"
     checksum = instance.checksum_sha256 or "temp"
     prefix = checksum[:2] if len(checksum) >= 2 else "00"
-    base_filename = os.path.basename(filename)
     return f"documents/{org_slug}/{prefix}/{checksum}_{base_filename}"
 
 
@@ -62,7 +74,7 @@ def format_human_size(size_bytes: int) -> str:
 class Document(TenantAwareModel, SoftDeleteModel):
     """
     Multi-tenant document and media record supporting SHA-256 integrity,
-    deduplication hashes, and GenericForeignKey entity attachments.
+    first-class client ownership, and GenericForeignKey entity attachments.
     """
     file = models.FileField(
         upload_to=document_upload_to_path,
@@ -101,6 +113,18 @@ class Document(TenantAwareModel, SoftDeleteModel):
         db_index=True,
         verbose_name=_("Is Public"),
         help_text=_("Indicates if document can be accessed publicly without token authentication.")
+    )
+
+    # First-class Client relationship
+    client = models.ForeignKey(
+        "clients.Client",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="documents",
+        db_index=True,
+        verbose_name=_("Client"),
+        help_text=_("Associated client entity if this document belongs to a specific client.")
     )
 
     # Generic Foreign Key linkage to any model (AgentTask, User, Organization, etc.)
@@ -144,6 +168,7 @@ class Document(TenantAwareModel, SoftDeleteModel):
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["organization", "checksum_sha256"]),
+            models.Index(fields=["client", "-created_at"]),
             models.Index(fields=["content_type", "object_id"]),
             models.Index(fields=["organization", "uploaded_by", "-created_at"]),
         ]
@@ -159,7 +184,26 @@ class Document(TenantAwareModel, SoftDeleteModel):
     def save(self, *args, **kwargs):
         """
         Auto-calculate filename, SHA-256 checksum, size, and MIME type before saving.
+        Synchronizes client FK and GenericForeignKey bidirectionally.
         """
+        # Bidirectional synchronization between client FK and GenericForeignKey
+        if self.client_id:
+            if not self.content_type_id:
+                try:
+                    self.content_type = ContentType.objects.get(app_label="clients", model="client")
+                    self.object_id = str(self.client_id)
+                except Exception:
+                    pass
+            if not self.organization_id and getattr(self.client, "organization_id", None):
+                self.organization_id = self.client.organization_id
+        elif self.content_type_id and self.object_id:
+            try:
+                if self.content_type.model == "client":
+                    import uuid
+                    self.client_id = uuid.UUID(str(self.object_id))
+            except Exception:
+                pass
+
         if self.file:
             if not self.filename:
                 self.filename = os.path.basename(self.file.name)

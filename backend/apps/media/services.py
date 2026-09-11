@@ -24,6 +24,7 @@ class MediaService:
         file_obj,
         organization=None,
         uploaded_by=None,
+        client=None,
         content_object=None,
         filename: Optional[str] = None,
         is_public: bool = False,
@@ -40,6 +41,7 @@ class MediaService:
 
         doc = Document(
             organization=organization,
+            client=client,
             file=file_obj,
             filename=display_name,
             checksum_sha256=checksum,

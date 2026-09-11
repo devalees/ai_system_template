@@ -7,7 +7,7 @@ An extensible, production-grade starter template pairing a **Django** web framew
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
 - **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
 - **Agent Team Reference**: [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md)
-- **Status**: Phase 31 Completed (Retire Archivist & Promote Security Guard as 5th Core Department Head; 100% test pass rate across 198 tests)
+- **Status**: Phase 32 Completed (Client-Dedicated Physical Storage & First-Class Document Architecture; 100% test pass rate across 205 tests)
 
 
 ---
@@ -18,12 +18,13 @@ An extensible, production-grade starter template pairing a **Django** web framew
 ### 1. Backend Service (`backend/`)
 - **Framework**: Django 5.x with Django REST Framework on Python 3.11.
 - **Data Persistence**: PostgreSQL 16 relational database with Redis 7 caching and session broker.
-- **Dynamic Administrative Portal**: Django Admin with single-screen `CustomUserAdmin` embedding `ProfileInline`, standalone `ClientAdmin` featuring dynamic CSS spend gauges and 1-to-many user inlines, `ProviderCredentialAdmin` with masked secret widgets, visual Settings Hub banner in `AppSettingValue`, dynamic provider/model dropdowns with compact modality badges (`[🖼️ Vision]`, `[📁 PDF]`, `[🎙️ Audio]`, `[🎥 Video]`, `[💬 Text]`), and a live 🔄 **Reload Profiles** widget.
+- **Dynamic Administrative Portal**: Django Admin with single-screen `CustomUserAdmin` embedding `ProfileInline`, standalone `ClientAdmin` featuring dynamic CSS spend gauges, `ClientDocumentInline`, and 1-to-many user inlines, `ProviderCredentialAdmin` with masked secret widgets, visual Settings Hub banner in `AppSettingValue`, dynamic provider/model dropdowns with compact modality badges (`[🖼️ Vision]`, `[📁 PDF]`, `[🎙️ Audio]`, `[🎥 Video]`, `[💬 Text]`), and a live 🔄 **Reload Profiles** widget.
 - **Model Catalog Engine**: Powered by `models.dev` dynamic registry and OpenRouter, rendering live context window length, token pricing cards ($/1M tokens), and normalized input/output modality chips (`Text`, `Vision/Image`, `Document/PDF`, `Audio/Voice`, `Video`).
 
 - **Core Models**:
   - `Organization`: Multi-tenant workspace and company isolation root (`apps.tenants`).
-  - `Client`: External client company entity belonging to an Organization, featuring 1-to-many user relationships, AI service gatekeeping (`is_ai_enabled`), dollar budget milestones, and document attachments (`apps.clients`).
+  - `Client`: External client company entity belonging to an Organization, featuring 1-to-many user relationships, AI service gatekeeping (`is_ai_enabled`), dollar budget milestones, automatic dedicated physical storage provisioning (`documents/clients/<client_id>/`), and document attachments (`apps.clients`).
+  - `Document`: Universal document & media entity with first-class `client` ForeignKey (`client_id`), automatic physical client storage partitioning (`documents/clients/<client_id>/<filename>`), dual GFK synchronization, and SHA-256 integrity verification (`apps.media`).
   - `ProviderCredential`: Encrypted storage for LLM provider API keys (OpenRouter, Gemini, OpenAI, Anthropic, Groq, DeepSeek) with multi-tenant scoping and masked admin representation.
   - `Profile`: Unified User Profile model attached 1-to-1 to `auth.User` via automatic `post_save` lifecycle signals, categorizing accounts (`is_agent`, `user_type: human/agent/client`), linking users to parent client companies (`Profile.client`), and managing Hermes AI inference configurations.
   - `AgentTask`: Task execution registry with assigned profiles, execution costs, reasoning overrides, and QA review pipelines.

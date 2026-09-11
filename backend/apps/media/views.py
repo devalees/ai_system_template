@@ -43,6 +43,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if mime_param:
             qs = qs.filter(mime_type__icontains=mime_param)
 
+        client_id_param = self.request.query_params.get("client_id")
+        if client_id_param:
+            qs = qs.filter(client_id=client_id_param)
+
         return qs.order_by("-created_at")
 
     @action(detail=False, methods=["post"], url_path="upload")
@@ -60,12 +64,16 @@ class DocumentViewSet(viewsets.ModelViewSet):
         custom_filename = validated_data.get("filename")
         object_id = validated_data.get("object_id")
         content_type = validated_data.get("target_content_type")
+        target_client = validated_data.get("target_client")
 
         org = getattr(request, "tenant", None)
+        if not org and target_client:
+            org = target_client.organization
 
         doc = MediaService.create_document(
             file_obj=file_obj,
             organization=org,
+            client=target_client,
             uploaded_by=request.user,
             filename=custom_filename,
             is_public=is_public,

@@ -1126,17 +1126,34 @@ Retire the legacy, redundant `archivist` profile (whose documentation responsibi
 ### 4. Current Focus
 Phase 31 completed and merged into `main`. Ready for next directives.
 
+---
 
+## Phase 32: Client-Dedicated Physical Storage & First-Class Document Architecture
 
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-11 14:15:00+03:00
 
+### 1. Objective & Scope
+Transform client document storage from a generic, hash-sharded scheme into a clean, human-readable, domain-driven structure:
+1. Elevate `client` to an explicit, indexed Foreign Key on `apps.media.models.Document` (`client_id`) with bidirectional sync to Django's `GenericForeignKey`.
+2. Automatically create dedicated physical storage directories (`documents/clients/<client_id>/`) on disk upon `Client` creation.
+3. Route uploaded client files directly to `documents/clients/<client_id>/<filename>`.
+4. Clean up legacy test folders from `backend/media/documents/` and isolate test suites using temporary directories for `MEDIA_ROOT`.
+5. Expose `client` / `client_id` across DRF serializers, viewsets, and Django Admin.
 
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Media Model & Storage Path Refactor** - COMPLETED
+- [x] **Sub-task 2: Automatic Client Directory Provisioning** - COMPLETED
+- [x] **Sub-task 3: API & Admin Synchronization** - COMPLETED
+- [x] **Sub-task 4: Media Cleanup & Test Suite Isolation** - COMPLETED
+- [x] **Sub-task 5: Empirical Verification & Documentation Synchronization** - COMPLETED
 
+### 3. Key Decisions & Deviations
+- *2026-09-11*: Opted for Option A (explicit `client = models.ForeignKey(Client, ...)` on `Document`) with dual-synchronization in `Document.save()` to maintain full backwards compatibility with Django `GenericForeignKey` queries (`content_type` + `object_id`).
+- *2026-09-11*: Structured client document physical storage as `documents/clients/<client_id>/<filename>`. Because `client_id` is a UUIDv4, it guarantees global uniqueness without folder name collisions.
+- *2026-09-11*: Configured ephemeral test media directories (`tempfile.mkdtemp()`) across test suites in `apps.media` and `apps.clients` with automated `tearDownModule()` teardowns, eliminating persistent test clutter in the host `media/` folder.
 
-
-
-
-
-
-
-
+### 4. Current Focus
+Phase 32 completed and verified (205/205 tests passing 100%). Ready for next directives.
 

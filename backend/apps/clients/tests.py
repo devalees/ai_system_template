@@ -1,11 +1,10 @@
-"""
-Unit tests for Client Management (apps.clients).
-"""
-
+import os
+import shutil
+import tempfile
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
@@ -15,7 +14,15 @@ from apps.clients.models import Client
 from apps.clients.admin import ClientAdmin
 from apps.integration.models import Profile
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(prefix="test_client_media_")
 
+
+def tearDownModule():
+    """Purge ephemeral client test media directory."""
+    shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class ClientModelTestCase(TestCase):
     """
     Unit tests validating Client data model, multi-tenancy, and AI budget logic.
@@ -40,6 +47,17 @@ class ClientModelTestCase(TestCase):
         self.assertEqual(client.ai_budget_percentage, 0.0)
         self.assertEqual(client.ai_budget_status, "healthy")
         self.assertTrue(client.can_use_ai())
+
+    def test_client_storage_directory_provisioning(self):
+        """Verify Client creation auto-provisions dedicated media directory."""
+        client = Client.objects.create(
+            organization=self.org1,
+            name="Storage Provisioning Corp",
+            slug="storage-corp"
+        )
+        storage_path = client.storage_dir
+        self.assertTrue(storage_path.endswith(f"documents/clients/{client.id}"))
+        self.assertTrue(os.path.isdir(storage_path))
 
     def test_unique_slug_per_organization(self):
         Client.objects.create(
@@ -144,6 +162,7 @@ class ClientModelTestCase(TestCase):
         self.assertEqual(user1.profile.effective_ai_spend_usd, client.ai_spend_usd)
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class ClientAPITestCase(APITestCase):
     """
     Tests REST API endpoints for Client management and budget actions.

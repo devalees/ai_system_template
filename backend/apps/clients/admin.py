@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.clients.models import Client
 from apps.integration.models import Profile
-from apps.media.admin import GenericDocumentInline
+from apps.media.admin import ClientDocumentInline
 
 
 class ClientUserInline(admin.TabularInline):
@@ -74,7 +74,7 @@ class ClientAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     ]
-    inlines = [ClientUserInline, GenericDocumentInline]
+    inlines = [ClientUserInline, ClientDocumentInline]
 
     fieldsets = (
         (_("Client & Organization Identity"), {

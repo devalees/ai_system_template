@@ -1079,29 +1079,40 @@ The filtering engine unifies trigger condition evaluation into a single authorit
 - **`Document` Model**:
   - Inherits `(TenantAwareModel, SoftDeleteModel)`.
   - Fields: `file` (`upload_to=document_upload_to_path`), `filename`, `file_size` (bytes), `mime_type`, `checksum_sha256` (64-char hex), `is_public` (bool), `uploaded_by` (`auth.User`), `extra_metadata` (JSON).
+  - First-Class Client Foreign Key: `client` (`ForeignKey("clients.Client", null=True, blank=True, related_name="documents")`), elevating client files to first-class citizens.
   - Generic Foreign Key: `content_type` (`ForeignKey(ContentType)`) + `object_id` (`CharField`), linking files dynamically to any system record (`AgentTask`, `User`, `Organization`, etc.).
+  - Dual-Synchronization in `save()`:
+    - If `client_id` is set, automatically resolves and synchronizes `content_type = ContentType.objects.get_for_model(Client)` and `object_id = str(client_id)`.
+    - Conversely, if `content_type` is `Client` and `object_id` is passed, automatically resolves and sets `client_id = uuid.UUID(str(object_id))`.
   - Auto-Calculation in `save()`: Auto-generates SHA-256 hex digest, extracts `file_size` in bytes, guesses MIME types from filename extension, and sets default `filename`.
   - Property `file_size_human`: Human-formatted size string (`B`, `KB`, `MB`, `GB`).
-  - Database Indexes: `(organization, checksum_sha256)`, `(content_type, object_id)`, `(organization, uploaded_by, -created_at)`.
+  - Database Indexes: `(organization, checksum_sha256)`, `(client, -created_at)`, `(content_type, object_id)`, `(organization, uploaded_by, -created_at)`.
 
-### 21.2 Storage Partitioning & Token Signer (`storage.py`)
-- **`SecureDocumentStorage`**: Custom `FileSystemStorage` mapping binary files into partitioned workspace directory layout:
-  `/app/media/documents/<org_slug>/<sha256[:2]>/<sha256>_<filename>`
+### 21.2 Storage Partitioning & Directory Provisioning
+- **Client Physical Storage**:
+  - Automatically provisioned upon `Client.save()` / `client.ensure_storage_dir()`:
+    `/app/media/documents/clients/<client_id>/`
+  - Upload Path Routing: When a document is attached to a `Client`, it routes directly into:
+    `documents/clients/<client_id>/<filename>`
+  - Fallback Layout (System / Internal): For non-client documents, routes to hash-sharded path:
+    `documents/<org_slug>/<sha256[:2]>/<sha256>_<filename>`
 - **Cryptographic Token Signer**:
   - `generate_secure_download_token(document_id, user_id)`: Generates time-stamped cryptographically signed URL parameter (`TimestampSigner`, salt: `apps.media.secure_download`).
   - `verify_secure_download_token(token, max_age)`: Validates signature integrity and checks expiration.
 
 ### 21.3 Ingestion & File Stream Service (`services.py`)
-- **`MediaService.create_document`**: Centralized ingestion pipeline taking uploaded file objects, calculating SHA-256 checksums, binding tenant organizations, and linking optional generic model targets.
+- **`MediaService.create_document`**: Centralized ingestion pipeline taking uploaded file objects, calculating SHA-256 checksums, binding tenant organizations, and accepting explicit `client` or generic model targets.
 - **`MediaService.get_document_response`**: Secure file stream renderer returning `FileResponse` binary responses with `Content-Type`, `Content-Length`, and `Content-Disposition` headers. Enforces tenant workspace permission checks unless `is_public=True`.
 
 ### 21.4 REST API & Administrative Components
 - **`DocumentViewSet` (`/api/v1/media/documents/`)**:
-  - `POST /api/v1/media/documents/upload/`: Multipart upload endpoint accepting `file`, `filename`, `is_public`, and optional generic entity targets (`model_app_label`, `model_name`, `object_id`).
+  - `POST /api/v1/media/documents/upload/`: Multipart upload endpoint accepting `file`, `filename`, `is_public`, `client_id`, and optional generic entity targets (`model_app_label`, `model_name`, `object_id`).
+  - `GET /api/v1/media/documents/`: Workspace document catalog supporting `?client_id=<uuid>`, `?is_public=<bool>`, and `?mime_type=<string>` filtering.
   - `GET /api/v1/media/documents/<id>/download/`: Binary stream download endpoint.
-- **`DocumentAdmin` & `GenericDocumentInline`**:
-  - Admin view with monospaced SHA-256 badges and human size formatters.
-  - Reusable `GenericDocumentInline` component embeddable in any Django Admin model change form.
+- **`DocumentAdmin` & `ClientDocumentInline`**:
+  - `DocumentAdmin`: Displays `filename`, `client`, `file_size_display`, `mime_type`, `checksum_badge`, `is_public`, `organization`, and `uploaded_by`.
+  - `ClientDocumentInline`: Embedded directly in `ClientAdmin` for instant inspection and file management.
+  - `GenericDocumentInline`: Reusable component embeddable in any other Django Admin model change form.
 
 ---
 

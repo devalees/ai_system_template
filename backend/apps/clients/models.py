@@ -6,7 +6,9 @@ Provides:
   Includes 1-to-many user relationship, AI service gatekeeping (is_ai_enabled), and dollar budget milestones.
 """
 
+import os
 from decimal import Decimal
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -151,3 +153,27 @@ class Client(UUIDModel, SoftDeleteModel, AuditableModel):
     def linked_users_count(self) -> int:
         """Return the count of user accounts linked to this client."""
         return self.users.count() if hasattr(self, "users") else 0
+
+    def ensure_storage_dir(self) -> str:
+        """
+        Ensure dedicated client physical storage directory exists under MEDIA_ROOT/documents/clients/<client_id>/.
+        Returns the absolute path to the directory.
+        """
+        media_root = getattr(settings, "MEDIA_ROOT", settings.BASE_DIR / "media")
+        client_dir = os.path.join(str(media_root), "documents", "clients", str(self.id))
+        os.makedirs(client_dir, exist_ok=True)
+        return client_dir
+
+    @property
+    def storage_dir(self) -> str:
+        """Return the physical storage directory path for this client."""
+        return self.ensure_storage_dir()
+
+    def save(self, *args, **kwargs):
+        """Persist client record and auto-provision dedicated media directory."""
+        super().save(*args, **kwargs)
+        try:
+            self.ensure_storage_dir()
+        except Exception:
+            pass
+
