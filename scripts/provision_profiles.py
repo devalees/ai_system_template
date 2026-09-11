@@ -170,6 +170,21 @@ for f in ['SOUL.md', 'config.yaml', 'profile.yaml']:
     if os.path.exists(s):
         shutil.copy2(s, os.path.join(dst, f))
 
+# Synchronize profile-scoped skills if present
+skills_src = os.path.join(src, 'skills')
+skills_dst = os.path.join(dst, 'skills')
+synced_skills = []
+if os.path.exists(skills_src):
+    os.makedirs(skills_dst, exist_ok=True)
+    for sk in os.listdir(skills_src):
+        sk_src = os.path.join(skills_src, sk)
+        sk_dst = os.path.join(skills_dst, sk)
+        if os.path.isdir(sk_src):
+            if os.path.exists(sk_dst):
+                shutil.rmtree(sk_dst)
+            shutil.copytree(sk_src, sk_dst)
+            synced_skills.append(sk)
+
 # Write profile .env credentials
 token = '{token_val}'
 if token:
@@ -180,10 +195,15 @@ if token:
     ]
     with open(env_file, 'w', encoding='utf-8') as ef:
         ef.writelines(lines)
+
+print(','.join(synced_skills))
 """
         sync_res = run_cmd(["python", "-c", sync_script])
         if sync_res.returncode == 0:
             print(f"    {GREEN}✓ Synced SOUL.md, config.yaml, and profile.yaml.{RESET}")
+            synced_profile_skills = sync_res.stdout.strip()
+            if synced_profile_skills:
+                print(f"    {GREEN}✓ Synced profile-scoped skills: {CYAN}{synced_profile_skills}{RESET}")
             if token_val:
                 print(f"    {GREEN}✓ Injected DJANGO_API_TOKEN into .env ({token_val[:8]}...){RESET}")
         else:
@@ -196,13 +216,24 @@ if token:
         success_count += 1
         print()
 
-    # Step D: Synchronize Custom Skills into Hermes Runtime
-    print(f"\n{BOLD}{BLUE}▶ Synchronizing custom skills into Hermes runtime...{RESET}")
+    # Step D: Synchronize Shared System Skills & Purge Migrated Custom Skills
+    print(f"\n{BOLD}{BLUE}▶ Synchronizing shared system skills into Hermes runtime...{RESET}")
     skill_sync_script = """
 import os, shutil
 src_root = '/workspace/skills'
 dst_root = '/root/.hermes/skills/custom'
 os.makedirs(dst_root, exist_ok=True)
+
+# Purge any migrated or obsolete skills from the global custom skills directory
+migrated_or_stray = {'cost_monitor', 'output_validator', 'spend-variance-audit', 'task-audit-verification'}
+for item in os.listdir(dst_root):
+    if item in migrated_or_stray:
+        target = os.path.join(dst_root, item)
+        if os.path.isdir(target):
+            shutil.rmtree(target)
+        else:
+            os.remove(target)
+
 count = 0
 if os.path.exists(src_root):
     for skill in os.listdir(src_root):
@@ -213,7 +244,7 @@ if os.path.exists(src_root):
                 shutil.rmtree(d_path)
             shutil.copytree(s_path, d_path)
             count += 1
-print(f"Synced {count} custom skills.")
+print(f"Synced {count} shared system skills to root.")
 """
     sk_res = run_cmd(["python", "-c", skill_sync_script])
     if sk_res.returncode == 0:
