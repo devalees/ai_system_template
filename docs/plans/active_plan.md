@@ -900,7 +900,7 @@ Streamline the Orchestrator profile for high token efficiency and laser-focused 
 - [x] **Sub-task 3: Dedicated `task_decomposer` Skill Implementation (`SKILL.md`, `run.py`)** - COMPLETED (Commit: `d7d80b5`)
 - [x] **Sub-task 4: Profile Persona (`SOUL.md`) Binding & Provisioner Support** - COMPLETED (Commit: `b0744c3`)
 - [x] **Sub-task 5: Empirical Verification & CLI Isolation Audit** - COMPLETED (Verified `0 builtin, 1 local — task_decomposer`; passed 185/185 unit tests in 110s)
-- [x] **Sub-task 6: Documentation Synchronization & Test Suite Verification** - COMPLETED
+- [x] **Sub-task 6: Documentation Synchronization & Test Suite Verification** - COMPLETED (Commit: `86343c7`)
 
 ### 3. Key Decisions & Deviations (Phase 26)
 - *2026-09-11*: Initialized Phase 26 per user discussion regarding Orchestrator's role, token efficiency, and toolsets. Confirmed that enabling all toolsets is an anti-pattern and that Orchestrator should only have the 5 core toolsets and planning skills.
