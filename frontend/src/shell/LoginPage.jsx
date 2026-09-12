@@ -8,7 +8,7 @@ export default function LoginPage() {
   const { language, setLanguage, currentTheme, switchTheme, allThemes } = useTheme();
 
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin');
+  const [password, setPassword] = useState('admin12345');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,8 +30,8 @@ export default function LoginPage() {
 
   const handleQuickLogin = () => {
     setUsername('admin');
-    setPassword('admin');
-    login('admin', 'admin');
+    setPassword('admin12345');
+    login('admin', 'admin12345');
   };
 
   return (
