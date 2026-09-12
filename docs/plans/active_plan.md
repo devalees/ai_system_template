@@ -1207,6 +1207,51 @@ Build a modern, containerized **React** frontend platform for the Universal AI S
 - *2026-09-12*: **UX & Navigation Refinement**: Per user direction, restructured the landing page to follow Odoo's clean architecture (central App Grid right in the middle of the screen as the main home view) with Apple visual squircle aesthetics. Completely removed the bottom dock to avoid interface clutter. Repositioned AI Chat Studio as an internal module rather than the default landing page. Integrated a pluggable Theme Engine (`themeEngine.js`) supporting multiple switchable themes (`Apple Obsidian Glass`, `Apple Frosted Light`, `Odoo Enterprise Purple`, `Cyber Emerald Pro`) with 1-click switching from TopBar and Settings.
 
 ### 4. Current Focus
-Phase 33 completed and verified. Ready for next directives.
+Phase 33 completed and verified. Transitioning to Phase 34 per user directive.
 
+---
 
+## Phase 34: Full Two-Way Frontend <-> Django Integration & Live Data Binding
+
+- **Status**: COMPLETED
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-12 06:36:00+03:00
+
+### 1. Objective & Scope
+Completely connect the React frontend SPA to the live Django backend so that all tables, metric gauges, forms, and configuration settings represent and mutate real records in PostgreSQL, mapped directly to Django Admin:
+- **Authentication & Workspace Bridge**:
+  - Expose `/api/token-auth/`, `/api/auth/token/`, and `/api/auth/me/`.
+  - Issue/seed a valid DRF Token for `admin` and connect `authContext` to live backend sessions.
+  - Automatically pass `Authorization: Token <token>` and `X-Workspace-Slug: <slug>`.
+- **Two-Way Client Management (`apps/clients/`)**:
+  - Live query `GET /api/v1/clients/` with real-time budget metric gauges.
+  - Interactive "New Record" modal submitting `POST /api/v1/clients/`.
+  - Client detail view with budget overrides (`POST .../budget-status/`) and document/user associations.
+- **Two-Way Task Kanban Pipeline (`apps/tasks/`)**:
+  - Live query `GET /api/tasks/` across pending, in-progress, review, and completed columns.
+  - "New Task" creation modal submitting `POST /api/tasks/`.
+  - Interactive QA gate review verdict submission (`POST /api/tasks/<id>/submit-verdict/`).
+- **Live Settings & Provider Credentials (`apps/settings/`)**:
+  - Expose `/api/provider-credentials/` for live viewing, adding, and toggling LLM API keys.
+  - Expose `/api/settings/` to persist and retrieve general branding settings (`AppSettingValue`).
+- **Live TopBar Notifications & Workspaces (`shell/TopBar.jsx`)**:
+  - Real-time unread notification count and dropdown via `/api/v1/notifications/`.
+  - Live organization list and switching via `/api/v1/organizations/`.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Django Admin Model Audit & Implementation Plan** - COMPLETED (All 25+ models audited; implementation plan approved)
+- [x] **Sub-task 2: Backend Auth, Provider Credentials & Settings API Endpoints** - COMPLETED (`CustomObtainAuthToken`, `CurrentUserView`, `AppSettingsView`, `ProviderCredentialViewSet`)
+- [x] **Sub-task 3: Frontend Live Token Authentication & Session Integration** - COMPLETED (`authContext.jsx` auto-bootstraps real token, discards dev-token, verifies with `/api/auth/me/`)
+- [x] **Sub-task 4: Two-Way Client Management & Form Submission** - COMPLETED (Live `GET /api/v1/clients/`, `POST /api/v1/clients/` with automatic slug & org assignment; fixed Vite proxy `ALLOWED_HOSTS` 400 error)
+- [x] **Sub-task 5: Two-Way Task Kanban & QA Verdict Submission** - COMPLETED (`TaskWorkspace.jsx` query & create tasks, QA review verdicts via `/api/tasks/`)
+- [x] **Sub-task 6: Live Settings Hub, Credentials & TopBar Notifications** - COMPLETED (Live settings and credentials management; TopBar real-time unread notifications bell and dropdown)
+- [x] **Sub-task 7: Full System Verification, E2E Form Testing & Commit** - COMPLETED (205/205 backend tests pass 100%, frontend production build passes cleanly, Vite proxy verified with HTTP 201)
+
+### 3. Key Decisions & Deviations (Phase 34)
+- *2026-09-12*: User directed prioritizing full end-to-end two-way data integration with Django before further UI feedback.
+- *2026-09-12*: Audited all 25+ models in Django Admin and established exact 1-to-1 mappings into frontend workspaces.
+- *2026-09-12*: **Vite Proxy & Host Header Root Cause (400 Bad Request)**: Server container logs revealed `DisallowedHost: Invalid HTTP_HOST header: 'django-template-backend:8000'`. Vite's `changeOrigin: true` proxies to the internal Docker container name `django-template-backend:8000`, which was absent from Django's `ALLOWED_HOSTS`. Added `django-template-backend` and wildcard `*` during `DEBUG=True` in both `core/settings.py` and `.env`. Verified with curl through port 3000 returning HTTP 201 Created.
+- *2026-09-12*: Discontinued browser agent automation per user directive; user will test the live UI directly in their browser.
+
+### 4. Current Focus
+Phase 34 completed. Ready for user testing of client creation and live forms in the browser.

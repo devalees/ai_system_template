@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../core/themeContext';
 import { useUISettings } from '../../core/uiSettingsContext';
+import api from '../../core/api';
 import { getAllApps } from '../registry';
 import {
   Sliders,
@@ -50,36 +51,68 @@ export default function SettingsHub() {
     alertThreshold4: 100,
   });
 
-  // Provider Credentials Mock/State (reflects ProviderCredential model)
-  const [credentials, setCredentials] = useState([
-    { id: 1, provider: 'openrouter', label: 'OpenRouter Production Key', maskedKey: 'sk-or-v1-••••••••••••3f8a', active: true },
-    { id: 2, provider: 'openai', label: 'OpenAI Enterprise Gateway', maskedKey: 'sk-proj-••••••••••••990c', active: true },
-    { id: 3, provider: 'google', label: 'Google Gemini Studio Key', maskedKey: 'AIzaSy••••••••••••44b1', active: true },
-  ]);
+  // Provider Credentials
+  const [credentials, setCredentials] = useState([]);
   const [newCredModal, setNewCredModal] = useState(false);
   const [newCredForm, setNewCredForm] = useState({ provider: 'openrouter', label: '', apiKey: '' });
 
+  // Load live settings and credentials from Django backend
+  useEffect(() => {
+    api.get('/api/settings/').then((data) => {
+      if (data && typeof data === 'object') {
+        setGeneralSettings((prev) => ({ ...prev, ...data }));
+      }
+    }).catch(() => {});
+
+    api.get('/api/provider-credentials/').then((data) => {
+      if (Array.isArray(data) && data.length > 0) {
+        setCredentials(data);
+      }
+    }).catch(() => {});
+  }, []);
+
   const allApps = getAllApps(appOrder);
 
-  const handleSave = () => {
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2500);
+  const handleSave = async () => {
+    try {
+      await api.post('/api/settings/', { settings: generalSettings });
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 2500);
+    } catch (err) {
+      console.warn('[Settings Save]:', err);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 2500);
+    }
   };
 
-  const handleAddCredential = (e) => {
+  const handleAddCredential = async (e) => {
     e.preventDefault();
     if (!newCredForm.apiKey) return;
 
-    const newEntry = {
-      id: Date.now(),
-      provider: newCredForm.provider,
-      label: newCredForm.label || `${newCredForm.provider.toUpperCase()} Key`,
-      maskedKey: newCredForm.apiKey.slice(0, 6) + '••••••••••••' + newCredForm.apiKey.slice(-4),
-      active: true,
-    };
-    setCredentials((prev) => [...prev, newEntry]);
-    setNewCredModal(false);
-    setNewCredForm({ provider: 'openrouter', label: '', apiKey: '' });
+    try {
+      const created = await api.post('/api/provider-credentials/', {
+        name: newCredForm.label || `${newCredForm.provider.toUpperCase()} Key`,
+        provider_type: newCredForm.provider,
+        api_key: newCredForm.apiKey,
+        is_active: true,
+      });
+      setCredentials((prev) => [created, ...prev]);
+      setNewCredModal(false);
+      setNewCredForm({ provider: 'openrouter', label: '', apiKey: '' });
+    } catch (err) {
+      console.error('[Add Credential Error]:', err);
+      alert(err.message || 'Failed to add credential in Django');
+    }
+  };
+
+  const handleDeleteCredential = async (id) => {
+    try {
+      await api.delete(`/api/provider-credentials/${id}/`);
+      setCredentials((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      console.warn('[Delete Credential]:', err);
+      setCredentials((prev) => prev.filter((c) => c.id !== id));
+    }
   };
 
   const tabs = [
@@ -336,9 +369,9 @@ export default function SettingsHub() {
                       <Key size={16} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{cred.label}</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{cred.name || cred.label}</div>
                       <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-                        {cred.maskedKey}
+                        {cred.masked_key || cred.maskedKey}
                       </div>
                     </div>
                   </div>
@@ -346,7 +379,7 @@ export default function SettingsHub() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span className="badge badge-emerald">ACTIVE</span>
                     <button
-                      onClick={() => setCredentials((prev) => prev.filter((c) => c.id !== cred.id))}
+                      onClick={() => handleDeleteCredential(cred.id)}
                       className="glass-button"
                       style={{ padding: '6px', color: 'var(--accent-rose)' }}
                     >

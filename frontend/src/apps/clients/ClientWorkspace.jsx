@@ -70,33 +70,42 @@ export default function ClientWorkspace() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Fetch live clients from Django backend if reachable
-  useEffect(() => {
-    api.get('/api/v1/clients/').then((data) => {
-      if (data && Array.isArray(data.results)) {
-        setClients(data.results);
-      } else if (Array.isArray(data)) {
-        setClients(data);
+  const loadClients = async () => {
+    try {
+      const data = await api.get('/api/v1/clients/');
+      const list = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
+      if (list.length > 0) {
+        setClients(list);
       }
-    }).catch(() => {
-      // Fallback to initial clients in dev/isolated environment
-    });
+    } catch (err) {
+      console.warn('[Clients API] Failed to fetch live clients:', err);
+    }
+  };
+
+  // Fetch live clients from Django backend
+  useEffect(() => {
+    loadClients();
   }, []);
 
-  const handleAddClient = (formData) => {
-    const newClient = {
-      id: `c-${Date.now()}`,
-      name: formData.name,
-      company_registration: formData.company_registration || 'CR-NEW',
-      is_ai_enabled: formData.is_ai_enabled ?? true,
-      ai_budget_usd: Number(formData.ai_budget_usd) || 500,
-      ai_spend_usd: 0.0,
-      user_count: 1,
-      doc_count: 0,
-      created_at: new Date().toISOString().split('T')[0],
-    };
-    setClients([newClient, ...clients]);
-    setShowAddModal(false);
+  const handleAddClient = async (formData) => {
+    try {
+      const payload = {
+        name: formData.name,
+        notes: formData.company_registration || '',
+        is_ai_enabled: formData.is_ai_enabled ?? true,
+        ai_budget_usd: Number(formData.ai_budget_usd) || 500,
+        primary_contact_name: formData.primary_contact_name || `${formData.name} Contact`,
+        primary_contact_email: formData.primary_contact_email || '',
+        primary_contact_phone: formData.primary_contact_phone || '',
+      };
+      const created = await api.post('/api/v1/clients/', payload);
+      setClients((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
+      setShowAddModal(false);
+      loadClients();
+    } catch (err) {
+      console.error('[Add Client Error]:', err);
+      alert(err.message || 'Failed to create client in Django');
+    }
   };
 
   const columns = [
@@ -121,7 +130,7 @@ export default function ClientWorkspace() {
           </div>
           <div>
             <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{val}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{row.company_registration}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{row.notes || row.company_registration || row.slug}</div>
           </div>
         </div>
       ),
@@ -140,14 +149,16 @@ export default function ClientWorkspace() {
       key: 'budget_gauge',
       label: language === 'ar' ? 'استهلاك الميزانية' : 'AI BUDGET SPEND GAUGE',
       render: (_, row) => {
-        const pct = Math.min(100, Math.round((row.ai_spend_usd / (row.ai_budget_usd || 1)) * 100));
+        const spend = Number(row.ai_spend_usd || 0);
+        const budget = Number(row.ai_budget_usd || 1);
+        const pct = Math.min(100, Math.round((spend / budget) * 100));
         const color = pct > 90 ? 'var(--accent-rose)' : pct > 60 ? 'var(--accent-amber)' : 'var(--accent-emerald)';
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '160px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
-              <span>${row.ai_spend_usd.toFixed(1)}</span>
-              <span style={{ fontWeight: 700, color }}>{pct}% (${row.ai_budget_usd})</span>
+              <span>${spend.toFixed(1)}</span>
+              <span style={{ fontWeight: 700, color }}>{pct}% (${budget})</span>
             </div>
             <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: '3px', transition: 'width 0.4s ease' }} />
@@ -159,22 +170,28 @@ export default function ClientWorkspace() {
     {
       key: 'user_count',
       label: language === 'ar' ? 'المستخدمين' : 'USERS',
-      render: (val) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <Users size={13} color="var(--text-muted)" />
-          <span>{val} users</span>
-        </div>
-      ),
+      render: (_, row) => {
+        const count = row.linked_users_count ?? row.user_count ?? 0;
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Users size={13} color="var(--text-muted)" />
+            <span>{count} users</span>
+          </div>
+        );
+      },
     },
     {
       key: 'doc_count',
       label: language === 'ar' ? 'المستندات' : 'DOCUMENTS',
-      render: (val) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <FolderLock size={13} color="var(--text-muted)" />
-          <span>{val} files</span>
-        </div>
-      ),
+      render: (_, row) => {
+        const count = row.documents_count ?? row.doc_count ?? 0;
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <FolderLock size={13} color="var(--text-muted)" />
+            <span>{count} files</span>
+          </div>
+        );
+      },
     },
   ];
 
@@ -191,7 +208,7 @@ export default function ClientWorkspace() {
         <div className="glass-card" style={{ padding: '18px' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Allocated AI Budget</div>
           <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--accent-cyan)', marginTop: '6px' }}>
-            ${clients.reduce((acc, c) => acc + c.ai_budget_usd, 0).toLocaleString()}
+            ${clients.reduce((acc, c) => acc + Number(c.ai_budget_usd || 0), 0).toLocaleString()}
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Dollar Denominated Ceilings</div>
         </div>
@@ -199,7 +216,7 @@ export default function ClientWorkspace() {
         <div className="glass-card" style={{ padding: '18px' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Monthly AI Spend</div>
           <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--accent-amber)', marginTop: '6px' }}>
-            ${clients.reduce((acc, c) => acc + c.ai_spend_usd, 0).toFixed(2)}
+            ${clients.reduce((acc, c) => acc + Number(c.ai_spend_usd || 0), 0).toFixed(2)}
           </div>
           <div style={{ fontSize: '11px', color: 'var(--accent-emerald)', marginTop: '4px' }}>Audit Health: Optimal</div>
         </div>

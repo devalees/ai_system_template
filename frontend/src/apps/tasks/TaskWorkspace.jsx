@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../core/themeContext';
 import api from '../../core/api';
+import DynamicForm from '../../components/DynamicForm';
 import {
   CheckSquare,
   Clock,
@@ -44,7 +45,7 @@ const INITIAL_TASKS = [
   },
   {
     id: 't-104',
-    name: 'Dissect & Compile Python AST Syntactic Integrity',
+    name: 'Pre-Commit Test Suite & Syntax Hygiene Audit',
     profile_name: 'qa_auditor',
     status: 'in_progress',
     reasoning_effort: 'high',
@@ -72,31 +73,57 @@ const COLUMNS = [
 export default function TaskWorkspace() {
   const { language } = useTheme();
   const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [verdictFeedback, setVerdictFeedback] = useState('');
 
-  // Fetch live tasks from backend if reachable
-  useEffect(() => {
-    api.get('/api/tasks/').then((data) => {
-      if (data && Array.isArray(data.results)) {
-        setTasks(data.results);
-      } else if (Array.isArray(data)) {
-        setTasks(data);
+  const loadTasks = async () => {
+    try {
+      const data = await api.get('/api/tasks/');
+      const list = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
+      if (list.length > 0) {
+        setTasks(list);
       }
-    }).catch(() => {});
+    } catch (err) {
+      console.warn('[Tasks API] Failed to fetch live tasks:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadTasks();
   }, []);
 
-  const handleReviewVerdict = (taskId, verdict) => {
-    setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id === taskId) {
-          return {
-            ...t,
-            status: verdict === 'approved' ? 'completed' : 'in_progress',
-          };
-        }
-        return t;
-      })
-    );
+  const handleCreateTask = async (formData) => {
+    try {
+      const payload = {
+        task_name: formData.task_name || formData.name,
+        profile_name: formData.profile_name || 'orchestrator',
+        reasoning_effort: formData.reasoning_effort || 'none',
+        status: formData.status || 'pending',
+      };
+      const created = await api.post('/api/tasks/', payload);
+      setTasks((prev) => [created, ...prev.filter((t) => t.id !== created.id)]);
+      setShowAddModal(false);
+      loadTasks();
+    } catch (err) {
+      console.error('[Create Task Error]:', err);
+      alert(err.message || 'Failed to create task in Django');
+    }
+  };
+
+  const handleReviewVerdict = async (taskId, verdict) => {
+    try {
+      await api.post(`/api/tasks/${taskId}/submit-verdict/`, {
+        verdict,
+        notes: verdictFeedback || `Verdict: ${verdict}`,
+        reviewer_profile: 'qa_auditor',
+      });
+      loadTasks();
+    } catch (err) {
+      console.warn('[Verdict API]:', err);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: verdict === 'approved' ? 'completed' : 'pending' } : t))
+      );
+    }
   };
 
   return (
@@ -115,7 +142,7 @@ export default function TaskWorkspace() {
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="glass-button glass-button-primary">
+          <button onClick={() => setShowAddModal(true)} className="glass-button glass-button-primary">
             <Plus size={14} />
             <span>{language === 'ar' ? 'إنشاء مهمة جديدة' : 'New Task'}</span>
           </button>
@@ -219,6 +246,70 @@ export default function TaskWorkspace() {
           );
         })}
       </div>
+
+      {/* New Task Creation Modal Form */}
+      {showAddModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1200,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(16px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: '520px' }}>
+            <DynamicForm
+              title={language === 'ar' ? 'إنشاء مهمة وكيل جديدة' : 'Create Autonomous Agent Task'}
+              fields={[
+                { name: 'task_name', label: 'Task Objective / Name', type: 'text', required: true, placeholder: 'e.g. Audit API Security' },
+                {
+                  name: 'profile_name',
+                  label: 'Assigned Agent Profile',
+                  type: 'select',
+                  options: [
+                    { value: 'orchestrator', label: 'Chief of Staff / Orchestrator' },
+                    { value: 'cost_controller', label: 'Financial & Cost Controller' },
+                    { value: 'qa_auditor', label: 'QA & Compliance Auditor' },
+                    { value: 'comms_agent', label: 'Client Coordinator' },
+                    { value: 'security_guard', label: 'Security & Threat Auditor' },
+                  ],
+                  defaultValue: 'orchestrator',
+                },
+                {
+                  name: 'reasoning_effort',
+                  label: 'Reasoning Effort Override',
+                  type: 'select',
+                  options: [
+                    { value: 'none', label: 'None (Instant Speed)' },
+                    { value: 'low', label: 'Low' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'high', label: 'High (Deep Verification)' },
+                    { value: 'max', label: 'Max' },
+                  ],
+                  defaultValue: 'none',
+                },
+                {
+                  name: 'status',
+                  label: 'Initial Column',
+                  type: 'select',
+                  options: [
+                    { value: 'pending', label: 'Pending Queue' },
+                    { value: 'in_progress', label: 'In Progress' },
+                    { value: 'review', label: 'QA Review Gate' },
+                  ],
+                  defaultValue: 'pending',
+                },
+              ]}
+              onSubmit={handleCreateTask}
+              onCancel={() => setShowAddModal(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

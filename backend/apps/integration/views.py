@@ -8,7 +8,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, DjangoModelPermissions, IsAuthenticated
 from rest_framework.response import Response
 
-from .models import HandshakeLog, Profile, AgentProfile, SpendReport, AgentTask
+from .models import HandshakeLog, Profile, AgentProfile, SpendReport, AgentTask, ProviderCredential
 from .serializers import (
     HandshakeRequestSerializer,
     HandshakeLogSerializer,
@@ -16,6 +16,7 @@ from .serializers import (
     SpendReportSerializer,
     AgentTaskSerializer,
     TaskVerdictSerializer,
+    ProviderCredentialSerializer,
 )
 
 class StrictDjangoModelPermissions(DjangoModelPermissions):
@@ -236,6 +237,23 @@ class AgentTaskViewSet(viewsets.ModelViewSet):
             "verdict": verdict,
             "notes": notes,
         })
+
+
+class ProviderCredentialViewSet(viewsets.ModelViewSet):
+    """
+    CRUD API for LLM Provider Credentials.
+    Masks plaintext API key on retrieval and automatically scopes to tenant organization.
+    """
+    queryset = ProviderCredential.objects.all()
+    serializer_class = ProviderCredentialSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        org = serializer.validated_data.get('organization')
+        if not org:
+            from apps.tenants.models import Organization
+            org = Organization.objects.first()
+        serializer.save(organization=org)
 
 
 @api_view(['GET'])

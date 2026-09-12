@@ -10,7 +10,15 @@ export default function DynamicForm({
   loading = false,
 }) {
   const { language } = useTheme();
-  const [formData, setFormData] = useState({ ...initialValues });
+  const [formData, setFormData] = useState(() => {
+    const initial = { ...initialValues };
+    fields.forEach((f) => {
+      if (initial[f.name] === undefined && f.defaultValue !== undefined) {
+        initial[f.name] = f.defaultValue;
+      }
+    });
+    return initial;
+  });
   const [errors, setErrors] = useState({});
 
   const handleChange = (name, value) => {

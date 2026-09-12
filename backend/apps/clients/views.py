@@ -26,6 +26,32 @@ class ClientViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', 'created_at', 'ai_budget_usd', 'ai_spend_usd']
     lookup_field = 'id'
 
+    def perform_create(self, serializer):
+        from django.utils.text import slugify
+        from apps.tenants.models import Organization, OrganizationMembership
+
+        name = serializer.validated_data.get('name', 'Client Account')
+        slug = serializer.validated_data.get('slug')
+        if not slug:
+            base_slug = slugify(name) or 'client'
+            unique_slug = base_slug
+            idx = 1
+            while Client.objects.filter(slug=unique_slug).exists():
+                unique_slug = f"{base_slug}-{idx}"
+                idx += 1
+            slug = unique_slug
+
+        org = serializer.validated_data.get('organization')
+        if not org:
+            mem = OrganizationMembership.objects.filter(user=self.request.user, is_active=True).first() if self.request.user.is_authenticated else None
+            org = mem.organization if mem else Organization.objects.first()
+
+        serializer.save(
+            organization=org,
+            slug=slug,
+            created_by=self.request.user if self.request.user.is_authenticated else None
+        )
+
     @action(detail=True, methods=['get', 'post'], url_path='budget-status')
     def budget_status(self, request, id=None):
         """

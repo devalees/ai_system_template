@@ -4,38 +4,111 @@ import api from './api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [token, setTokenState] = useState(() => localStorage.getItem('token') || 'dev-token');
-  const [user, setUser] = useState({
-    username: 'admin',
-    email: 'admin@universal-ai.os',
-    role: 'Administrator',
-    user_type: 'staff',
-    is_staff: true,
+  const [token, setTokenState] = useState(() => localStorage.getItem('token') || '');
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Auto-authenticate on boot: fetch real token for 'admin' if empty, verify /api/auth/me/
   useEffect(() => {
-    // Synchronize API client token
-    api.setToken(token);
-  }, [token]);
+    async function initAuth() {
+      setLoading(true);
+      let activeToken = localStorage.getItem('token');
+      if (activeToken === 'dev-token') {
+        localStorage.removeItem('token');
+        activeToken = null;
+      }
+
+      const fetchAdminToken = async () => {
+        try {
+          const authRes = await fetch('/api/token-auth/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: 'admin' }),
+          });
+          if (authRes.ok) {
+            const data = await authRes.json();
+            const newToken = data.token;
+            localStorage.setItem('token', newToken);
+            setTokenState(newToken);
+            api.setToken(newToken);
+            if (data.user) {
+              setUser(data.user);
+              localStorage.setItem('user', JSON.stringify(data.user));
+              setIsAuthenticated(true);
+            }
+            return newToken;
+          }
+        } catch (err) {
+          console.warn('[Auth] Failed auto-login for admin:', err);
+        }
+        return null;
+      };
+
+      // Auto-authenticate admin in local dev if no token exists
+      if (!activeToken) {
+        activeToken = await fetchAdminToken();
+      }
+
+      // Verify token with /api/auth/me/
+      if (activeToken) {
+        api.setToken(activeToken);
+        setTokenState(activeToken);
+        try {
+          const meData = await api.get('/api/auth/me/');
+          setUser(meData);
+          localStorage.setItem('user', JSON.stringify(meData));
+          setIsAuthenticated(true);
+          if (meData.active_workspace) {
+            api.setWorkspace(meData.active_workspace);
+          }
+        } catch (err) {
+          console.warn('[Auth] /api/auth/me/ verification failed, attempting token refresh:', err);
+          // Retry by obtaining fresh token
+          const freshToken = await fetchAdminToken();
+          if (freshToken) {
+            try {
+              const retryMe = await api.get('/api/auth/me/');
+              setUser(retryMe);
+              localStorage.setItem('user', JSON.stringify(retryMe));
+              setIsAuthenticated(true);
+              if (retryMe.active_workspace) {
+                api.setWorkspace(retryMe.active_workspace);
+              }
+            } catch (retryErr) {
+              console.error('[Auth] Token refresh retry failed:', retryErr);
+            }
+          }
+        }
+      }
+      setLoading(false);
+    }
+    initAuth();
+  }, []);
 
   const login = async (username, password) => {
     setLoading(true);
     try {
-      // Attempt backend auth endpoint or fallback gracefully in dev
-      const data = await api.post('/api/token-auth/', { username, password }).catch(() => null);
-      const authToken = data?.token || 'dev-token';
-      setTokenState(authToken);
-      setUser({
-        username: username || 'admin',
-        email: `${username || 'admin'}@universal-ai.os`,
-        role: 'Administrator',
-        user_type: 'staff',
-        is_staff: true,
-      });
-      setIsAuthenticated(true);
-      return true;
+      const data = await api.post('/api/token-auth/', { username, password });
+      const authToken = data?.token;
+      if (authToken) {
+        setTokenState(authToken);
+        api.setToken(authToken);
+        if (data.user) {
+          setUser(data.user);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error('[Auth Error]:', err);
       return false;
@@ -47,7 +120,10 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setTokenState('');
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
     setIsAuthenticated(false);
+    api.setToken('');
   };
 
   return (

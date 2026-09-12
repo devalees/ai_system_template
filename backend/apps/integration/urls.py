@@ -8,6 +8,7 @@ from .views import (
     AgentProfileViewSet,
     SpendReportViewSet,
     AgentTaskViewSet,
+    ProviderCredentialViewSet,
     list_hermes_providers,
     list_hermes_models,
     list_hermes_profiles,
@@ -19,6 +20,7 @@ router = DefaultRouter()
 router.register(r'profiles', AgentProfileViewSet, basename='agent-profile')
 router.register(r'tasks', AgentTaskViewSet, basename='agent-task')
 router.register(r'spend-reports', SpendReportViewSet, basename='spend-report')
+router.register(r'provider-credentials', ProviderCredentialViewSet, basename='provider-credential')
 
 urlpatterns = [
     path('health/', health_check, name='api-health'),
