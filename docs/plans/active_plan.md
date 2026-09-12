@@ -1274,7 +1274,7 @@ Address Notes 1, 2, and 3 from user feedback:
 - [x] **Sub-task 1: Django CSRF Trusted Origins Configuration** - COMPLETED
 - [x] **Sub-task 2: Django Admin Navigation & Vite Proxy for `/admin` & `/static`** - COMPLETED
 - [x] **Sub-task 3: Dedicated `LoginPage.jsx`, Authentication Guard & Logout Lifecycle** - COMPLETED
-- [x] **Sub-task 4: Frontend Compilation & Live Endpoints Verification** - COMPLETED
+- [x] **Sub-task 4: Frontend Compilation & Live Endpoints Verification** - COMPLETED (Commit: `593b074`)
 
 ### 3. Key Decisions & Deviations (Phase 35)
 - *2026-09-12*: Implemented `LoginPage` with theme support (EN/AR), status indicator, and quick-login shortcut for development.
