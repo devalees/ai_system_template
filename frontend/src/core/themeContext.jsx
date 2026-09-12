@@ -1,56 +1,50 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { THEMES, applyTheme } from './themeEngine';
 
 const ThemeContext = createContext(null);
 
 const translations = {
   en: {
     system_name: 'Universal AI OS',
-    search_placeholder: 'Search apps, tasks, settings... (⌘K)',
-    launchpad: 'Launchpad',
-    dock: 'Dock',
+    home: 'Home',
+    search_placeholder: 'Search apps, records, settings... (⌘K)',
+    launchpad: 'App Launcher',
     settings: 'Settings',
     apps: 'Applications',
     notifications: 'Notifications',
     profile: 'Profile',
     logout: 'Log Out',
-    dark_mode: 'Dark Mode',
-    light_mode: 'Light Mode',
+    themes: 'Theme Engine',
     language: 'Language',
     arabic: 'العربية',
     english: 'English',
     status_online: 'Online',
-    tokens_today: 'Tokens Today',
-    budget_remaining: 'Remaining',
   },
   ar: {
     system_name: 'نظام الذكاء الاصطناعي الشامل',
-    search_placeholder: 'ابحث في التطبيقات، المهام، الإعدادات... (⌘K)',
-    launchpad: 'لوحة التطبيقات',
-    dock: 'شريط الوصول السريع',
+    home: 'الرئيسية',
+    search_placeholder: 'ابحث في التطبيقات، السجلات، الإعدادات... (⌘K)',
+    launchpad: 'قائمة التطبيقات',
     settings: 'الإعدادات',
     apps: 'التطبيقات',
     notifications: 'الإشعارات',
     profile: 'الملف الشخصي',
     logout: 'تسجيل الخروج',
-    dark_mode: 'الوضع الداكن',
-    light_mode: 'الوضع الفاتح',
+    themes: 'محرك السمات والمظهر',
     language: 'اللغة',
     arabic: 'العربية',
     english: 'English',
     status_online: 'متصل',
-    tokens_today: 'رموز اليوم',
-    budget_remaining: 'المتبقي',
   },
 };
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'dark');
+  const [themeId, setThemeId] = useState(() => localStorage.getItem('app_theme_id') || 'apple-obsidian');
   const [language, setLanguageState] = useState(() => localStorage.getItem('app_language') || 'en');
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('app_theme', theme);
-  }, [theme]);
+    applyTheme(themeId);
+  }, [themeId]);
 
   useEffect(() => {
     document.documentElement.setAttribute('lang', language);
@@ -58,8 +52,11 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('app_language', language);
   }, [language]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  const switchTheme = (newThemeId) => {
+    if (THEMES[newThemeId]) {
+      setThemeId(newThemeId);
+      applyTheme(newThemeId);
+    }
   };
 
   const setLanguage = (lang) => {
@@ -71,7 +68,17 @@ export function ThemeProvider({ children }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, language, setLanguage, t }}>
+    <ThemeContext.Provider
+      value={{
+        themeId,
+        currentTheme: THEMES[themeId] || THEMES['apple-obsidian'],
+        switchTheme,
+        allThemes: Object.values(THEMES),
+        language,
+        setLanguage,
+        t,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

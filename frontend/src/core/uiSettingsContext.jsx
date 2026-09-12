@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const UISettingsContext = createContext(null);
 
 export function UISettingsProvider({ children }) {
-  const [activeAppId, setActiveAppId] = useState('ai_studio');
+  const [activeAppId, setActiveAppId] = useState('home');
   const [isLaunchpadOpen, setIsLaunchpadOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
