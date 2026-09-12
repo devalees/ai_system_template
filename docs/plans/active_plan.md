@@ -1245,7 +1245,7 @@ Completely connect the React frontend SPA to the live Django backend so that all
 - [x] **Sub-task 4: Two-Way Client Management & Form Submission** - COMPLETED (Live `GET /api/v1/clients/`, `POST /api/v1/clients/` with automatic slug & org assignment; fixed Vite proxy `ALLOWED_HOSTS` 400 error)
 - [x] **Sub-task 5: Two-Way Task Kanban & QA Verdict Submission** - COMPLETED (`TaskWorkspace.jsx` query & create tasks, QA review verdicts via `/api/tasks/`)
 - [x] **Sub-task 6: Live Settings Hub, Credentials & TopBar Notifications** - COMPLETED (Live settings and credentials management; TopBar real-time unread notifications bell and dropdown)
-- [x] **Sub-task 7: Full System Verification, E2E Form Testing & Commit** - COMPLETED (205/205 backend tests pass 100%, frontend production build passes cleanly, Vite proxy verified with HTTP 201)
+- [x] **Sub-task 7: Full System Verification, E2E Form Testing & Commit** - COMPLETED (205/205 backend tests pass 100%, frontend production build passes cleanly, Vite proxy verified with HTTP 201; Commit: `bd54eed`)
 
 ### 3. Key Decisions & Deviations (Phase 34)
 - *2026-09-12*: User directed prioritizing full end-to-end two-way data integration with Django before further UI feedback.
