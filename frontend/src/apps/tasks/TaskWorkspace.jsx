@@ -145,7 +145,7 @@ export default function TaskWorkspace() {
                 flexDirection: 'column',
                 gap: '12px',
                 minHeight: '480px',
-                background: 'rgba(15, 21, 35, 0.5)',
+                background: 'var(--bg-elevated)',
               }}
             >
               {/* Column Title */}

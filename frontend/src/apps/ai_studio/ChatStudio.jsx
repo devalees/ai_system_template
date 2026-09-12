@@ -377,7 +377,7 @@ export default function ChatStudio() {
         height: 'calc(100vh - 38px)',
         display: 'flex',
         flexDirection: 'column',
-        background: 'radial-gradient(ellipse at 50% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 65%), var(--bg-primary)',
+        background: 'var(--bg-primary)',
         overflow: 'hidden',
         position: 'relative',
       }}
@@ -386,7 +386,7 @@ export default function ChatStudio() {
       <div
         style={{
           padding: '10px 18px',
-          background: 'rgba(15, 21, 35, 0.75)',
+          background: 'var(--bg-glass-heavy)',
           backdropFilter: 'var(--blur-glass)',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
@@ -587,8 +587,8 @@ export default function ChatStudio() {
                   className="glass-card"
                   style={{
                     padding: '14px 16px',
-                    background: isUser ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-glass-card)',
-                    borderColor: isUser ? 'rgba(99, 102, 241, 0.35)' : 'var(--border-subtle)',
+                    background: isUser ? 'rgba(29, 155, 240, 0.15)' : 'var(--bg-glass-card)',
+                    borderColor: isUser ? 'rgba(29, 155, 240, 0.35)' : 'var(--border-subtle)',
                     fontSize: '14px',
                     lineHeight: '1.6',
                     color: 'var(--text-primary)',
@@ -703,7 +703,7 @@ export default function ChatStudio() {
           transform: 'translateX(-50%)',
           width: 'calc(100% - 40px)',
           maxWidth: '840px',
-          background: 'rgba(15, 21, 35, 0.88)',
+          background: 'var(--bg-glass-heavy)',
           backdropFilter: 'var(--blur-glass)',
           WebkitBackdropFilter: 'var(--blur-glass)',
           border: '1px solid var(--border-glass)',

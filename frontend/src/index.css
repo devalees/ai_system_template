@@ -3,62 +3,72 @@
    ========================================================================== */
 
 :root {
-  /* Dark / Obsidian Glass Palette (Default) */
-  --bg-space: #06080e;
-  --bg-primary: #090d16;
-  --bg-secondary: #0f1523;
-  --bg-elevated: #161e31;
-  --bg-hover: #1c263d;
-  --bg-glass: rgba(15, 21, 35, 0.72);
-  --bg-glass-heavy: rgba(9, 13, 22, 0.85);
-  --bg-glass-card: rgba(22, 30, 49, 0.65);
+  /* Twitter / X Lights Out Palette (Default) */
+  --bg-space: #000000;
+  --bg-primary: #000000;
+  --bg-secondary: #000000;
+  --bg-elevated: #16181c;
+  --bg-hover: rgba(239, 243, 244, 0.1);
+  --bg-glass: rgba(0, 0, 0, 0.85);
+  --bg-glass-heavy: rgba(0, 0, 0, 0.95);
+  --bg-glass-card: #000000;
 
-  /* Foreground / Text */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-inverse: #090d16;
+  /* Foreground / Text (Twitter High-Readability Contrast) */
+  --text-primary: #f7f9f9;
+  --text-secondary: #71767b;
+  --text-muted: #536471;
+  --text-inverse: #000000;
 
-  /* Accent Vibrance */
-  --accent-primary: #6366f1;
-  --accent-primary-hover: #4f46e5;
-  --accent-primary-glow: rgba(99, 102, 241, 0.25);
-  --accent-purple: #8b5cf6;
-  --accent-pink: #ec4899;
-  --accent-cyan: #06b6d4;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
+  /* Accent Vibrance (Twitter Sky Blue) */
+  --accent-primary: #1d9bf0;
+  --accent-primary-hover: #1a8cd8;
+  --accent-primary-glow: rgba(29, 155, 240, 0.25);
+  --accent-purple: #7856ff;
+  --accent-pink: #f91880;
+  --accent-cyan: #1d9bf0;
+  --accent-emerald: #00ba7c;
+  --accent-amber: #ffd400;
   --accent-rose: #f43f5e;
 
-  /* Gradients */
-  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-  --gradient-brand-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-  --gradient-card-glow: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  /* Primary Button Tokens (Twitter "Post" Button) */
+  --btn-primary-bg: #ffffff;
+  --btn-primary-text: #000000;
+  --btn-primary-hover: #e6e6e6;
 
-  /* Borders & Highlights */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-glass: rgba(255, 255, 255, 0.14);
-  --border-hover: rgba(99, 102, 241, 0.4);
-  --border-active: #6366f1;
+  /* Gradients & Accents */
+  --gradient-brand: linear-gradient(135deg, #1d9bf0 0%, #7856ff 100%);
+  --gradient-brand-subtle: linear-gradient(135deg, rgba(29, 155, 240, 0.15) 0%, rgba(120, 86, 255, 0.15) 100%);
+  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  --gradient-card-glow: transparent;
 
-  /* Shadows & Depth */
-  --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --shadow-elevated: 0 12px 30px rgba(0, 0, 0, 0.45);
-  --shadow-glass: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.3);
-  --shadow-dock: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 1px 1px rgba(255, 255, 255, 0.12);
+  /* Borders & Dividers (Twitter Crisp Borders) */
+  --border-subtle: #2f3336;
+  --border-glass: #2f3336;
+  --border-hover: #536471;
+  --border-active: #1d9bf0;
+
+  /* Depth & Radii */
+  --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 12px 30px rgba(0, 0, 0, 0.7);
+  --shadow-glass: 0 16px 40px rgba(0, 0, 0, 0.75);
+  --shadow-glow: 0 0 24px rgba(29, 155, 240, 0.25);
+  --shadow-dock: 0 20px 50px rgba(0, 0, 0, 0.8);
 
   /* Filters */
-  --blur-glass: blur(24px) saturate(190%);
-  --blur-launchpad: blur(40px) saturate(210%);
-  --blur-subtle: blur(10px);
+  --blur-glass: blur(20px);
+  --blur-launchpad: blur(30px);
+  --blur-subtle: blur(8px);
 
-  /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'Fira Code', monospace;
+  /* Typography (Native Twitter Font Stack) */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Radii */
+  --radius-squircle: 20px;
+  --radius-card: 16px;
+  --radius-button: 9999px;
 
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -118,16 +128,14 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% -20%, rgba(99, 102, 241, 0.12) 0%, transparent 60%),
-              radial-gradient(ellipse at 100% 100%, rgba(236, 72, 153, 0.08) 0%, transparent 50%),
-              var(--bg-space);
+  background: var(--bg-space);
 }
 
 /* Arabic RTL Layout Configuration */
 html[dir="rtl"], body[dir="rtl"] {
   direction: rtl;
   text-align: right;
-  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* ==========================================================================
@@ -139,65 +147,46 @@ html[dir="rtl"], body[dir="rtl"] {
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-12px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.92); }
+  from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes launchpadZoomIn {
-  from { opacity: 0; transform: scale(1.08); filter: blur(10px); }
-  to { opacity: 1; transform: scale(1); filter: blur(0); }
-}
-
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
-  50% { box-shadow: 0 0 28px rgba(99, 102, 241, 0.6); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
+  0%, 100% { box-shadow: 0 0 12px var(--accent-glow); }
+  50% { box-shadow: 0 0 22px var(--accent-glow); }
 }
 
 /* ==========================================================================
-   GLASSMORPHISM & CORE COMPONENT STYLES
+   TWITTER / X "LIGHTS OUT" & CLEAN COMPONENT STYLES
    ========================================================================== */
 .glass-panel {
-  background: var(--bg-glass);
+  background: var(--bg-glass-heavy);
   backdrop-filter: var(--blur-glass);
   -webkit-backdrop-filter: var(--blur-glass);
-  border: 1px solid var(--border-glass);
-  box-shadow: var(--shadow-glass);
-  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card, 16px);
 }
 
 .glass-card {
   background: var(--bg-glass-card);
-  backdrop-filter: var(--blur-subtle);
-  -webkit-backdrop-filter: var(--blur-subtle);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  transition: all var(--transition-normal);
+  border-radius: var(--radius-card, 16px);
+  transition: all var(--transition-fast);
 }
 
 .glass-card:hover {
   border-color: var(--border-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-elevated);
+  background: var(--bg-elevated);
 }
 
 .glass-button {
@@ -205,14 +194,14 @@ html[dir="rtl"], body[dir="rtl"] {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 7px 18px;
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-glass);
-  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-button, 9999px);
   cursor: pointer;
   transition: all var(--transition-fast);
   text-decoration: none;
@@ -222,24 +211,25 @@ html[dir="rtl"], body[dir="rtl"] {
 .glass-button:hover {
   background: var(--bg-hover);
   border-color: var(--border-hover);
-  color: #fff;
-  transform: translateY(-1px);
 }
 
 .glass-button:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
+/* Twitter "Post" Style Pill Button */
 .glass-button-primary {
-  background: var(--gradient-brand);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+  background: var(--btn-primary-bg, #ffffff) !important;
+  color: var(--btn-primary-text, #000000) !important;
+  border: none !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
 }
 
 .glass-button-primary:hover {
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-  transform: translateY(-1px);
+  background: var(--btn-primary-hover, #e6e6e6) !important;
+  transform: scale(1.02);
 }
 
 .glass-input {

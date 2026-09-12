@@ -39,7 +39,7 @@ const translations = {
 };
 
 export function ThemeProvider({ children }) {
-  const [themeId, setThemeId] = useState(() => localStorage.getItem('app_theme_id') || 'apple-obsidian');
+  const [themeId, setThemeId] = useState(() => localStorage.getItem('app_theme_id') || 'twitter-lights-out');
   const [language, setLanguageState] = useState(() => localStorage.getItem('app_language') || 'en');
 
   useEffect(() => {

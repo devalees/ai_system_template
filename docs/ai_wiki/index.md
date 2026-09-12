@@ -223,10 +223,12 @@ An extensible, production-grade starter template pairing a **Django** web framew
 
 ### 18. Enterprise React Frontend Platform (`frontend/`)
 - **Containerized Architecture**: Isolated `node:20-alpine` Docker container (`frontend/Dockerfile` and `frontend/docker-compose.yml`) running React 18 + Vite on port 3000 with hot-module reloading and reverse proxy to Django backend.
-- **Apple-Style Platform Shell**:
-  - Top taskbar with system logo dropdown, active application indicator, dynamic app-injected menus and submenus, `Cmd+K` global command search, live AI token/budget telemetry pill, notifications bell, and language/theme toggles.
-  - Fullscreen Launchpad springboard with luxury glassmorphic squircles, instant category/search filtering, and dynamic user reordering.
-  - Mac-style floating dock at screen bottom with subtle hover magnification, active dot indicators, and quick-launch shortcuts.
+- **Pluggable Theme Engine (`themeEngine.js`)**:
+  - Default Theme: **X / Twitter Lights Out** (`twitter-lights-out`) with true pitch-black OLED background (`#000000`), crisp `#2f3336` borders, white pill buttons (`border-radius: 9999px`), electric sky blue accents (`#1d9bf0`), and native system typography.
+  - Multi-theme switching via TopBar and Settings Hub (`Apple Obsidian Glass`, `Apple Frosted Light`, `Odoo Enterprise Purple`).
+- **Odoo-Style Platform Hub & TopBar Navigation**:
+  - Central Application Hub (`AppGridLanding`) displaying department and business modules directly on canvas with search and category filtering.
+  - Slim top navigation bar (`38px`) with system identity, breadcrumb context, global search trigger (`Cmd+K`), theme switcher, RTL language toggle, and online status.
 - **Enterprise Multi-Modal AI Chat Studio (`src/apps/ai_studio/`)**:
   - Voice-first interface: real-time speech detection and dictation via Web Speech API and voice message recording.
   - Multi-modal attachments: upload audio, video, images, and documents/PDFs validated against model modality badges.

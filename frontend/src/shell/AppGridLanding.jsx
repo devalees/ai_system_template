@@ -63,7 +63,7 @@ export default function AppGridLanding() {
         flexDirection: 'column',
         alignItems: 'center',
         padding: '50px 24px 80px',
-        background: 'radial-gradient(ellipse at 50% 15%, rgba(99, 102, 241, 0.1) 0%, transparent 60%), var(--bg-primary)',
+        background: 'var(--bg-primary)',
         animation: 'fadeIn 0.25s ease',
       }}
     >
