@@ -1,5 +1,5 @@
 import React from 'react';
-import { AuthProvider } from './core/authContext';
+import { AuthProvider, useAuth } from './core/authContext';
 import { ThemeProvider } from './core/themeContext';
 import { UISettingsProvider, useUISettings } from './core/uiSettingsContext';
 import { initializeApps } from './apps';
@@ -7,6 +7,7 @@ import { getApp } from './apps/registry';
 import TopBar from './shell/TopBar';
 import AppGridLanding from './shell/AppGridLanding';
 import CommandSearch from './shell/CommandSearch';
+import LoginPage from './shell/LoginPage';
 
 // Initialize modular apps into the registry
 initializeApps();
@@ -41,13 +42,56 @@ function AppShell() {
   );
 }
 
+function RootContent() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          width: '100vw',
+          height: '100vh',
+          background: 'var(--bg-base)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          color: 'var(--text-secondary)',
+          fontSize: '13px',
+        }}
+      >
+        <div
+          style={{
+            width: '28px',
+            height: '28px',
+            border: '2px solid var(--border-glass)',
+            borderTopColor: 'var(--accent-primary)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
+        <span>Initializing Workspace...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  return (
+    <UISettingsProvider>
+      <AppShell />
+    </UISettingsProvider>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <UISettingsProvider>
-          <AppShell />
-        </UISettingsProvider>
+        <RootContent />
       </ThemeProvider>
     </AuthProvider>
   );

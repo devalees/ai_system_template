@@ -1254,4 +1254,32 @@ Completely connect the React frontend SPA to the live Django backend so that all
 - *2026-09-12*: Discontinued browser agent automation per user directive; user will test the live UI directly in their browser.
 
 ### 4. Current Focus
-Phase 34 completed. Ready for user testing of client creation and live forms in the browser.
+Phase 34 completed and verified.
+
+---
+
+## Phase 35: Authentication Gate, CSRF Trusted Origins & Django Admin Navigation
+
+- **Status**: COMPLETED
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-12 06:55:00+03:00
+
+### 1. Objective & Scope
+Address Notes 1, 2, and 3 from user feedback:
+- **Note 1 (Authentication Gate & Login Page)**: Provide dedicated `LoginPage.jsx` component, guard root navigation in `App.jsx`, support explicit user logout with session clearing, and offer 1-click admin login.
+- **Note 2 (CSRF Trusted Origins)**: Configure `CSRF_TRUSTED_ORIGINS` in `backend/core/settings.py` and `.env` to trust `http://localhost:3000`, `http://127.0.0.1:3000`, and `http://localhost:8000`.
+- **Note 3 (Django Admin Navigation & Vite Proxy)**: Route Django Admin directly to backend port 8000 in `TopBar.jsx` and configure `/admin` and `/static` reverse proxy rules in `frontend/vite.config.js`.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Django CSRF Trusted Origins Configuration** - COMPLETED
+- [x] **Sub-task 2: Django Admin Navigation & Vite Proxy for `/admin` & `/static`** - COMPLETED
+- [x] **Sub-task 3: Dedicated `LoginPage.jsx`, Authentication Guard & Logout Lifecycle** - COMPLETED
+- [x] **Sub-task 4: Frontend Compilation & Live Endpoints Verification** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 35)
+- *2026-09-12*: Implemented `LoginPage` with theme support (EN/AR), status indicator, and quick-login shortcut for development.
+- *2026-09-12*: Added `is_logged_out` flag in `sessionStorage` upon clicking Logout, preventing automatic background admin re-authentication so the user remains on the login page until explicitly signing in.
+- *2026-09-12*: Configured both Vite proxy (`/admin`, `/static`) and dynamic direct port resolution (`:8000/admin/`) to guarantee reliable access to Django Admin regardless of entry path.
+
+### 4. Current Focus
+Phase 35 completed. Ready for user browser verification.

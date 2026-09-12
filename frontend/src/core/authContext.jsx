@@ -20,6 +20,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function initAuth() {
       setLoading(true);
+
+      // If the user explicitly logged out, honor the choice and prompt for login
+      if (sessionStorage.getItem('is_logged_out') === 'true') {
+        setTokenState('');
+        setUser(null);
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
       let activeToken = localStorage.getItem('token');
       if (activeToken === 'dev-token') {
         localStorage.removeItem('token');
@@ -71,7 +81,6 @@ export function AuthProvider({ children }) {
           }
         } catch (err) {
           console.warn('[Auth] /api/auth/me/ verification failed, attempting token refresh:', err);
-          // Retry by obtaining fresh token
           const freshToken = await fetchAdminToken();
           if (freshToken) {
             try {
@@ -99,28 +108,35 @@ export function AuthProvider({ children }) {
       const data = await api.post('/api/token-auth/', { username, password });
       const authToken = data?.token;
       if (authToken) {
+        sessionStorage.removeItem('is_logged_out');
+        localStorage.setItem('token', authToken);
         setTokenState(authToken);
         api.setToken(authToken);
         if (data.user) {
           setUser(data.user);
           localStorage.setItem('user', JSON.stringify(data.user));
+          if (data.user.active_workspace) {
+            api.setWorkspace(data.user.active_workspace);
+          }
         }
         setIsAuthenticated(true);
-        return true;
+        return { success: true };
       }
-      return false;
+      return { success: false, error: 'No token received from backend' };
     } catch (err) {
       console.error('[Auth Error]:', err);
-      return false;
+      return { success: false, error: err.message || 'Invalid username or password' };
     } finally {
       setLoading(false);
     }
   };
 
   const logout = () => {
-    setTokenState('');
+    sessionStorage.setItem('is_logged_out', 'true');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('active_workspace');
+    setTokenState('');
     setUser(null);
     setIsAuthenticated(false);
     api.setToken('');

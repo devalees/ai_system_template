@@ -18,6 +18,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/admin': {
+        target: process.env.VITE_BACKEND_URL || 'http://django-template-backend:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/static': {
+        target: process.env.VITE_BACKEND_URL || 'http://django-template-backend:8000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });

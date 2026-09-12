@@ -536,7 +536,7 @@ export default function TopBar() {
                 <span>{t('settings')}</span>
               </button>
               <a
-                href="/admin/"
+                href={typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? `http://${window.location.hostname}:8000/admin/` : '/admin/'}
                 target="_blank"
                 rel="noreferrer"
                 className="glass-button"
