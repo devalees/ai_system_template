@@ -1,0 +1,21 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: react-template-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_BACKEND_URL=http://django-template-backend:8000
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+    external: true
+    name: backend_backend_network
