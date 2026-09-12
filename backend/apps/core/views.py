@@ -23,6 +23,7 @@ class CustomObtainAuthToken(APIView):
     Authenticate user with username and password, returning DRF token and user metadata.
     """
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []  # Bypass SessionAuthentication CSRF check on token endpoint
 
     def post(self, request, *args, **kwargs):
         serializer = AuthTokenSerializer(data=request.data, context={'request': request})

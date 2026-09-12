@@ -89,7 +89,12 @@ class ApiClient {
     const response = await this.request(endpoint, { method: 'POST', body });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || errorData.detail || `POST ${endpoint} failed (${response.status})`);
+      const msg = (Array.isArray(errorData.non_field_errors) && errorData.non_field_errors[0])
+        || errorData.error
+        || errorData.detail
+        || errorData.message
+        || `Request failed (${response.status})`;
+      throw new Error(msg);
     }
     return response.json();
   }
