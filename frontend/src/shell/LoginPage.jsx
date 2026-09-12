@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { useAuth } from '../core/authContext';
 import { useTheme } from '../core/themeContext';
-import { Lock, User, ShieldCheck, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
+import { Lock, User, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const { language, setLanguage, currentTheme, switchTheme, allThemes } = useTheme();
 
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin12345');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!username.trim()) {
-      setError(language === 'ar' ? 'يرجى إدخال اسم المستخدم' : 'Please enter your username');
+    if (!username.trim() || !password) {
+      setError(language === 'ar' ? 'يرجى إدخال اسم المستخدم وكلمة المرور' : 'Please enter both username and password');
       return;
     }
     setLoading(true);
@@ -26,12 +26,6 @@ export default function LoginPage() {
       setError(res.error || (language === 'ar' ? 'فشل تسجيل الدخول. تأكد من صحة البيانات.' : 'Login failed. Please check your credentials.'));
     }
     setLoading(false);
-  };
-
-  const handleQuickLogin = () => {
-    setUsername('admin');
-    setPassword('admin12345');
-    login('admin', 'admin12345');
   };
 
   return (
@@ -238,30 +232,6 @@ export default function LoginPage() {
             )}
           </button>
         </form>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '4px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            {language === 'ar' ? 'أو' : 'OR'}
-          </span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
-        </div>
-
-        {/* Quick Demo Login Shortcut */}
-        <button
-          onClick={handleQuickLogin}
-          disabled={loading}
-          className="glass-button"
-          style={{
-            justifyContent: 'center',
-            padding: '10px',
-            fontSize: '12px',
-            border: '1px dashed var(--border-subtle)',
-          }}
-        >
-          <Sparkles size={14} color="var(--accent-primary)" />
-          <span>{language === 'ar' ? 'دخول سريع بصلاحيات المدير (admin)' : 'Quick Login as Admin'}</span>
-        </button>
 
         {/* Footer info */}
         <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
