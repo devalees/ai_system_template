@@ -1155,5 +1155,57 @@ Transform client document storage from a generic, hash-sharded scheme into a cle
 - *2026-09-11*: Configured ephemeral test media directories (`tempfile.mkdtemp()`) across test suites in `apps.media` and `apps.clients` with automated `tearDownModule()` teardowns, eliminating persistent test clutter in the host `media/` folder.
 
 ### 4. Current Focus
-Phase 32 completed and verified (205/205 tests passing 100%). Ready for next directives.
+Phase 32 completed and verified (205/205 tests passing 100%). Transitioning to Phase 33.
+
+---
+
+## Phase 33: Enterprise React Frontend: Apple-Style Shell, Multi-Modal AI Studio & Odoo-Style Settings
+
+- **Status**: COMPLETED
+- **Active Branch**: `feat/enterprise-react-frontend`
+- **Last Updated**: 2026-09-12 04:47:00+03:00
+
+### 1. Objective & Scope
+Build a modern, containerized **React** frontend platform for the Universal AI System Template:
+- **Dockerized Container Architecture (`frontend/`)**: Containerize React 18 + Vite SPA using `node:20-alpine` on port 3000, connected to backend network with hot module reloading.
+- **Apple-Style Platform Shell**:
+  - Top taskbar with dynamic, reorderable menus and submenus, system status, global search launcher (`Cmd+K`), notification bell, and user profile avatar.
+  - Fullscreen Launchpad springboard with reorderable/draggable application icons and search filtering.
+  - Quick-access dock for pinned applications.
+- **Enterprise Multi-Modal AI Chat Studio (`src/apps/ai_studio/`)**:
+  - Voice-first interface: live speech-to-text audio detection and voice message recording.
+  - Multi-modal attachments (Video, Audio, Images, Documents/PDFs) with dynamic validation against model modality badges (`[🖼️ Vision]`, `[📁 PDF]`, `[🎙️ Audio]`, `[🎥 Video]`).
+  - Model control bar: instant switching between the 5 Department Heads (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `security_guard`), provider dropdown, model selector with context window metrics, and reasoning effort slider (`none`, `low`, `medium`, `high`, `max`).
+  - Real-time CLI-grade telemetry: live token counter (prompt + completion = total), real-time cost calculation ($ USD) using catalog token rates, generation speed (tokens/sec), and collapsible reasoning thought-blocks.
+- **Odoo-Style Unified Settings Hub (`src/apps/settings/`)**:
+  - Single-screen configuration center with categorized left sidebar (General, Navigation & UI, AI Models & Provider Credentials, Clients, Automations, Storage, Security).
+  - Contextual jumping: direct shortcut from any app to its dedicated configuration tab in Settings.
+- **Pluggable Modular App Registry & Schema Auto-Scaffolder**:
+  - Drop-in modular architecture (`src/apps/<name>/` with `manifest.js`, `menus.js`, `settings.js`, `pages/`).
+  - Universal generic table and form generator from DRF API options for zero-code automatic scaffolding of future domain apps (e.g., Accounting).
+- **First-Class Operational Apps**:
+  - Client CRM workspace (`apps/clients/`) with dynamic visual CSS budget gauges.
+  - Task Registry & Review Pipeline (`apps/tasks/`).
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Docker Containerization & React + Vite Scaffolding (`frontend/`)** - COMPLETED (Commit: `2b1b76b`)
+- [x] **Sub-task 2: Apple-Grade Design System, Tokens, Glassmorphism & RTL Support (`index.css`)** - COMPLETED (Commit: `63718a2`)
+- [x] **Sub-task 3: Apple-Style Platform Shell (TopBar, Menus, Launchpad Springboard & Dock)** - COMPLETED (Commit: `8a7ad69`)
+- [x] **Sub-task 4: Pluggable App Registry & Schema-Driven Auto-Scaffolder** - COMPLETED (Commit: `8a7ad69`)
+- [x] **Sub-task 5: Enterprise Multi-Modal AI Chat Studio (Voice, Media, Telemetry, Controls)** - COMPLETED (Commit: `8a7ad69`)
+- [x] **Sub-task 6: Odoo-Style Unified Settings Hub & App Tab Integrations** - COMPLETED (Commit: `8a7ad69`)
+- [x] **Sub-task 7: Operational Workspaces (Clients CRM & AI Tasks)** - COMPLETED (Commit: `8a7ad69`)
+- [x] **Sub-task 8: End-to-End Verification, Automated Testing & Documentation Synchronization** - COMPLETED (Commit: `docs`)
+
+### 3. Key Decisions & Deviations (Phase 33)
+- *2026-09-12*: Initialized Phase 33 per user directive to build a containerized React frontend.
+- *2026-09-12*: Selected Apple-style platform shell metaphor (top taskbar with dynamic submenus, fullscreen glassmorphic Launchpad springboard with reorderable app icons) combined with an Odoo-style single-screen Settings Hub with categorized sidebar.
+- *2026-09-12*: Designed the AI Chat Studio as a voice-first, multi-modal workspace (speech detection, video/audio/doc uploads) with live CLI-style telemetry (real-time token counters, generation speed, and cost calculation in $ USD).
+- *2026-09-12*: Adopted 2-tier hybrid extensibility: Pluggable modular apps (`src/apps/`) + Universal schema-driven CRUD scaffolder for zero-code future domain applications.
+- *2026-09-12*: Implemented `frontend/` Docker setup on port 3000 with hot-module reloading and production build testing (`npm run build` passing in 3.33s).
+- *2026-09-12*: Verified full backend test suite: 205/205 tests passing in 117s (100% pass rate).
+
+### 4. Current Focus
+Phase 33 completed and verified. Ready for next directives.
+
 

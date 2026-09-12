@@ -3,13 +3,15 @@
 ## 1. Technical Stack & Security Isolation
 
 - **Backend Web Framework**: Django 5.x + Django REST Framework (Python 3.11)
+- **Frontend Web Platform**: React 18 + Vite SPA with Apple-style Platform Shell & Odoo Settings
 - **Agent Engine**: Hermes Agent (`hermes-agent:local` / Nous Research)
 - **Database**: PostgreSQL 16
 - **Cache & Broker**: Redis 7
-- **Container Architecture**: **Two Isolated Docker Projects**
-  1. `backend/docker-compose.yml`: Encapsulates Django, Celery Worker, Celery Beat, PostgreSQL, and Redis in an internal network (`backend_network`).
-  2. `agent_service/docker-compose.yml`: Encapsulates Hermes Agent in an isolated network (`hermes_isolated_network`).
-- **Inter-Service Communication**: Strictly over HTTP REST API (`http://host.docker.internal:8000/api`) with zero shared container networks, storage, or privileges.
+- **Container Architecture**: **Three Decoupled Docker Projects**
+  1. `backend/docker-compose.yml`: Encapsulates Django, Celery Worker, Celery Beat, PostgreSQL, and Redis in `backend_network`.
+  2. `frontend/docker-compose.yml`: Encapsulates React 18 + Vite SPA in `node:20-alpine` on port 3000, connected to `backend_network`.
+  3. `agent_service/docker-compose.yml`: Encapsulates Hermes Agent in an isolated network (`hermes_isolated_network`).
+- **Inter-Service Communication**: Strictly over HTTP REST API (`http://host.docker.internal:8000/api`) with zero shared container storage or elevated privileges.
 
 ---
 
@@ -17,6 +19,7 @@
 
 | Service | Container Name | Host Port | Internal Port | Description |
 | :--- | :--- | :--- | :--- | :--- |
+| `frontend` | `react-template-frontend` | 3000 | 3000 | React 18 + Vite Platform Shell & AI Studio |
 | `backend` | `django-template-backend` | 8000 | 8000 | Django REST API & Admin Portal |
 | `celery_worker` | `django-template-celery-worker` | - | - | Celery Distributed Task Worker |
 | `celery_beat` | `django-template-celery-beat` | - | - | Celery Beat Database Scheduler |
