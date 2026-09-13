@@ -1,28 +1,40 @@
-"""FastAPI application factory and system diagnostics."""
+"""FastAPI application factory, lifecycle management, and micro-kernel integration."""
 
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Dict, Any
+from typing import AsyncGenerator, Dict, Any, List
 from datetime import datetime, timezone
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 import redis.asyncio as aioredis
 
 from core.config import settings
 from core.database import engine
+from core.kernel import kernel
+from core.event_bus import event_bus
+from core.exceptions import (
+    PlatformException,
+    platform_exception_handler,
+    validation_exception_handler,
+    global_exception_handler,
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Manage application startup and shutdown events."""
+    """Manage application startup and shutdown events with 4-phase micro-kernel boot."""
+    # 1. Boot Micro-Kernel (discover -> load -> migrate -> bootstrap)
+    await kernel.boot(app=app)
     yield
-    # Safely close database connection pool
+    # 2. Teardown resources
+    await event_bus.close()
     await engine.dispose()
 
 
 def create_app() -> FastAPI:
-    """Instantiate and configure the FastAPI application."""
+    """Instantiate and configure the FastAPI application with micro-kernel integration."""
     app = FastAPI(
         title="Sovereign Headless Backend Platform",
         description="High-performance async micro-kernel backend platform for sovereign enterprise apps.",
@@ -30,7 +42,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Enable CORS for frontend and external integrations
+    # 1. Enable CORS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -39,13 +51,31 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # 2. Register Global Standardized Error Envelope Handlers
+    app.add_exception_handler(PlatformException, platform_exception_handler)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(Exception, global_exception_handler)
+
+    # 3. Micro-Kernel Registry Diagnostics Endpoint
+    @app.get("/api/v1/kernel/modules", tags=["Kernel Diagnostics"])
+    async def get_kernel_modules() -> Dict[str, Any]:
+        """Return registered modules, execution load order, and AI-enabled capabilities."""
+        return {
+            "status": "online",
+            "total_modules": len(kernel.manifests),
+            "load_order": kernel.load_order,
+            "modules": kernel.list_modules(),
+            "ai_enabled_count": len(kernel.get_ai_enabled_modules()),
+        }
+
+    # 4. System Health Check Endpoint
     @app.get("/health", tags=["System Diagnostics"])
     async def health_check() -> JSONResponse:
         """Asynchronous system health check verifying database, redis, and celery connectivity."""
         components: Dict[str, str] = {}
         all_healthy = True
 
-        # 1. PostgreSQL Database Ping
+        # Database Ping
         try:
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
@@ -54,7 +84,7 @@ def create_app() -> FastAPI:
             components["database"] = f"error: {str(exc)}"
             all_healthy = False
 
-        # 2. Redis Cache Ping
+        # Redis Ping
         try:
             r = aioredis.from_url(settings.REDIS_URL, socket_connect_timeout=2)
             await r.ping()
@@ -64,7 +94,7 @@ def create_app() -> FastAPI:
             components["redis"] = f"error: {str(exc)}"
             all_healthy = False
 
-        # 3. Celery Broker Connectivity
+        # Celery Broker Connectivity
         try:
             r_celery = aioredis.from_url(settings.CELERY_BROKER_URL, socket_connect_timeout=2)
             await r_celery.ping()
@@ -73,6 +103,9 @@ def create_app() -> FastAPI:
         except Exception as exc:
             components["celery_broker"] = f"error: {str(exc)}"
             all_healthy = False
+
+        # Kernel Boot Status
+        components["kernel"] = "booted" if kernel._booted else "ready"
 
         response_payload = {
             "status": "healthy" if all_healthy else "degraded",
@@ -85,6 +118,7 @@ def create_app() -> FastAPI:
         http_status = status.HTTP_200_OK if all_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
         return JSONResponse(status_code=http_status, content=response_payload)
 
+    # 5. Root Information Endpoint
     @app.get("/", tags=["System Diagnostics"])
     async def root_endpoint() -> Dict[str, Any]:
         """Root API platform status and documentation links."""
@@ -94,6 +128,7 @@ def create_app() -> FastAPI:
             "status": "online",
             "docs": "/docs",
             "health": "/health",
+            "kernel_modules": "/api/v1/kernel/modules",
         }
 
     return app
