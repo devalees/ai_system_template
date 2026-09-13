@@ -86,32 +86,44 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
-## 3. Technology Stack & Runtime (Dimension 2 — In Progress)
+## 3. Technology Stack & Runtime (Dimension 2 — AGREED)
 
 - [x] **Web & API Framework**: **FastAPI** + **Uvicorn** (AGREED)
   * High-throughput asynchronous ASGI runtime.
   * Direct Pydantic v2 schema sharing with `agent_service/`.
   * Native WebSocket/SSE support for chatter, real-time alerts, and agent thought streams.
-  * Auto-generated OpenAPI/Swagger documentation.
-- [ ] **Database ORM & Query Layer**: *(Under review — Recommended: SQLAlchemy 2.0 Async + Alembic)*
-- [ ] **Primary Relational Database**: *(Under review — Recommended: PostgreSQL 16)*
-- [ ] **Asynchronous Task Queue & Cache**: *(Under review — Recommended: Redis + ARQ/Celery)*
+  * Auto-generated OpenAPI/Swagger documentation (`/docs`).
+- [x] **Primary Relational Database**: **PostgreSQL 16** (AGREED)
+  * Battle-tested ACID compliance for financial/enterprise transactions.
+  * Rich `JSONB` indexing support for flexible metadata and dynamic module attributes.
+  * Managed cleanly via Docker and `docker-compose.yml`.
+- [x] **Database ORM & Migrations**: **SQLAlchemy 2.0 Async** + **Alembic** (AGREED)
+  * Modern async session management (`asyncpg` driver).
+  * Ideal for compiling the Universal Filtering AST into parameterized SQL.
+  * Programmatic migration runner supporting decoupled modular migrations.
+- [x] **Asynchronous Task Queue & Broker**: **Redis** + **Celery** (AGREED)
+  * Distributed, reliable task queue for offloading Trigger-Condition-Action events, email dispatches, and heavy background jobs.
+  * Redis doubles as high-speed in-memory cache and pub/sub message broker.
+- [x] **Data Validation & Contracts**: **Pydantic v2** (AGREED)
+  * Universal schema contracts, Rust-speed serialization/validation.
+- [x] **Testing & Verification**: **Pytest** + **HTTPX (AsyncClient)** (AGREED)
+  * Fast, isolated in-memory testing for every module, action, and API endpoint.
 
 ---
 
 ## 4. Pending Dimensions for Collaborative Brainstorming
 
-- [ ] **Dimension 3: Database & Multi-Tenant Storage Strategy**
-  - Multi-tenancy implementation pattern (Shared DB + discriminator column vs. schema-per-tenant)
-  - Handling dynamic schema extensions / custom fields
+- [ ] **Dimension 3: Database & Multi-Tenant Storage Strategy** *(Currently in focus)*
+  - Multi-tenancy implementation pattern: **Shared Database with Discriminator (`tenant_id`/`company_id`)** vs. **PostgreSQL Schema-per-Tenant** (`tenant_a.*`, `tenant_b.*`).
+  - Handling dynamic custom attributes & fields per tenant (PostgreSQL `JSONB` vs. dedicated tables).
 - [ ] **Dimension 4: Asynchronous Execution, Task Queue & Event Bus**
-  - Background worker architecture for automated actions and CPU-bound workloads
-  - WebSocket / SSE event distribution
+  - Event dispatch flow: ORM hooks $\rightarrow$ Redis/Celery queue $\rightarrow$ Action execution $\rightarrow$ WebSocket pub/sub.
+  - Periodic / Scheduled cron runner (Celery Beat).
 - [ ] **Dimension 5: Hermes Agent Bridge & MCP Integration**
-  - Dynamic tool generation from module schemas
-  - Bi-directional communication between backend API and `agent_service` container
+  - Dynamic tool generation from module schemas.
+  - Bi-directional communication between backend API and `agent_service` container.
 
 ---
 
 ## 5. Current Focus
-Finalize Dimension 2 supporting stack (ORM, Database, Task Queue) with user.
+Brainstorm **Dimension 3: Database & Multi-Tenant Storage Strategy** (specifically evaluating Shared DB with `company_id` discriminator vs. Schema-per-tenant).
