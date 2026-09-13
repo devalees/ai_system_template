@@ -1283,3 +1283,31 @@ Address Notes 1, 2, and 3 from user feedback:
 
 ### 4. Current Focus
 Phase 35 completed. Ready for user browser verification.
+
+---
+
+## Phase 36: Enterprise Agent Upgrade & Self-Refining Platform (PENDING REVIEW)
+
+- **Status**: PENDING <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-13 13:14:00+03:00
+- **Dedicated Implementation Plan**: [`docs/plans/enterprise_agent_upgrade_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/enterprise_agent_upgrade_plan.md)
+
+### 1. Objective & Scope
+Transform Hermes Agent from an ephemeral script-bound prototype into an enterprise-grade, self-refining platform across 5 core pillars:
+1. **Institutional Semantic Memory (`pgvector`)**: Persistent task solution embeddings and client document semantic search.
+2. **Standardized Tooling (MCP)**: Connect standard Model Context Protocol servers over JSON-RPC.
+3. **Glass-Box Tracing & LLMOps (Langfuse)**: Waterfall latency, token pricing, and turn-by-turn thought trees in Docker.
+4. **Schema-Strict Self-Correction**: Pydantic tool input/output validation, mid-flight retry, and loop circuit breakers.
+5. **Continuous Improvement Flywheel (Golden Evals)**: 25+ deterministic domain test cases with automated `run_evals` CLI runner.
+
+### 2. Task Milestones (Pending Approval)
+- [ ] **Milestone 1: PostgreSQL pgvector & Semantic Memory Engine (`apps.memory`)** - PENDING
+- [ ] **Milestone 2: Standardized MCP Client Integration (`agent_service/mcp/`)** - PENDING
+- [ ] **Milestone 3: Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
+- [ ] **Milestone 4: Pydantic Schema Contracts & Mid-Flight Error Recovery** - PENDING
+- [ ] **Milestone 5: Golden Benchmark Evaluation Suite & CI/CD Runner** - PENDING
+
+### 3. Current Focus
+Plan submitted in [`docs/plans/enterprise_agent_upgrade_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/enterprise_agent_upgrade_plan.md). Awaiting user review and selection of initial execution milestone.
+
