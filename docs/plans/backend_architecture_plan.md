@@ -147,7 +147,86 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
-## 3. Technology Stack & Runtime (Dimension 2 — AGREED)
+## 3. Structural Taxonomy: Kernel vs. Base Utilities vs. Pluggable Apps
+
+To maintain strict modularity, clean boundaries, and zero circular dependencies, the backend is organized into three distinct tiers:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                     TIER 3: PLUGGABLE BUSINESS APPS (modules/apps/)                    │
+│   (Sales, CRM, Accounting, Invoicing, Procurement, Custom Business Verticals...)       │
+│   - Declares manifest.py (dependencies, models, schemas, settings, ai_enabled: bool)   │
+│   - Inherits base models, lookups, chatter, and attachments without tight coupling     │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ Extends & Consumes
+┌───────────────────────────────────────────▼────────────────────────────────────────────┐
+│                      TIER 2: CORE BASE UTILITIES (modules/base/)                       │
+│   (Foundational system services installed out-of-the-box)                              │
+│                                                                                        │
+│   1. identity_rbac     : Users (human/agent), Groups, 3-tier ownership, JWT & Tokens   │
+│   2. settings          : Per-module dynamic settings schemas & tenant overrides        │
+│   3. lookups           : Normalized dynamic lookup models (countries, currencies, etc.)│
+│   4. audit             : Immutable record mutation logs & audit reporting              │
+│   5. chatter           : Polymorphic threaded discussions, emails & WebSocket alerts   │
+│   6. documents         : Blob attachment manager with parent-inherited permissions     │
+│   7. automated_actions : Declarative Trigger-Condition-Action pipeline & Celery dispatch│
+│   8. import_export     : Universal bulk CSV/Excel/JSON mapping & streaming engine       │
+│   9. backup            : Disaster recovery CLI & atomic database/filestore bundles     │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ Powered by
+┌───────────────────────────────────────────▼────────────────────────────────────────────┐
+│                           TIER 1: SYSTEM KERNEL (core/)                                │
+│   (Pure infrastructure runtime engine; zero business domain logic)                     │
+│                                                                                        │
+│   - kernel.py          : Module discovery, manifest validator, acyclic DAG resolver    │
+│   - database.py        : Async SQLAlchemy engine, session factory & connection pools   │
+│   - context.py         : Request contextvar tracking active company_id & user_id       │
+│   - base_models.py     : Declarative base model (UUID PK, tenant auto-scoping, JSONB)  │
+│   - query_engine.py    : Universal Filter & Aggregator AST compiler into parameterized SQL│
+│   - event_bus.py       : In-process lifecycle event dispatcher & Redis Pub/Sub bridge  │
+│   - app.py             : FastAPI ASGI application factory & central exception router   │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Detailed Component Responsibilities:
+
+#### **Tier 1: System Kernel (`backend/core/`)**
+*Non-domain platform primitives; guarantees stability, tenant isolation, and lifecycle orchestration:*
+* **`kernel.py` (Module Engine)**: Scans directories, parses `manifest.py`, validates acyclic dependencies (DAG), and manages the boot lifecycle: `discover` $\rightarrow$ `load` $\rightarrow$ `migrate` $\rightarrow$ `bootstrap`.
+* **`database.py` & `context.py` (Multi-Tenancy Engine)**: Maintains the async connection pool (`asyncpg`) and ContextVars. Automatically injects `WHERE company_id = :active_company_id` into all queries and creates at the session level.
+* **`base_models.py` (Model Foundation)**:
+  * `BaseModel`: UUID primary key, `company_id`, audit timestamps (`created_at`, `updated_at`), and actor references (`created_by_id`, `updated_by_id`).
+  * `ExtensibleModelMixin`: Adds `custom_fields JSONB DEFAULT '{}'::jsonb` with automatic PostgreSQL GIN indexing.
+  * `ArchivableMixin`: Provides soft-delete capabilities (`is_active: bool`).
+* **`query_engine.py` (Universal AST Compilers)**:
+  * *Universal Filter Compiler*: Compiles nested boolean JSON trees (`AND`/`OR`) into parameterized SQLAlchemy filter clauses.
+  * *Universal Aggregator Compiler*: Compiles declarative aggregation specs (`SUM`, `AVG`, `COUNT`, conditional filters, and computed equations) into high-speed PostgreSQL aggregate queries.
+* **`event_bus.py` (Event Backbone)**: Catches in-process entity lifecycle mutations (`before_save`, `after_save`, `on_state_change`) and dispatches them to Celery or Redis Pub/Sub.
+
+#### **Tier 2: Core Base Utilities (`backend/modules/base/`)**
+*Pre-installed system modules that expose standardized capabilities for domain apps to inherit:*
+1. **`identity_rbac`**: Manages `User` (`user_type: "human" | "ai_agent"`), `Group`, `Permission`, and `UserGroupLink`. Enforces model-level capabilities and 3-tier ownership scopes (`GLOBAL`, `TEAM`, `OWN`).
+2. **`settings`**: Provides the dynamic configuration store (`ModuleSettings`) and standardized `GET/PATCH /api/v1/{module}/settings` endpoints for all apps.
+3. **`lookups`**: Houses normalized lookup models (`Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`) and loads initial ISO seed fixtures on installation.
+4. **`audit`**: Houses the immutable `AuditLog` table, capturing entity mutation diffs, actor identities, and audit reporting endpoints.
+5. **`chatter`**: Manages polymorphic threaded discussions `(res_model, res_id)`, activity logs, email thread synchronization, and WebSocket alert dispatching.
+6. **`documents`**: Attachment manager providing Content-Addressable Storage (`filestore/`) and parent-inherited permission security.
+7. **`automated_actions`**: The Trigger-Condition-Action (TCA) engine, orchestrating event rules, expression conditions, Celery execution, and Hermes AI Agent invocations (`invoke_ai_agent`).
+8. **`import_export`**: Reusable streaming service for CSV, Excel, and JSON batch processing with dynamic field mapping and validation.
+9. **`backup`**: Disaster recovery CLI tools and Celery Beat scheduled jobs producing unified atomic archive bundles (`dump.sql` + `filestore/` + `manifest.json`).
+
+#### **Tier 3: Pluggable Domain Applications (`backend/modules/apps/`)**
+*Independent business verticals; each modular app follows a uniform package layout:*
+* `manifest.py`: Package name, version, dependencies (`depends_on`), `ai_enabled: bool`, and settings schema ref.
+* `models.py`: Business models subclassing Kernel's `BaseModel` (inheriting multi-tenancy, custom fields, and audit timestamps).
+* `schemas.py`: Pydantic request/response models with agent-first documentation and realistic examples.
+* `routes.py`: FastAPI `APIRouter` mounting into the Kernel API gateway.
+* `actions.py`: Domain-specific business logic, state transitions, and automated action definitions.
+* `seed.json`: Default initial fixtures specific to the module.
+
+---
+
+## 4. Technology Stack & Runtime (Dimension 2 — AGREED)
 
 - [x] **Web & API Framework**: **FastAPI** + **Uvicorn** (AGREED)
   * High-throughput asynchronous ASGI runtime.
@@ -172,7 +251,32 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
-## 4. Database & Multi-Tenant Storage Strategy (Dimension 3 — AGREED)
+## 4. Dimension 2: Technology Stack & Runtime (AGREED)
+
+- [x] **Web & API Framework**: **FastAPI** + **Uvicorn** (AGREED)
+  * High-throughput asynchronous ASGI runtime.
+  * Direct Pydantic v2 schema sharing with `agent_service/`.
+  * Native WebSocket/SSE support for chatter, real-time alerts, and agent thought streams.
+  * Auto-generated OpenAPI/Swagger documentation (`/docs`).
+- [x] **Primary Relational Database**: **PostgreSQL 16** (AGREED)
+  * Battle-tested ACID compliance for financial/enterprise transactions.
+  * Rich `JSONB` indexing support for flexible metadata and dynamic module attributes.
+  * Managed cleanly via Docker and `docker-compose.yml`.
+- [x] **Database ORM & Migrations**: **SQLAlchemy 2.0 Async** + **Alembic** (AGREED)
+  * Modern async session management (`asyncpg` driver).
+  * Ideal for compiling the Universal Filtering AST into parameterized SQL.
+  * Programmatic migration runner supporting decoupled modular migrations.
+- [x] **Asynchronous Task Queue & Broker**: **Redis** + **Celery** (AGREED)
+  * Distributed, reliable task queue for offloading Trigger-Condition-Action events, email dispatches, and heavy background jobs.
+  * Redis doubles as high-speed in-memory cache and pub/sub message broker.
+- [x] **Data Validation & Contracts**: **Pydantic v2** (AGREED)
+  * Universal schema contracts, Rust-speed serialization/validation.
+- [x] **Testing & Verification**: **Pytest** + **HTTPX (AsyncClient)** (AGREED)
+  * Fast, isolated in-memory testing for every module, action, and API endpoint.
+
+---
+
+## 5. Dimension 3: Database & Multi-Tenant Storage Strategy (AGREED)
 
 - [x] **Multi-Tenancy Isolation Model**: **Pattern A (Shared Database with Discriminator `company_id`)** (AGREED)
   * Single, high-performance PostgreSQL 16 database.
@@ -187,9 +291,7 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
----
-
-## 5. Asynchronous Execution, Task Queue & Event Bus (Dimension 4 — AGREED)
+## 6. Dimension 4: Asynchronous Execution, Task Queue & Event Bus (AGREED)
 
 - [x] **Decoupled Event Pipeline**: **ORM Hooks $\rightarrow$ Redis Broker $\rightarrow$ Celery Worker** (AGREED)
   * Fast API endpoints return immediately in `<20ms`; slow side-effects (sending emails, invoking webhooks, generating PDF documents, running automated business actions) are queued in Celery.
@@ -204,7 +306,7 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
-## 6. Hermes Agent Bridge & MCP Integration (Dimension 5 — AGREED)
+## 7. Dimension 5: Hermes Agent Bridge & MCP Integration (AGREED)
 
 - [x] **Automated Action as the AI Execution Bridge** (AGREED)
   * Seamlessly unifies AI automation with the **Trigger-Condition-Action (TCA)** engine (Principle 3).
@@ -221,7 +323,7 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
-## 7. Comprehensive Architectural Blueprint Status
+## 8. Comprehensive Architectural Blueprint Status
 
 All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 * [x] **Dimension 1**: Architecture & Philosophy (16 core principles including contextual RBAC, per-app settings, relational dynamism, i18n, audit logging, first-class AI agent user identity, universal aggregator, bulk import/export, and unified atomic backups).
@@ -232,7 +334,7 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 
 ---
 
-## 8. Implementation Roadmap & Milestones
+## 9. Implementation Roadmap & Milestones
 
 ### Milestone 1: Container Infrastructure & Docker Scaffolding
 - [ ] Configure `backend`, `postgres:16-alpine`, `redis:7-alpine`, and `celery_worker` services in Docker Compose.
@@ -285,5 +387,5 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 
 ---
 
-## 9. Current Focus
-Milestones prioritized and documented. Ready for execution of **Milestone 1: Container Infrastructure & Docker Scaffolding**.
+## 10. Current Focus
+All architectural dimensions and structural taxonomies are finalized. Ready for execution of **Milestone 1: Container Infrastructure & Docker Scaffolding**.
