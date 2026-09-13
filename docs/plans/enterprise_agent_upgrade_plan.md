@@ -20,15 +20,17 @@ In the current setup, Hermes Agent suffers from two operational bottlenecks:
 1. **Amnesia (Lack of Long-Term Memory)**: Because agents start every task with zero historical context, they must spend multiple slow LLM turns exploring the environment, querying files, or guessing parameters.
 2. **Black-Box Execution**: When an agent takes 40+ seconds or chooses a sub-optimal path, there is no real-time telemetry to see which specific tool call or prompt caused the latency.
 
-### The Solution: The 5 Enterprise Pillars
+### The Solution: The 6 Enterprise Pillars
 By introducing:
 1. **Institutional Semantic Memory (`pgvector`)** within our existing PostgreSQL 16 database.
 2. **Model Context Protocol (MCP)** standardized external tooling.
 3. **Glass-Box Tracing & Observability (Langfuse)** in Docker.
 4. **Schema-Strict Tool Contracts & Mid-Flight Error Recovery**.
 5. **Golden Benchmark Evaluation Suite (`tests/evals/`) & Closed-Loop Improvement Flywheel**.
+6. **Cross-Project Knowledge Portability & Dual-Tier Architecture (Global vs. Local)**: Sanitized export/import pipelines for procedural wisdom and Git upstream sync for tools and prompts.
 
-The agents gain instant recall of prior successful solutions (slashing turn count and latency), complete execution transparency, and a rigorous test harness where every operational failure becomes a permanent test case that prevents regressions.
+The agents gain instant recall of prior successful solutions (slashing turn count and latency), complete execution transparency, a rigorous test harness where every operational failure becomes a permanent test case that prevents regressions, and the ability to carry hard-earned agent capabilities into future projects.
+
 
 ---
 
@@ -41,6 +43,8 @@ The agents gain instant recall of prior successful solutions (slashing turn coun
 | **3. Monitoring & Observability** | **Black-Box Cost Totals**<br>• We track high-level daily token totals in `SpendReport` and model CRUD diffs in `ActivityLog`.<br>• Cannot visualize turn-by-turn agent thought process, tool arguments, or per-span latency bottlenecks. | **Glass-Box Waterfall Tracing (Langfuse)**<br>• Lightweight Langfuse Docker container linked to the stack.<br>• Interactive visual trace trees: prompt injection, LLM thinking time, tool execution duration, token pricing per turn.<br>• 1-click filtering: "Tasks with latency > 15s" or "Tasks with tool errors". | **Transformative**<br>• Instant debugging of agent stalls.<br>• Complete auditability for enterprise compliance. |
 | **4. Error Recovery & Self-Correction** | **Late-Stage Review Gate**<br>• Quality control happens predominantly at the end of the pipeline when `qa_auditor` inspects the final output files.<br>• Sub-step tool failures rely on raw CLI stderr. | **Multi-Tiered Self-Healing**<br>• Strict Pydantic input/output schemas at tool boundaries.<br>• Automatic mid-flight retry with explicit error explanation injected into the context.<br>• Circuit breakers abort runaway tool loops before consuming token budgets. | **High**<br>• Prevents tool hallucination.<br>• Catches syntax and argument mistakes before wasting turns. |
 | **5. Continuous Improvement Cycle (The Flywheel)** | **Ad-Hoc Manual Tweaking**<br>• Improving an agent means guessing changes to `SOUL.md`.<br>• No automated way to verify if adjusting a prompt for one problem broke another capability. | **Closed-Loop Engineering (Golden Evals)**<br>• Automated benchmark suite of 25+ real-world domain scenarios executed via `pytest`.<br>• Clear quantitative score (e.g., "Pass Rate: 92%, Avg Cost: $0.03").<br>• Operational failures convert into new test cases in minutes. | **Transformative**<br>• Replaces prompt guesswork with data-driven software engineering.<br>• Zero regression risk when switching models. |
+| **6. Cross-Project Knowledge Portability** | **Siloed & Trapped**<br>• Capabilities and lessons learned in one domain (e.g. Accounting) cannot be exported without manual copy-pasting.<br>• Copying databases risks leaking private client data (PII). | **Dual-Tier Architecture & Knowledge CLI**<br>• Partitioned memories (`client_private` vs `system_generalized`).<br>• Git upstream sync for MCP tools and profile SOULs.<br>• CLI export/import (`export_agent_knowledge`) to seed new projects with seasoned agent wisdom on Day 1. | **Transformative**<br>• Compounding returns across all your software ventures.<br>• Zero risk of client data cross-contamination. |
+
 
 ---
 
@@ -238,6 +242,51 @@ flowchart TD
 
 ---
 
+### Milestone 6: Cross-Project Knowledge Portability & Dual-Tier Architecture
+
+#### 6.1 Objectives
+- Establish an automated, secure pipeline to transport procedural agent intelligence, tool enhancements, and lessons learned from domain projects (e.g. Accounting) into new repositories or back to the core starter template.
+- Implement strict memory scope partitioning (`client_private` vs `system_generalized`) to ensure confidential client data and PII never leak across project boundaries.
+
+#### 6.2 Technical Plan
+- **The Dual-Tier Architecture (Mirroring Antigravity's Global vs. Local Model)**:
+  - **Tier 1: Global Platform Layer**:
+    - Universal MCP tool servers (`agent_service/mcp/system_tools_server.py`).
+    - Base agent persona contracts (`SOUL.md` files).
+    - Base procedural memories (`system_generalized` seed knowledge).
+    - Shared upstream Git tracking (`devalees/ai_system_template`).
+  - **Tier 2: Local Project Layer**:
+    - Domain-specific Django models (`apps.accounting`, `apps.legal`, etc.).
+    - Client document storage partitions (`documents/clients/<client_id>/`).
+    - Tenant-isolated relational data and private episodic memories (`scope='client_private'`).
+- **Memory Scope Partitioning in `apps.memory.models.MemoryEntry`**:
+  - Add explicit `scope` field:
+    - `SCOPE_CLIENT_PRIVATE = 'client_private'` (financial figures, customer names, client invoices, PII).
+    - `SCOPE_SYSTEM_GENERALIZED = 'system_generalized'` (procedural rules, error workarounds, optimization patterns).
+- **Knowledge Export & Import CLI Engine (`apps.memory.management.commands`)**:
+  - `export_agent_knowledge`:
+    ```bash
+    python manage.py export_agent_knowledge --scope generalized --format jsonl --output fixtures/knowledge/domain_patterns.jsonl
+    ```
+    - Exports embeddings, solution summaries, and metadata for `system_generalized` records.
+    - Strips tenant IDs, user PKs, and any client-linked foreign keys.
+  - `import_agent_knowledge`:
+    ```bash
+    python manage.py import_agent_knowledge --input fixtures/knowledge/domain_patterns.jsonl --target-org <UUID>
+    ```
+    - Ingests vector embeddings directly into PostgreSQL `django-template-db`.
+    - Automatically builds vector index so new agents have instant recall from Turn 1.
+- **Git Upstream Sync Workflow for Tools & Prompts**:
+  - Standardized Git tracking for MCP tools and profile SOULs so improvements push back cleanly to the template repository.
+
+#### 6.3 Key Deliverables
+- [ ] Model scope field on `MemoryEntry` (`scope: client_private / system_generalized`)
+- [ ] Export command `python manage.py export_agent_knowledge` with PII sanitization
+- [ ] Import command `python manage.py import_agent_knowledge` with vector bulk-indexing
+- [ ] Documentation detailing the Global vs. Local Tier model in `docs/ai_wiki/`
+
+---
+
 ## 5. Phased Implementation Roadmap
 
 ```
@@ -264,7 +313,14 @@ Phase 39: Golden Evaluation Suite & Continuous Improvement Flywheel (Milestone 5
   ├── Step 2: Author 25 deterministic golden test cases across the 5 agent roles
   ├── Step 3: Implement `python manage.py run_evals` CLI with pass/fail metrics
   └── Step 4: Document the step-by-step Feedback Loop workflow in docs/ai_wiki/
+
+Phase 40: Cross-Project Knowledge Portability & Dual-Tier Architecture (Milestone 6)
+  ├── Step 1: Add scope classification to apps.memory models (client_private vs system_generalized)
+  ├── Step 2: Implement export_agent_knowledge command with sanitization filter
+  ├── Step 3: Implement import_agent_knowledge command with bulk vector indexing
+  └── Step 4: Validate cross-project knowledge import into clean database with 100% data privacy
 ```
+
 
 ---
 
@@ -290,3 +346,6 @@ Phase 39: Golden Evaluation Suite & Continuous Improvement Flywheel (Milestone 5
    - Malformed tool inputs trigger instant Pydantic correction without crash or unhandled 500 error.
 4. **Benchmark Score**:
    - `python manage.py run_evals` passes at >= 90% across all 25 golden test cases in under 3 minutes.
+5. **Cross-Project Knowledge Portability**:
+   - `python manage.py export_agent_knowledge --scope generalized` produces a sanitized, PII-free JSONL dataset that successfully imports into a fresh database with immediate vector recall on Turn 1.
+
