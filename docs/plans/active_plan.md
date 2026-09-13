@@ -1632,9 +1632,10 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - [x] **Sub-stage 5.5: `chatter` (Polymorphic Discussion & Real-time Collaboration)** - COMPLETED (Commit: `c0dcece`)
   - Models: `MailMessage` with polymorphic linkage `(res_model, res_id)`, `message_type: "comment" | "notification" | "ai_finding"`, and `Activity`.
   - Service layer (`ChatterService`), Redis Pub/Sub broadcaster, and WebSocket real-time thread subscription gateway (`/api/v1/chatter/ws/{res_model}/{res_id}`).
-- [ ] **Sub-stage 5.6: `documents` (Blob Storage & Inherited Permissions)**
-  - Content-Addressable Storage engine saving files to `filestore/` by SHA-256 hash.
-  - Parent-inherited permission model: access governed by read rights on target `res_model` / `res_id`.
+- [x] **Sub-stage 5.6: `documents` (Blob Storage & Inherited Permissions)** - COMPLETED (Commit: `5734a75`)
+  - Content-Addressable Storage engine (`storage.py`) saving files to `filestore/` partitioned by SHA-256 hash with deduplication.
+  - Polymorphic attachment metadata model (`DocumentAttachment`), service (`DocumentService`), and streaming upload/download REST endpoints (`/api/v1/documents/*`).
+  - Automated continuous OpenAPI and Postman synchronization validated.
 - [ ] **Sub-stage 5.7: `mail_gateway` (Outbound & Inbound Email Pipeline)**
   - Outbound SMTP server configuration with Jinja2 multi-lingual email templates.
   - Celery-queued async email sending with retry logic, failure tracking, and bounce management.
@@ -1704,7 +1705,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Sub-stage 5.4 Completed - Commit: `31b3e8a`)*: Implemented `audit` module: immutable `AuditLog` model capturing actor attribution and state diffs, `compute_instance_diff` delta generator, `AuditService.log_mutation` helper, and tenant-scoped REST exploration endpoints (`/api/v1/audit/` and `/api/v1/audit/entity/{model_name}/{record_id}`). 30/30 unit tests passing in container in 13.01s.
 - *2026-09-14 (Sub-stage 5.5 Completed - Commit: `c0dcece`)*: Implemented `chatter` module: polymorphic `MailMessage` and `Activity` models, `ChatterService` orchestrating thread persistence, in-process event emission, and real-time Redis Pub/Sub broadcasting (`sovereign:chatter:{company_id}:{res_model}:{res_id}`), with dedicated WebSocket gateway (`/api/v1/chatter/ws/{res_model}/{res_id}`). 33/33 unit tests passing in container in 15.44s.
 - *2026-09-14 (Rule Alignment & Continuous API Sync - Commit: `e4c3187`)*: Activated continuous OpenAPI and Postman synchronization mandated by [`fastapi_standards.md`](file:///home/ehab/.gemini/config/rules/fastapi_standards.md). Created [`backend/core/exporter.py`](file:///home/ehab/Desktop/economy_editor/backend/core/exporter.py) and generated initial [`docs/api/openapi.json`](file:///home/ehab/Desktop/economy_editor/docs/api/openapi.json), [`docs/api/postman_collection.json`](file:///home/ehab/Desktop/economy_editor/docs/api/postman_collection.json), and [`docs/api/postman_environment.json`](file:///home/ehab/Desktop/economy_editor/docs/api/postman_environment.json). Hardened all Pydantic schemas across all completed modules with `ConfigDict(json_schema_extra=...)` realistic examples and eliminated loose unstructured dictionaries from endpoint returns. Rebuilt Docker image with `email-validator` baked in and mounted `../docs:/docs`.
+- *2026-09-14 (Sub-stage 5.6 Completed - Commit: `5734a75`)*: Implemented `documents` module: Content-Addressable Storage (CAS) with SHA-256 deduplication and async file streaming (`aiofiles`), polymorphic `DocumentAttachment` metadata table, and complete REST endpoints (`POST /upload`, `GET /{id}`, `GET /{id}/download`, `GET /entity/...`, `DELETE /{id}`). Synchronized OpenAPI and Postman collection. 35/35 unit tests passing in container in 18.21s.
 
 ### 4. Current Focus
-Begin execution of **Stage 5, Sub-stage 5.6: `documents` (Blob Storage & Inherited Permissions)** in `backend/modules/base/documents/`, including immediate post-substage OpenAPI and Postman re-export.
+Begin execution of **Stage 5, Sub-stage 5.7: `mail_gateway` (Outbound & Inbound Email Pipeline)** in `backend/modules/base/mail_gateway/`, including Celery async sending pipeline, Jinja2 templating, and continuous API re-export.
 
