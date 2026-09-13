@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "1ec4b5fe-673d-4b22-ab23-9e3f908f4467",
+    "_postman_id": "7182af5a-c7fd-44c0-974f-6ab617a0a0af",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -16,6 +16,203 @@
     ]
   },
   "item": [
+    {
+      "name": "Document & Blob Storage Engine",
+      "item": [
+        {
+          "name": "Upload binary file attachment to content-addressable storage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "upload"
+              ],
+              "variable": []
+            },
+            "description": "Upload and hash binary file, saving to content-addressable filestore."
+          },
+          "response": []
+        },
+        {
+          "name": "Get document attachment metadata",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/:attachment_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                ":attachment_id"
+              ],
+              "variable": [
+                {
+                  "key": "attachment_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Retrieve metadata information for a single document attachment."
+          },
+          "response": []
+        },
+        {
+          "name": "Soft-delete a document attachment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/:attachment_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                ":attachment_id"
+              ],
+              "variable": [
+                {
+                  "key": "attachment_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Soft-delete attachment record while preserving CAS physical file for historical audit trails."
+          },
+          "response": []
+        },
+        {
+          "name": "Download raw binary file from content-addressable storage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/:attachment_id/download",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                ":attachment_id",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "attachment_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Stream binary file content with appropriate Content-Disposition headers."
+          },
+          "response": []
+        },
+        {
+          "name": "List all attachments attached to a business entity",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/entity/:res_model/:res_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "entity",
+                ":res_model",
+                ":res_id"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": ""
+                },
+                {
+                  "key": "res_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "List all attachments associated with a specific entity record."
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "Identity & Contextual RBAC",
       "item": [

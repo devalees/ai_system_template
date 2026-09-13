@@ -1169,6 +1169,256 @@
         }
       }
     },
+    "/api/v1/documents/upload": {
+      "post": {
+        "tags": [
+          "Document & Blob Storage Engine",
+          "Document Attachments"
+        ],
+        "summary": "Upload binary file attachment to content-addressable storage",
+        "description": "Upload and hash binary file, saving to content-addressable filestore.",
+        "operationId": "upload_attachment_api_v1_documents_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_attachment_api_v1_documents_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentAttachmentRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/documents/{attachment_id}": {
+      "get": {
+        "tags": [
+          "Document & Blob Storage Engine",
+          "Document Attachments"
+        ],
+        "summary": "Get document attachment metadata",
+        "description": "Retrieve metadata information for a single document attachment.",
+        "operationId": "get_attachment_metadata_api_v1_documents__attachment_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "attachment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Attachment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentAttachmentRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Document & Blob Storage Engine",
+          "Document Attachments"
+        ],
+        "summary": "Soft-delete a document attachment",
+        "description": "Soft-delete attachment record while preserving CAS physical file for historical audit trails.",
+        "operationId": "delete_attachment_api_v1_documents__attachment_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "attachment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Attachment Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{attachment_id}/download": {
+      "get": {
+        "tags": [
+          "Document & Blob Storage Engine",
+          "Document Attachments"
+        ],
+        "summary": "Download raw binary file from content-addressable storage",
+        "description": "Stream binary file content with appropriate Content-Disposition headers.",
+        "operationId": "download_attachment_binary_api_v1_documents__attachment_id__download_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "attachment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Attachment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/entity/{res_model}/{res_id}": {
+      "get": {
+        "tags": [
+          "Document & Blob Storage Engine",
+          "Document Attachments"
+        ],
+        "summary": "List all attachments attached to a business entity",
+        "description": "List all attachments associated with a specific entity record.",
+        "operationId": "list_entity_attachments_api_v1_documents_entity__res_model___res_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Res Model"
+            }
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Res Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentAttachmentRead"
+                  },
+                  "title": "Response List Entity Attachments Api V1 Documents Entity  Res Model   Res Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/chatter/{res_model}/{res_id}/messages": {
       "get": {
         "tags": [
@@ -1809,6 +2059,58 @@
           "record_id": "inv00000-0000-0000-0000-000000000001"
         }
       },
+      "Body_upload_attachment_api_v1_documents_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "Binary file upload"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Optional target entity model (e.g. invoice, contract)"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Optional target entity record UUID"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description or note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_attachment_api_v1_documents_upload_post"
+      },
       "CityCreate": {
         "properties": {
           "name": {
@@ -2184,6 +2486,107 @@
           "is_base": true,
           "name": "US Dollar",
           "symbol": "$"
+        }
+      },
+      "DocumentAttachmentRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "file_hash": {
+            "type": "string",
+            "title": "File Hash"
+          },
+          "file_size": {
+            "type": "integer",
+            "title": "File Size"
+          },
+          "mime_type": {
+            "type": "string",
+            "title": "Mime Type"
+          },
+          "storage_path": {
+            "type": "string",
+            "title": "Storage Path"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "name",
+          "file_hash",
+          "file_size",
+          "mime_type",
+          "storage_path",
+          "res_model",
+          "res_id",
+          "description",
+          "created_at"
+        ],
+        "title": "DocumentAttachmentRead",
+        "example": {
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-14T02:30:00Z",
+          "description": "Executed SLA contract signed by client CEO",
+          "file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "file_size": 245760,
+          "id": "doc00000-0000-0000-0000-000000000001",
+          "mime_type": "application/pdf",
+          "name": "signed_contract_2026.pdf",
+          "res_id": "c0000000-0000-0000-0000-000000000001",
+          "res_model": "contract",
+          "storage_path": "a0000000-0000-0000-0000-000000000001/e3/e3b0c442..."
         }
       },
       "GroupCreate": {
