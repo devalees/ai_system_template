@@ -1636,7 +1636,7 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
   - Content-Addressable Storage engine (`storage.py`) saving files to `filestore/` partitioned by SHA-256 hash with deduplication.
   - Polymorphic attachment metadata model (`DocumentAttachment`), service (`DocumentService`), and streaming upload/download REST endpoints (`/api/v1/documents/*`).
   - Automated continuous OpenAPI and Postman synchronization validated.
-- [x] **Sub-stage 5.7: `mail_gateway` (Outbound & Inbound Email Pipeline)** - COMPLETED (Commit: pending)
+- [x] **Sub-stage 5.7: `mail_gateway` (Outbound & Inbound Email Pipeline)** - COMPLETED (Commit: `af504ad`)
   - Outbound SMTP server configuration (`MailServer`) with Jinja2 multi-lingual email templates (`MailTemplate`).
   - Celery-queued async email sending (`mail_queue`) with retry logic, failure tracking, mock fallback, and REST endpoints.
 - [ ] **Sub-stage 5.8: `notification_engine` (Multi-Channel Push Subsystem)**
