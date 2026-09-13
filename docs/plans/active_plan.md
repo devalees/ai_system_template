@@ -1303,7 +1303,7 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 6. **Sovereign Package Portability**: Fully portable `agent_service/` directory with sanitized export/import CLI pipelines for procedural wisdom.
 
 ### 2. Task Milestones & Architectural Alignment
-- [x] **Sub-task 0: Architecture Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED (Synchronized Sovereign Decoupled Architecture, 6 Pillars, Langfuse :3100, sqlite-vec memory, FastMCP, and Tiered QA in `architecture.md` and `index.md`)
+- [x] **Sub-task 0: Architecture Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED (Commit: `a030672`)
 - [ ] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - PENDING
 - [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - PENDING
 - [ ] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
