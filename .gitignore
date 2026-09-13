@@ -13,26 +13,18 @@ env/
 venv/
 ENV/
 .venv/
-
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-/backend/media/
-!backend/apps/media/
-staticfiles/
+.pytest_cache/
 
 # Docker
 *.pid
 .docker/
 
 # Hermes & Agent Local Data
-hermes_data/sessions/
-hermes_data/logs/
-hermes_data/*.db
+agent_service/data/
 data/
-backend/hermes_root_env
+*.db
+*.db-journal
+*.log
 
 # IDE & OS
 .idea/
@@ -41,8 +33,3 @@ backend/hermes_root_env
 *.swo
 .DS_Store
 Thumbs.db
-
-# Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/

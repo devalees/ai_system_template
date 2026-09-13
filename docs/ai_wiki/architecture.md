@@ -1,21 +1,17 @@
-# System Architecture: Decoupled AI System Template
+# System Architecture: Sovereign Autonomous AI Agent Platform
 
-## 1. Technical Stack & Security Isolation
+## 1. Technical Stack & Isolation Architecture
 
-- **Backend Web Framework**: Django 5.x + Django REST Framework (Python 3.11)
-- **Frontend Web Platform**: React 18 + Vite SPA with Apple-style Platform Shell & Odoo Settings (Port 3000)
-- **Autonomous Agent Engine**: Hermes Agent (`hermes-agent:local` / Nous Research) in Docker (Port 8643)
-- **Relational Database**: PostgreSQL 16
-- **Cache & Broker**: Redis 7
-- **Embedded Semantic Vector Store**: `sqlite-vec` in `agent_service/data/memory.db` (zero external DB dependency)
-- **Tool Protocol**: Model Context Protocol (FastMCP) over in-process JSON-RPC (`agent_service/mcp/`)
-- **Glass-Box Tracing & LLMOps**: Langfuse (`ghcr.io/langfuse/langfuse:2`) on Port 3100
-- **Architectural Paradigm**: **Two Sovereign Microservices (100% Decoupled & Swappable)**
-  1. `backend/`: Django, Celery Worker, Celery Beat, PostgreSQL, and Redis in `backend_network`. Encapsulates enterprise business logic, relational tables, multi-tenant RBAC, and client accounts.
-  2. `agent_service/`: Sovereign, portable AI intelligence runtime holding its own 5 calibrated profiles, embedded vector memory (`memory.db`), standardized FastMCP tools, and independent golden evaluation benchmarks (`agent_service/evals/`).
-  3. `frontend/`: React 18 + Vite platform shell containerized on port 3000.
-  4. `observability/`: Standalone Langfuse telemetry container on port 3100.
-- **Inter-Service Communication**: Strictly over HTTP REST API (`http://host.docker.internal:8000/api`) and Model Context Protocol (MCP) with zero shared container storage, zero shared database connections, and zero elevated privileges.
+- **Agent Execution Engine**: Nous Research Hermes Agent (`hermes-agent:local`) containerized on port 8643.
+- **Embedded Semantic Vector Store**: `sqlite-vec` in `agent_service/data/memory.db` (in-process C-extension; zero external DB server dependency).
+- **Tool Protocol**: Model Context Protocol (FastMCP) over in-process JSON-RPC 2.0 (`agent_service/mcp/`).
+- **Glass-Box Tracing & LLMOps**: Standalone Langfuse container (`ghcr.io/langfuse/langfuse:2`) on port 3100.
+- **Evaluation Harness**: Independent `pytest` benchmark suite (`agent_service/evals/`).
+- **Knowledge CLI**: Sanitized procedural knowledge export/import engine (`agent_service/memory/cli.py`).
+- **Container Architecture**:
+  - Isolated Docker network (`hermes_isolated_network`).
+  - Completely self-contained: zero external web framework, zero database servers (PostgreSQL/Redis), zero shared host filesystems.
+  - Standardized gateway interface: OpenAI-compatible HTTP REST (`/v1/chat/completions`, `/v1/models`) and interactive terminal CLI (`hermes chat`).
 
 ---
 
@@ -23,13 +19,7 @@
 
 | Service | Container Name | Host Port | Internal Port | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `frontend` | `react-template-frontend` | 3000 | 3000 | React 18 + Vite Platform Shell & AI Studio |
-| `backend` | `django-template-backend` | 8000 | 8000 | Django REST API & Admin Portal |
-| `celery_worker` | `django-template-celery-worker` | - | - | Celery Distributed Task Worker |
-| `celery_beat` | `django-template-celery-beat` | - | - | Celery Beat Database Scheduler |
-| `db` | `django-template-db` | 5432 | 5432 | PostgreSQL 16 Relational Store |
-| `redis` | `django-template-redis` | 6379 | 6379 | Redis 7 Cache & Celery Broker |
-| `hermes` | `hermes-template-agent` | 8643 | 8642 | Hermes Agent Gateway daemon |
+| `hermes` | `hermes-template-agent` | 8643 | 8642 | Hermes Agent Gateway daemon (OpenAI-compatible) |
 | `langfuse` | `langfuse-template-observability` | 3100 | 3000 | Standalone Langfuse LLMOps Tracing Dashboard |
 
 ---
@@ -38,185 +28,108 @@
 
 ```
 economy_editor/
-├── agent_service/                   # Sovereign AI Agent Package (100% Decoupled & Portable)
+├── agent_service/                   # Sovereign AI Agent Package (100% Portable)
 │   ├── docker-compose.yml           # Hermes isolated container definition
-│   ├── profiles/                    # The 5 Calibrated Profiles (SOUL.md, config.yaml, profile.yaml)
-│   │   ├── orchestrator/            # Chief of Staff (intake & triage; FastMCP decompose_task_dag)
-│   │   ├── cost_controller/         # Financial auditor (FastMCP audit_token_budget + Langfuse)
-│   │   ├── qa_auditor/              # QA & compliance gatekeeper (Tiered Risk-Based validation)
-│   │   ├── comms_agent/             # Client service concierge (FastMCP client_service_action)
-│   │   └── security_guard/          # SecOps & threat auditor (FastMCP security_audit)
+│   ├── .env                         # Local environment & LLM provider credentials
+│   ├── .env.example                 # Example configuration template
+│   ├── profiles/                    # Calibrated Profiles (SOUL.md, config.yaml, profile.yaml)
 │   ├── mcp/                         # Internal Model Context Protocol Tool Ecosystem
 │   │   ├── system_tools_server.py   # FastMCP server exposing core capabilities over JSON-RPC
-│   │   └── schemas/                 # Pydantic input/output schemas for all MCP tools
+│   │   └── schemas/                 # Pydantic input/output validation schemas
 │   ├── memory/                      # Embedded Sovereign Vector Engine (sqlite-vec)
 │   │   ├── vector_store.py          # MemoryStore with cosine similarity search (<15ms)
 │   │   └── cli.py                   # Knowledge Export & Import CLI (PII-sanitized)
-│   ├── data/                        # Persistent Sovereign Storage
+│   ├── data/                        # Persistent Sovereign Storage (memory.db, runtime state)
 │   │   └── memory.db                # In-process sqlite-vec database
 │   ├── evals/                       # Independent Golden Benchmark Evaluation Suite
 │   │   ├── test_golden_evals.py     # 25+ deterministic domain test cases (pytest)
-│   │   └── conftest.py              # Standalone pytest fixtures (zero Django dependency)
-│   ├── telemetry/                   # Glass-Box Observability Hooks
-│   │   └── tracer.py                # OpenTelemetry & Langfuse telemetry interceptor
-│   └── skills/                      # Shared bootstrap skills (django_handshake)
-│       └── django_handshake/        # Container connectivity & handshake bootstrap
-├── backend/                         # Django Web Service
-│   ├── apps/
-│   │   ├── automation/              # Centralized Automation Engine & Service Registry
-│   │   │   ├── actions.py           # Registered action handlers (Hermes, webhook, script, internal)
-│   │   │   ├── admin.py             # Automation Admin with live toggles & Run Now action
-│   │   │   ├── engine.py            # Event dispatcher, condition evaluator & Celery worker bridge
-│   │   │   ├── forms.py             # Dynamic App/Model discovery & JSON Schema payload forms
-│   │   │   ├── models.py            # AutomationRule & AutomationLog
-│   │   │   ├── registry.py          # 4-category ServiceRegistry with dynamic introspection
-│   │   │   ├── scheduler.py         # django-celery-beat synchronization engine
-│   │   │   ├── tasks.py             # Celery asynchronous execution tasks
-│   │   ├── api_gateway/             # Developer API Gateway, Scoped Keys & Webhooks
-│   │   ├── audit/                   # Immutable Activity Audit Trail & Context Middleware
-│   │   ├── automation/              # Centralized Automation Engine & Service Registry
-│   │   ├── clients/                 # Client Management, 1-to-Many Users & AI Service Governance
-│   │   │   ├── admin.py             # ClientAdmin with dynamic CSS spend gauges & User inlines
-│   │   │   ├── models.py            # Client model (tenant-scoped, is_ai_enabled, dollar budgets)
-│   │   │   ├── serializers.py       # Client entity and budget status serializers
-│   │   │   ├── urls.py              # REST routing for /api/v1/clients/
-│   │   │   └── views.py             # ClientViewSet with /budget-status/ actions
-│   │   ├── core/                    # Core foundations, base models, settings hub & i18n
-│   │   ├── integration/             # Integration App & Hermes catalog
-│   │   ├── media/                   # Document & Media Management
-│   │   ├── meta_engine/             # Metadata Engine & Modular App Runtime
-│   │   ├── notifications/           # Universal Notifications Engine
-│   │   ├── reports/                 # Dynamic Visual Reporting & Vector PDF Engine
-│   │   └── tenants/                 # Multi-Tenancy, Organizations & Workspaces
-│   │       ├── admin.py             # Admin App Store & Studio UI
-│   │       ├── app_installer.py     # Multi-pass declarative app installer
-│   │       ├── app_uninstaller.py   # Reverse dependency guard & safe uninstaller
-│   │       ├── dependency_resolver.py # DAG topological dependency sorter
-│   │       ├── manifest_reader.py   # Package scanner and manifest parser
-│   │       ├── model_factory.py     # Dynamic in-memory model compiler
-│   │       ├── models.py            # SystemModule & Meta catalog models
-│   │       ├── schema_engine.py     # Dynamic PostgreSQL DDL engine
-│   │       ├── serializers.py       # Dynamic DRF entity serializer factory
-│   │       ├── signals.py           # Database DDL synchronization signals
-│   │       ├── urls.py              # Entity gateway & App Store routes
-│   │       └── views.py             # Polymorphic CRUD & schema endpoints
-│   ├── modules/                     # Modular Application Packages
-│   │   ├── contacts/                # Reference Contacts & Address Book app
-│   │   └── crm/                     # Reference CRM & Sales Pipeline app
-│   ├── core/                        # Django Project Configuration & Celery Setup
-│   │   ├── celery.py                # Celery application initialization
-│   │   └── settings.py              # Celery & django-celery-beat broker settings
-│   └── docker-compose.yml           # Django, Celery Worker, Celery Beat, DB, and Redis stack
-├── docs/
-│   ├── ai_wiki/                     # System architecture & documentation wiki
-│   │   ├── index.md                 # System overview & components
-│   │   └── architecture.md          # Detailed architectural patterns
-│   └── plans/
-│       └── active_plan.md           # Cumulative, append-only task plan
-└── scripts/
-    └── provision_profiles.py        # Automated profile provisioning script
+│   │   └── conftest.py              # Standalone pytest fixtures
+│   └── telemetry/                   # Glass-Box Observability Hooks
+│       └── tracer.py                # OpenTelemetry & Langfuse telemetry interceptor
+└── docs/
+    ├── ai_wiki/                     # System architecture & documentation wiki
+    │   ├── index.md                 # System overview & primary components
+    │   └── architecture.md          # Technical architecture & design patterns
+    ├── agent_team.md                # Workforce profile specifications
+    └── plans/                       # Active implementation plans
+        ├── active_plan.md           # Cumulative task tracking & milestones
+        └── enterprise_agent_upgrade_plan.md # 6-Pillar upgrade specification
 ```
 
 ---
 
-## 4. Data Models (`backend/apps/integration/models.py`)
+## 4. The 6 Sovereign Pillars: Deep Architectural Design
 
-### `Profile` (Aliased as `AgentProfile`)
-- `user`: OneToOneField to `auth.User` via automatic `post_save` lifecycle signals.
-- `is_agent`: Boolean flag indicating whether account acts as an autonomous AI agent.
-- `user_type`: Choice field (`human`, `agent`, `client`) for clear multi-user categorization.
-- `hermes_profile_name`: Hermes runtime folder/profile slug (`orchestrator`, `cost_controller`, etc.).
-- `name`: Profile identifier / alias (backward compatible).
-- `display_name`: Human-readable title (e.g. "Chief of Staff / Orchestrator").
-- `role`: Canonical role choice (`orchestrator`, `finance`, `quality_assurance`, `communications`, `knowledge_management`, `general`).
-- `provider`: Inference provider slug (`openrouter`, `anthropic`, `openai-api`, `gemini`, `deepseek`, etc.).
-- `model_name`: Selected model identifier (e.g. `google/gemini-2.5-flash`, `claude-sonnet-4-6`).
-- `reasoning_effort`: Thinking/reasoning token budget (`none`, `low`, `medium`, `high`, `max`).
-- `is_active`: Boolean flag controlling execution eligibility.
-- `description`: Role narrative and assignment boundaries.
-
-### `AgentTask`
-- `created_by`: ForeignKey to `auth.User` tracking dispatching agent / service account.
-- `task_name`: Human-readable task title.
-- `assigned_profile`: Foreign key to `AgentProfile`.
-- `status`: Workflow state (`pending`, `in_progress`, `review`, `completed`, `failed`).
-- `review_verdict`: QA decision (`pending`, `approved`, `rejected`, `changes_requested`).
-- `reasoning_effort`: Task-specific override (`inherit`, `none`, `low`, `medium`, `high`, `max`).
-- `cost_usd`: Measured token cost incurred during execution.
-- `reviewer_notes`: Structured feedback from `qa_auditor`.
-
-### `SpendReport`
-- `created_by`: ForeignKey to `auth.User` (must be `bot_cost_controller`).
-- `reported_by`: Profile identifier (typically `cost_controller`).
-- `total_cost_usd`: Aggregated expenditure.
-- `daily_budget_usd`: Configured ceiling.
-- `budget_status`: `OK`, `WARNING`, or `EXCEEDED`.
-- `total_tokens`: Token volume tracked across sessions.
-- `total_api_calls`: Total LLM invocations.
-- `recommendations`: Actionable model-efficiency and cost-reduction recommendations derived from benchmark intelligence.
-
-### `ModelBenchmark`
-- `model_identifier`: Canonical model ID (e.g. `google/gemini-2.5-flash`).
-- `benchmark_name`: Benchmark suite (`DeepSWE`, `SWE-bench`).
-- `score`: Primary pass-rate percentage ($0.0 - 100.0$).
-- `avg_cost_per_task`: Measured dollar cost per benchmark task.
-- `tokens_per_task`: Token consumption per task.
-- `agent_steps`: Average agent reasoning/tool steps per task.
-- `last_synced_at`: Synchronization timestamp.
-
----
-
-## 5. Hermes Multi-Profile Architecture & Reasoning Ladder
-
-- **Isolation**: Each profile maintains an isolated directory under `/root/.hermes/profiles/<name>/` with its own `config.yaml`, `SOUL.md`, `.env`, and SQLite `state.db`.
-- **Reasoning Effort Ladder**: Profiles configure native `agent.reasoning_effort` (`none`, `low`, `medium`, `high`, `max`). Hermes Agent automatically enforces wire clamping (`clamp_effort`) so unsupported vendor levels degrade gracefully to the nearest supported level without throwing errors.
-- **Invocation**: Agents are executed directly using profile and reasoning flags:
-  ```bash
-  hermes -p <profile_name> --reasoning <level> -z "Task prompt"
+### 4.1 Pillar 1: Embedded Sovereign Semantic Memory (`sqlite-vec`)
+- **Engine**: In-process C-extension `sqlite-vec` embedded directly inside Python, operating on `agent_service/data/memory.db`.
+- **Latency & Footprint**:
+  - Memory queries execute in-memory with sub-15ms latency.
+  - Footprint is ~10–25 MB RAM with zero external server dependencies ($0/month hosting).
+- **Data Schema**:
+  - `memory_entries`: `id` (TEXT PK), `category` (TEXT), `title` (TEXT), `content` (TEXT), `scope` (`generalized` vs `project_local`), `metadata_json` (TEXT), `created_at` (TIMESTAMP).
+  - `vec_entries`: Virtual vector table indexed via `sqlite-vec` (768 or 1536 dimensions).
+- **Pre-Flight Semantic Recall Loop**:
   ```
-- **Declarative Source of Truth**: Source definitions reside in `agent_service/profiles/` and are synchronized via `scripts/provision_profiles.py`.
+  [Task Request / User Prompt]
+             │
+             ▼
+  [Pre-Flight Hook: vector_store.recall_similar(task_prompt, top_k=2)]
+             │
+             ├── In-Process Cosine Distance Search (<15ms)
+             ▼
+  [Top-2 Proven Past Solutions Injected into Turn 1 System Prompt]
+             │
+             ▼
+  [Agent Solves Task in 1 Turn instead of 4+ Iterations] (50–70% Latency & Token Reduction)
+             │
+             ▼ (Upon Successful Validation)
+  [Post-Flight Hook: vector_store.add_memory(solution_summary)]
+  ```
 
 ---
 
-## 6. Dynamic Model Catalog Engine (`models.dev` & OpenRouter)
-
-- **Live Registry**: Integrates `models.dev/api.json` — the same universal registry powering Hermes Agent CLI — alongside OpenRouter (`https://openrouter.ai/api/v1/models`), with automatic in-memory and disk caching (`/tmp/models_dev_cache.json`, 4-hour TTL).
-- **Noise Suppression**: Applies Hermes' native regex filters (`_NOISE_PATTERNS`, `_GOOGLE_HIDDEN_MODELS`) to eliminate audio, TTS, embeddings, and deprecated models.
-- **Normalized Input/Output Modalities**: Extracts and standardizes `input_modalities` and `output_modalities` lists across OpenRouter (`architecture.input_modalities`) and `models.dev` (`modalities.input`). Supports `text`, `image`, `file` / `pdf`, `audio`, and `video`.
-- **Dynamic Admin Form & Specifications Card**: In Django Admin, selecting a `provider` triggers an asynchronous client fetch to `/api/hermes/models/?provider=<slug>`, populating `<optgroup>`-sorted models and rendering a live **Model Specifications & Pricing Card** displaying:
-  - Context Window length (e.g. 1,000,000 tokens)
-  - Input Token Cost ($ / 1M tokens)
-  - Output Token Cost ($ / 1M tokens)
-  - **Supported Modalities**: Color-coded pill badges for **Accepted Inputs** (`💬 Text`, `🖼️ Vision / Image`, `📁 Document / File`, `🎙️ Audio / Voice`, `🎥 Video`) and **Generated Outputs** (e.g. `🎙️ Audio`).
-  - Reasoning capabilities (`🧠 Reasoning Supported` badge).
-  - Compact option labels in the model dropdown containing quick capability badges, e.g. `[🖼️ Vision]`, `[📁 File]`, `[🖼️📁 Multi]`, or `[💬 Text]`.
-
+### 4.2 Pillar 2: Standardized Model Context Protocol (FastMCP) Tool Ecosystem
+- **Protocol**: Standard JSON-RPC 2.0 over in-process communication.
+- **FastMCP Server (`agent_service/mcp/system_tools_server.py`)**:
+  - Eliminates subprocess shell invocation overhead and terminal security risks.
+  - Exposes typed functions decorated with `@mcp.tool()`:
+    1. `decompose_task_dag`: Directed acyclic graph (DAG) objective decomposition with pre-flight memory recall.
+    2. `audit_token_budget`: Real-time token tracking and Langfuse telemetry evaluation against configured budget caps.
+    3. `validate_code_deliverable`: Multi-tier validator combining deterministic Python AST syntax checks ($0, <5ms) with conditional LLM reviews for high-risk changes.
+    4. `client_service_action`: Zero-trust document queries and client budget governance.
+    5. `security_audit`: High-speed in-memory regex scanner for secret leak detection, tenant boundaries, and permissions.
 
 ---
 
-## 7. Tiered Risk-Based Quality Assurance & Self-Correction State Machine
+### 4.3 Pillar 3: Standalone Glass-Box Tracing & LLMOps (Langfuse :3100)
+- **Containerized Observability**: Standalone Langfuse service (`ghcr.io/langfuse/langfuse:2`) running on port `3100:3000`.
+- **Telemetry Interceptor (`agent_service/telemetry/tracer.py`)**:
+  - Wraps agent inference loops with OpenTelemetry instrumentation:
+    - **Trace Root**: Task UUID, active profile name, calibrated reasoning effort.
+    - **Generation Spans**: Prompt text, thinking stream, output tokens, latency (ms), and exact dollar cost calculated via catalog token pricing.
+    - **Tool Spans**: MCP tool name, validated input arguments, execution duration, and exit status.
+  - Renders complete visual trace waterfalls in the Langfuse dashboard.
 
-Rather than forcing every task through a heavy, expensive 2nd LLM turn (`qa_auditor` with `reasoning: high`), the sovereign architecture employs a 3-tier risk-based validation pipeline that slashes routine QA review latency and cost by 80%:
+---
 
-### 7.1 The 3 Validation Tiers
-1. **Tier 1: Deterministic Syntax & Schema Compiler ($0 USD, <5ms)**:
-   - In-process Python AST compilation, JSON/YAML validation, placeholder hygiene, and Pydantic tool argument validation.
-   - Executes automatically without spending any LLM tokens.
-   - Rejects malformed arguments or syntax errors deterministically.
-2. **Tier 2: Mid-Flight Context Reflection & Auto-Correction**:
-   - When a Tier 1 check fails or a tool returns an error, the exact structured traceback is injected back into the active agent turn.
-   - The agent self-corrects immediately in-flight without aborting the task.
-   - Guarded by an anti-loop circuit breaker (`MAX_CONSECUTIVE_TOOL_FAILURES = 2`).
-3. **Tier 3: Conditional LLM QA Auditor Review**:
-   - `qa_auditor` is invoked via FastMCP `validate_code_deliverable` **only** when:
-     - The task touches high-risk domains (financial calculations, multi-tenant boundaries, security configurations).
-     - The assigned agent's self-confidence score is < 85%.
-     - Explicit human review is flagged in the task request.
+### 4.4 Pillar 4: Schema-Strict Execution & Mid-Flight Self-Correction
+- **Pydantic Tool Contracts (`agent_service/mcp/schemas/`)**:
+  - Every FastMCP tool defines rigid Pydantic argument and return schemas.
+  - Malformed tool invocations are rejected immediately in memory with zero API token spend and zero shell overhead.
+- **Mid-Flight Context Reflection**:
+  - Structured validation errors are formatted and injected directly into the active LLM context:
+    `"Error: Tool 'security_audit' requires 'mode' to be one of ['leaks', 'tenant', 'rbac']. Provided 'all'. Please correct your input."`
+  - The agent self-corrects mid-flight without crashing or failing the overall task pipeline.
+- **Anti-Loop Circuit Breaker**:
+  - Tracks consecutive failed tool attempts. If an agent repeats the same invalid tool invocation twice consecutively (`MAX_CONSECUTIVE_TOOL_FAILURES = 2`), execution aborts cleanly with diagnostic logs.
 
-### 7.2 The Tiered QA State Machine Flow
+---
+
+### 4.5 Pillar 5: Tiered Risk-Based Quality Assurance State Machine
+Rather than forcing every task through a heavy, expensive 2nd LLM turn with `reasoning: high`, the architecture employs a 3-tier risk-based validation pipeline:
 
 ```
-[AgentTask: In Progress] (Assigned Agent executes task)
+[Agent Task Execution]
         │
         ▼
 [Tier 1: In-Process AST & Schema Check] ──(Syntax Error)──► [Tier 2: In-Flight Context Injection]
@@ -235,1233 +148,47 @@ Rather than forcing every task through a heavy, expensive 2nd LLM turn (`qa_audi
         └── Low-Risk AND Confidence >= 85%  │ │
                 │                           │ │
                 ▼ (Direct Auto-Approve)     │ │
-        [AgentTask: Completed] ◄────────────┴─┘
+        [Task: Completed & Indexed] ◄───────┴─┘
                 ▲
-                └── [AgentTask: In Progress / Rejected] ◄─────┘
+                └── [Task: In Progress / Rejected] ◄────────┘
 ```
 
 ---
 
-## 8. Role-Based Access Control (RBAC) & Service Account Architecture
-
-To uphold the Principle of Least Privilege across the multi-agent ecosystem, agent profiles do not share a single master API key or operate with unbounded administrative access. Instead, each profile operates as an isolated Django Service Account bound to native Django permissions.
-
-### 8.1 Service Account & Permission Matrix
-
-| Profile | Bot User (`auth.User`) | Django Group (`auth.Group`) | Model Permissions (`auth.Permission`) | Endpoint Access |
-| :--- | :--- | :--- | :--- | :--- |
-| `orchestrator` | `bot_orchestrator` | `Agent_Orchestrator` | `view_agentprofile`, `view_agenttask`, `add_agenttask`, `change_agenttask` | POST/GET `/api/tasks/`, GET `/api/profiles/` |
-| `cost_controller` | `bot_cost_controller` | `Agent_CostController` | `view_spendreport`, `add_spendreport`, `view_agentprofile` | POST/GET `/api/spend-reports/`, GET `/api/profiles/` |
-| `qa_auditor` | `bot_qa_auditor` | `Agent_QAAuditor` | `view_agenttask`, `change_agenttask`, `view_agentprofile` | GET `/api/tasks/`, POST `/api/tasks/<id>/submit-verdict/` |
-| `comms_agent` | `bot_comms_agent` | `Agent_CommsAgent` | `view_agenttask`, `view_agentprofile` | GET `/api/tasks/`, GET `/api/profiles/` |
-| `security_guard` | `bot_security_guard` | `Agent_SecurityGuard` | `view_agenttask`, `view_agentprofile`, `view_activitylog`, `view_apikey`, `view_webhookevent` | GET `/api/tasks/`, GET `/api/profiles/`, GET `/api/v1/audit/logs/`, GET `/api/v1/api-keys/` |
-
-### 8.2 Endpoint Authorization & Defense-in-Depth
-
-- **`StrictDjangoModelPermissions`**: Custom DRF permission class mapping HTTP verbs to native Django permissions:
-  - `GET`, `HEAD` -> `view_<model>`
-  - `POST` -> `add_<model>`
-  - `PUT`, `PATCH` -> `change_<model>`
-  - `DELETE` -> `delete_<model>`
-- **Cost Controller Boundary**: `bot_cost_controller` possesses `add_spendreport` but lacks `add_agenttask`. Any attempt by `cost_controller` to POST to `/api/tasks/` is immediately rejected with `403 Forbidden`.
-- **Review Gate Defense**: `AgentTaskViewSet.submit_verdict` explicitly validates that the authenticated caller belongs to `Agent_QAAuditor` and holds `change_agenttask` permission. Submitting reviews from unauthorized profiles (such as `cost_controller` or `orchestrator`) is strictly blocked (`403 Forbidden`).
-- **Audit Trails**: `AgentTask` and `SpendReport` models capture `created_by`, automatically populated from `request.user` via DRF `perform_create()`.
-
-### 8.3 Runtime Token Provisioning Flow
-
-```
-[Django: seed_profiles]
-       │
-       ▼ (Generates bot users, groups, permissions & DRF tokens)
-[/tmp/agent_tokens.json]
-       │
-       ▼ (scripts/provision_profiles.py reads manifest)
-[/root/.hermes/profiles/<profile_name>/.env] (Injected inside Hermes container)
-       │
-       ▼
-[Hermes Runtime: DJANGO_API_TOKEN] (Sourced on profile execution: hermes -p <profile>)
-```
+### 4.6 Pillar 6: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)
+- **Harness**: Built entirely within `agent_service/evals/` and driven by standard `pytest`.
+- **Zero External Dependency**: Executes directly against the agent runtime (`pytest agent_service/evals/`) in any environment.
+- **25 Deterministic Golden Scenarios**:
+  1. `test_orchestrator_decomposes_complex_task`: Validates DAG generation, dependency ordering, and cycle rejection.
+  2. `test_security_guard_detects_api_key_leak`: Tests regex detection of OpenAI, OpenRouter, Anthropic, Stripe, and SSH keys.
+  3. `test_qa_auditor_rejects_syntax_errors`: Confirms Tier 1 deterministic rejection of invalid Python AST.
+  4. `test_memory_recall_returns_correct_prior_pattern`: Validates semantic search accuracy in `memory.db`.
+  5. `test_circuit_breaker_halts_infinite_loop`: Ensures runaway tool invocations halt at the 2nd consecutive failure.
+- **Quantitative Targets**: $\ge 90\%$ pass rate, $100\%$ tool invocation accuracy, $\le \$0.05$ cost per run, $\le 15$ seconds duration.
 
 ---
 
-## 9. Unified User-Profile Architecture & Live Hermes Engine Discovery
-
-### 9.1 Idiomatic 1-to-1 User Profile Lifecycle
-Rather than treating AI agents as an isolated, detached entity, the system follows standard Django best practices:
-- **`auth.User` as Universal Identity**: Every actor—human administrator, client, or autonomous AI agent—is represented by a standard Django `User`.
-- **Automatic Lifecycle Signal**: A `post_save` receiver on `User` automatically provisions or retrieves a linked `Profile` record (`user.profile`), eliminating orphaned records.
-- **Categorization Flags**:
-  - `is_agent`: Determines if the account executes LLM agent tasks.
-  - `user_type`: `human` (staff/internal), `agent` (bot worker), or `client` (external user).
-
-### 9.2 Live Hermes Profile Discovery
-- **Direct Engine Visibility**: The declarative profile definitions directory (`agent_service/profiles/`) is mounted read-only into `/app/agent_profiles/` inside the Django backend container.
-- **Service Layer (`HermesDiscoveryService`)**: Inspects runtime folders, dynamically parses `profile.yaml` and `config.yaml`, and returns structured metadata (display name, canonical role, default model).
-- **REST Discovery API**: `GET /api/hermes/profiles/` exposes available profiles live to client interfaces and Django Admin.
-
-### 9.3 Single-Screen Admin UI & 🔄 Reload Widget
-- **`CustomUserAdmin`**: Unregisters Django's default User admin to embed `ProfileInline` directly in the user edit page.
-- **Interactive Selector**: The `hermes_profile_name` input is rendered as a `<select>` dropdown accompanied by an AJAX **🔄 Reload Profiles** button (`hermes_profile_selector.js`).
-- **Dynamic Pre-fill**: Selecting an engine profile automatically pre-populates display name, canonical role, and default inference model while keeping `is_agent=True`.
-
----
-
-## 10. Centralized Automation Engine & Service Registry Architecture (`apps.automation`)
-
-### 10.1 Service Registry & Action Registration
-The automation framework decouples trigger detection from business execution via a centralized, in-memory `ServiceRegistry` instance (`automation_registry`):
-- **4 Categorized Service Types**:
-  - `hermes_agent`: Actions invoking Hermes Agent profiles or dispatching agent tasks.
-  - `internal_app`: Core domain actions (e.g. Django model updates, state synchronization).
-  - `script_service`: Custom local utility scripts and routines.
-  - `external_webhook`: Outbound HTTP webhook dispatches with customizable headers and payload mapping.
-- **Decorator-Based Registration**: Action handlers are registered cleanly via `@register_action`:
-  ```python
-  @register_action(
-      action_id="auto_provision_hermes_profile",
-      name="Auto-Provision Hermes Profile",
-      category="hermes_agent",
-      description="Generates bot user, DRF token, declarative files, and runtime .env",
-      payload_schema={...}
-  )
-  def auto_provision_hermes_profile(payload, context): ...
-  ```
-- **Dynamic Introspection**: Zero-touch model discovery utilizes `django.apps.apps.get_models()`. Form choices dynamically present all installed models formatted as `<app_label>.<ModelName>` and expose field dictionaries for target conditions.
-
-### 10.2 Triggers: Model Events, State Transitions & Time Schedules
-Each `AutomationRule` (exposed in Admin as **Automation Action**) is bound to either a `model_event` or `time_based` trigger:
-1. **Model Event & State Transition Triggers (Odoo-Style)**:
-   - Supported actions: `created` (post_save created=True), `updated` (post_save created=False), `field_changed` (state transitions), `deleted` (post_delete), or `any`.
-   - **State Transition Engine**: Employs a lightweight `pre_save` signal hook caching the database state (`_automation_old_values`). On `post_save`, `AutomationEngine` computes `changed_fields` and evaluates:
-     - `trigger_field`: Monitors a specific attribute (e.g. `status` or `review_verdict`).
-     - `previous_value`: Ensures the field transitioned *from* this value (e.g. `review`).
-     - `target_value`: Ensures the field transitioned *to* this value (e.g. `completed`).
-   - Dynamic lifecycle signals inspect `filter_conditions` (e.g. `{"is_agent": True}`).
-   - Safe signal connection: Core model signals are connected on module import, while dynamic models declared in active rules are connected post-migration and during rule save.
-2. **Time-Based Triggers**:
-   - **Mode: `once`**: One-shot trigger scheduled at a fixed `run_at` ISO datetime. Once fired, the rule automatically transitions `is_active=False`.
-   - **Mode: `recurring`**: Recurring interval or cron-based execution.
-   - **Supported Units**: `seconds`, `minutes`, `hours`, `days`, `weeks`, `months`.
-   - Native integration with `django_celery_beat.models.PeriodicTask`, `IntervalSchedule`, and `CrontabSchedule`.
-   - **Admin Cleanliness**: Raw Celery Beat tables (`ClockedSchedule`, `CrontabSchedule`, `IntervalSchedule`, `SolarSchedule`, `PeriodicTask`) are unregistered from Django Admin, presenting a clean interface centered exclusively on **Automation Actions** and **Automation Logs**.
-
-### 10.3 Celery & Celery Beat Execution Flow
-```
-[Event / Beat Clock]
-         │
-         ▼
-[AutomationEngine.evaluate_and_trigger()] 
-         │ (Applies filter_conditions & creates AutomationLog: pending)
-         ▼
-[Celery Task: run_automation_rule.delay(rule_id, context, log_id)]
-         │
-         ▼
-[Celery Worker: executes action handler]
-         │
-         ├─► [SUCCESS] ──► AutomationLog: status='success', output_data={...}
-         └─► [FAILURE] ──► AutomationLog: status='failed', error_message='...'
-```
-
-### 10.4 Flagship Action: Dynamic Hermes Profile Auto-Provisioning
-When an administrative user or API client creates an AI Agent account (`Profile.is_agent=True`):
-1. **Trigger**: Model event post-save on `integration.Profile` fires matching rule.
-2. **Execution**: Celery worker runs `auto_provision_hermes_profile`:
-   - Ensures an associated `auth.User` and DRF `Token` exist.
-   - Generates declarative profile files in `/app/agent_profiles/<profile_name>/`:
-     - `SOUL.md`: Role-specific system instructions.
-     - `config.yaml`: LLM provider, default model, and reasoning parameters.
-     - `profile.yaml`: Metadata manifest.
-   - Generates runtime environment file `/app/hermes_runtime_profiles/<profile_name>/.env` injecting:
-     - `DJANGO_API_TOKEN`
-     - `HERMES_PROFILE`
-     - `MODEL_NAME`
-     - Provider API keys.
-3. **Immediate Availability**: Hermes Agent detects the profile directory immediately without requiring container restarts.
-
-### 10.5 JSON Serialization & Resilient Architecture
-- **UUID & Datetime Handling**: To prevent database JSONField serialization errors (`TypeError: Object of type UUID is not JSON serializable`), `AutomationEngine` recursively transforms all inputs via `make_json_serializable()`.
-- **Decoupled Bootstrapping**: `AppConfig.ready()` bypasses database queries during initialization, ensuring zero `RuntimeWarning` or migration deadlocks on greenfield database setup.
-
-### 10.6 Next-Gen Odoo-Style Automation Actions (Phase 6)
-- **Semantic Separation of Source vs. Destination**:
-  - `trigger_model`: Source model monitored for database lifecycle triggers (`auth.User`, `integration.Profile`, `integration.AgentTask`).
-  - `target_model`: Destination model receiving automated record CRUD operations.
-- **Direct Target Model CRUD Operations**:
-  - `create`: Instantiates new records on `target_model` with mapped fields and type coercion.
-  - `update`: Locates records via `target_record_id`, `id`, `pk`, or context `pk`, updating attributes while protecting immutable fields.
-  - `delete`: Removes records identified by ID with transactional safety.
-- **Dynamic Field Mapping & Template Interpolation**:
-  - Declarative `field_mappings` support scalar constants and context interpolation (`{{username}}`, `{{pk}}`, `{{status}}`).
-  - Automatic relationship resolution: Foreign key fields automatically resolve username strings, scalar IDs, and related model instances.
-- **Visual Condition Rules Engine**:
-  - `condition_rules`: Evaluates structured operator rules (`==`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `in`, `is_empty`, `is_not_empty`) with dot-notation lookup (`profile.is_agent`).
-- **Dynamic Model & Field Introspection API**:
-  - `GET /api/automation/introspection/?model=<app_label.ModelName>` provides real-time schema specifications, field types, requirement constraints (`required_fields`), and choice options.
-  - Parameterless requests return a complete catalog of all installed system models grouped by Django application.
-- **System Signal Reification & Deletion Protection**:
-  - Core automation routines (`Auto-Provision Hermes Profile`, `Daily Spend Audit`, `QA Review Routing`, `Daily Budget Alert`) are marked `is_system=True`.
-  - Enforces deletion locks across `AutomationRule.delete()` (raising `ValidationError`) and Django Admin (`has_delete_permission`, `delete_queryset`), preventing accidental removal of foundational workflows.
-- **Reactive Dynamic Admin UI**:
-  - Static script `automation_reactive_admin.js` provides conditional fieldset toggles (showing/hiding Model Event vs. Beat Scheduling sections), live AJAX schema introspection, and interactive field mapping pills with required field badges.
-
----
-
-## 11. Decoupled Triggers & 1-to-N Action Pipelines (Phase 7)
-
-```
-                       ┌─────────────────────────┐
-                       │    AutomationTrigger    │
-                       │ (WHEN & Under What Cond)│
-                       └────────────┬────────────┘
-                                    │ 1-to-N
-             ┌──────────────────────┼──────────────────────┐
-             ▼                      ▼                      ▼
-    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-    │AutomationAction │    │AutomationAction │    │AutomationAction │
-    │ [Sequence: 10]  │    │ [Sequence: 20]  │    │ [Sequence: 30]  │
-    └────────┬────────┘    └────────┬────────┘    └────────┬────────┘
-             │                      │                      │
-             ▼                      ▼                      ▼
-  [Celery Task Dispatch] [Celery Task Dispatch] [Celery Task Dispatch]
-             │                      │                      │
-             ▼                      ▼                      ▼
-    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-    │  AutomationLog  │    │  AutomationLog  │    │  AutomationLog  │
-    │ (trigger,action)│    │ (trigger,action)│    │ (trigger,action)│
-    └─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-### 11.1 Decomposed Data Models
-- **`AutomationTrigger` ("WHEN")**: Defines root event sources, lifecycle rules, schedules, and filtering:
-  - `trigger_type`: `model_event`, `time_based`, `webhook`, `manual`.
-  - `trigger_model`, `event_type`, `filter_conditions`, `condition_rules`.
-  - State transitions: `trigger_field`, `previous_value`, `target_value`.
-  - Scheduling: `schedule_unit`, `schedule_value`, `scheduled_time`, `periodic_task`.
-  - Metrics: `last_triggered_at`, `trigger_count`.
-- **`AutomationAction` ("WHAT")**: Represents sequenced, executable steps linked 1-to-N to a parent trigger:
-  - `trigger`: ForeignKey to `AutomationTrigger` (`related_name='actions'`).
-  - `sequence`: Integer execution ordering (`10, 20, 30...`).
-  - Target model operations: `target_model`, `target_operation`, `field_mappings`.
-  - Service handlers: `action_category`, `action_type`, `action_params`.
-  - Metrics: `last_run_at`, `run_count`.
-- **`AutomationLog`**: Audit record retaining foreign keys to both `trigger` and `action`, capturing granular duration, status, context snapshots, output payloads, and stack traces.
-
-### 11.2 Unified Asynchronous Celery Execution
-- All automated actions execute asynchronously via Celery distributed workers (`execute_automation_action_task.delay(action.id, context, trigger_source)`).
-- Eliminates synchronous execution blockages on web server worker threads, ensuring sub-millisecond HTTP response cycles, Redis task queueing, and uniform observability.
-- Celery Beat schedules trigger `scheduled_automation_task`, which automatically evaluates the trigger and enqueues all active actions in sequential order.
-
-### 11.3 Universal System Signal Reification
-- **Reified User Profile Lifecycle**: `auth.User` creation is elevated into a first-class automation pipeline (`Auto-Provision Profile on User Creation` trigger + `Provision Django User Profile` action handler).
-- Eliminates unobserved hidden side effects and brings core Django framework lifecycle events under the centralized visibility and audit tracking of `AutomationLog`.
-
-### 11.4 Reactive Multi-Action Admin UI
-- `AutomationTriggerAdmin` embeds `AutomationActionInline` (with dynamic model and action introspection) and `AutomationLogInline`.
-- Allows operators to configure root triggers and view/edit multi-step action sequences and recent execution audit logs on a single unified screen.
-- Enhanced with `automation_reactive_admin.js` for instant schema introspection pills and visual condition presets.
-
----
-
-## 12. Interactive Condition Rules Table Builder & Temporal Engine (Phase 8)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ 🎯 Visual Condition Rules (Trigger Filters)                                            │
-├──────────────────────────┬──────────────────────────┬──────────────────────┬───────────┤
-│ Field (Model-Aware)      │ Operator                 │ Expected Value       │ Actions   │
-├──────────────────────────┼──────────────────────────┼──────────────────────┼───────────┤
-│ [ due_date (Date)      ▼]│ [ > (Greater / After)  ▼]│ [ 2026-09-09       ] │ [ ✕ Del ] │
-│ [ status (Status)      ▼]│ [ == (Equals)          ▼]│ [ completed        ] │ [ ✕ Del ] │
-│ [ notes (Notes)        ▼]│ [ is_empty (Is Null)   ▼]│ [ (disabled)       ] │ [ ✕ Del ] │
-├──────────────────────────┴──────────────────────────┴──────────────────────┴───────────┤
-│ [ + Add Condition ]  [ 🗑️ Clear All ]                                                  │
-│ 💡 Value Formatting & Database Type Guide:                                             │
-│ 📅 Dates (Django Standard): YYYY-MM-DD (e.g. 2026-09-09)                                │
-│ ⏱️ Timestamps: YYYY-MM-DD HH:MM:SS                                                     │
-│ 🔢 Numbers: 10, 3.75, -5.0 | 🔤 Booleans: true / false                                 │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 12.1 Interactive Table Widget in Django Admin
-- Replaces raw JSON editing in `condition_rules` with a responsive spreadsheet-like table.
-- Dynamically discovers all fields from the selected `trigger_model` via the Introspection API (`/api/automation/introspection/?model=...`).
-- Supported Operators: `==`, `!=`, `>`, `>=`, `<`, `<=`, `contains`, `not_contains`, `in`, `not_in`, `is_empty`, `is_not_empty`.
-- Adapts value input dynamically: disables for null checks, provides type badges, and renders date format reminders.
-- Implements continuous two-way synchronization with the underlying Django `JSONField`.
-
-### 12.2 Date Formatting Standard & Engine Temporal Parsing
-- Standardizes date values on the Django / PostgreSQL ISO 8601 standard: `YYYY-MM-DD` (Year-Month-Day).
-- In `AutomationEngine.evaluate_single_condition`, temporal values (`date`, `datetime`, and ISO strings) are parsed via `try_parse_temporal()`.
-- Supports chronological comparisons (`<`, `<=`, `>`, `>=`, `==`, `!=`) directly comparing date and datetime components without failing numeric conversions or relying on lexicographical strings.
-
----
-
-## 13. Unified Filter Conditions Engine with Boolean Logic (AND/OR) & Visual Group Builder (Phase 9)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ 🎯 Trigger Filter Conditions (Boolean Rules with AND, OR & Groups)        [🗑️ Reset All]│
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [Match for Trigger: ALL of the following (AND) ▼]                                      │
-│   ├── [ cost_usd (Decimal) ▼] [ > (Greater Than) ▼] [ 10.0            ] [ ✕ ]          │
-│   │                                                                                    │
-│   └── ┌── [Match: ANY of the following (OR) ▼] ── Sub-Group ( ... )   [✕ Delete Group] │
-│       ├── [ status (Choice)   ▼] [ == (Equals)     ▼] [ review        ] [ ✕ ]          │
-│       ├── [ status (Choice)   ▼] [ == (Equals)     ▼] [ urgent        ] [ ✕ ]          │
-│       └── [ + Add Condition ]  [ + Add Group (...) ]                                   │
-│                                                                                        │
-│   [ + Add Condition ]  [ + Add Group (...) ]                                           │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ 💡 Value Formatting & Database Type Guide:                                             │
-│ 📅 Dates (Django Standard): YYYY-MM-DD (e.g. 2026-09-09)                                │
-│ ⏱️ Timestamps: YYYY-MM-DD HH:MM:SS                                                     │
-│ 🔢 Numbers: 10, 3.75, -5.0 | 🔤 Booleans: true / false                                 │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 13.1 Boolean Algebra & Recursive Evaluation Tree
-The filtering engine unifies trigger condition evaluation into a single authoritative recursive Boolean algebra structure:
-- **Recursive Boolean Specification**:
-  ```json
-  {
-    "combinator": "AND",
-    "rules": [
-      {"field": "cost_usd", "operator": ">", "value": 10.0},
-      {
-        "combinator": "OR",
-        "rules": [
-          {"field": "status", "operator": "==", "value": "review"},
-          {"field": "status", "operator": "==", "value": "urgent"}
-        ]
-      }
-    ]
-  }
-  ```
-- **Evaluation Semantics (`AutomationEngine.evaluate_filter_tree`)**:
-  - `AND`: Short-circuits on the first rule/group returning `False`.
-  - `OR`: Short-circuits on the first rule/group returning `True`.
-  - Leaf Rules: Evaluated via `evaluate_single_condition()`, supporting dot-notation nested attributes (`profile.is_agent`), operators (`==`, `!=`, `>`, `>=`, `<`, `<=`, `contains`, `not_contains`, `in`, `not_in`, `is_empty`, `is_not_empty`), and temporal ISO date comparison.
-- **In-Flight vs. Database Query Lifecycle**:
-  - **Database Model Events (`model_event: created, updated, deleted`)**: The filter runs in-memory against the in-flight snapshot context captured during the signal lifecycle (`post_save`).
-  - **Time-Based Triggers (`time_based`)**: The filter conditions act as database query parameters when querying eligible records for batch processing.
-- **Full Backward Compatibility**: Seamlessly handles legacy flat dictionaries (`{"is_agent": True}`) and flat lists (`[{"field": ...}]`) without requiring database migrations or manual conversion.
-
-### 13.2 Option A Visual Group Builder Component
-- Implemented in `automation_reactive_admin.js` as an interactive, hierarchical card tree.
-- Uses left-border indented card blocks (`.is-nested` with `border-left: 4px solid #0284c7`) to visually represent mathematical parentheses `(...)`.
-- Allows users to nest arbitrary sub-groups (`+ Add Group (...)`) with combinators (`AND` / `OR`).
-- Features real-time two-way JSON synchronization writing to `filter_conditions` and mirroring to `condition_rules`.
-- Displays dynamic model introspection field dropdowns, field type badges, and inline date formatting reminders.
-
----
-
-## 14. Action Params Assistant, Persona-Specific Prompt Presets & Template Resolution (Phase 10)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ 🤖 Action Assistant: hermes_profile:cost_controller             hermes_agent           │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Monitor token consumption, track operational budget, and audit expenditures.          │
-│                                                                                        │
-│ 💡 Quick Action Presets (Click to Load):                                               │
-│ [ 📊 Daily Token & Budget Audit ]  [ 🔍 Audit Task Spend ]  [ ⚠️ Budget Overrun Check ]│
-│                                                                                        │
-│ ⚡ Insert Context Variables:                                                           │
-│ [ {{pk}} ] [ {{username}} ] [ {{task_name}} ] [ {{cost_usd}} ] [ {{status}} ] [ {{now}} ]│
-│                                                                                        │
-│ 📋 Expected Parameters:                                                                │
-│ prompt: Natural language task instruction dispatched to the agent                      │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 14.1 Interactive Action Params Assistant (`automation_reactive_admin.js`)
-- Dynamically rendered in both standalone `AutomationActionAdmin` and inline action rows on `AutomationTriggerAdmin`.
-- Binds to `action_type` changes and queries `/api/automation/services/` to load persona descriptions, parameter schemas, and production presets.
-- **1-Click Presets**: Immediately populates pre-crafted, production-ready JSON into the `action_params` textarea.
-- **Context Variable Insertion**: Displays trigger context variables (`{{pk}}`, `{{task_name}}`, `{{cost_usd}}`, `{{username}}`, `{{status}}`, `{{now}}`), inserting them directly at the cursor position.
-- **Schema Guidance**: Explains expected keys and data structures (e.g. `prompt: string`).
-
-### 14.2 Persona-Specific Prompt Presets (`registry.py`)
-- Standard presets tailored to the 5 core Nous Research Hermes Agent personas:
-  - **`cost_controller`**: Daily token & budget audit, task spend verification against thresholds, budget overrun anomaly alerts.
-  - **`qa_auditor`**: Review task output deliverables & submit verdict, scan for hardcoded secrets and unfinished placeholders.
-  - **`orchestrator`**: Triage & decompose new intake tasks, synthesize deliverables across sub-tasks.
-  - **`comms_agent`**: Draft professional client milestone and progress updates.
-  - **`security_guard`**: Run zero-trust secret leak checks, tenant boundary isolation audits, and API gateway threat scans.
-  - **System Handlers**: Generic webhook payload dispatches, user profile auto-provisioning.
-
-### 14.3 Recursive Template Variable Resolution (`engine.py`)
-- In `AutomationEngine.execute_action`, `resolve_nested_template` recursively scans `action_params` data structures (strings, dicts, lists).
-- Embedded placeholders like `Audit task #{{pk}} ('{{task_name}}') costing ${{cost_usd}}` are dynamically interpolated at runtime against the in-flight trigger execution context.
-- Exact scalar matches (e.g. `{{cost_usd}}` or `{{pk}}`) are coerced cleanly to native numbers or strings.
-- Audit logs in `AutomationLog.input_context` capture the resolved parameters for full transparency and reproducibility.
-
----
-
-## 15. Direct On-Page Automation Execution & Context Builder (Phase 11)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ Automation Trigger / Action Change Form                                                │
-│                                                     [ ▶ Run Pipeline Now ] [ History ] │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Fields & Inlines ...                                                                   │
-│                                                                                        │
-│ [ Save ]  [ Save and continue editing ]                  [ ▶ Run Pipeline Now ]        │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 15.1 Direct On-Page Execution Mechanisms
-- **`AutomationTriggerAdmin`**:
-  - Top `object-tools` button: `▶ Run Pipeline Now` (`admin:automation_trigger_run_now`).
-  - Injected button in `.submit-row` at the bottom of the change form.
-  - Action column in changelist view: `▶ Run Pipeline`.
-- **`AutomationActionAdmin`**:
-  - Top `object-tools` button: `▶ Run Action Now` (`admin:automation_action_run_now`).
-  - Injected button in `.submit-row` at the bottom of the change form.
-  - Action column in changelist view: `▶ Run Action`.
-- **`AutomationActionInline`**:
-  - Inline row control: `▶ Run Step #{sequence}: {name}` directly alongside active toggle.
-
-### 15.2 Rich Execution Context Builder (`admin.py`)
-- `build_execution_context(model_identifier, user)`:
-  - Dynamically inspects the target or trigger model (e.g. `integration.AgentTask`).
-  - Extracts field values from the latest live database record (e.g. `pk`, `task_name`, `cost_usd`, `status`).
-  - Provides sensible fallback defaults (`task_name="Sample Agent Task"`, `cost_usd=15.50`, etc.) if the table is empty.
-  - Injects `username`, `user_id`, `manual_trigger=True`, and `force_execution=True`.
-  - Ensures interpolated prompt parameters in `action_params` (e.g. `{{task_name}}`, `{{cost_usd}}`) evaluate cleanly without missing keys.
-
-### 15.3 Engine Manual / Force Execution Support (`engine.py`)
-- `AutomationEngine.execute_trigger` and `AutomationEngine.execute_action` support the `force_execution` flag:
-  - Bypasses inactive trigger status when an operator explicitly tests an action or pipeline from the admin interface.
-  - Skips conditional rule filtering during manual testing, allowing operators to verify action execution and prompt formatting immediately.
-  - Records full timing, duration, and structured outputs in `AutomationLog`.
-
-### 15.4 Hermes Agent Gateway Authentication & Timeout Resilience
-- **Credential Synchronization**:
-  - The backend communicates with the Hermes Gateway daemon (`http://host.docker.internal:8643/v1/chat/completions`) using the `Authorization: Bearer <API_SERVER_KEY>` header.
-  - Automatically falls back to `HERMES_API_KEY` from Django settings or environment to ensure seamless authorization.
-- **Configurable Timeouts**:
-  - Multi-profile agent audits and complex reasoning routines require generous HTTP timeouts.
-  - Configurable `HERMES_REQUEST_TIMEOUT = 120` (seconds) introduced in `core/settings.py` and passed to `requests.post(..., timeout=(10, timeout_val))` in `apps.automation.actions.py`.
-- **Status Classification**:
-  - Responses returning HTTP 4xx/5xx status codes or gateway error bodies are explicitly categorized as `status="failed"` in `AutomationLog` with the full response body captured for debugging.
-
-### 15.5 Action Deduplication & Idempotent Seeding Architecture
-- **Pipeline Multi-Action Execution**:
-  - `AutomationEngine.execute_trigger` executes all active `AutomationAction` records attached to a trigger in sequence order (`sequence=10, 20...`).
-  - To prevent duplicate action dispatches, each trigger maintains a distinct pipeline of action handlers.
-- **Idempotent Seeder Reconciliation (`seed_automations.py`)**:
-  - Detects and reconciles any legacy auto-generated action records (e.g. `f"{trigger.name} - Action"`) produced during schema migrations.
-  - Automatically re-links historical `AutomationLog` audit trails to canonical action records before purging redundant entries, ensuring idempotent runs with zero duplicate action creation.
-
----
-
-## 16. Core Foundations, Modular App Settings & Bilingual Multi-Language Engine (`apps.core`) (Phase 12)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        apps.core Foundational Architecture                             │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ 1. Abstract Base Models:                                                               │
-│    • UUIDModel (Non-enumerable uuid4 PKs)                                              │
-│    • TimeStampedModel (Auto-indexed created_at, updated_at)                            │
-│    • SoftDeleteModel (Paranoid model: objects.alive() vs all_objects, restore())       │
-│    • AuditableModel (Auto created_by / updated_by via contextvars CurrentUserMiddleware)│
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ 2. Odoo-Style Modular Application Settings Framework:                                  │
-│    • Declarative App Registration: `@register_settings_group('automation', ...)`       │
-│    • Typed Validation: int, str, float, bool, choice, secret, json                     │
-│    • Secret Encryption & UI Masking: AES/Signing crypto with `••••••••` masking        │
-│    • Dual-Layer Resolution: Redis Cache (TTL) ➔ DB (AppSettingValue) ➔ Code Fallback  │
-│    • Unified Settings Hub in Admin: Single-screen view with categorized app sidebar    │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ 3. Bilingual Multi-Language Engine (English / Arabic):                                 │
-│    • GNU gettext extraction & compilation (`locale/ar/LC_MESSAGES/django.mo`)         │
-│    • LocaleMiddleware with URL prefix, Cookie, and Accept-Language header resolution   │
-│    • BiDi / Native RTL Layout for Arabic with full Django Admin translation            │
-│    • User Profile Preference: `preferred_language` on `Profile` with 1-click switching│
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 16.1 Abstract Base Models (`apps.core.models`)
-- **`TimeStampedModel`**: Standardizes indexed `created_at` and `updated_at` fields across domain models.
-- **`UUIDModel`**: Equips domain models with UUIDv4 primary keys to defend external APIs against automated record ID enumeration attacks.
-- **`SoftDeleteModel`**: Implements paranoid deletion semantics:
-  - Default `objects` manager delegates to `SoftDeleteQuerySet.alive()`, concealing soft-deleted records from standard queries.
-  - `all_objects` manager includes soft-deleted records for auditing and recovery.
-  - Safe lifecycle methods: `.delete(soft=True)`, `.hard_delete()`, and `.restore()`.
-- **`AuditableModel`**: Captures `created_by` and `updated_by` foreign keys to `auth.User`, auto-populated during `save()` via the active request context.
-
-### 16.2 Thread-Safe Request Context Tracking (`apps.core.middleware`)
-- Employs Python 3.11's standard `contextvars.ContextVar("current_user")` to capture the authenticated user from `request.user`.
-- Context token is guaranteed to reset in a `finally` block upon response delivery, preventing user state leakage across worker threads.
-- Enables `AuditableModel.save()` to record audit actors without polluting method signatures or requiring explicit user arguments.
-
-### 16.3 Odoo-Style Modular Application Settings Framework (`apps.core.settings_registry`)
-- **App-Scoped Declarations**: Each installed application declares its own configuration parameters cleanly in `conf.py` using `@register_settings_group`.
-- **Rich Typed Parameters**: Supports `int`, `str`, `float`, `bool` (toggle switches), `choice` (dropdowns), `secret` (encrypted credentials), and `json`.
-- **Cryptographic Secret Protection (`crypto.py`)**: Sensitive values (API keys, webhook signing secrets) are encrypted and signed using Django's `SECRET_KEY` before database persistence, and masked in the UI.
-- **Fast Dual-Layer Resolution (`config.py`)**:
-  - `get_setting("app.KEY", default=...)` queries Redis cache (`core:setting:<app>:<key>`) first.
-  - If missing from cache, queries PostgreSQL `AppSettingValue`.
-  - Falls back to registered setting defaults, then Django `settings.py` / `.env`.
-  - Signal-based automatic cache invalidation on save and delete guarantees zero-downtime configuration updates across all running Django processes and Celery workers.
-
-### 16.4 Unified Django Admin Settings Hub (`apps.core.admin`)
-- Accessible directly at `/admin/core/appsettingvalue/hub/` with a prominent changelist shortcut button.
-- Clean Odoo-style visual interface featuring:
-  - Left navigation sidebar of installed applications (`⚙️ General Platform`, `⚡ Automation Engine`, `🤖 AI Agents & Hermes`).
-  - Native toggle switches for booleans, number steppers, dropdowns for choices, and show/hide toggles for secrets.
-  - Instant form persistence updating PostgreSQL and invalidating Redis cache.
-
-### 16.5 Bilingual Multi-Language Architecture (English / Arabic)
-- Configured in `core/settings.py` with `LocaleMiddleware`, `LANGUAGES = [('en', 'English'), ('ar', 'العربية')]`, and `LOCALE_PATHS`.
-- Compiled Arabic binary translation catalog (`backend/locale/ar/LC_MESSAGES/django.mo`).
-- Full BiDi / RTL support automatically formatting Arabic interface layouts.
-- User profile preference `Profile.preferred_language` on `apps.integration.models.Profile` exposed in Django Admin user forms.
-- DRF content negotiation dynamically resolves localized error messages and responses based on client `Accept-Language` headers.
-
----
-
-## 17. Metadata Engine, Dynamic Schema & Modular App Runtime (`apps.meta_engine`)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│             METADATA-DRIVEN ARCHITECTURE & MODULAR RUNTIME ECOSYSTEM                   │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                        │
-│  [Modular App Packages] (modules/<app_id>/manifest.json)                               │
-│       │                                                                                │
-│       ▼                                                                                │
-│  [AppManifestReader] ────► [DependencyResolver (DAG Topological Sort)]                 │
-│                                    │                                                   │
-│                                    ▼                                                   │
-│                       [Multi-Pass AppInstaller]                                       │
-│                       Pass 1: MetaModels & Scalar MetaFields                           │
-│                       Pass 2: Relational Foreign Key Links                             │
-│                       Pass 3: MetaViews (Forms, Lists, Kanbans)                        │
-│                       Pass 4: MetaActions & Hierarchical MetaMenus                     │
-│                       Pass 5: MetaReports (CSS Paged Media Templates)                  │
-│                                    │                                                   │
-│                 ┌──────────────────┴──────────────────┐                                │
-│                 ▼                                     ▼                                │
-│     [DynamicSchemaEngine]                 [DynamicModelFactory]                        │
-│     (Django SchemaEditor DDL)             (In-Memory Compilation)                      │
-│     • CREATE / DROP TABLE                 • Compiles (UUID, SoftDelete, Auditable)     │
-│     • ADD / DROP COLUMN                   • Registers into django.apps.apps            │
-│     • Physical PostgreSQL Tables          • Standard ORM CRUD (filter, save, join)     │
-│                 │                                     │                                │
-│                 └──────────────────┬──────────────────┘                                │
-│                                    ▼                                                   │
-│                     [Declarative REST API Gateway]                                     │
-│                     • /api/v1/entities/<slug>/ (Polymorphic CRUD)                      │
-│                     • /api/v1/entities/<slug>/schema/ (Introspection)                  │
-│                     • Row-Level MetaRule Security Evaluation                           │
-│                     • DynamicEntitySerializerFactory                                   │
-│                                    ▲                                                   │
-│                                    │                                                   │
-│                     [Odoo-Style Admin App Store]                                       │
-│                     • /admin/meta_engine/systemmodule/app-store/                       │
-│                     • 1-Click Install / Uninstall with 3 Data Policies                 │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 17.1 Metadata Catalog Architecture (`apps.meta_engine.models`)
-- **`SystemModule`**: Registry tracking discoverable and installed applications, metadata (name, version, category, icon, summary, author), status (`uninstalled`, `installed`, `error`, `to_upgrade`), and dependency graph.
-- **`MetaModel`**: Programmatic entity definition (`name`, `label`, `label_plural`, `app_label`, `table_name`, `is_system`, `is_auditable`, `is_soft_delete`, `ordering_field`, `module`).
-- **`MetaField`**: Column attributes supporting 12 data types (`char`, `text`, `integer`, `float`, `decimal`, `boolean`, `date`, `datetime`, `json`, `foreign_key`, `many_to_many`, `file`), validation constraints (`required`, `unique`, `index`), choices, default values, and system kernel reserved name protection (`id`, `pk`, `created_at`, `updated_at`, `created_by`, `updated_by`).
-- **`MetaView`**: Declarative layout specification storing coordinate and widget schema trees as JSON for forms, lists, kanbans, pivots, and trees.
-- **`MetaMenu`**: Hierarchical navigation tree with parent-child nesting, sequence ordering, icons, and action links.
-- **`MetaAction`**: Window view actions, server actions, report generation actions, and URL redirects.
-- **`MetaRule`**: Row-level access control evaluating `perm_read`, `perm_write`, `perm_create`, `perm_delete`, and dynamic JSON domain expressions (e.g. `{"created_by": "{{user.id}}"}`).
-- **`MetaReport`**: Declarative printable report definitions (PDF/HTML) using CSS Paged Media `@page` layout rules, orientation, paper standard (`A4`, `Letter`, `thermal_80mm`), and template interpolation tokens (`{{record.field}}`).
-
-### 17.2 Dynamic PostgreSQL Schema Engine (`apps.meta_engine.schema_engine`)
-- Translates `MetaModel` and `MetaField` instances directly into physical database schema modifications via Django's connection `schema_editor()`.
-- Direct DDL operations: `create_table()`, `drop_table()`, `add_column()`, `drop_column()`, `table_exists()`, and `column_exists()`.
-- Injects standard kernel audit columns (`id` UUID, `created_at`, `updated_at`, `created_by_id`, `updated_by_id`) automatically on table creation.
-- Seamless lifecycle signals in `signals.py` synchronize PostgreSQL tables and columns automatically when metadata records change.
-
-### 17.3 Dynamic In-Memory Model Factory (`apps.meta_engine.model_factory`)
-- Python metaclass compilation utilizing `type(class_name, bases, attrs)` to produce authentic, live Django Model classes in memory.
-- Inherits `(UUIDModel, SoftDeleteModel, AuditableModel)` with zero disk code generation.
-- Registered dynamically into `django.apps.apps` for transparent ORM compatibility (filtering, ordering, aggregations, foreign key joins).
-- Lazy model resolution on demand via `DynamicModelFactory.get_by_slug(slug)`.
-
-### 17.4 Modular App Lifecycle & DAG Dependency Management
-- **Manifest Format (`manifest.json`)**: Self-contained or modular declarations of dependencies, models, fields, views, menus, automations, and reports.
-- **Topological Dependency Resolver (`dependency_resolver.py`)**: Resolves dependency DAGs via Kahn's algorithm, calculating optimal installation sequences and blocking cyclic loops (`CyclicDependencyError`) or missing prerequisites (`MissingDependencyError`).
-- **Multi-Pass Ingestion (`app_installer.py`)**:
-  - Pass 1: Core models and scalar fields (creates tables and columns).
-  - Pass 2: Relational links and foreign keys (adds FK constraints across target tables).
-  - Pass 3: View layouts, navigation menus, actions, and printable reports.
-  - Pass 4: In-memory dynamic model compilation.
-- **Safe App Uninstaller & Data Retention Policies (`app_uninstaller.py`)**:
-  - Reverse Dependency Guard: Blocks uninstallation of modules if another active module depends on them.
-  - 3 Data Retention Policies:
-    1. `archive`: Conceals models, views, and menus while preserving physical tables and records.
-    2. `snapshot_backup_and_drop`: Serializes table records to JSON snapshot file in `media/module_backups/` before dropping DDL.
-    3. `cascade_drop`: Drops metadata assets and physical PostgreSQL tables immediately.
-
-### 17.5 Universal Declarative REST API Gateway (`apps.meta_engine.views`)
-- Single unified REST endpoint family mounted at `/api/v1/entities/<model_slug>/`:
-  - `GET /api/v1/entities/<model_slug>/`: List records with pagination, filtering, ordering, and full-text search.
-  - `POST /api/v1/entities/<model_slug>/`: Create record with automatic user audit attribution.
-  - `GET /api/v1/entities/<model_slug>/<id>/`: Retrieve single record.
-  - `PUT / PATCH /api/v1/entities/<model_slug>/<id>/`: Update record.
-  - `DELETE /api/v1/entities/<model_slug>/<id>/`: Delete record (or soft-delete if enabled).
-  - `GET /api/v1/entities/<model_slug>/schema/`: Full declarative introspection of fields, views, and printable reports.
-- Dynamic serializers via `DynamicEntitySerializerFactory`.
-- Row-level `MetaRule` enforcement evaluating user group permissions and interpolating dynamic domain filters (e.g. `{{user.id}}`).
-
-### 17.6 Odoo-Style Admin App Store Interface (`apps.meta_engine.admin`)
-- Accessible at `/admin/meta_engine/systemmodule/app-store/` with changelist toolbar button.
-- Card grid UI with icons, version badges, categories, summaries, dependencies, and 1-click install/uninstall actions.
-- Integrated disk synchronization ("🔄 Scan Disk for Modules").
-- Live PostgreSQL DDL status badges and direct REST API gateway links in `MetaModelAdmin`.
-
----
-
-## 18. Multi-Tenancy, Organizations & Workspaces Architecture (Phase 14)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        🌐 Incoming Request / API / Celery Task                         │
-└───────────────────────────────────────────┬────────────────────────────────────────────┘
-                                            │
-                                            ▼
-                    ┌───────────────────────────────────────────────┐
-                    │      TenantMiddleware Resolution Strategy     │
-                    │ 1. Header: X-Workspace-Slug / Organization-ID │
-                    │ 2. Query Param: ?workspace=<slug>             │
-                    │ 3. Subdomain / Domain: <slug>.platform.com    │
-                    │ 4. Authenticated User Default Membership       │
-                    │ 5. Global Fallback: "default" Workspace       │
-                    └───────────────────────┬───────────────────────┘
-                                            │
-                                            ▼
-                    ┌───────────────────────────────────────────────┐
-                    │   Python 3.11 contextvars Tenant Scope        │
-                    │   _current_tenant_ctx.set(organization)       │
-                    │   (guaranteed token reset in finally block)   │
-                    └───────────────────────┬───────────────────────┘
-                                            │
-             ┌──────────────────────────────┴──────────────────────────────┐
-             ▼                                                             ▼
-┌─────────────────────────────┐                               ┌─────────────────────────────┐
-│    Static Stored Models     │                               │  Declarative Dynamic Models │
-│  (TenantAwareModel Bases)   │                               │  (apps.meta_engine Factory) │
-│ - Organization FK (indexed) │                               │ - is_tenant_aware = True    │
-│ - Automatic tenant on save  │                               │ - Compiles TenantAwareModel │
-│ - TenantManager filtering   │                               │ - DDL organization_id col   │
-└────────────┬────────────────┘                               └──────────────┬──────────────┘
-             │                                                             │
-             └──────────────────────────────┬──────────────────────────────┘
-                                            │
-                                            ▼
-                       ┌────────────────────────────────────────┐
-                       │  Row-Level Scoped QuerySet Execution   │
-                       │  .filter(organization=current_tenant)  │
-                       │  (Unfiltered via TenantAllManager /    │
-                       │   bypass_tenant_isolation() context)   │
-                       └────────────────────────────────────────┘
-```
-
-### 18.1 Tenant Representation & RBAC Hierarchy (`apps.tenants.models`)
-- **`Organization`**:
-  - Inherits `(UUIDModel, SoftDeleteModel, AuditableModel)`.
-  - Fields: `name`, `slug` (unique, db_index), `tier` (`free`, `starter`, `pro`, `enterprise`), `max_users` (seat limit), `domain` (custom domain / email domain), `is_active`, and `metadata` (JSON configuration).
-  - Helper methods: `active_members_count`, `can_add_user()`, `get_owner()`, `is_member(user)`.
-- **`OrganizationMembership`**:
-  - Junction linking `auth.User` to `Organization` with unique constraint `(organization, user)`.
-  - Granular Workspace Roles: `owner` (full workspace ownership & deletion), `admin` (member & invitation management), `member` (standard operational access), `viewer` (read-only), `guest` (restricted).
-  - Validates seat capacity on creation via `clean()`.
-- **`OrganizationInvitation`**:
-  - Expiring, tokenized invitations (`secrets.token_urlsafe(64)`).
-  - Lifecycles: `pending` → `accepted` | `expired` | `revoked`.
-  - Atomic `accept(user)` method creating membership and timestamping acceptance.
-
-### 18.2 Row-Level Tenant Isolation via TenantAwareModel (`apps.tenants.base_models`)
-- **`TenantAwareModel(AuditableModel)`**:
-  - Abstract base model ensuring every tenant-scoped entity carries an indexed foreign key to `Organization`.
-  - Nullable with fallback: `organization = models.ForeignKey(..., null=True, blank=True)` preventing migration deadlocks and supporting system-wide templates.
-  - Auto-population in `save()`: Binds `self.organization` to `get_current_tenant()` (or system default workspace) if omitted.
-- **`TenantManager` & `TenantQuerySet` (`apps.tenants.managers`)**:
-  - Automatically applies `is_deleted=False` (via integrated `SoftDeleteQuerySet.alive()`) and `.filter(organization=get_current_tenant())`.
-  - Provides convenience helpers: `.alive()`, `.dead()`, `.restore()`, `.hard_delete()`.
-- **`TenantAllManager`**:
-  - Exposed via `Model.all_objects` to allow explicit unfiltered access for migrations, global analytics, and superuser maintenance.
-
-### 18.3 Thread-Safe ContextVars Context Management (`apps.tenants.context`)
-- Avoids thread-local memory leakage across worker threads by utilizing Python 3.11's `contextvars.ContextVar`.
-- Public API:
-  - `get_current_tenant() -> Optional[Organization]`
-  - `set_current_tenant(organization) -> Token`
-  - `clear_current_tenant(token=None)`
-  - `tenant_context(organization)`: Scoped execution context manager.
-  - `bypass_tenant_isolation()`: Scoped bypass context manager for cross-tenant operations.
-
-### 18.4 Multi-Strategy Tenant Resolution Middleware (`apps.tenants.middleware`)
-- Multi-tier resolution order:
-  1. HTTP Header: `X-Workspace-Slug` or `X-Organization-ID` (UUID or slug).
-  2. Query Parameter: `?workspace=<slug>`.
-  3. Host domain or subdomain: `<slug>.domain.com` or custom domain.
-  4. Authenticated user's default active membership.
-  5. Global system default workspace (`Default Workspace`, slug: `default`).
-- Security gate: If an explicit workspace is requested, verifies that `request.user` has active membership (superusers bypass check). Non-members receive `403 Forbidden`.
-
-### 18.5 Declarative MetaEngine Integration
-- **`MetaModel.is_tenant_aware`**: Boolean flag (default `True`) instructing the engine to partition dynamic entity records by tenant.
-- **Dynamic Model Factory**: Injects `TenantAwareModel` into compiled model bases, compiling dynamic models with `organization` foreign key and `TenantManager`.
-- **Dynamic Schema Engine**: Automatically generates `organization_id` foreign key column pointing to `tenants_organization` in physical PostgreSQL tables.
-- **Universal Declarative REST API Gateway**: In `UniversalEntityViewSet`, queries are auto-scoped by tenant, and new records automatically bind to `get_current_tenant()`.
-
-### 18.6 Administrative & REST API Surface (`apps.tenants.views` & `admin`)
-- **`OrganizationViewSet` (`/api/v1/organizations/`)**:
-  - Full CRUD with membership filtering (superusers see all; regular users see their active workspaces).
-  - Creator is automatically assigned as `owner`.
-  - Action `@action(detail=True) members`: List and add members.
-  - Action `@action(detail=True) invite`: List pending invitations and dispatch new invites.
-  - Action `@action(detail=True) switch`: Verify membership and return active workspace header hints.
-- **`InvitationAcceptAPIView` (`/api/v1/invitations/<token>/accept/`)**: Self-service invitation token validation and membership activation.
-- **Django Admin**: `OrganizationAdmin` with `OrganizationMembershipInline`, user capacity badges, tier styling, and invitation revocation actions.
-
----
-
-## 19. Comprehensive Activity Audit Trail Architecture (`apps.audit`) (Phase 15)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│              Enterprise Activity Audit Trail & Compliance Architecture                │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                        │
-│  [Incoming HTTP Request / REST API]               [Celery Worker / Background Task]    │
-│            │                                                    │                      │
-│            ▼                                                    ▼                      │
-│  [AuditContextMiddleware]                             [with audit_context(...):]       │
-│  • Extracts Client IP (Forwarded/Real/Remote)         • Binds actor, IP, req_id        │
-│  • Extracts User-Agent & Correlation ID               • Binds custom metadata          │
-│  • Binds to contextvars (_client_ip_ctx, etc.)        • Cleans context in finally      │
-│  • Injects X-Request-ID into Response Headers                                          │
-│            │                                                    │                      │
-│            └─────────────────────────┬──────────────────────────┘                      │
-│                                      │                                                 │
-│                                      ▼                                                 │
-│                      ┌───────────────────────────────┐                                 │
-│                      │  Django Model Lifecycle Hooks │                                 │
-│                      │   pre_save, post_save, delete │                                 │
-│                      └───────────────┬───────────────┘                                 │
-│                                      │                                                 │
-│                        ┌─────────────┴─────────────┐                                   │
-│                        ▼                           ▼                                   │
-│             [Static Auditable Models]    [Dynamic MetaEngine Models]                   │
-│             (@register_auditable or      (meta_model.is_auditable=True,                │
-│              _audit_enabled = True)       DynamicModelFactory auto-reg)                │
-│                        │                           │                                   │
-│                        └─────────────┬─────────────┘                                   │
-│                                      │                                                 │
-│                                      ▼                                                 │
-│                      ┌───────────────────────────────┐                                 │
-│                      │   Attribute Diffing Engine    │                                 │
-│                      │   (apps.audit.signals)        │                                 │
-│                      │ • Excludes auto timestamps    │                                 │
-│                      │ • Masks sensitive credentials │                                 │
-│                      │ • Suppresses zero-diff noise  │                                 │
-│                      │ • Maps soft delete / restore  │                                 │
-│                      └───────────────┬───────────────┘                                 │
-│                                      │                                                 │
-│                                      ▼                                                 │
-│                      ┌───────────────────────────────┐                                 │
-│                      │     ActivityLog Repository    │                                 │
-│                      │ • GenericForeignKey target    │                                 │
-│                      │ • Integer & UUID PK support   │                                 │
-│                      │ • Immutable save() & delete() │                                 │
-│                      │ • Immutable QuerySet bulk ops │                                 │
-│                      └───────────────┬───────────────┘                                 │
-│                                      │                                                 │
-│                 ┌────────────────────┴────────────────────┐                            │
-│                 ▼                                         ▼                            │
-│    [Read-Only Django Admin]                  [Read-Only REST API Gateway]              │
-│    • Visual Before/After Diff Table          • GET /api/v1/audit/logs/                 │
-│    • Colored Action & Status Badges          • Scoped to active tenant                 │
-│    • Blocked add/change/delete               • Multi-parameter filter & search         │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 19.1 Immutable Storage & Generic Relationship Schema (`apps.audit.models`)
-- **`ActivityLog`**:
-  - Primary Key: Distributed UUIDv4 (`UUIDModel`).
-  - Actor Types: `user` (human), `bot` (service account), `system` (background daemon), `anonymous`.
-  - Actions: `create`, `update`, `delete` (soft), `restore`, `hard_delete`, `login`, `logout`, `login_failed`, `export`, `custom`.
-  - Status: `success`, `failure`, `warning`.
-  - Polymorphic Target (`GenericForeignKey`):
-    - `content_type`: `ForeignKey(ContentType, on_delete=SET_NULL, null=True, db_index=True)`.
-    - `object_id`: `CharField(max_length=255, null=True, blank=True, db_index=True)`.
-    - Stringified `object_id` seamlessly stores standard integer primary keys (`auth.User`, `AppSettingValue`) and non-enumerable UUID primary keys (`Organization`, `MetaModel`, dynamic models).
-  - Multi-Tenant Scoping:
-    - Nullable `organization` foreign key allowing both tenant-partitioned audit trails and global system-level events (e.g. system bot scheduler boot, platform healthchecks).
-  - Structured Diffs & Telemetry:
-    - `changes`: `JSONField(default=dict)` storing `{"field": {"old": val1, "new": val2}}`.
-    - `ip_address`: `GenericIPAddressField(null=True, blank=True)`.
-    - `user_agent`: `TextField(blank=True)`.
-    - `request_id`: `CharField(max_length=64, blank=True, db_index=True)`.
-    - `metadata`: `JSONField(default=dict)` for contextual trace parameters.
-- **Dual-Layer Immutability Enforcers**:
-  - `ActivityLog.save()`: Raises `ImmutabilityError(PermissionDenied)` if updating an existing persisted record.
-  - `ActivityLog.delete()`: Raises `ImmutabilityError` unless explicitly called with `allow_purge=True`.
-  - `ActivityLogQuerySet.update()`: Disallows bulk SQL updates on QuerySets.
-  - `ActivityLogQuerySet.delete()`: Disallows bulk SQL deletions unless `allow_purge=True` is provided.
-
-### 19.2 Request Context & Client Telemetry Middleware (`apps.audit.context` & `middleware`)
-- **Python 3.11 `contextvars` Engine**:
-  - `_client_ip_ctx`, `_user_agent_ctx`, `_request_id_ctx`, `_audit_actor_ctx`, `_audit_metadata_ctx`.
-  - Functions: `get_audit_ip()`, `get_audit_user_agent()`, `get_audit_request_id()`, `get_audit_actor()`, `get_audit_metadata()`.
-  - Context Manager: `with audit_context(actor=..., ip=..., request_id=...):` for background tasks, celery workers, and test scopes.
-- **`AuditContextMiddleware`**:
-  - Extracts client IP address with proxy / CDN defense (`HTTP_X_FORWARDED_FOR`, `HTTP_X_REAL_IP`, `REMOTE_ADDR`).
-  - Extracts `HTTP_USER_AGENT`.
-  - Resolves or generates correlation ID (`HTTP_X_REQUEST_ID`, `HTTP_X_CORRELATION_ID`, or `req_<hex>`), attaching `request.id` and setting the `X-Request-ID` response header.
-  - Binds contextvars before view processing and guarantees reset in a `finally` block to prevent thread state contamination.
-
-### 19.3 Automated Lifecycle Diffing & Security Signals (`apps.audit.signals`)
-- **Noise Suppression & Hygiene**:
-  - Excludes auto-updating timestamp fields (`updated_at`, `modified_at`).
-  - Masks sensitive credentials (`password`, `token`, `secret`, `api_key`) as `"[PROTECTED]"`.
-  - Suppresses empty audit log generation when `save()` is executed with no attribute changes.
-- **Signal Handlers**:
-  - `pre_save`: Queries database for original record snapshot (using `all_objects` or `_base_manager` to safely inspect soft-deleted records) and caches `_audit_old_snapshot`.
-  - `post_save`:
-    - New record (`created=True`) -> generates `ACTION_CREATE` with initial field values.
-    - Existing record -> compares old vs new values.
-    - Soft-delete detection: if `is_deleted` transitions `False -> True`, records `ACTION_DELETE`; if `True -> False`, records `ACTION_RESTORE`; otherwise `ACTION_UPDATE`.
-  - `post_delete`: Records `ACTION_HARD_DELETE` with snapshot of prior record attributes.
-- **Authentication Security Event Receivers**:
-  - `user_logged_in`: Logs `ACTION_LOGIN` (`STATUS_SUCCESS`) with actor, target user, IP, and User-Agent.
-  - `user_logged_out`: Logs `ACTION_LOGOUT` (`STATUS_SUCCESS`).
-  - `user_login_failed`: Logs `ACTION_LOGIN_FAILED` (`STATUS_FAILURE`) with attempted username and client IP for intrusion detection.
-
-### 19.4 Dynamic MetaEngine Declarative Integration
-- `MetaModel.is_auditable`: Declarative schema flag.
-- When `DynamicModelFactory` compiles an in-memory Django model from a `MetaModel` where `is_auditable=True`:
-  - Injects `_audit_enabled = True` attribute on the dynamic model class.
-  - Registers dynamic class into `apps.audit.registry._AUDITABLE_MODELS`.
-  - Full CRUD operations on dynamic entities automatically emit `ActivityLog` entries with before/after diffs and tenant attribution.
-
-### 19.5 Administrative & REST API Surface (`apps.audit.admin` & `views`)
-- **`ActivityLogAdmin`**:
-  - Strictly read-only: `has_add_permission`, `has_change_permission`, and `has_delete_permission` unconditionally return `False`.
-  - Custom visual diff card (`changes_diff_card`): Renders before/after changes as an HTML comparison table with styled line-through red badges for prior values and green badges for new values.
-  - Colored action badges (`action_badge`): Emerald (create), Blue (update), Amber (soft delete), Cyan (restore), Red (hard delete), Purple (login), Gray (logout), Crimson (login failed).
-  - Colored status badges (`status_badge`): Green (success), Red (failure), Yellow (warning).
-- **`ActivityLogViewSet` (`/api/v1/audit/logs/`)**:
-  - Read-only (`ReadOnlyModelViewSet`) exposing `list` and `retrieve`.
-  - Multi-tenant query scoping: auto-filters by active organization (`get_current_tenant()`) for non-superusers.
-  - Filtering by `action`, `actor_type`, `status`, `request_id`, `object_id`.
-  - Full-text search across `object_repr`, `object_id`, and `actor__username`.
-  - Mutation endpoints (`POST`, `PUT`, `PATCH`, `DELETE`) return `405 Method Not Allowed`.
-
----
-
-## 20. Universal Notifications Engine Architecture (`apps.notifications`)
-
-### 20.1 Data Model Architecture
-- **`Notification` Model**:
-  - Inherits `(TenantAwareModel, SoftDeleteModel)`.
-  - Fields: `recipient` (`auth.User`), `actor` (`auth.User`, nullable), `level` (`info`, `success`, `warning`, `error`), `title`, `message`, `action_url`, `read_at`, `is_read`, `channel` (`in_app`, `email`, `webhook`, `slack`, `hermes`), `extra_data` (JSON payload).
-  - Database Indexes: `(recipient, is_read, -created_at)` and `(organization, recipient, is_read)`.
-  - Instance Method: `mark_as_read()` updating `is_read=True` and timestamp `read_at=now()`.
-- **`NotificationPreference` Model**:
-  - Inherits `(UUIDModel, TimeStampedModel)`.
-  - 1-to-1 relationship with `auth.User`.
-  - Multi-channel delivery toggles (`in_app_enabled`, `email_enabled`, `webhook_enabled`, `slack_enabled`).
-  - Target endpoints (`webhook_url`, `slack_webhook_url`, `channel_config`).
-  - Auto-provisioning signal: `post_save` on `User` automatically creates a `NotificationPreference` record.
-
-### 20.2 Dispatcher Service & Multi-Channel Adapters (`dispatcher.py`)
-- **`NotificationDispatcher`**:
-  - Central manager resolving recipient preferences and dispatching payloads.
-  - `ADAPTERS` registry mapping channel identifiers to adapter handlers.
-  - Redis Unread Count Manager: `get_unread_count(user_id, org_id)` reading from Redis key `notifications:unread_count:{user_id}:{org_id}` with 10-minute cache TTL and database fallback on cache miss.
-  - Signal-Driven Cache Invalidation: `post_save` and `post_delete` signals on `Notification` automatically invalidate Redis unread count keys for the recipient workspace.
-- **Adapters**:
-  - `InAppAdapter`: Constructs persistent `Notification` database record.
-  - `EmailAdapter`: Formats HTML / plain text and dispatches via Django email framework.
-  - `WebhookAdapter`: Constructs structured JSON payload (`event: "notification.delivered"`, timestamp, payload) and executes HTTP POST request to user endpoint.
-  - `SlackAdapter`: Constructs Slack message blocks with colored level attachments and posts to Slack incoming webhook.
-
-### 20.3 Asynchronous Celery Dispatcher (`apps.notifications.tasks`)
-- **`send_notification_async_task`**: `@shared_task` receiving recipient, level, title, message, action_url, and extra_data.
-- Executes background multi-channel delivery with automated 3-tier retries on network failures.
-
-### 20.4 Automation Engine Action Integration (`apps.automation.actions`)
-- `@register_action("send_notification", ...)`:
-  - Canonical flagship action handler in `apps.automation`.
-  - Bridges trigger context (`{{username}}`, `{{task_name}}`, `{{pk}}`) to `NotificationDispatcher.send(...)`.
-  - Ships with prompt presets for system notification alerts.
-
-### 20.5 REST API Surface & Administrative Portal
-- **`NotificationViewSet` (`/api/v1/notifications/`)**:
-  - Authenticated user inbox endpoint (`list`, `retrieve`, `destroy`).
-  - Workspace scoping: automatically filters records by current user and active workspace tenant.
-  - Filtering by `is_read` (`true`/`false`) and `level`.
-  - Custom Action `POST /api/v1/notifications/<id>/mark-read/`: Marks single item read.
-  - Custom Action `POST /api/v1/notifications/mark-all-read/`: Bulk marks all workspace notifications as read.
-  - Custom Action `GET /api/v1/notifications/unread-count/`: Returns ultra-fast cached count `{ "unread_count": N }`.
-- **`NotificationPreferenceViewSet` (`/api/v1/notifications/preferences/`)**:
-  - Endpoint for inspecting (`GET`) and modifying (`PUT`/`PATCH`) delivery preferences and webhook endpoints.
-- **`NotificationAdmin`**:
-  - Visual HTML level badges (`ℹ️ Info`, `✅ Success`, `⚠️ Warning`, `🚨 Error`).
-  - Admin Action `mark_selected_as_read`.
-
----
-
-## 21. Universal Document & Media Management Architecture (`apps.media`)
-
-### 21.1 Data Model Architecture
-- **`Document` Model**:
-  - Inherits `(TenantAwareModel, SoftDeleteModel)`.
-  - Fields: `file` (`upload_to=document_upload_to_path`), `filename`, `file_size` (bytes), `mime_type`, `checksum_sha256` (64-char hex), `is_public` (bool), `uploaded_by` (`auth.User`), `extra_metadata` (JSON).
-  - First-Class Client Foreign Key: `client` (`ForeignKey("clients.Client", null=True, blank=True, related_name="documents")`), elevating client files to first-class citizens.
-  - Generic Foreign Key: `content_type` (`ForeignKey(ContentType)`) + `object_id` (`CharField`), linking files dynamically to any system record (`AgentTask`, `User`, `Organization`, etc.).
-  - Dual-Synchronization in `save()`:
-    - If `client_id` is set, automatically resolves and synchronizes `content_type = ContentType.objects.get_for_model(Client)` and `object_id = str(client_id)`.
-    - Conversely, if `content_type` is `Client` and `object_id` is passed, automatically resolves and sets `client_id = uuid.UUID(str(object_id))`.
-  - Auto-Calculation in `save()`: Auto-generates SHA-256 hex digest, extracts `file_size` in bytes, guesses MIME types from filename extension, and sets default `filename`.
-  - Property `file_size_human`: Human-formatted size string (`B`, `KB`, `MB`, `GB`).
-  - Database Indexes: `(organization, checksum_sha256)`, `(client, -created_at)`, `(content_type, object_id)`, `(organization, uploaded_by, -created_at)`.
-
-### 21.2 Storage Partitioning & Directory Provisioning
-- **Client Physical Storage**:
-  - Automatically provisioned upon `Client.save()` / `client.ensure_storage_dir()`:
-    `/app/media/documents/clients/<client_id>/`
-  - Upload Path Routing: When a document is attached to a `Client`, it routes directly into:
-    `documents/clients/<client_id>/<filename>`
-  - Fallback Layout (System / Internal): For non-client documents, routes to hash-sharded path:
-    `documents/<org_slug>/<sha256[:2]>/<sha256>_<filename>`
-- **Cryptographic Token Signer**:
-  - `generate_secure_download_token(document_id, user_id)`: Generates time-stamped cryptographically signed URL parameter (`TimestampSigner`, salt: `apps.media.secure_download`).
-  - `verify_secure_download_token(token, max_age)`: Validates signature integrity and checks expiration.
-
-### 21.3 Ingestion & File Stream Service (`services.py`)
-- **`MediaService.create_document`**: Centralized ingestion pipeline taking uploaded file objects, calculating SHA-256 checksums, binding tenant organizations, and accepting explicit `client` or generic model targets.
-- **`MediaService.get_document_response`**: Secure file stream renderer returning `FileResponse` binary responses with `Content-Type`, `Content-Length`, and `Content-Disposition` headers. Enforces tenant workspace permission checks unless `is_public=True`.
-
-### 21.4 REST API & Administrative Components
-- **`DocumentViewSet` (`/api/v1/media/documents/`)**:
-  - `POST /api/v1/media/documents/upload/`: Multipart upload endpoint accepting `file`, `filename`, `is_public`, `client_id`, and optional generic entity targets (`model_app_label`, `model_name`, `object_id`).
-  - `GET /api/v1/media/documents/`: Workspace document catalog supporting `?client_id=<uuid>`, `?is_public=<bool>`, and `?mime_type=<string>` filtering.
-  - `GET /api/v1/media/documents/<id>/download/`: Binary stream download endpoint.
-- **`DocumentAdmin` & `ClientDocumentInline`**:
-  - `DocumentAdmin`: Displays `filename`, `client`, `file_size_display`, `mime_type`, `checksum_badge`, `is_public`, `organization`, and `uploaded_by`.
-  - `ClientDocumentInline`: Embedded directly in `ClientAdmin` for instant inspection and file management.
-  - `GenericDocumentInline`: Reusable component embeddable in any other Django Admin model change form.
-
----
-
-## 22. Enterprise Automation Engine Hardening & Pipeline Coordination (`apps.automation`) (Phase 21)
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│               Enterprise Hardened Automation Pipeline Architecture                     │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                        │
-│  [Model Event / Beat Trigger] ──► [transaction.on_commit (prod)]                       │
-│                                           │                                            │
-│                                           ▼                                            │
-│                         [execute_automation_trigger_task]                              │
-│                                           │                                            │
-│                    ┌──────────────────────┴──────────────────────┐                     │
-│                    │ Sequential Pipeline Chaining                │                     │
-│                    │ (_current_automation_depth <= 3)            │                     │
-│                    │ tenant_context(trigger.organization)        │                     │
-│                    └──────────────────────┬──────────────────────┘                     │
-│                                           │                                            │
-│                      ┌────────────────────┴────────────────────┐                       │
-│                      ▼                                         ▼                       │
-│            [Step 1: Action (Seq 10)]                 [Step 2: Action (Seq 20)]         │
-│            • Target CRUD / Hermes                    • Receives {{record_id}}          │
-│            • Sandboxed target models                 • Chained pipeline context        │
-│            • Output -> mutated context               • Halt if stop_on_failure         │
-│                      │                                         │                       │
-│                      └────────────────────┬────────────────────┘                       │
-│                                           │                                            │
-│                                           ▼                                            │
-│                                  [AutomationLog Audit]                                 │
-│                                  • organization FK                                     │
-│                                  • execution_depth level                               │
-│                                  • timing & status                                     │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 22.1 Transaction Safety & Race Condition Elimination (`signals.py`)
-- Standardizes signal dispatches on `django.db.transaction.on_commit`.
-- Ensures Celery workers executing in external processes or containers only query database records after the outer Django transaction commits successfully.
-- Preserves eager synchronous execution in unit test suites when `CELERY_TASK_ALWAYS_EAGER=True`.
-
-### 22.2 Sequential Pipeline Coordination & Context Chaining (`engine.py`)
-- Coordinates multi-action execution (`sequence=10, 20...`) sequentially within `AutomationEngine.execute_pipeline`.
-- Accumulates output data across steps: `record_id` or scalar values generated by Step 1 are automatically made available to Step 2 expressions (`{{record_id}}`, `{{target_record_id}}`, `{{step_outputs}}`).
-- Circuit breaking: respects `action.stop_on_failure` (default `True`) to abort remaining steps if an action fails.
-
-### 22.3 Cascading Recursion & Infinite Loop Guard (`_automation_depth`)
-- Employs Python 3.11 `contextvars.ContextVar` (`_current_automation_depth`) across thread lifecycles.
-- Enforces hard ceiling `MAX_AUTOMATION_DEPTH = 3`. If a trigger cascades updates on its own monitored model, execution halts cleanly before queue flooding occurs, recording structured error diagnostics in `AutomationLog`.
-
-### 22.4 Multi-Tenancy Workspace Scoping
-- `AutomationTrigger`, `AutomationAction`, and `AutomationLog` feature nullable `organization` foreign keys.
-- Scopes model event triggers: global triggers (`organization__isnull=True`) run platform-wide, while organization triggers only fire for matching tenant records.
-- Celery worker tasks execute cleanly inside `apps.tenants.context.tenant_context(org)`.
-
-### 22.5 Target Model CRUD Sandboxing
-- Enforces strict blacklist `RESTRICTED_TARGET_MODELS = {'auth.permission', 'auth.group', 'contenttypes.contenttype', 'authtoken.token', 'sessions.session', 'admin.logentry', 'automation.automationlog'}`.
-- Rejects unauthorized or malicious manipulation of internal framework tables with `PermissionError`.
-
-### 22.6 Failure Resilience & Transient Retries (`actions.py` & `tasks.py`)
-- Outbound webhooks and Hermes Agent Gateway requests feature automated retries with exponential backoff on transient network errors (connection resets, timeouts, HTTP 502/503/504).
-- Celery tasks configured with `max_retries=3`, `default_retry_delay=5`.
-
----
-
-## 23. Centralized Provider Credentials, Zero-Downtime Sync & Agent Governance (Phase 22)
-
-### 23.1 Encrypted Provider Credential Management (`apps.integration.models`)
-- Introduces `ProviderCredential` storing LLM inference credentials (`openrouter`, `gemini`, `openai`, `anthropic`, `groq`, `deepseek`, `custom`).
-- AES-256 / SHA-256 tamper-proof signing and encryption at rest using `apps.core.crypto.encrypt_secret` and `decrypt_secret`.
-- Masked property `masked_key` (e.g. `sk-or-••••••••c9f0`) for safe administrative rendering.
-- `Profile.resolve_provider_and_key()` implements clear hierarchical resolution:
-  1. Profile-assigned dedicated `ProviderCredential`
-  2. Default active `ProviderCredential` matching profile's provider
-  3. Settings Hub secret (`integration.<PROVIDER>_API_KEY`)
-  4. Platform settings fallback
-
-### 23.2 Zero-Downtime Hermes Runtime Synchronization (`apps.integration.services.credential_sync`)
-- Exploits Hermes Agent's native per-turn dynamic secret scoping (`build_profile_secret_scope` and `_reload_runtime_env_preserving_config_authority`).
-- Shares volumes between Django and Hermes:
-  - `- ../agent_service/data:/app/hermes_runtime_data:rw`
-  - `- ../agent_service/.env:/app/hermes_root_env:rw`
-- On `ProviderCredential` or `AppSettingValue` `post_save` signals, Django atomically updates `/root/.hermes/.env`, per-profile `.env`, and `config.yaml`.
-- Hermes reads updated credentials on the very next prompt turn with **zero container restarts and zero downtime**.
-
-### 23.3 Pre-Execution Budget Gates & Direct Token Accounting (`apps.automation.actions`)
-- **Pre-Execution Ceiling Gate**:
-  - In `dispatch_hermes_prompt_action`, sums today's spend from `SpendReport` before dispatch.
-  - If `today_spend >= DAILY_BUDGET_CAP_USD`, execution halts with `"status": "budget_exceeded"`, preventing unexpected token overrun.
-- **Post-Execution Direct Accounting**:
-  - Parses OpenAI-compatible `usage` blocks (`prompt_tokens`, `completion_tokens`, `total_tokens`) returned by Hermes Gateway.
-  - Automatically records cost and token consumption into `SpendReport` and attaches to `AgentTask.tokens_used` / `AgentTask.cost_usd`.
-  - Eliminates reliance on Hermes agents self-scanning disk SQLite databases (`state.db`).
-
-### 23.4 Calibrated Reasoning Budgets & Multi-Agent Pipeline Handoff
-- Calibrates default profile reasoning budgets (`orchestrator` & `comms_agent` = `none`, `cost_controller` = `low`, `qa_auditor` & `security_guard` = `high`) eliminating 10–15s latency on operational workflows.
-- Accumulates step deliverables (`deliverable`) in `execute_pipeline`, allowing downstream steps to consume outputs via `{{deliverable}}` or `{{step_outputs}}`.
-
----
-
-## 24. Provider Credentials Consolidation, Model Catalog Vendor Categorization & Profile Admin UX (Phase 23)
-
-### 24.1 Credentials Consolidation & Settings Hub De-duplication
-- **Single Source of Truth**: All LLM API keys and custom inference endpoints reside exclusively in the `ProviderCredential` relational model (`apps.integration.models`).
-- **De-duplication**: Removed redundant secret settings (`OPENROUTER_API_KEY`, `GEMINI_API_KEY`, etc.) from the Visual Settings Hub (`apps.integration.conf`), eliminating administrator confusion over competing configuration layers.
-- **Settings Hub Focus**: Settings Hub retains only global operational governance parameters:
-  - `DEFAULT_PROVIDER` (e.g. `openrouter`)
-  - `DEFAULT_MODEL` (e.g. `google/gemini-2.5-flash`)
-  - `DEFAULT_REASONING_EFFORT` (e.g. `medium`)
-  - `DAILY_BUDGET_CAP_USD` (e.g. `50.0`)
-- **Updated Resolution Hierarchy**: `Profile.resolve_provider_and_key()` resolves:
-  1. Direct `profile.provider_credential` (if assigned and active).
-  2. Default active `ProviderCredential` for the profile's provider (`is_default=True`).
-  3. Environment variables fallback (`settings.py` / `os.environ`).
-
-### 24.2 Model Catalog Vendor Attribution & Alphabetical Sorting (`hermes_catalog.py`)
-- **Vendor Normalization**: Extracts vendor prefixes from model IDs (`google/`, `anthropic/`, `meta-llama/`, `deepseek/`, `openai/`, etc.) and maps them to clean display labels via `VENDOR_DISPLAY_NAMES` and `extract_provider_group`.
-- **Alphabetical Sorting**: OpenRouter and canonical models are sorted primarily by `provider_group` alphabetically, and secondarily by model name.
-- **Optgroup Grouping in Django Admin**:
-  - `ProfileAdminForm` generates grouped choice tuples: `[(group_name, [(model_id, label), ...])]`.
-  - Django Admin automatically renders `<optgroup label="Google">`, `<optgroup label="Anthropic">`, etc.
-  - Dynamic JavaScript (`agent_profile_models.js`) creates matching `<optgroup>` elements on client-side provider changes while preserving model pricing/context cards.
-
-### 24.3 Profile Admin Fieldset Streamlining (`admin.py`)
-- **Visual De-cluttering**: Reorganized `ProfileAdmin` and `ProfileInline` into clear logical fieldsets:
-  - `Profile & Classification`
-  - `LLM Inference & Model Selection`
-  - `Advanced Credential & Endpoint Overrides` (collapsed)
-- **Clear Guidance on `provider_credential`**: Positioned inside the collapsed advanced section with explicit help text clarifying that leaving it blank automatically inherits the global default credential for the provider.
-
----
-
-## 25. Sovereign Decoupled Architecture & The Two Sovereign Pillars
-
-### 25.1 The Core Architectural Principle
-The enterprise system is built upon **Two Sovereign Microservices** that are 100% independent, swappable, and communicate exclusively over standard networking protocols (HTTP REST & Model Context Protocol):
-
-```
-+------------------------------------+           +-------------------------------------+
-|      Backend Platform              |           |      Sovereign Agent Platform       |
-|      (Django 5.x / PostgreSQL 16)  |           |      (Hermes / Standalone Agent)    |
-|                                    |   HTTP    |                                     |
-|  • Enterprise Business Logic       |◄─────────►|  • 5 Calibrated Profiles            |
-|  • PostgreSQL 16 Relational Data   |  Task API |  • Embedded Vector Memory           |
-|  • Tenant RBAC & Client Vaults     |           |    (sqlite-vec in memory.db)        |
-|  • Data Provider MCP Bridge        |◄─────────►|  • Internal FastMCP Tool Ecosystem  |
-+------------------------------------+    MCP    |  • Independent Golden Benchmark     |
-                                                 +-------------------------------------+
-                                                                    ▲
-                                                                    │ OpenTelemetry
-                                                 +------------------▼------------------+
-                                                 |  Langfuse Dashboard (Standalone)    |
-                                                 |  - Visual Trace Trees & Costs :3100 |
-                                                 +-------------------------------------+
-```
-
-### 25.2 Sovereignty Guarantees
-1. **Portability**: The entire `agent_service/` directory can be lifted and plugged into **FastAPI**, **Next.js**, **Express**, or executed as a standalone CLI with **zero code changes**.
-2. **Swappability**: Hermes can be replaced with any alternative agent framework (LangGraph, CrewAI, AutoGen) inside `agent_service/` without modifying a single Django model, view, or migration.
-3. **Zero Database Dependency**: The agent platform requires no access to Django's PostgreSQL database. Agent memory resides in an in-process **`sqlite-vec`** database (`agent_service/data/memory.db`).
-4. **Standardized Inter-Service Protocol**: All interactions flow over standard HTTP REST (`/v1/chat/completions`, `/api/tasks/`) or JSON-RPC Model Context Protocol (MCP).
-
----
-
-## 26. Embedded Sovereign Semantic Memory (`sqlite-vec`) (Pillar 1)
-
-### 26.1 In-Process Vector Architecture (`agent_service/memory/vector_store.py`)
-- **Engine**: In-process C-extension `sqlite-vec` embedded directly inside Python, operating on `agent_service/data/memory.db`.
-- **Latency & Footprint**:
-  - Memory queries execute in-memory with sub-15ms latency.
-  - Footprint is ~10–25 MB RAM with zero external server dependencies ($0/month hosting).
-- **Data Schema**:
-  - `memory_entries`: `id` (TEXT PK), `category` (TEXT), `title` (TEXT), `content` (TEXT), `scope` (`generalized` vs `project_local`), `metadata_json` (TEXT), `created_at` (TIMESTAMP).
-  - `vec_entries`: Virtual vector table indexed via `sqlite-vec` (768 or 1536 dimensions).
-
-### 26.2 Pre-Flight Memory Recall Loop
-```
-[User / Backend Task Request]
-           │
-           ▼
-[Pre-Flight Hook: vector_store.recall_similar(task_prompt, top_k=2)]
-           │
-           ├── Cosine Distance Search (<15ms)
-           ▼
-[Top-2 Proven Past Solutions Injected into Turn 1 System Prompt]
-           │
-           ▼
-[Agent Solves Task in 1 Turn instead of 4+ Iterations] (50–70% Latency & Token Reduction)
-           │
-           ▼ (Upon QA Approval)
-[Post-Flight Hook: vector_store.add_memory(solution_summary)]
-```
-
----
-
-## 27. Internal Model Context Protocol (FastMCP) Tool Ecosystem (Pillar 2)
-
-### 27.1 Architecture & FastMCP Framework
-Legacy bespoke CLI bash scripts in `agent_service/profiles/<name>/skills/<skill>/run.py` are superseded by native **Model Context Protocol (FastMCP)** tool servers executing inside `agent_service/mcp/system_tools_server.py`:
-- **Protocol**: Standard JSON-RPC 2.0 over stdio or HTTP.
-- **Execution**: In-process function invocation eliminating bash subprocess overhead, shell argument parsing delays, and terminal security risks.
-
-### 27.2 Profile Tool Migration Matrix
-Each of the 5 Department Heads connects to FastMCP tools tailored to its calibrated role:
-
-| Profile | Legacy CLI Script | Refactored FastMCP Tool | Behavior Shift |
-| :--- | :--- | :--- | :--- |
-| **`orchestrator`** | `task_decomposer/run.py` | `@mcp.tool() decompose_task_dag` | Reuses proven DAG patterns from `memory.db`; assigns QA review conditionally. |
-| **`cost_controller`**| `cost_monitor/run.py` | `@mcp.tool() audit_token_budget` | Replaces SQLite disk polling with streaming Langfuse telemetry metrics. |
-| **`qa_auditor`** | `output_validator/run.py` | `@mcp.tool() validate_code_deliverable` | Implements Tiered QA: Tier 1 deterministic AST check $\rightarrow$ Tier 3 conditional LLM. |
-| **`comms_agent`** | `client_service_bridge/run.py` | `@mcp.tool() client_service_action` | Direct JSON-RPC streaming for document queries and client dollar budget checks. |
-| **`security_guard`** | `security_scanner/run.py` | `@mcp.tool() security_audit` | High-speed in-memory regex scanning and tenant isolation verification without process forks. |
-
----
-
-## 28. Standalone Glass-Box Tracing & LLMOps (Langfuse :3100) (Pillar 3)
-
-### 28.1 Independent Observability Container
-- **Service**: Standalone Langfuse instance (`ghcr.io/langfuse/langfuse:2`) running on host port `3100:3000`.
-- **Decoupled Operation**: Runs independently of Django; captures agent telemetry whether invoked by Django, FastAPI, or direct CLI execution.
-
-### 28.2 Telemetry Interceptor (`agent_service/telemetry/tracer.py`)
-- **OpenTelemetry Instrumentation**: Wraps agent inference loops with structured trace trees:
-  - **Trace Root**: Task UUID, active profile name, calibrated reasoning effort.
-  - **Generation Spans**: Full prompt text, thinking/reasoning stream, output tokens, latency (ms), and exact dollar cost calculated via catalog token pricing.
-  - **Tool Spans**: MCP tool name, validated input arguments, execution duration, and exit status.
-- **Visual Trace Waterfalls**: Provides complete glass-box visibility into agent decision trees, tool invocation sequences, and latency bottlenecks.
-
----
-
-## 29. Schema-Strict Execution, Mid-Flight Self-Correction & Circuit Breakers (Pillar 4)
-
-### 29.1 Pydantic Tool Contracts (`agent_service/mcp/schemas/`)
-- Every FastMCP tool defines rigid Pydantic argument and return schemas (e.g. `class SecurityAuditInput(BaseModel): ...`).
-- Malformed tool invocations are rejected immediately in memory with zero API token spend and zero shell overhead.
-
-### 29.2 Mid-Flight Context Reflection
-- When a tool fails schema validation or execution, the structured error is formatted and injected directly into the active LLM context:
-  `"Error: Tool 'security_audit' requires 'mode' to be one of ['leaks', 'tenant', 'rbac']. Provided 'all'. Please correct your input."`
-- The agent self-corrects mid-flight without crashing or failing the overall task pipeline.
-
-### 29.3 Anti-Loop Circuit Breaker
-- In-memory execution state tracks consecutive failed tool attempts.
-- If an agent repeats the same invalid tool invocation twice consecutively (`MAX_CONSECUTIVE_TOOL_FAILURES = 2`), execution aborts cleanly with structured diagnostic notes, preventing runaway token expenditure.
-
----
-
-## 30. Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`) (Pillar 5)
-
-### 30.1 Standalone Test Harness
-- Located entirely within `agent_service/evals/` and driven by standard `pytest`.
-- **Zero Backend Requirement**: Executes directly against the agent runtime (`pytest agent_service/evals/`) with the Django backend completely stopped (`docker stop django-template-backend`).
-
-### 30.2 25 Deterministic Golden Scenarios
-Comprehensive test suite covering real-world operational challenges:
-1. `test_orchestrator_decomposes_complex_task`: Validates DAG generation, dependency ordering, and cycle rejection.
-2. `test_security_guard_detects_api_key_leak`: Tests regex detection of OpenAI, OpenRouter, Anthropic, Stripe, and SSH keys.
-3. `test_qa_auditor_rejects_syntax_errors`: Confirms Tier 1 deterministic rejection of invalid Python AST.
-4. `test_memory_recall_returns_correct_prior_pattern`: Validates semantic search accuracy in `memory.db`.
-5. `test_circuit_breaker_halts_infinite_loop`: Ensures runaway tool invocations halt at the 2nd consecutive failure.
-
-### 30.3 Quantitative Certification Metrics
-- **Pass Rate Target**: $\ge 90\%$
-- **Tool Invocation Accuracy**: $100\%$
-- **Average Cost per Benchmark Run**: $\le \$0.05$ USD
-- **Average Run Duration**: $\le 15$ seconds
-- **CLI Runner**: Executed on demand or in CI via `./scripts/run_agent_evals.sh`.
-
----
-
-## 31. Cross-Project Knowledge Portability & Sovereign Package Architecture (Pillar 6)
-
-### 31.1 Self-Contained Directory Architecture
-The `agent_service/` directory is organized as an independent, modular repository/submodule:
-```
-agent_service/
-├── Dockerfile                 # Isolated runtime environment
-├── docker-compose.yml         # Container definitions (Hermes + Langfuse)
-├── profiles/                  # 5 Calibrated Profiles (SOUL.md, config.yaml)
-├── mcp/                       # FastMCP Tool Servers & Pydantic Schemas
-├── memory/                    # sqlite-vec Vector Engine & CLI
-├── data/                      # memory.db (Persistent vector store)
-├── evals/                     # Standalone Golden Benchmark Suite
-└── telemetry/                 # Langfuse OpenTelemetry Tracer
-```
-
-### 31.2 Knowledge Export & Import CLI (`agent_service/memory/cli.py`)
-- **Sanitized Export**:
+### 4.7 Pillar 7: Cross-Project Knowledge Portability & Knowledge CLI
+- **Sanitized Knowledge Export**:
   ```bash
   python -m agent_service.memory.cli export --scope generalized --output knowledge_seed.jsonl
   ```
-  Extracts validated procedural problem-solving patterns and vector embeddings while stripping all private client data, proprietary names, and confidential records.
-- **Instant Import**:
+  Extracts validated procedural problem-solving patterns and vector embeddings while stripping all private data, proprietary names, and confidential records.
+- **Instant Knowledge Import**:
   ```bash
   python -m agent_service.memory.cli import --input knowledge_seed.jsonl
   ```
   Injects procedural wisdom into any new project's `memory.db` in seconds, delivering Day 1 compound intelligence across all software projects.
 
+---
 
+## 5. Hardware, Resource & Infrastructure Footprint
 
-
-
-
-
-
-
-
+| Component | Dedicated Server? | RAM Footprint | CPU Overhead | Monthly Hosting Cost |
+| :--- | :--- | :--- | :--- | :--- |
+| **`hermes` Gateway** | In Docker container | ~80–150 MB | Low (idle <1%) | **$0** |
+| **`sqlite-vec`** | In-process C extension | ~10–25 MB | Negligible (<15ms queries) | **$0** |
+| **FastMCP Tool Server** | In-process JSON-RPC | ~15–30 MB | Negligible | **$0** |
+| **Langfuse Dashboard** | Standalone Docker container | ~200–350 MB | Low (~1–3% during logging) | **$0** |
+| **Golden Evals** | Transient `pytest` process | Transient | Only during test execution | **$0** |
+| **TOTAL** | **0 External Servers** | **~300–550 MB RAM** | **Standard Host is more than sufficient** | **$0 Added Cost** |

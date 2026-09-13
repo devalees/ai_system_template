@@ -1,3 +1,0 @@
-"""
-Client Management Application Package.
-"""

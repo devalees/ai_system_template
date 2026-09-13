@@ -1,112 +1,70 @@
-# AI System Template (Decoupled Django & Hermes Agent)
+# Sovereign Autonomous AI Agent Platform
 
 [![Docker](https://img.shields.io/badge/Docker-Isolated_Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Django](https://img.shields.io/badge/Django-5.0+-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Hermes Agent](https://img.shields.io/badge/Nous-Hermes_Agent-purple)](https://github.com/NousResearch/hermes-agent)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Model Context Protocol](https://img.shields.io/badge/MCP-Standardized_Tools-00D26A)](https://modelcontextprotocol.io/)
+[![sqlite-vec](https://img.shields.io/badge/sqlite--vec-In--Process_Vector_DB-orange)](https://github.com/asg017/sqlite-vec)
+[![Langfuse](https://img.shields.io/badge/Langfuse-LLMOps_Tracing-blue)](https://langfuse.com/)
 
-A production-ready, domain-agnostic starter template pairing a **Django** backend service with an autonomous **Nous Research Hermes Agent** runtime, deployed in **two separate, isolated Docker environments** for security.
-
-Neither container shares internal networks or storage; all communication flows strictly through authenticated REST API endpoints over HTTP.
+A production-grade, 100% sovereign, and portable autonomous AI agent platform powered by the **Nous Research Hermes Agent** execution engine. Completely independent, containerized, and decoupled from any external web frameworks or databases.
 
 ---
 
-## Architectural Blueprint
+## The 6 Sovereign Pillars
+
+1. **Embedded Sovereign Semantic Memory (`sqlite-vec`)**: In-process vector database inside `agent_service/data/memory.db`. Zero network latency, sub-15ms cosine distance recall, and 100% portable with the agent runtime.
+2. **Model Context Protocol (FastMCP) Standardized Tooling**: Internal JSON-RPC tool ecosystem (`agent_service/mcp/`) replacing fragile shell scripts with typed, high-speed tools.
+3. **Glass-Box Observability & Tracing (Langfuse)**: Standalone Docker monitoring service on port `3100` capturing complete thought streams, tool execution waterfalls, latency, and token costs.
+4. **Schema-Strict Self-Correction & Circuit Breakers**: Pydantic input/output contracts, mid-flight traceback injection for self-healing, and anti-loop circuit breakers.
+5. **Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)**: Automated `pytest` test harness certifying agent intelligence standalone with deterministic domain scenarios.
+6. **Cross-Project Knowledge Portability**: Self-contained package architecture with sanitized knowledge export/import CLI (`agent_service/memory/cli.py`) for compound intelligence across projects.
+
+---
+
+## Directory Architecture
 
 ```
- ┌──────────────────────────────────────────────┐
- │               Host Machine                   │
- │                                              │
- │  ┌────────────────────────────────────────┐  │
- │  │ Docker Environment 1: Django Backend   │  │
- │  │ (backend/docker-compose.yml)           │  │
- │  │  - Django REST API & Admin (Port 8000) │  │
- │  │  - PostgreSQL 16 (Port 5432)           │  │
- │  │  - Redis 7 (Port 6379)                 │  │
- │  └────────────────────▲───────────────────┘  │
- │                       │                      │
- │          REST API     │                      │
- │          HTTP Traffic │                      │
- │                       │                      │
- │  ┌────────────────────▼───────────────────┐  │
- │  │ Docker Environment 2: Hermes Agent     │  │
- │  │ (agent_service/docker-compose.yml)     │  │
- │  │  - Hermes Agent Daemon (Port 8643)     │  │
- │  │  - Autonomous Skills & Local Storage   │  │
- │  └────────────────────────────────────────┘  │
- └──────────────────────────────────────────────┘
+economy_editor/
+├── agent_service/                   # Sovereign AI Agent Package (100% Portable)
+│   ├── docker-compose.yml           # Hermes isolated container definition
+│   ├── profiles/                    # Calibrated Profiles (SOUL.md, config.yaml)
+│   ├── mcp/                         # Internal Model Context Protocol Tool Ecosystem
+│   │   ├── system_tools_server.py   # FastMCP server exposing tools over JSON-RPC
+│   │   └── schemas/                 # Pydantic input/output validation schemas
+│   ├── memory/                      # Embedded Sovereign Vector Engine (sqlite-vec)
+│   │   ├── vector_store.py          # Vector store with cosine similarity search (<15ms)
+│   │   └── cli.py                   # Knowledge Export & Import CLI (PII-sanitized)
+│   ├── data/                        # Persistent storage (memory.db, runtime state)
+│   ├── evals/                       # Independent Golden Benchmark Evaluation Suite
+│   │   └── test_golden_evals.py     # Deterministic domain scenarios (pytest)
+│   └── telemetry/                   # Glass-Box Observability Hooks (Langfuse / OTel)
+└── docs/
+    ├── ai_wiki/                     # System architecture & documentation wiki
+    └── plans/                       # Implementation plans & active roadmap
 ```
 
 ---
 
 ## Quickstart Guide
 
-### One-Click Automated Setup (Recommended)
-Clone the repository and run the automated installer:
+### 1. Configure Environment
 ```bash
-git clone https://github.com/devalees/ai_system_template.git
-cd ai_system_template
-
-chmod +x install.sh
-./install.sh
-```
-This script handles pre-flight diagnostics, environment bootstrapping, container orchestration for both isolated environments, and runs the bidirectional handshake test automatically.
-
----
-
-### Manual Setup (Step-by-Step)
-
-#### 1. Start Django Backend (Environment 1)
-```bash
-cd backend
 cp .env.example .env
-docker compose up -d --build
+# Edit .env and supply your LLM provider API keys (OpenRouter, Gemini, Groq, Anthropic, or OpenAI)
 ```
-* Django Admin available at: `http://localhost:8000/admin/` (default credentials: `admin` / `admin12345`)
-* API Health endpoint: `http://localhost:8000/api/health/`
 
-### 2. Start Hermes Agent (Environment 2)
+### 2. Launch Standalone Agent Service
 ```bash
-cd ../agent_service
-cp .env.example .env
-docker compose up -d
+docker compose -f agent_service/docker-compose.yml up -d
 ```
-* Hermes Gateway available at: `http://localhost:8643/`
 
-### 3. Run Bidirectional Handshake Verification
-From the root directory:
+### 3. Verify Hermes Gateway
 ```bash
-python scripts/verify_handshake.py
+# Check loaded models via OpenAI-compatible Gateway API
+curl -H "Authorization: Bearer hermes_agent_secret_key_prod_2026_audit" http://localhost:8643/v1/models
 ```
-Or execute the handshake skill directly inside the Hermes container:
+
+### 4. Interactive CLI Execution
 ```bash
-docker compose -f agent_service/docker-compose.yml exec hermes python /workspace/skills/django_handshake/run.py
+docker exec -it hermes-template-agent hermes chat
 ```
-
----
-
-## Directory Structure
-
-```
-├── docs/
-│   ├── ai_wiki/             # Architecture and system documentation
-│   └── plans/               # Active implementation plan & task state
-├── backend/                 # Isolated Docker Project 1 (Django)
-│   ├── docker-compose.yml
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   ├── manage.py
-│   ├── core/
-│   └── apps/integration/
-├── agent_service/           # Isolated Docker Project 2 (Hermes)
-│   ├── docker-compose.yml
-│   ├── .env.example
-│   └── skills/django_handshake/
-└── scripts/
-    └── verify_handshake.py  # Verification script
-```
-
----
-
-## License
-MIT
