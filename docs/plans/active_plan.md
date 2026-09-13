@@ -1572,15 +1572,15 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
   - Implement `/health` endpoint validating asynchronous database connection pool, Redis cache ping, and Celery worker heartbeat.
 
 #### **Stage 2: Micro-Kernel Core Architecture & Dynamic Module Loader**
-- [ ] **Sub-stage 2.1: Acyclic Module DAG & Manifest Validator (`backend/core/kernel.py`)**
+- [x] **Sub-stage 2.1: Acyclic Module DAG & Manifest Validator (`backend/core/kernel.py`)** - COMPLETED (Commit: `7b382dc`)
   - Implement manifest contract parser (`manifest.py`: `name`, `version`, `depends_on`, `ai_enabled`, `settings_schema`).
   - Implement topological sort algorithm validating module dependencies and preventing circular references.
-- [ ] **Sub-stage 2.2: 4-Phase Kernel Boot Lifecycle Engine**
+- [x] **Sub-stage 2.2: 4-Phase Kernel Boot Lifecycle Engine** - COMPLETED (Commit: `7b382dc`)
   - Formalize lifecycle execution sequence: `discover` $\rightarrow$ `load` $\rightarrow$ `migrate` $\rightarrow$ `bootstrap`.
-- [ ] **Sub-stage 2.3: FastAPI Application Factory & Modular Router Mounting (`backend/core/app.py`)**
+- [x] **Sub-stage 2.3: FastAPI Application Factory & Modular Router Mounting (`backend/core/app.py`)** - COMPLETED (Commit: `7b382dc`)
   - Factory pattern `create_app()` dynamically registering loaded module routers under `/api/v1/{module_name}`.
   - Global centralized exception handlers returning structured, machine-actionable error envelopes with resolution hints.
-- [ ] **Sub-stage 2.4: In-Process Event Bus & Redis Pub/Sub Bridge (`backend/core/event_bus.py`)**
+- [x] **Sub-stage 2.4: In-Process Event Bus & Redis Pub/Sub Bridge (`backend/core/event_bus.py`)** - COMPLETED (Commit: `7b382dc`)
   - Asynchronous event dispatcher capturing entity lifecycle events (`before_save`, `after_save`, `on_state_change`).
   - Redis Pub/Sub bridge broadcasting events across processes and WebSocket gateways.
 
@@ -1694,7 +1694,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14*: Subdivided each milestone into granular, independently verifiable sub-stages to facilitate atomic Git commits and systematic step-by-step execution.
 - *2026-09-14 (Future Roadmap Note - Visual App Studio)*: Formally documented the future **No-Code Visual App Studio & Dynamic Metamodel Engine** (Principle 19). Agreed to defer runtime dynamic table creation to a future phase aligned with Frontend UI development. The future Studio will generate real physical PostgreSQL tables and real SQL schemas (strictly rejecting unstructured single-JSONB compromises or freeform AI code generation) backed by a Redis distributed schema bus to invalidate metadata across Uvicorn and Celery workers. The initial release (Phase 42) maintains deterministic, Git-versioned Python packages in `backend/modules/apps/`, while runtime entity customization is fully supported via `custom_fields JSONB` and dynamic lookups.
 - *2026-09-14 (Stage 1 Completed - Commit: `4a7a781`)*: Successfully built, deployed, and verified Stage 1 multi-service Docker container stack (`sovereign-backend-api`, `sovereign-backend-postgres`, `sovereign-backend-redis`, `sovereign-backend-celery`) on isolated `sovereign-network`. Verified asynchronous connection pool to PostgreSQL 16, Redis 7 cache ping, Celery task worker heartbeat (`ping` -> `pong`), and automated pytest suite (2/2 passing in container).
+- *2026-09-14 (Stage 2 Completed - Commit: `7b382dc`)*: Implemented Micro-Kernel core architecture: `ModuleManifest` contracts (`manifest.py`), topological sort Kahn's algorithm resolving acyclic module DAGs and rejecting cycles (`CircularDependencyError`) and missing dependencies (`MissingDependencyError`), 4-phase boot lifecycle (`discover` -> `load` -> `migrate` -> `bootstrap`), machine-actionable error envelopes (`PlatformException`, `exceptions.py`), in-process `EventBus` with wildcard matching and Redis Pub/Sub bridge (`event_bus.py`), and `/api/v1/kernel/modules` diagnostics route. All 10 unit tests passing in container in 1.25s.
 
 ### 4. Current Focus
-Begin execution of **Stage 2: Micro-Kernel Core Architecture & Dynamic Module Loader** (Sub-stage 2.1: Acyclic Module DAG & Manifest Validator in `backend/core/kernel.py`).
+Begin execution of **Stage 3: Multi-Tenancy Engine, Base Models & Soft-Delete Architecture** (Sub-stage 3.1: ContextVar & Request Middleware in `backend/core/context.py`).
 
