@@ -15,11 +15,15 @@ Deterministic pytest evaluations certifying:
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from pathlib import Path
 from typing import Any, Dict
 
 import pytest
+
+# Ensure deterministic mock execution for external API tests
+os.environ["EXTERNAL_API_BASE_URL"] = "http://localhost:8000"
 
 from agent_service.mcp.credential_vault import CredentialVault, vault
 from agent_service.mcp.integration_server import (

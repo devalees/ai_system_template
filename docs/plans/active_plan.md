@@ -1440,5 +1440,41 @@ Establish a zero-trust external integration and dynamic agent provisioning archi
 ### 4. Current Focus
 Phase 38 completed with full autonomous lifecycle (provisioning, deprovisioning, RBAC, and Chat Gateway intake).
 
+---
+
+## Phase 39: Automated Cross-Instance Knowledge & Skill Synchronization Engine
+
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-13 20:25:00+03:00
+
+### 1. Objective & Scope
+Establish an automated, zero-token, deterministic background synchronization engine enabling multi-tenant Sovereign Agent deployments to continuously exchange generalized procedural memories and vetted skill playbooks via a central Git/GitHub repository without human intervention:
+1. **Authenticated Machine-to-Machine Git Remote**: Automatic injection of Personal Access Tokens (`KNOWLEDGE_HUB_AUTH_TOKEN`) or SSH Deploy Keys (`KNOWLEDGE_HUB_SSH_KEY_PATH`).
+2. **Tenant Privacy Isolation**: Physical quarantine of `scope='project_local'` records via SQL queries. Only `scope='generalized'` operational procedures are eligible for export.
+3. **Automated Secret & PII Scrubbing**: Pipeline integration with `sanitize_text` to strip API keys (`sk-...`), Bearer tokens, passwords, company emails, and internal IPv4 addresses.
+4. **Smart Vector Deduplication**: Incoming memories from the Central Hub are deduplicated against local `sqlite-vec` embeddings (exact content check + cosine similarity >= 0.88).
+5. **Dynamic Skill Mounting**: Inbound `SKILL.md` bundles from `skills/` in the Hub are automatically mounted into local `skills/` directories.
+6. **Daemon & Cron Runner**: CLI supporting `--once` execution for cron schedules and `--interval-hours` for persistent daemon execution.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Core Synchronization Engine (`agent_service/sync/knowledge_sync.py`)** - COMPLETED
+- [x] **Sub-task 2: Sync Daemon & CLI Entrypoint (`agent_service/sync/daemon.py`)** - COMPLETED
+- [x] **Sub-task 3: Environment Configuration (`.env`, `.env.example`)** - COMPLETED
+- [x] **Sub-task 4: Deterministic Benchmark Test Suite (`test_knowledge_sync.py`)** - COMPLETED
+- [x] **Sub-task 5: Live GitHub Repository Verification (`https://github.com/devalees/skills.git`)** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 39)
+- *2026-09-13*: User approved Phase 39 Implementation Plan adopting deterministic non-AI script synchronization via Git and Personal Access Token (PAT) authentication.
+- *2026-09-13*: User configured live repository `https://github.com/devalees/skills.git` with a fine-grained GitHub PAT in `.env`.
+- *2026-09-13*: Implemented `KnowledgeSyncEngine` in `agent_service/sync/knowledge_sync.py` featuring empty remote repository auto-scaffolding, branch normalization (`main`), exact content and vector similarity deduplication via `sqlite-vec`, and zero-trust sanitization.
+- *2026-09-13*: Implemented `agent_service/sync/daemon.py` supporting both one-shot `--once` execution and recurring daemon intervals.
+- *2026-09-13*: Authored `agent_service/evals/test_knowledge_sync.py` with 6 deterministic benchmarks covering token injection, scope quarantine, secret scrubbing, vector deduplication, skill mounting, and end-to-end multi-node Git simulation.
+- *2026-09-13*: Executed live end-to-end sync against `https://github.com/devalees/skills.git`. Verified initial commit `76d5914`, generalized memory commit `291cac9`, and general reconciliation skill commit `32cc158` live on GitHub main branch.
+- *2026-09-13*: Verified full test runner inside `hermes-template-agent` passing 68/68 tests in 2.98s (100% pass rate).
+
+### 4. Current Focus
+Phase 39 completed. Automated multi-tenant collective intelligence synchronization verified live against remote GitHub hub.
+
 
 
