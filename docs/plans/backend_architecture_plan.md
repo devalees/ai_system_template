@@ -129,6 +129,22 @@ The architectural philosophy is anchored by 8 core principles:
 * **Non-Blocking Asynchronous Processing**: Large datasets are processed in the background via Celery workers with chunked batch inserts, avoiding HTTP request timeouts and providing live progress percentages over WebSockets.
 * **Granular RBAC Protection**: Strict capability checks (`import:<model>` and `export:<model>`) ensure users can only import/export data for models they are explicitly authorized to manage.
 
+### Principle 16: Unified Atomic Backup & Disaster Recovery (Database + Filestore Bundle)
+* **Solving the Database-Filestore Disconnect**:
+  * A backup is **never** just an isolated SQL dump. It is a single, self-contained compressed archive bundle (`backup_YYYYMMDD_HHMMSS.tar.gz`) containing:
+    1. `dump.sql`: Complete PostgreSQL transactional database dump (`pg_dump`).
+    2. `filestore/`: The entire directory of physical document attachments, media, and blobs.
+    3. `manifest.json`: System version, migration revision (Alembic hash), company tenant list, file counts, and cryptographic SHA-256 checksums.
+* **Relative Content-Addressable Storage (CAS)**:
+  * The database never stores brittle absolute host paths. File records store relative storage keys: `filestore/{company_id}/{sha256_hash}`.
+  * Restoring the archive bundle onto *any* host machine, folder, or container restores both database records and physical files in 100% synchronized fidelity with zero broken attachment links.
+* **Security & Isolation from Public HTTP**:
+  * Dangerous raw backup/restore DDL operations are strictly excluded from public HTTP endpoints to prevent remote denial-of-service or database wipe attacks.
+  * Driven by standalone, secure CLI scripts (`backup.sh`, `restore.sh` / `backend/scripts/backup.py`).
+* **Automated Action & Cron Integration**:
+  * Administrators can schedule recurring automated backup snapshots (Daily, Weekly, Monthly) via the **Automated Actions Engine** and Celery Beat, with snapshot records and status logged into `action_execution_log`.
+  * Disaster recovery (`restore.sh`) is intentionally restricted to an offline administrator CLI command with confirmation safeguards.
+
 ---
 
 ## 3. Technology Stack & Runtime (Dimension 2 — AGREED)
@@ -208,7 +224,7 @@ The architectural philosophy is anchored by 8 core principles:
 ## 7. Comprehensive Architectural Blueprint Status
 
 All 5 core dimensions have been collaboratively brainstormed and agreed upon:
-* [x] **Dimension 1**: Architecture & Philosophy (15 core principles including contextual RBAC, per-app settings, relational dynamism, i18n, audit logging, first-class AI agent user identity, universal aggregator, and bulk import/export).
+* [x] **Dimension 1**: Architecture & Philosophy (16 core principles including contextual RBAC, per-app settings, relational dynamism, i18n, audit logging, first-class AI agent user identity, universal aggregator, bulk import/export, and unified atomic backups).
 * [x] **Dimension 2**: Technology Stack (FastAPI, PostgreSQL 16, SQLAlchemy 2.0 Async, Alembic, Redis + Celery, Pydantic v2).
 * [x] **Dimension 3**: Database & Multi-Tenant Storage Strategy (Pattern A: Shared DB with `company_id` + `JSONB` custom fields with GIN indexes).
 * [x] **Dimension 4**: Asynchronous Execution & Event Bus (ORM hooks $\rightarrow$ Redis/Celery $\rightarrow$ WebSockets + Celery Beat).
@@ -247,10 +263,11 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 - [ ] **Contextual Chatter & WebSockets**: Polymorphic threaded discussions `(res_model, res_id)` with internal notes, emails, and Redis Pub/Sub WebSocket broadcasting.
 - [ ] **File & Document Storage**: Attachment manager supporting blob persistence, MIME metadata, and parsing.
 
-### Milestone 6: Event-Driven Automated Actions Engine (TCA)
+### Milestone 6: Event-Driven Automated Actions & Backup Engine (TCA)
 - [ ] Trigger registry: ORM lifecycle hooks (`on_create`, `on_update`, `on_delete`, `on_state_change`), Celery Beat cron intervals.
 - [ ] Universal condition evaluator running against record attributes and relational paths.
 - [ ] Action execution dispatcher: `update_record`, `create_record`, `send_email`, `invoke_webhook`.
+- [ ] **Unified Atomic Backup Engine**: Standalone CLI scripts (`backup.sh`, `restore.sh`), atomic archive bundle (`dump.sql` + `filestore/` + `manifest.json`), and scheduled automated backup actions via Celery Beat.
 
 ### Milestone 7: Hermes Agent Bridge & Dynamic MCP Tool Exposer
 - [ ] `invoke_ai_agent` automated action executor calling Hermes Gateway (`:8643`) with dynamic prompt templates.
@@ -263,6 +280,7 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
   * Universal filtering AST compilation.
   * Symmetric human vs. AI agent RBAC enforcement.
   * Automated action execution and audit trail logging.
+  * Atomic backup archive creation and restore integrity.
   * End-to-end Hermes Agent dispatch and chatter callbacks.
 
 ---
