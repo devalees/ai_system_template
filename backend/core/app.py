@@ -11,6 +11,7 @@ from sqlalchemy import text
 import redis.asyncio as aioredis
 
 from core.config import settings
+from core.context import MultiTenancyContextMiddleware
 from core.database import engine
 from core.kernel import kernel
 from core.event_bus import event_bus
@@ -42,7 +43,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # 1. Enable CORS
+    # 1. Register Multi-Tenancy & Context Extraction Middleware
+    app.add_middleware(MultiTenancyContextMiddleware)
+
+    # 2. Enable CORS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
