@@ -1513,4 +1513,32 @@ Establish an autonomous cognitive reflection and learning engine that captures h
 - *2026-09-13*: Synchronized `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md` to document the 8 Sovereign Pillars and the complete HITL Distillation Lifecycle.
 
 ### 4. Current Focus
-Phase 40 completed. All 72 golden benchmark scenarios verified passing. System ready for next domain milestone.
+Phase 40 completed. All 72 golden benchmark scenarios verified passing. System transitioned to Phase 41 Backend Architecture & API Planning.
+
+---
+
+## Phase 41: Sovereign Headless Backend Platform & Architecture Planning
+
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-13 23:48:00+03:00
+- **Dedicated Specification File**: [`docs/plans/backend_architecture_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/backend_architecture_plan.md)
+
+### 1. Objective & Scope
+Brainstorm, specify, and architect the Sovereign Headless Backend & API Layer to power pluggable domain applications with pure data APIs, universal advanced filtering, event-driven automated actions, native multi-tenancy, model-level RBAC, and seamless integration with the Sovereign AI Agent ecosystem (`agent_service/`).
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Dimension 1 (Architecture & Philosophy) Synthesis** - COMPLETED
+- [/] **Sub-task 2: Dimension 2 (Technology Stack & Language Runtime) Brainstorming** - IN PROGRESS
+- [ ] **Sub-task 3: Dimension 3 (Data Persistence & Multi-Tenancy Strategy) Planning** - PENDING
+- [ ] **Sub-task 4: Dimension 4 (Asynchronous Execution & Event Bus) Planning** - PENDING
+- [ ] **Sub-task 5: Dimension 5 (Hermes Agent Bridge & Dynamic MCP Tool Integration) Planning** - PENDING
+- [ ] **Sub-task 6: Comprehensive Architectural Blueprint Finalization** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 41)
+- *2026-09-13*: User initiated dedicated architectural brainstorming session for the Backend & API platform.
+- *2026-09-13*: Agreed on 8 core architectural principles for Dimension 1 (Modular Micro-Kernel, Per-Module AI Toggle, Trigger-Condition-Action Engine, Universal Filtering AST, Base Utilities vs. Pluggable Apps, Model-Level RBAC, Native Multi-Tenancy, and Contextual Record-Level Chatter).
+- *2026-09-13*: Created dedicated specification and tracking document [`docs/plans/backend_architecture_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/backend_architecture_plan.md).
+
+### 4. Current Focus
+Review Dimension 1 in the plan with the user and proceed to brainstorm Dimension 2 (Technology Stack).
