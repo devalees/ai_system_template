@@ -1629,9 +1629,9 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - [x] **Sub-stage 5.4: `audit` (Immutable Audit Trail & Diffs)** - COMPLETED (Commit: `31b3e8a`)
   - Model: `AuditLog` capturing `actor_id`, `actor_type`, `company_id`, `model_name`, `record_id`, `action`, and JSON state diff.
   - State diff computation engine (`compute_instance_diff`), service layer (`AuditService`), and tenant-isolated REST endpoints (`/api/v1/audit/*`).
-- [ ] **Sub-stage 5.5: `chatter` (Polymorphic Discussion & Real-time Collaboration)**
+- [x] **Sub-stage 5.5: `chatter` (Polymorphic Discussion & Real-time Collaboration)** - COMPLETED (Commit: `c0dcece`)
   - Models: `MailMessage` with polymorphic linkage `(res_model, res_id)`, `message_type: "comment" | "notification" | "ai_finding"`, and `Activity`.
-  - WebSocket broadcaster streaming new messages to connected clients via Redis Pub/Sub.
+  - Service layer (`ChatterService`), Redis Pub/Sub broadcaster, and WebSocket real-time thread subscription gateway (`/api/v1/chatter/ws/{res_model}/{res_id}`).
 - [ ] **Sub-stage 5.6: `documents` (Blob Storage & Inherited Permissions)**
   - Content-Addressable Storage engine saving files to `filestore/` by SHA-256 hash.
   - Parent-inherited permission model: access governed by read rights on target `res_model` / `res_id`.
@@ -1701,7 +1701,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Sub-stage 5.2 Completed - Commit: `fe2a6e0`)*: Implemented `settings` module: `ModuleSettings` persistent JSONB table, Redis-cached retrieval with 1-hour TTL, transactional merge updates, automatic cache invalidation, and authenticated REST endpoints (`GET/PATCH /api/v1/settings/{module_name}`). Verified complete multi-tenant isolation. 25/25 unit tests passing in container in 8.64s.
 - *2026-09-14 (Sub-stage 5.3 Completed - Commit: `e969070`)*: Implemented `lookups` master data module: normalized models (`Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`), ISO fixture library (`fixtures.py`), idempotent seeder (`seed_iso_data()`), and full REST CRUD endpoints (`/api/v1/lookups/*`) with company isolation and fast query filtering. 27/27 unit tests passing in container in 10.92s.
 - *2026-09-14 (Sub-stage 5.4 Completed - Commit: `31b3e8a`)*: Implemented `audit` module: immutable `AuditLog` model capturing actor attribution and state diffs, `compute_instance_diff` delta generator, `AuditService.log_mutation` helper, and tenant-scoped REST exploration endpoints (`/api/v1/audit/` and `/api/v1/audit/entity/{model_name}/{record_id}`). 30/30 unit tests passing in container in 13.01s.
+- *2026-09-14 (Sub-stage 5.5 Completed - Commit: `c0dcece`)*: Implemented `chatter` module: polymorphic `MailMessage` and `Activity` models, `ChatterService` orchestrating thread persistence, in-process event emission, and real-time Redis Pub/Sub broadcasting (`sovereign:chatter:{company_id}:{res_model}:{res_id}`), with dedicated WebSocket gateway (`/api/v1/chatter/ws/{res_model}/{res_id}`). 33/33 unit tests passing in container in 15.44s.
 
 ### 4. Current Focus
-Begin execution of **Stage 5, Sub-stage 5.5: `chatter` (Polymorphic Discussion & Real-time Collaboration)** in `backend/modules/base/chatter/`.
+Begin execution of **Stage 5, Sub-stage 5.6: `documents` (Blob Storage & Inherited Permissions)** in `backend/modules/base/documents/`.
 
