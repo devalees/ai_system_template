@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "a9d47305-6f55-49c8-9665-90c127ef5ee5",
+    "_postman_id": "36623544-5678-4abe-b77a-788ee8eba976",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -1385,6 +1385,364 @@
                 }
               }
             }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Multi-Channel Notification Engine",
+      "item": [
+        {
+          "name": "List authenticated user's notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "notifications"
+              ],
+              "variable": []
+            },
+            "description": "Retrieve notifications targeted to the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Get user unread notifications count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/unread-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "unread-count"
+              ],
+              "variable": []
+            },
+            "description": "Return count of unread notifications for top navigation badges."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark single notification as read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/notifications/:notification_id/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "notifications",
+                ":notification_id",
+                "read"
+              ],
+              "variable": [
+                {
+                  "key": "notification_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Acknowledge and mark an individual notification as read."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark all user notifications as read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/notifications/mark-all-read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "notifications",
+                "mark-all-read"
+              ],
+              "variable": []
+            },
+            "description": "Clear all unread notification badges for the active user."
+          },
+          "response": []
+        },
+        {
+          "name": "Dispatch multi-channel notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "send"
+              ],
+              "variable": []
+            },
+            "description": "Dispatch notification across allowed channels (In-App, WebPush, Mobile Push).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action_url\": \"/settings/security\",\n  \"body\": \"Unusual login attempt detected from new IP address.\",\n  \"channels\": [\n    \"in_app\",\n    \"web_push\"\n  ],\n  \"metadata_info\": {\n    \"ip\": \"192.168.1.100\"\n  },\n  \"notification_type\": \"ai_alert\",\n  \"priority\": \"urgent\",\n  \"recipient_id\": \"u0000000-0000-0000-0000-000000000001\",\n  \"res_id\": \"u0000000-0000-0000-0000-000000000001\",\n  \"res_model\": \"res.users\",\n  \"title\": \"System Security Alert\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get user notification preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/preferences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "preferences"
+              ],
+              "variable": []
+            },
+            "description": "Retrieve active user delivery preferences across channels and event types."
+          },
+          "response": []
+        },
+        {
+          "name": "Set or update channel preference",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/preferences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "preferences"
+              ],
+              "variable": []
+            },
+            "description": "Configure opt-in / opt-out preferences for a specific channel and notification category.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"email\",\n  \"is_enabled\": false,\n  \"notification_type\": \"task\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register WebPush device subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/subscriptions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "subscriptions"
+              ],
+              "variable": []
+            },
+            "description": "Register browser WebPush (VAPID) endpoint and encryption keys for this user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auth\": \"tBHItJI5svbpez7KI4CCXg==\",\n  \"endpoint\": \"https://fcm.googleapis.com/fcm/send/sample_endpoint_token\",\n  \"p256dh\": \"BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QT9Q0A4APqOM89...\",\n  \"user_agent\": \"Mozilla/5.0 Chrome/120.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unregister WebPush device subscription",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification_engine/subscriptions/:subscription_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notification_engine",
+                "subscriptions",
+                ":subscription_id"
+              ],
+              "variable": [
+                {
+                  "key": "subscription_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Remove a registered WebPush subscription endpoint."
           },
           "response": []
         }

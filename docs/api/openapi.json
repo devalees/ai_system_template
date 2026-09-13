@@ -1445,6 +1445,437 @@
         }
       }
     },
+    "/api/v1/notification_engine/notifications": {
+      "get": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - In-App"
+        ],
+        "summary": "List authenticated user's notifications",
+        "description": "Retrieve notifications targeted to the authenticated user.",
+        "operationId": "list_notifications_api_v1_notification_engine_notifications_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "is_read",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by read status",
+              "title": "Is Read"
+            },
+            "description": "Filter by read status"
+          },
+          {
+            "name": "notification_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by type (task, info, alert)",
+              "title": "Notification Type"
+            },
+            "description": "Filter by type (task, info, alert)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Pagination size",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Pagination size"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Pagination offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationRead"
+                  },
+                  "title": "Response List Notifications Api V1 Notification Engine Notifications Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notification_engine/unread-count": {
+      "get": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - In-App"
+        ],
+        "summary": "Get user unread notifications count",
+        "description": "Return count of unread notifications for top navigation badges.",
+        "operationId": "get_unread_count_api_v1_notification_engine_unread_count_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notification_engine/notifications/{notification_id}/read": {
+      "patch": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - In-App"
+        ],
+        "summary": "Mark single notification as read",
+        "description": "Acknowledge and mark an individual notification as read.",
+        "operationId": "mark_notification_read_api_v1_notification_engine_notifications__notification_id__read_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Notification Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notification_engine/notifications/mark-all-read": {
+      "post": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - In-App"
+        ],
+        "summary": "Mark all user notifications as read",
+        "description": "Clear all unread notification badges for the active user.",
+        "operationId": "mark_all_read_api_v1_notification_engine_notifications_mark_all_read_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Mark All Read Api V1 Notification Engine Notifications Mark All Read Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notification_engine/send": {
+      "post": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - Dispatch"
+        ],
+        "summary": "Dispatch multi-channel notification",
+        "description": "Dispatch notification across allowed channels (In-App, WebPush, Mobile Push).",
+        "operationId": "send_notification_api_v1_notification_engine_send_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendNotificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendNotificationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notification_engine/preferences": {
+      "get": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - Preferences"
+        ],
+        "summary": "Get user notification preferences",
+        "description": "Retrieve active user delivery preferences across channels and event types.",
+        "operationId": "get_user_preferences_api_v1_notification_engine_preferences_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationPreferenceRead"
+                  },
+                  "type": "array",
+                  "title": "Response Get User Preferences Api V1 Notification Engine Preferences Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - Preferences"
+        ],
+        "summary": "Set or update channel preference",
+        "description": "Configure opt-in / opt-out preferences for a specific channel and notification category.",
+        "operationId": "set_user_preference_api_v1_notification_engine_preferences_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationPreferenceSet"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notification_engine/subscriptions": {
+      "post": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - Subscriptions"
+        ],
+        "summary": "Register WebPush device subscription",
+        "description": "Register browser WebPush (VAPID) endpoint and encryption keys for this user.",
+        "operationId": "register_subscription_api_v1_notification_engine_subscriptions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushSubscriptionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notification_engine/subscriptions/{subscription_id}": {
+      "delete": {
+        "tags": [
+          "Multi-Channel Notification Engine",
+          "Notification Engine - Subscriptions"
+        ],
+        "summary": "Unregister WebPush device subscription",
+        "description": "Remove a registered WebPush subscription endpoint.",
+        "operationId": "delete_subscription_api_v1_notification_engine_subscriptions__subscription_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/lookups/seed": {
       "post": {
         "tags": [
@@ -4658,6 +5089,230 @@
           }
         }
       },
+      "NotificationCountResponse": {
+        "properties": {
+          "unread_count": {
+            "type": "integer",
+            "title": "Unread Count"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unread_count",
+          "total_count"
+        ],
+        "title": "NotificationCountResponse",
+        "example": {
+          "total_count": 42,
+          "unread_count": 5
+        }
+      },
+      "NotificationPreferenceRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "notification_type": {
+            "type": "string",
+            "title": "Notification Type"
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "title": "Is Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "channel",
+          "notification_type",
+          "is_enabled"
+        ],
+        "title": "NotificationPreferenceRead",
+        "example": {
+          "channel": "email",
+          "id": "p0000000-0000-0000-0000-000000000001",
+          "is_enabled": true,
+          "notification_type": "invoice",
+          "user_id": "u0000000-0000-0000-0000-000000000001"
+        }
+      },
+      "NotificationPreferenceSet": {
+        "properties": {
+          "channel": {
+            "type": "string",
+            "title": "Channel",
+            "description": "Channel name: in_app, email, web_push, sms"
+          },
+          "notification_type": {
+            "type": "string",
+            "title": "Notification Type",
+            "description": "Type: all, task, mention, invoice, alert",
+            "default": "all"
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "title": "Is Enabled",
+            "description": "Whether delivery on this channel is enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "channel",
+          "is_enabled"
+        ],
+        "title": "NotificationPreferenceSet",
+        "example": {
+          "channel": "email",
+          "is_enabled": false,
+          "notification_type": "task"
+        }
+      },
+      "NotificationRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "recipient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Recipient Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "notification_type": {
+            "type": "string",
+            "title": "Notification Type"
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority"
+          },
+          "is_read": {
+            "type": "boolean",
+            "title": "Is Read"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          },
+          "action_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Url"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id"
+          },
+          "metadata_info": {
+            "type": "object",
+            "title": "Metadata Info"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "recipient_id",
+          "title",
+          "body",
+          "notification_type",
+          "priority",
+          "is_read",
+          "read_at",
+          "action_url",
+          "res_model",
+          "res_id",
+          "metadata_info",
+          "created_at"
+        ],
+        "title": "NotificationRead",
+        "example": {
+          "action_url": "/crm/leads/l0000000-0000-0000-0000-000000000001",
+          "body": "Lead 'Sovereign Corp' has been assigned to your sales queue.",
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-14T02:40:00Z",
+          "id": "n0000000-0000-0000-0000-000000000001",
+          "is_read": false,
+          "metadata_info": {
+            "source": "lead_router"
+          },
+          "notification_type": "task",
+          "priority": "normal",
+          "recipient_id": "u0000000-0000-0000-0000-000000000001",
+          "res_id": "l0000000-0000-0000-0000-000000000001",
+          "res_model": "crm.lead",
+          "title": "New Lead Assigned"
+        }
+      },
       "PermissionCreate": {
         "properties": {
           "code": {
@@ -4695,6 +5350,121 @@
           "module_name": "accounting",
           "name": "Post Invoices",
           "ownership_scope": "GLOBAL"
+        }
+      },
+      "PushSubscriptionCreate": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint",
+            "description": "Browser Push Service subscription URL"
+          },
+          "p256dh": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "P256Dh",
+            "description": "Client ECDH public key (P-256 curve)"
+          },
+          "auth": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Auth",
+            "description": "Client authentication secret"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent",
+            "description": "Client browser / device user agent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint",
+          "p256dh",
+          "auth"
+        ],
+        "title": "PushSubscriptionCreate",
+        "example": {
+          "auth": "tBHItJI5svbpez7KI4CCXg==",
+          "endpoint": "https://fcm.googleapis.com/fcm/send/sample_endpoint_token",
+          "p256dh": "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QT9Q0A4APqOM89...",
+          "user_agent": "Mozilla/5.0 Chrome/120.0"
+        }
+      },
+      "PushSubscriptionRead": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint",
+            "description": "Browser Push Service subscription URL"
+          },
+          "p256dh": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "P256Dh",
+            "description": "Client ECDH public key (P-256 curve)"
+          },
+          "auth": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Auth",
+            "description": "Client authentication secret"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent",
+            "description": "Client browser / device user agent"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint",
+          "p256dh",
+          "auth",
+          "id",
+          "user_id",
+          "created_at"
+        ],
+        "title": "PushSubscriptionRead",
+        "example": {
+          "auth": "tBHItJI5svbpez7KI4CCXg==",
+          "created_at": "2026-09-14T02:42:00Z",
+          "endpoint": "https://fcm.googleapis.com/fcm/send/sample_endpoint_token",
+          "id": "sub0000-0000-0000-0000-000000000001",
+          "p256dh": "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QT9Q0A4APqOM89...",
+          "user_agent": "Mozilla/5.0 Chrome/120.0",
+          "user_id": "u0000000-0000-0000-0000-000000000001"
         }
       },
       "SendMailRequest": {
@@ -4904,6 +5674,150 @@
           "message": "Email dispatched successfully",
           "queue_id": "q0000000-0000-0000-0000-000000000001",
           "state": "sent"
+        }
+      },
+      "SendNotificationRequest": {
+        "properties": {
+          "recipient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Recipient Id",
+            "description": "Target User UUID"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Title",
+            "description": "Notification header title"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body",
+            "description": "Full text or markdown description"
+          },
+          "notification_type": {
+            "type": "string",
+            "title": "Notification Type",
+            "description": "Classification: info, warning, success, danger, task, mention, ai_alert",
+            "default": "info"
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority",
+            "description": "Priority level: low, normal, high, urgent",
+            "default": "normal"
+          },
+          "action_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Url",
+            "description": "Deep link target URL"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Polymorphic target record model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Polymorphic target record ID"
+          },
+          "metadata_info": {
+            "type": "object",
+            "title": "Metadata Info",
+            "description": "Arbitrary custom payload attributes"
+          },
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Channels",
+            "description": "Requested delivery channels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recipient_id",
+          "title",
+          "body"
+        ],
+        "title": "SendNotificationRequest",
+        "example": {
+          "action_url": "/settings/security",
+          "body": "Unusual login attempt detected from new IP address.",
+          "channels": [
+            "in_app",
+            "web_push"
+          ],
+          "metadata_info": {
+            "ip": "192.168.1.100"
+          },
+          "notification_type": "ai_alert",
+          "priority": "urgent",
+          "recipient_id": "u0000000-0000-0000-0000-000000000001",
+          "res_id": "u0000000-0000-0000-0000-000000000001",
+          "res_model": "res.users",
+          "title": "System Security Alert"
+        }
+      },
+      "SendNotificationResponse": {
+        "properties": {
+          "notification_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Notification Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "dispatched_channels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dispatched Channels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "notification_id",
+          "status",
+          "dispatched_channels"
+        ],
+        "title": "SendNotificationResponse",
+        "example": {
+          "dispatched_channels": [
+            "in_app",
+            "web_push"
+          ],
+          "notification_id": "n0000000-0000-0000-0000-000000000001",
+          "status": "delivered"
         }
       },
       "TagCreate": {
