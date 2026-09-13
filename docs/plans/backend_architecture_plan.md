@@ -106,6 +106,16 @@ The architectural philosophy is anchored by 8 core principles:
   * Standard RBAC permission checks execute identically for humans and agents.
 * **Auditing Accountability**: In all audit logs and chatter threads, mutations performed by an agent are unambiguously credited to that specific AI agent identity (`user_type="ai_agent"`).
 
+### Principle 14: Universal Advanced Aggregator & Equation Engine (Analytics & KPI Metrics)
+* **Kernel-Level Analytics Uniformity**: Symmetrical to the Universal Filtering Engine (Principle 4), a centralized Aggregation & Computation Engine provided by the Kernel so that every existing and future module automatically inherits advanced analytical summaries without writing custom SQL endpoints.
+* **Standard & Statistical Aggregations**:
+  * Out-of-the-box operations: `SUM`, `AVG`, `MIN`, `MAX`, `COUNT`, `COUNT_DISTINCT`, and percentiles.
+  * Multi-dimensional grouping: Grouping across multiple attributes (e.g., group by `customer.country`, then by `status`) and temporal buckets (`day`, `week`, `month`, `quarter`, `year`).
+* **Complex Computed Expressions & Equations**:
+  * Evaluates mathematical equations across aggregated metrics (e.g., `(SUM(revenue) - SUM(cogs)) / NULLIF(SUM(revenue), 0) * 100` for Gross Margin %, or `COUNT(tickets) / NULLIF(COUNT(agents), 0)` for Workload Ratio).
+  * Conditional aggregations (e.g., `SUM(amount) FILTER (WHERE status = 'paid')` vs. `SUM(amount) FILTER (WHERE status = 'overdue')`).
+* **PostgreSQL Engine Compilation**: Compiles declarative JSON aggregation specifications directly into parameterized SQL with native PostgreSQL aggregate functions, `GROUP BY`, `HAVING`, and window functions, guaranteeing sub-second execution across large datasets.
+
 ---
 
 ## 3. Technology Stack & Runtime (Dimension 2 — AGREED)
@@ -209,9 +219,10 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 - [ ] Extensible `custom_fields JSONB` column with PostgreSQL GIN indexing on base entities.
 - [ ] FastAPI session middleware enforcing active `company_id` context on all requests.
 
-### Milestone 4: Universal Advanced Filtering & Query Engine
+### Milestone 4: Universal Advanced Filtering & Aggregator Engine
 - [ ] Declarative AST parser and compiler for nested boolean query trees (`AND`, `OR`, `NOT`).
 - [ ] Parameterized SQLAlchemy query translation with full operator support (`eq`, `contains`, `in`, `between`, relational traversals).
+- [ ] Universal Aggregation & Equation Engine: declarative schema compiling `SUM`, `AVG`, `MIN`, `MAX`, `COUNT`, multi-level `GROUP BY`, temporal bucketing, conditional filters (`FILTER WHERE`), and computed arithmetic equations.
 
 ### Milestone 5: Core Base Utilities (Installed by Default)
 - [ ] **Identity & Symmetric RBAC**: `User` model with `user_type: "human" | "ai_agent"`, Groups, model-level CRUD permissions, and user-level overrides.
