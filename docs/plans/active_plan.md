@@ -1387,3 +1387,47 @@ Decompose the monolithic `system_tools` FastMCP server into a platform-wide `com
 
 ### 4. Current Focus
 Phase 37 Modular FastMCP Domain Servers & Zero-Trust Profile Scoping successfully completed and verified.
+
+---
+
+## Phase 38: External System Integration, Dynamic Agent Provisioning & Scoped Credential Vault
+
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-13 18:10:00+03:00
+
+### 1. Objective & Scope
+Establish a zero-trust external integration and dynamic agent provisioning architecture enabling the Sovereign AI platform to connect safely to external client systems:
+1. **Per-Agent Scoped Credential Vault & RBAC Gatekeeper (`agent_service/mcp/credential_vault.py`)**:
+   - In-process credential manager mapping `agent_id` to its specific service token and endpoint access policy.
+   - Strict enforcement of allowed HTTP methods and wildcard endpoints.
+   - In-process injection of `Authorization: Bearer <token>`, `X-Agent-ID: <agent_id>` without exposing keys to LLM prompts.
+   - Automatic response body sanitization and secret redaction.
+2. **Dynamic Agent Provisioning Engine**:
+   - Enable external systems to provision custom domain specialist profiles (e.g. `procurement_agent`, `radiology_agent`) on the fly via JSON manifests.
+   - Dynamic scaffolding of profile directories under `agent_service/profiles/<agent_id>/` (`profile.yaml`, `SOUL.md`, `config.yaml`, `.no-bundled-skills`).
+   - Semantic vector indexing of agent responsibilities into `agent_service/data/memory.db` (`category="agent_registry"`).
+3. **FastMCP Integration Server (`agent_service/mcp/integration_server.py`)**:
+   - Expose 6 typed tools: `discover_external_system`, `provision_custom_agent`, `list_registered_agents`, `invoke_external_api`, `fetch_company_profile`, `sync_external_records`.
+4. **Day-1 Onboarding & Discovery**:
+   - Inspect external API schemas, extract entity models, and store vector embeddings in `memory.db` (`category="external_api_spec"`).
+5. **Two-Tier Workforce Hierarchy**:
+   - Tier 1 Governance (`orchestrator`, `security_guard`, `cost_controller`, `qa_auditor`): Fixed internal platform invariants with zero external database write privileges.
+   - Tier 2 Domain Specialists (`procurement_agent`, `comms_agent`, etc.): Pluggable business specialists with scoped write tokens.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Schemas & Credential Vault with RBAC Enforcement** - COMPLETED
+- [/] **Sub-task 2: FastMCP Integration Server (`integration_server.py`)** - IN PROGRESS
+- [ ] **Sub-task 3: System Configuration, Environment & Profile Wiring** - PENDING
+- [ ] **Sub-task 4: Golden Benchmark Evaluation Suite (`test_integration_server.py`)** - PENDING
+- [ ] **Sub-task 5: Architecture Wiki & System Synchronization** - PENDING
+
+### 3. Key Decisions & Deviations (Phase 38)
+- *2026-09-13*: User directed adopting Pattern B (Dedicated FastMCP Integration Server) with 100% zero-trust secret handling.
+- *2026-09-13*: User clarified requirement for **Dynamic Agent Provisioning**: The external client must be able to provision custom specialist agents (e.g., Procurement, Radiology) via JSON manifests rather than manual profile editing.
+- *2026-09-13*: User clarified **Per-Agent Scoped Credentials (RBAC)**: Governance agents (`security_guard`, `cost_controller`, `qa_auditor`) must have ZERO external database write credentials to prevent accidental mutations. Only Tier 2 domain specialists receive scoped write tokens for their designated endpoints.
+- *2026-09-13*: Implemented `agent_service/mcp/credential_vault.py` with `CredentialVault` providing in-process token lookup, wildcard endpoint RBAC checks, Tier 1 zero-write defaults, and recursive secret scrubbing.
+
+### 4. Current Focus
+Executing Sub-task 2: FastMCP Integration Server (`integration_server.py`).
+
