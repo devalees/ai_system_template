@@ -12,6 +12,9 @@ services:
     environment:
       PYTHONSAFEPATH: "1"
       PYTHONPATH: "/:/workspace"
+      LANGFUSE_HOST: "http://langfuse:3000"
+      LANGFUSE_PUBLIC_KEY: "${LANGFUSE_PUBLIC_KEY:-pk-lf-sovereign-2026}"
+      LANGFUSE_SECRET_KEY: "${LANGFUSE_SECRET_KEY:-sk-lf-sovereign-2026}"
     env_file:
       - .env
     extra_hosts:
@@ -19,6 +22,46 @@ services:
     command: ["gateway"]
     networks:
       - hermes_isolated_network
+
+  langfuse_db:
+    image: postgres:16-alpine
+    container_name: langfuse-template-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${LANGFUSE_DB_USER:-langfuse}
+      POSTGRES_PASSWORD: ${LANGFUSE_DB_PASSWORD:-langfuse_secret_password_2026}
+      POSTGRES_DB: ${LANGFUSE_DB_NAME:-langfuse}
+    volumes:
+      - langfuse_db_data:/var/lib/postgresql/data
+    networks:
+      - hermes_isolated_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LANGFUSE_DB_USER:-langfuse} -d ${LANGFUSE_DB_NAME:-langfuse}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: langfuse-template-server
+    restart: unless-stopped
+    depends_on:
+      langfuse_db:
+        condition: service_healthy
+    ports:
+      - "${LANGFUSE_PORT:-3100}:3000"
+    environment:
+      DATABASE_URL: "postgresql://${LANGFUSE_DB_USER:-langfuse}:${LANGFUSE_DB_PASSWORD:-langfuse_secret_password_2026}@langfuse_db:5432/${LANGFUSE_DB_NAME:-langfuse}"
+      NEXTAUTH_URL: "http://localhost:${LANGFUSE_PORT:-3100}"
+      NEXTAUTH_SECRET: "${LANGFUSE_NEXTAUTH_SECRET:-langfuse_nextauth_secret_sovereign_2026_salt}"
+      SALT: "${LANGFUSE_SALT:-langfuse_salt_sovereign_agent_2026}"
+      ENCRYPTION_KEY: "${LANGFUSE_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}"
+      TELEMETRY_ENABLED: "false"
+    networks:
+      - hermes_isolated_network
+
+volumes:
+  langfuse_db_data:
 
 networks:
   hermes_isolated_network:

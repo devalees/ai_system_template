@@ -1308,8 +1308,8 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 - [x] **Sub-task 1.5: Repository Transformation to 100% Standalone AI Agent Platform** - COMPLETED (Commit: `10e64a4`)
 - [x] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - COMPLETED (Commit: `6da4fd0`)
 - [x] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - COMPLETED (Commit: `68ed083`)
-- [/] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - IN_PROGRESS
-- [ ] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - PENDING
+- [x] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - COMPLETED (Commit: pending)
+- [/] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - IN_PROGRESS
 - [ ] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - PENDING
 - [ ] **Milestone 6: Sovereign Package Portability & Knowledge CLI** - PENDING
 
@@ -1330,9 +1330,15 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
   - Linked Hermes virtualenv to system packages via `system_packages.pth` and verified `hermes mcp test system_tools` discovering all 5 tools with 100% connection success.
   - Scaffolding and activated 5 core department head profiles (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `security_guard`) with calibrated reasoning budgets, authoritative `SOUL.md` personas, and `.no-bundled-skills` to eliminate prompt bloat.
   - Authored and consolidated test suite in `agent_service/evals/` (19 tests covering MCP tools, DAG validation, memory embeddings, and CRUD). Empirically verified all 19 tests passing in 2.08s.
+- *2026-09-13*: **Milestone 3 Implementation & Verification**:
+  - Added independent `langfuse` (v2.95.11) and `langfuse_db` (`postgres:16-alpine`) services to [`agent_service/docker-compose.yml`](file:///home/ehab/Desktop/economy_editor/agent_service/docker-compose.yml) on port `3100:3000`.
+  - Started containers; verified `langfuse-template-db` healthy, all Next.js database migrations applied, and `http://localhost:3100/api/public/health` returning `200 OK`.
+  - Implemented glass-box telemetry interceptor [`agent_service/telemetry/tracer.py`](file:///home/ehab/Desktop/economy_editor/agent_service/telemetry/tracer.py) (`TelemetryTracer`) capturing generation spans, token cost calculation across models, tool execution timing, and dual-mode persistence (Langfuse HTTP + resilient local JSON fallback).
+  - Authored test suite [`agent_service/evals/test_telemetry.py`](file:///home/ehab/Desktop/economy_editor/agent_service/evals/test_telemetry.py) (5 tests covering token pricing, span accumulation, tool timing, local JSON persistence, and non-blocking HTTP dispatch).
+  - Empirically verified all 24 evals passing in 2.09s (`24 passed in 2.09s`).
 
 ### 4. Current Focus
-Milestone 2 completed. Moving to Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker (`agent_service/docker-compose.yml` and `agent_service/telemetry/`).
+Milestone 3 completed. Moving to Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review (`agent_service/qa/` and mid-flight self-correction engine).
 
 
 
