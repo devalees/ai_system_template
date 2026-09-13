@@ -184,8 +184,22 @@ flowchart TD
 
 | Profile | Calibrated Reasoning | Primary FastMCP Tool | Target Latency | Optimization Focus |
 | :--- | :--- | :--- | :--- | :--- |
-| **`orchestrator`** | `none` | `decompose_task_dag` | < 1 sec | Instant triage, memory-augmented DAG decomposition |
+| **`orchestrator`** | `none` | `decompose_task_dag`, `discover_external_system` | < 1 sec | Instant triage, memory-augmented DAG decomposition |
 | **`cost_controller`** | `low` | `audit_token_budget` | < 3 sec | Real-time budget tracking via Langfuse telemetry |
 | **`qa_auditor`** | `high` | `validate_code_deliverable` | Dynamic | Tiered QA: $0 deterministic AST check, conditional LLM |
-| **`comms_agent`** | `none` | `client_service_action` | < 1 sec | Zero-latency concierge, zero-trust document streaming |
+| **`comms_agent`** | `none` | `client_service_action`, `sync_external_records` | < 1 sec | Zero-latency concierge, zero-trust document streaming |
 | **`security_guard`** | `high` | `security_audit` | < 5 sec | In-memory regex secret scanning & boundary audits |
+
+---
+
+## 5. Two-Tier Workforce Hierarchy & Dynamic Agent Provisioning
+
+### Tier 1: Sovereign Governance Agents (Fixed Platform Invariants)
+- `orchestrator`, `security_guard`, `cost_controller`, `qa_auditor`.
+- **Zero External Database Write Access**: These agents are internal platform guardians. They inspect code, track spend, scan secrets, and route DAGs locally. They are physically barred from mutating the external client's production database.
+
+### Tier 2: Dynamic Domain Specialists (Pluggable Client Specialists)
+- Provisioned on-demand via JSON manifests submitted to `@mcp.tool() provision_custom_agent`.
+- Examples: `procurement_agent` (purchase orders, ERP inventory), `radiology_agent` (DICOM metadata, scans), `billing_agent` (invoices, collections).
+- **Per-Agent Scoped Credentials (RBAC)**: Each domain agent holds its own dedicated service account token and wildcard endpoint access policy managed in [`agent_service/mcp/credential_vault.py`](file:///home/ehab/Desktop/economy_editor/agent_service/mcp/credential_vault.py).
+
