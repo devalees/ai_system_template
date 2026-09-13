@@ -1418,9 +1418,9 @@ Establish a zero-trust external integration and dynamic agent provisioning archi
 ### 2. Task Checklist & Progress
 - [x] **Sub-task 1: Schemas & Credential Vault with RBAC Enforcement** - COMPLETED (Commit: `59bb1d3`)
 - [x] **Sub-task 2: FastMCP Integration Server (`integration_server.py`)** - COMPLETED (Commit: `2357172`)
-- [x] **Sub-task 3: System Configuration, Environment & Profile Wiring** - COMPLETED
-- [/] **Sub-task 4: Golden Benchmark Evaluation Suite (`test_integration_server.py`)** - IN PROGRESS
-- [ ] **Sub-task 5: Architecture Wiki & System Synchronization** - PENDING
+- [x] **Sub-task 3: System Configuration, Environment & Profile Wiring** - COMPLETED (Commit: `b3ebd81`)
+- [x] **Sub-task 4: Golden Benchmark Evaluation Suite (`test_integration_server.py`)** - COMPLETED
+- [/] **Sub-task 5: Architecture Wiki & System Synchronization** - IN PROGRESS
 
 ### 3. Key Decisions & Deviations (Phase 38)
 - *2026-09-13*: User directed adopting Pattern B (Dedicated FastMCP Integration Server) with 100% zero-trust secret handling.
@@ -1429,7 +1429,8 @@ Establish a zero-trust external integration and dynamic agent provisioning archi
 - *2026-09-13*: Implemented `agent_service/mcp/credential_vault.py` with `CredentialVault` providing in-process token lookup, wildcard endpoint RBAC checks, Tier 1 zero-write defaults, and recursive secret scrubbing.
 - *2026-09-13*: Implemented `agent_service/mcp/integration_server.py` exposing 6 FastMCP tools: `discover_external_system`, `provision_custom_agent`, `list_registered_agents`, `invoke_external_api`, `fetch_company_profile`, and `sync_external_records`.
 - *2026-09-13*: Registered `integration_tools` in `config.yaml`, configured `orchestrator` and `comms_agent` profiles, and empirically verified live Hermes MCP discovery discovering all 6 tools in 2.93s.
+- *2026-09-13*: Authored `agent_service/evals/test_integration_server.py` (10 tests) covering Tier 1 zero-write enforcement, wildcard RBAC, Day-1 discovery vector indexing, dynamic provisioning, and payload sanitization. All 61 evaluations passing in 2.59s (100% pass rate).
 
 ### 4. Current Focus
-Executing Sub-task 4: Golden Benchmark Evaluation Suite (`test_integration_server.py`).
+Executing Sub-task 5: Architecture Wiki & System Synchronization.
 

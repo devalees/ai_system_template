@@ -139,9 +139,9 @@ def test_profile_scoping_isolation() -> None:
     profiles_dir = Path(__file__).resolve().parent.parent / "profiles"
 
     expected_toolsets = {
-        "comms_agent": {"common_tools", "comms_tools", "file_ops"},
+        "comms_agent": {"common_tools", "comms_tools", "integration_tools", "file_ops"},
         "cost_controller": {"common_tools", "cost_tools", "file_ops"},
-        "orchestrator": {"common_tools", "orchestrator_tools", "kanban", "delegate", "file_ops"},
+        "orchestrator": {"common_tools", "orchestrator_tools", "integration_tools", "kanban", "delegate", "file_ops"},
         "qa_auditor": {"common_tools", "qa_tools", "file_ops", "terminal"},
         "security_guard": {"common_tools", "security_tools", "file_ops", "terminal"},
     }
@@ -157,8 +157,13 @@ def test_profile_scoping_isolation() -> None:
     comms_tools = expected_toolsets["comms_agent"]
     qa_tools = expected_toolsets["qa_auditor"]
     sec_tools = expected_toolsets["security_guard"]
+    cost_tools = expected_toolsets["cost_controller"]
 
     assert "qa_tools" not in comms_tools
     assert "security_tools" not in comms_tools
     assert "comms_tools" not in qa_tools
     assert "qa_tools" not in sec_tools
+    assert "integration_tools" not in qa_tools
+    assert "integration_tools" not in sec_tools
+    assert "integration_tools" not in cost_tools
+

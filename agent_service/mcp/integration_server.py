@@ -123,14 +123,15 @@ def discover_external_system(
             f"Discovery Summary: {summary_text}"
         )
         mem_id = mem.add_memory(
+            title=f"External API Specification: {system_name}",
             content=mem_content,
             category="external_api_spec",
             scope="project_local",
-            tags=["api_spec", "onboarding", "endpoints"],
             metadata={"base_url": target_url, "endpoints_count": len(discovered_endpoints)},
         )
     except Exception as e:
         summary_text += f" (Memory indexing notice: {e})"
+
 
     return ExternalDiscoveryResult(
         success=True,
@@ -234,14 +235,15 @@ toolsets:
             f"Target Endpoints: {', '.join(spec.target_endpoints)}."
         )
         mem_id = mem.add_memory(
+            title=f"Agent Profile: {spec.display_name} ({norm_id})",
             content=agent_mem_content,
             category="agent_registry",
             scope="project_local",
-            tags=["agent_profile", "registry", norm_id],
             metadata={"agent_id": norm_id, "role": spec.role, "display_name": spec.display_name},
         )
     except Exception as e:
         pass
+
 
     return AgentProvisionResult(
         success=True,

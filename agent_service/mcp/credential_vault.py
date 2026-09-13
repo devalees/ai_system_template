@@ -190,7 +190,7 @@ class CredentialVault:
 
         # 2. Explicit disallowed check
         for pattern in policy.disallowed_endpoints:
-            if fnmatch(ep, pattern):
+            if fnmatch(ep, pattern) or (pattern.endswith("/*") and ep == pattern[:-2]):
                 return (
                     False,
                     f"Endpoint Forbidden: Target route '{ep}' matches restricted pattern '{pattern}' for agent '{norm_id}'.",
@@ -199,11 +199,12 @@ class CredentialVault:
         # 3. Allowed endpoints check
         matched = False
         for pattern in policy.allowed_endpoints:
-            if fnmatch(ep, pattern) or pattern == "*":
+            if fnmatch(ep, pattern) or pattern == "*" or (pattern.endswith("/*") and ep == pattern[:-2]):
                 matched = True
                 break
 
         if not matched:
+
             return (
                 False,
                 f"Endpoint Unauthorized: Target route '{ep}' is not covered by permitted endpoints for agent '{norm_id}'.",
