@@ -1305,7 +1305,7 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 ### 2. Task Milestones & Architectural Alignment
 - [x] **Sub-task 0: Architecture Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED (Commit: `a030672`)
 - [x] **Sub-task 1: Clean-Slate Decoupling & Pure Standalone Hermes Provisioning** - COMPLETED (Commit: `f7b11d1`)
-- [x] **Sub-task 1.5: Repository Transformation to 100% Standalone AI Agent Platform** - COMPLETED (Backed up full stack to `archive/full-stack-django-frontend`; removed `backend/`, `frontend/`, and `scripts/`; stopped all backend/frontend containers; scrubbed all Django references from `index.md`, `architecture.md`, `agent_team.md`, and `README.md`)
+- [x] **Sub-task 1.5: Repository Transformation to 100% Standalone AI Agent Platform** - COMPLETED (Commit: `10e64a4`)
 - [ ] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - PENDING
 - [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - PENDING
 - [ ] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
