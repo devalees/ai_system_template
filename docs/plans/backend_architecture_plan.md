@@ -111,19 +111,31 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
-## 4. Pending Dimensions for Collaborative Brainstorming
+## 4. Database & Multi-Tenant Storage Strategy (Dimension 3 — AGREED)
 
-- [ ] **Dimension 3: Database & Multi-Tenant Storage Strategy** *(Currently in focus)*
-  - Multi-tenancy implementation pattern: **Shared Database with Discriminator (`tenant_id`/`company_id`)** vs. **PostgreSQL Schema-per-Tenant** (`tenant_a.*`, `tenant_b.*`).
-  - Handling dynamic custom attributes & fields per tenant (PostgreSQL `JSONB` vs. dedicated tables).
-- [ ] **Dimension 4: Asynchronous Execution, Task Queue & Event Bus**
-  - Event dispatch flow: ORM hooks $\rightarrow$ Redis/Celery queue $\rightarrow$ Action execution $\rightarrow$ WebSocket pub/sub.
-  - Periodic / Scheduled cron runner (Celery Beat).
+- [x] **Multi-Tenancy Isolation Model**: **Pattern A (Shared Database with Discriminator `company_id`)** (AGREED)
+  * Single, high-performance PostgreSQL 16 database.
+  * Every entity table includes a `company_id` foreign key.
+  * The Kernel automatically injects `WHERE company_id = :active_company_id` into all SQLAlchemy queries and creates via session-level hooks, eliminating accidental cross-tenant data leaks.
+  * Delivers maximum connection pool efficiency, simple single-step migrations across the platform, and effortless cross-company consolidation reporting.
+- [x] **Dynamic Custom Attributes**: **PostgreSQL `JSONB` (`custom_fields`) + GIN Indexing** (AGREED)
+  * Every extensible entity includes a binary JSON column (`custom_fields JSONB DEFAULT '{}'::jsonb`).
+  * Backed by PostgreSQL **GIN indexing** (`USING gin(custom_fields)`), enabling sub-millisecond query execution inside nested JSON attributes.
+  * Validated dynamically against per-module Pydantic schemas.
+  * Allows tenants and modules to define custom attributes on the fly without DDL table locks or database migrations.
+
+---
+
+## 5. Pending Dimensions for Collaborative Brainstorming
+
+- [ ] **Dimension 4: Asynchronous Execution, Task Queue & Event Bus** *(Currently in focus)*
+  - Event dispatch lifecycle: ORM lifecycle hooks $\rightarrow$ Celery worker execution $\rightarrow$ Action logging $\rightarrow$ WebSocket pub/sub.
+  - Scheduled / Recurring automation runner via **Celery Beat** (cron triggers).
 - [ ] **Dimension 5: Hermes Agent Bridge & MCP Integration**
   - Dynamic tool generation from module schemas.
   - Bi-directional communication between backend API and `agent_service` container.
 
 ---
 
-## 5. Current Focus
-Brainstorm **Dimension 3: Database & Multi-Tenant Storage Strategy** (specifically evaluating Shared DB with `company_id` discriminator vs. Schema-per-tenant).
+## 6. Current Focus
+Brainstorm **Dimension 4: Asynchronous Execution, Task Queue & Event Bus** (Celery worker pipelines, event pub/sub, and WebSocket notifications).
