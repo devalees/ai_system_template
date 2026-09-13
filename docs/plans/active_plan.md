@@ -1531,8 +1531,8 @@ Brainstorm, specify, and architect the Sovereign Headless Backend & API Layer to
 - [x] **Sub-task 1: Dimension 1 (Architecture & Philosophy) Synthesis** - COMPLETED
 - [x] **Sub-task 2: Dimension 2 (Technology Stack & Language Runtime) Agreement** - COMPLETED
 - [x] **Sub-task 3: Dimension 3 (Data Persistence & Multi-Tenancy Strategy) Agreement** - COMPLETED
-- [/] **Sub-task 4: Dimension 4 (Asynchronous Execution & Event Bus) Planning** - IN PROGRESS
-- [ ] **Sub-task 5: Dimension 5 (Hermes Agent Bridge & Dynamic MCP Tool Integration) Planning** - PENDING
+- [x] **Sub-task 4: Dimension 4 (Asynchronous Execution & Event Bus) Agreement** - COMPLETED
+- [/] **Sub-task 5: Dimension 5 (Hermes Agent Bridge & Dynamic MCP Tool Integration) Planning** - IN PROGRESS
 - [ ] **Sub-task 6: Comprehensive Architectural Blueprint Finalization** - PENDING
 
 ### 3. Key Decisions & Deviations (Phase 41)

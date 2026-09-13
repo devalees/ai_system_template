@@ -126,16 +126,31 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
-## 5. Pending Dimensions for Collaborative Brainstorming
+---
 
-- [ ] **Dimension 4: Asynchronous Execution, Task Queue & Event Bus** *(Currently in focus)*
-  - Event dispatch lifecycle: ORM lifecycle hooks $\rightarrow$ Celery worker execution $\rightarrow$ Action logging $\rightarrow$ WebSocket pub/sub.
-  - Scheduled / Recurring automation runner via **Celery Beat** (cron triggers).
-- [ ] **Dimension 5: Hermes Agent Bridge & MCP Integration**
-  - Dynamic tool generation from module schemas.
-  - Bi-directional communication between backend API and `agent_service` container.
+## 5. Asynchronous Execution, Task Queue & Event Bus (Dimension 4 — AGREED)
+
+- [x] **Decoupled Event Pipeline**: **ORM Hooks $\rightarrow$ Redis Broker $\rightarrow$ Celery Worker** (AGREED)
+  * Fast API endpoints return immediately in `<20ms`; slow side-effects (sending emails, invoking webhooks, generating PDF documents, running automated business actions) are queued in Celery.
+  * In-process event bus catches entity mutations (`before_save`, `after_save`, `on_state_transition`) and dispatches async tasks reliably.
+- [x] **Periodic & Cron Automation**: **Celery Beat** (AGREED)
+  * Acts as the platform-wide central timer evaluating scheduled automated actions (e.g. daily invoice reminders, periodic reconciliation, status expirations).
+- [x] **Real-Time Client Updates**: **Redis Pub/Sub $\rightarrow$ FastAPI WebSockets** (AGREED)
+  * Live broadcasting of record chatter updates, user mentions, in-app notifications, and streaming AI agent thought processes to connected frontend/API clients.
+- [x] **Resilience & Auditability**: **Action Execution Log** (AGREED)
+  * Automatic retry with exponential backoff on transient network failures (e.g. SMTP/Webhook timeouts).
+  * Persistent execution status, execution latency, and error tracebacks logged into `action_execution_log`.
 
 ---
 
-## 6. Current Focus
-Brainstorm **Dimension 4: Asynchronous Execution, Task Queue & Event Bus** (Celery worker pipelines, event pub/sub, and WebSocket notifications).
+## 6. Pending Dimensions for Collaborative Brainstorming
+
+- [ ] **Dimension 5: Hermes Agent Bridge & MCP Integration** *(Currently in focus)*
+  * Dynamic FastMCP tool exposure from AI-enabled modules.
+  * Context propagation: passing tenant ID, user permissions, and record context to Hermes.
+  * In-process / REST bridge connecting FastAPI backend to `agent_service/` container (:8643).
+
+---
+
+## 7. Current Focus
+Brainstorm **Dimension 5: Hermes Agent Bridge & MCP Integration** (connecting FastAPI backend with the Sovereign Agent runtime).
