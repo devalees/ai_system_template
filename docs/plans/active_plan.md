@@ -1585,18 +1585,18 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
   - Redis Pub/Sub bridge broadcasting events across processes and WebSocket gateways.
 
 #### **Stage 3: Multi-Tenancy Engine, Base Models & Soft-Delete Architecture**
-- [ ] **Sub-stage 3.1: ContextVar & Request Middleware (`backend/core/context.py`)**
+- [x] **Sub-stage 3.1: ContextVar & Request Middleware (`backend/core/context.py`)** - COMPLETED (Commit: `05d197b`)
   - Thread-safe Python `ContextVar` maintaining `active_company_id`, `current_user_id`, and `actor_type`.
   - FastAPI middleware validating `X-Company-ID` and JWT bearer claims on every incoming request.
-- [ ] **Sub-stage 3.2: Declarative Model Primitives (`backend/core/base_models.py`)**
+- [x] **Sub-stage 3.2: Declarative Model Primitives (`backend/core/base_models.py`)** - COMPLETED (Commit: `05d197b`)
   - `BaseModel`: Primary key (UUID), tenant FK (`company_id`), timestamps (`created_at`, `updated_at`), actor FKs (`created_by_id`, `updated_by_id`).
   - `ExtensibleModelMixin`: Adds dynamic `custom_fields JSONB DEFAULT '{}'::jsonb` with automatic PostgreSQL GIN index (`USING gin(custom_fields)`).
   - `ArchivableMixin`: Provides operational `is_active: bool = True` status.
-- [ ] **Sub-stage 3.3: Soft-Delete Engine & PostgreSQL Partial Unique Indexes (`SoftDeleteMixin`)**
+- [x] **Sub-stage 3.3: Soft-Delete Engine & PostgreSQL Partial Unique Indexes (`SoftDeleteMixin`)** - COMPLETED (Commit: `05d197b`)
   - Fields: `deleted_at: Optional[datetime] = None`, `deleted_by_id: Optional[UUID] = None`.
   - Automatic Kernel query filtration (`WHERE deleted_at IS NULL` and `WHERE company_id = :active_company_id`).
   - Partial unique index compatibility (`CREATE UNIQUE INDEX ... WHERE deleted_at IS NULL`).
-- [ ] **Sub-stage 3.4: Async Database Session Factory & Connection Pool (`backend/core/database.py`)**
+- [x] **Sub-stage 3.4: Async Database Session Factory & Connection Pool (`backend/core/database.py`)** - COMPLETED (Commit: `05d197b`)
   - Async SQLAlchemy engine configuration with tuned connection pooling.
   - FastAPI dependency `get_db()` providing scoped `AsyncSession` with automatic rollback on errors.
 
@@ -1695,7 +1695,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Future Roadmap Note - Visual App Studio)*: Formally documented the future **No-Code Visual App Studio & Dynamic Metamodel Engine** (Principle 19). Agreed to defer runtime dynamic table creation to a future phase aligned with Frontend UI development. The future Studio will generate real physical PostgreSQL tables and real SQL schemas (strictly rejecting unstructured single-JSONB compromises or freeform AI code generation) backed by a Redis distributed schema bus to invalidate metadata across Uvicorn and Celery workers. The initial release (Phase 42) maintains deterministic, Git-versioned Python packages in `backend/modules/apps/`, while runtime entity customization is fully supported via `custom_fields JSONB` and dynamic lookups.
 - *2026-09-14 (Stage 1 Completed - Commit: `4a7a781`)*: Successfully built, deployed, and verified Stage 1 multi-service Docker container stack (`sovereign-backend-api`, `sovereign-backend-postgres`, `sovereign-backend-redis`, `sovereign-backend-celery`) on isolated `sovereign-network`. Verified asynchronous connection pool to PostgreSQL 16, Redis 7 cache ping, Celery task worker heartbeat (`ping` -> `pong`), and automated pytest suite (2/2 passing in container).
 - *2026-09-14 (Stage 2 Completed - Commit: `7b382dc`)*: Implemented Micro-Kernel core architecture: `ModuleManifest` contracts (`manifest.py`), topological sort Kahn's algorithm resolving acyclic module DAGs and rejecting cycles (`CircularDependencyError`) and missing dependencies (`MissingDependencyError`), 4-phase boot lifecycle (`discover` -> `load` -> `migrate` -> `bootstrap`), machine-actionable error envelopes (`PlatformException`, `exceptions.py`), in-process `EventBus` with wildcard matching and Redis Pub/Sub bridge (`event_bus.py`), and `/api/v1/kernel/modules` diagnostics route. All 10 unit tests passing in container in 1.25s.
+- *2026-09-14 (Stage 3 Completed - Commit: `05d197b`)*: Implemented Multi-Tenancy Engine, Base Models & Soft-Delete Architecture: thread-safe `ContextVar` management and `MultiTenancyContextMiddleware` (`context.py`), canonical `BaseModel` and mixins (`base_models.py` with UUID PKs, audit actors, `custom_fields JSONB`, `ArchivableMixin`), automatic SQLAlchemy query filtration interceptor (`database.py` injecting `WHERE deleted_at IS NULL` and `WHERE company_id = :active_company_id` via `with_loader_criteria` on all SELECTs, with `include_deleted` and `ignore_tenant` execution options), and `before_flush` auto-population hooks. Full test suite passing 15/15 tests in 1.09s.
 
 ### 4. Current Focus
-Begin execution of **Stage 3: Multi-Tenancy Engine, Base Models & Soft-Delete Architecture** (Sub-stage 3.1: ContextVar & Request Middleware in `backend/core/context.py`).
+Begin execution of **Stage 4: Universal Advanced Filtering, AST Compiler & Aggregator Engine** (Sub-stage 4.1: Universal Filter AST Grammar & Pydantic Schema in `backend/core/query_engine.py`).
 
