@@ -1675,9 +1675,10 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
   - End-to-end tracing propagated through Langfuse (`:3100`).
 
 #### **Stage 8: Continuous API Synchronization, Golden Benchmarks & Verification**
-- [ ] **Sub-stage 8.1: Continuous OpenAPI & Postman Exporter (`backend/core/exporter.py`)**
+- [x] **Sub-stage 8.1: Continuous OpenAPI & Postman Exporter (`backend/core/exporter.py`)** - COMPLETED & ACTIVE (Commit: `e4c3187`)
   - Automated script exporting `docs/api/openapi.json`, `docs/api/postman_collection.json`, and `docs/api/postman_environment.json`.
-  - Postman dynamic login token capture script and collection-level bearer inheritance validation.
+  - Postman dynamic login token capture script, collection-level bearer inheritance (`{{auth_token}}`), and `X-Company-ID: {{active_company_id}}` header injection.
+  - Continuous synchronization protocol enforced on every endpoint addition or modification.
 - [ ] **Sub-stage 8.2: Comprehensive Pytest Test Suite (`backend/tests/`)**
   - Multi-tenancy isolation tests (verifying cross-tenant queries fail with 404/empty).
   - Soft-delete tests (verifying filtered records and PostgreSQL partial unique index behavior).
@@ -1702,7 +1703,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Sub-stage 5.3 Completed - Commit: `e969070`)*: Implemented `lookups` master data module: normalized models (`Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`), ISO fixture library (`fixtures.py`), idempotent seeder (`seed_iso_data()`), and full REST CRUD endpoints (`/api/v1/lookups/*`) with company isolation and fast query filtering. 27/27 unit tests passing in container in 10.92s.
 - *2026-09-14 (Sub-stage 5.4 Completed - Commit: `31b3e8a`)*: Implemented `audit` module: immutable `AuditLog` model capturing actor attribution and state diffs, `compute_instance_diff` delta generator, `AuditService.log_mutation` helper, and tenant-scoped REST exploration endpoints (`/api/v1/audit/` and `/api/v1/audit/entity/{model_name}/{record_id}`). 30/30 unit tests passing in container in 13.01s.
 - *2026-09-14 (Sub-stage 5.5 Completed - Commit: `c0dcece`)*: Implemented `chatter` module: polymorphic `MailMessage` and `Activity` models, `ChatterService` orchestrating thread persistence, in-process event emission, and real-time Redis Pub/Sub broadcasting (`sovereign:chatter:{company_id}:{res_model}:{res_id}`), with dedicated WebSocket gateway (`/api/v1/chatter/ws/{res_model}/{res_id}`). 33/33 unit tests passing in container in 15.44s.
+- *2026-09-14 (Rule Alignment & Continuous API Sync - Commit: `e4c3187`)*: Activated continuous OpenAPI and Postman synchronization mandated by [`fastapi_standards.md`](file:///home/ehab/.gemini/config/rules/fastapi_standards.md). Created [`backend/core/exporter.py`](file:///home/ehab/Desktop/economy_editor/backend/core/exporter.py) and generated initial [`docs/api/openapi.json`](file:///home/ehab/Desktop/economy_editor/docs/api/openapi.json), [`docs/api/postman_collection.json`](file:///home/ehab/Desktop/economy_editor/docs/api/postman_collection.json), and [`docs/api/postman_environment.json`](file:///home/ehab/Desktop/economy_editor/docs/api/postman_environment.json). Hardened all Pydantic schemas across all completed modules with `ConfigDict(json_schema_extra=...)` realistic examples and eliminated loose unstructured dictionaries from endpoint returns. Rebuilt Docker image with `email-validator` baked in and mounted `../docs:/docs`.
 
 ### 4. Current Focus
-Begin execution of **Stage 5, Sub-stage 5.6: `documents` (Blob Storage & Inherited Permissions)** in `backend/modules/base/documents/`.
+Begin execution of **Stage 5, Sub-stage 5.6: `documents` (Blob Storage & Inherited Permissions)** in `backend/modules/base/documents/`, including immediate post-substage OpenAPI and Postman re-export.
 
