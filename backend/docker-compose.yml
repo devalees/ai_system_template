@@ -1,0 +1,120 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sovereign-backend-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sovereign}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sovereign_secret_pass_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-sovereign_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sovereign-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sovereign} -d ${POSTGRES_DB:-sovereign_db}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: sovereign-backend-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - sovereign-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sovereign-backend-api
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+      - filestore_data:/app/filestore
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-sovereign}:${POSTGRES_PASSWORD:-sovereign_secret_pass_2026}@postgres:5432/${POSTGRES_DB:-sovereign_db}
+      - REDIS_URL=redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/0
+      - CELERY_BROKER_URL=redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/1
+      - CELERY_RESULT_BACKEND=redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/2
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-sovereign_jwt_secret_dev_key_2026_change_in_prod}
+      - HERMES_GATEWAY_URL=${HERMES_GATEWAY_URL:-http://host.docker.internal:8643}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-http://host.docker.internal:3100}
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sovereign-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sovereign-backend-celery
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+      - filestore_data:/app/filestore
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-sovereign}:${POSTGRES_PASSWORD:-sovereign_secret_pass_2026}@postgres:5432/${POSTGRES_DB:-sovereign_db}
+      - REDIS_URL=redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/0
+      - CELERY_BROKER_URL=redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/1
+      - CELERY_RESULT_BACKEND=redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/2
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-sovereign_jwt_secret_dev_key_2026_change_in_prod}
+      - HERMES_GATEWAY_URL=${HERMES_GATEWAY_URL:-http://host.docker.internal:8643}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-http://host.docker.internal:3100}
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["celery", "-A", "celery_app.celery", "worker", "--loglevel=info", "--concurrency=2"]
+    networks:
+      - sovereign-network
+
+volumes:
+  postgres_data:
+    name: sovereign-postgres-data
+  redis_data:
+    name: sovereign-redis-data
+  filestore_data:
+    name: sovereign-filestore-data
+
+networks:
+  sovereign-network:
+    name: sovereign-network
+    driver: bridge

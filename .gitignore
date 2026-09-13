@@ -23,6 +23,10 @@ build/
 *.pid
 .docker/
 
+# Storage & Uploads
+filestore/
+backend/filestore/
+
 # Hermes & Agent Local Data
 agent_service/data/
 data/

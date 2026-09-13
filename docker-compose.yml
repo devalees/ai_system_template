@@ -1,0 +1,5 @@
+# Sovereign Platform Root Docker Compose
+# Integrates backend infrastructure while preserving modular decoupling
+
+include:
+  - backend/docker-compose.yml
