@@ -1561,14 +1561,14 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 ### 2. Task Checklist & Granular Stages
 
 #### **Stage 1: Container Infrastructure, Docker Network & Environment Scaffolding**
-- [ ] **Sub-stage 1.1: Multi-Service Docker Compose Setup**
+- [x] **Sub-stage 1.1: Multi-Service Docker Compose Setup** - COMPLETED (Commit: `4a7a781`)
   - Configure `backend` (FastAPI / Uvicorn ASGI on `:8000`), `postgres` (`postgres:16-alpine`), `redis` (`redis:7-alpine`), and `celery_worker` in `docker-compose.yml`.
   - Establish isolated bridge network (`sovereign-network`) and persistent named volumes (`postgres_data`, `redis_data`, `filestore_data`).
-- [ ] **Sub-stage 1.2: Decoupled Environment & Secrets Configuration**
+- [x] **Sub-stage 1.2: Decoupled Environment & Secrets Configuration** - COMPLETED (Commit: `4a7a781`)
   - Establish `.env.example` and runtime `.env` specifying database connection strings (`postgresql+asyncpg://`), Redis URLs, JWT secret keys, and Hermes Gateway endpoints.
-- [ ] **Sub-stage 1.3: Project Dependency Management**
+- [x] **Sub-stage 1.3: Project Dependency Management** - COMPLETED (Commit: `4a7a781`)
   - Define `pyproject.toml` / `requirements.txt` with locked versions (`fastapi`, `uvicorn[standard]`, `sqlalchemy[asyncio]`, `asyncpg`, `alembic`, `celery[redis]`, `redis`, `pydantic>=2.0`, `pydantic-settings`, `httpx`, `python-jose[cryptography]`, `passlib[bcrypt]`, `openpyxl`, `jinja2`, `websockets`, `aiofiles`).
-- [ ] **Sub-stage 1.4: Container Health Checks & Verification**
+- [x] **Sub-stage 1.4: Container Health Checks & Verification** - COMPLETED (Commit: `4a7a781`)
   - Implement `/health` endpoint validating asynchronous database connection pool, Redis cache ping, and Celery worker heartbeat.
 
 #### **Stage 2: Micro-Kernel Core Architecture & Dynamic Module Loader**
@@ -1693,7 +1693,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14*: Unpacked comprehensive 8-stage implementation roadmap into `active_plan.md` derived directly from ratified blueprint [`docs/plans/backend_architecture_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/backend_architecture_plan.md).
 - *2026-09-14*: Subdivided each milestone into granular, independently verifiable sub-stages to facilitate atomic Git commits and systematic step-by-step execution.
 - *2026-09-14 (Future Roadmap Note - Visual App Studio)*: Formally documented the future **No-Code Visual App Studio & Dynamic Metamodel Engine** (Principle 19). Agreed to defer runtime dynamic table creation to a future phase aligned with Frontend UI development. The future Studio will generate real physical PostgreSQL tables and real SQL schemas (strictly rejecting unstructured single-JSONB compromises or freeform AI code generation) backed by a Redis distributed schema bus to invalidate metadata across Uvicorn and Celery workers. The initial release (Phase 42) maintains deterministic, Git-versioned Python packages in `backend/modules/apps/`, while runtime entity customization is fully supported via `custom_fields JSONB` and dynamic lookups.
+- *2026-09-14 (Stage 1 Completed - Commit: `4a7a781`)*: Successfully built, deployed, and verified Stage 1 multi-service Docker container stack (`sovereign-backend-api`, `sovereign-backend-postgres`, `sovereign-backend-redis`, `sovereign-backend-celery`) on isolated `sovereign-network`. Verified asynchronous connection pool to PostgreSQL 16, Redis 7 cache ping, Celery task worker heartbeat (`ping` -> `pong`), and automated pytest suite (2/2 passing in container).
 
 ### 4. Current Focus
-Begin execution of **Stage 1: Container Infrastructure, Docker Network & Environment Scaffolding** (Sub-stage 1.1: Multi-Service Docker Compose Setup).
+Begin execution of **Stage 2: Micro-Kernel Core Architecture & Dynamic Module Loader** (Sub-stage 2.1: Acyclic Module DAG & Manifest Validator in `backend/core/kernel.py`).
 
