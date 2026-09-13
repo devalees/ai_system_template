@@ -84,6 +84,28 @@ The architectural philosophy is anchored by 8 core principles:
 * **Tenant Extensibility**: Tenants can add, modify, reorder, or deactivate lookup choices at runtime via standard API endpoints without code deployments or database migrations.
 * **Pragmatic Boundary**: Strictly applies relational normalization to domain lookup dimensions while avoiding brittle anti-patterns (such as universal EAV across core entity columns).
 
+### Principle 11: Native Multi-Language (i18n / l10n) Architecture
+* **API-Level Internationalization**: Every API endpoint respects the `Accept-Language` HTTP header (or authenticated user language preference, e.g., `en`, `ar`).
+* **Translatable Static Content**: System error messages, validation errors, and notification templates are stored in structured translation catalogs (JSON/gettext).
+* **Translatable Dynamic Data**: Support for multi-lingual model fields (e.g. product names, category descriptions) stored in structured `JSONB` translation maps (`{"en": "Sales Invoice", "ar": "فاتورة مبيعات"}`) returning the active locale automatically.
+
+### Principle 12: Comprehensive Enterprise Audit Trail & Historical Logging
+* **Immutable Mutation Log**: Comprehensive tracking of all database mutations across every module (`AuditLog` table).
+* **Audit Metadata Captured**:
+  * *Actor*: `user_id` (human user or AI agent).
+  * *Context*: `company_id`, client IP address, and user agent.
+  * *Operation*: `CREATE`, `UPDATE`, `DELETE`, `STATE_TRANSITION`, or `ACTION_TRIGGER`.
+  * *Payload Diff*: Precise JSON diff capturing previous values vs. new values (`before_state`, `after_state`).
+* **Auditable Reporting Endpoints**: Standardized API endpoints (`GET /api/v1/audit/logs`, `GET /api/v1/audit/reports`) allowing administrators and auditors to inspect historical record evolution.
+
+### Principle 13: First-Class AI Agent Identity in User & RBAC Model
+* **Unified User Model**: The `User` entity explicitly defines `user_type: "human" | "ai_agent"`.
+* **Symmetric Authorization**: An AI Agent is registered in the database just like a human employee, assigned its own unique `user_id`, profile metadata, and linked to standard RBAC Groups/Roles (e.g. assigning the `procurement_agent` to the *Procurement Reviewers* group).
+* **Token & Identity Verification**:
+  * When Hermes interacts via FastMCP or REST API, it authenticates with its designated `agent_user_id` and service token.
+  * Standard RBAC permission checks execute identically for humans and agents.
+* **Auditing Accountability**: In all audit logs and chatter threads, mutations performed by an agent are unambiguously credited to that specific AI agent identity (`user_type="ai_agent"`).
+
 ---
 
 ## 3. Technology Stack & Runtime (Dimension 2 — AGREED)
@@ -163,13 +185,62 @@ The architectural philosophy is anchored by 8 core principles:
 ## 7. Comprehensive Architectural Blueprint Status
 
 All 5 core dimensions have been collaboratively brainstormed and agreed upon:
-* [x] **Dimension 1**: Architecture & Philosophy (8 core principles + per-app settings + relational dynamism).
+* [x] **Dimension 1**: Architecture & Philosophy (13 core principles including per-app settings, relational dynamism, i18n, audit logging, and first-class AI agent user identity).
 * [x] **Dimension 2**: Technology Stack (FastAPI, PostgreSQL 16, SQLAlchemy 2.0 Async, Alembic, Redis + Celery, Pydantic v2).
-* [x] **Dimension 3**: Database & Multi-Tenant Storage Strategy (Pattern A: Shared DB with `company_id` + `JSONB` custom fields).
+* [x] **Dimension 3**: Database & Multi-Tenant Storage Strategy (Pattern A: Shared DB with `company_id` + `JSONB` custom fields with GIN indexes).
 * [x] **Dimension 4**: Asynchronous Execution & Event Bus (ORM hooks $\rightarrow$ Redis/Celery $\rightarrow$ WebSockets + Celery Beat).
 * [x] **Dimension 5**: Hermes Agent Bridge & MCP Integration (Configurable Automated Actions with dynamic prompt templates & RBAC gating).
 
 ---
 
-## 8. Current Focus
-All architectural dimensions are finalized and agreed. Ready to synthesize the comprehensive implementation roadmap and milestone plan for execution.
+## 8. Implementation Roadmap & Milestones
+
+### Milestone 1: Container Infrastructure & Docker Scaffolding
+- [ ] Configure `backend`, `postgres:16-alpine`, `redis:7-alpine`, and `celery_worker` services in Docker Compose.
+- [ ] Scaffolding Python dependencies: `fastapi`, `uvicorn`, `sqlalchemy[asyncio]`, `asyncpg`, `alembic`, `celery`, `redis`, `pydantic`.
+- [ ] Verify health checks and database connectivity inside the isolated Docker network.
+
+### Milestone 2: Micro-Kernel Core & Dynamic Module Loader
+- [ ] Implement `backend/core/kernel.py`: dynamic module discovery, manifest validation (`manifest.py`), and acyclic dependency DAG enforcement.
+- [ ] Implement Kernel lifecycle management stages: `discover` $\rightarrow$ `load` $\rightarrow$ `migrate` $\rightarrow$ `bootstrap`.
+
+### Milestone 3: Multi-Tenancy & Database ORM Engine
+- [ ] Base SQLAlchemy async declarative model with automatic `company_id` multi-tenancy injection.
+- [ ] Extensible `custom_fields JSONB` column with PostgreSQL GIN indexing on base entities.
+- [ ] FastAPI session middleware enforcing active `company_id` context on all requests.
+
+### Milestone 4: Universal Advanced Filtering & Query Engine
+- [ ] Declarative AST parser and compiler for nested boolean query trees (`AND`, `OR`, `NOT`).
+- [ ] Parameterized SQLAlchemy query translation with full operator support (`eq`, `contains`, `in`, `between`, relational traversals).
+
+### Milestone 5: Core Base Utilities (Installed by Default)
+- [ ] **Identity & Symmetric RBAC**: `User` model with `user_type: "human" | "ai_agent"`, Groups, model-level CRUD permissions, and user-level overrides.
+- [ ] **Multi-Language (i18n / l10n)**: Request language negotiation (`Accept-Language`), translation catalogs, and `JSONB` multi-lingual field support.
+- [ ] **Enterprise Audit Trail**: Immutable `AuditLog` table capturing actor, timestamp, operation, and before/after JSON diffs.
+- [ ] **Per-Module Settings Subsystem**: Scoped module configuration contracts and API endpoints (`GET/PATCH /api/v1/{module}/settings`).
+- [ ] **Dynamic Lookups & Seed Fixtures**: Normalized lookup models (countries, currencies, categories) with auto-seeded default data.
+- [ ] **Contextual Chatter & WebSockets**: Polymorphic threaded discussions `(res_model, res_id)` with internal notes, emails, and Redis Pub/Sub WebSocket broadcasting.
+- [ ] **File & Document Storage**: Attachment manager supporting blob persistence, MIME metadata, and parsing.
+
+### Milestone 6: Event-Driven Automated Actions Engine (TCA)
+- [ ] Trigger registry: ORM lifecycle hooks (`on_create`, `on_update`, `on_delete`, `on_state_change`), Celery Beat cron intervals.
+- [ ] Universal condition evaluator running against record attributes and relational paths.
+- [ ] Action execution dispatcher: `update_record`, `create_record`, `send_email`, `invoke_webhook`.
+
+### Milestone 7: Hermes Agent Bridge & Dynamic MCP Tool Exposer
+- [ ] `invoke_ai_agent` automated action executor calling Hermes Gateway (`:8643`) with dynamic prompt templates.
+- [ ] Dynamic FastMCP tool generator reflecting Pydantic schemas from `ai_enabled` modules.
+- [ ] Feedback integration posting agent audit findings directly into record Chatter threads.
+
+### Milestone 8: Golden Benchmark Evaluation Suite & Verification
+- [ ] Deterministic `pytest` test suite with `httpx.AsyncClient` validating:
+  * Multi-tenancy boundary isolation.
+  * Universal filtering AST compilation.
+  * Symmetric human vs. AI agent RBAC enforcement.
+  * Automated action execution and audit trail logging.
+  * End-to-end Hermes Agent dispatch and chatter callbacks.
+
+---
+
+## 9. Current Focus
+Milestones prioritized and documented. Ready for execution of **Milestone 1: Container Infrastructure & Docker Scaffolding**.
