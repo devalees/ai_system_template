@@ -1615,7 +1615,7 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
   - Standardized parameters (`page`, `page_size`, `sort_by`, `sort_direction`) with maximum limit enforcement (`limit=100`) and metadata envelopes.
 
 #### **Stage 5: Foundational Core Base Utilities (`backend/modules/base/`)**
-- [ ] **Sub-stage 5.1: `identity_rbac` (Contextual RBAC & First-Class Agent Identity)**
+- [x] **Sub-stage 5.1: `identity_rbac` (Contextual RBAC & First-Class Agent Identity)** - COMPLETED (Commit: `1392398`)
   - Models: `User` (with `user_type: "human" | "ai_agent"`), `Group`, `Permission`, `UserGroupLink`.
   - 3-tier ownership model: `GLOBAL`, `TEAM`, `OWN`.
   - Declarative FastAPI permission dependency: `Depends(require_permission("module.model.action"))`.
@@ -1697,7 +1697,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Stage 2 Completed - Commit: `7b382dc`)*: Implemented Micro-Kernel core architecture: `ModuleManifest` contracts (`manifest.py`), topological sort Kahn's algorithm resolving acyclic module DAGs and rejecting cycles (`CircularDependencyError`) and missing dependencies (`MissingDependencyError`), 4-phase boot lifecycle (`discover` -> `load` -> `migrate` -> `bootstrap`), machine-actionable error envelopes (`PlatformException`, `exceptions.py`), in-process `EventBus` with wildcard matching and Redis Pub/Sub bridge (`event_bus.py`), and `/api/v1/kernel/modules` diagnostics route. All 10 unit tests passing in container in 1.25s.
 - *2026-09-14 (Stage 3 Completed - Commit: `05d197b`)*: Implemented Multi-Tenancy Engine, Base Models & Soft-Delete Architecture: thread-safe `ContextVar` management and `MultiTenancyContextMiddleware` (`context.py`), canonical `BaseModel` and mixins (`base_models.py` with UUID PKs, audit actors, `custom_fields JSONB`, `ArchivableMixin`), automatic SQLAlchemy query filtration interceptor (`database.py` injecting `WHERE deleted_at IS NULL` and `WHERE company_id = :active_company_id` via `with_loader_criteria` on all SELECTs, with `include_deleted` and `ignore_tenant` execution options), and `before_flush` auto-population hooks. Full test suite passing 15/15 tests in 1.09s.
 - *2026-09-14 (Stage 4 Completed - Commit: `7950c8f`)*: Implemented Universal Query Engine, AST Filter Compiler, Aggregator & Pagination: Pydantic AST models (`FilterNode`, `FilterGroup`), recursive boolean tree compiler with support for 14 operators (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `contains`, `icontains`, `starts_with`, `ends_with`, `in`, `not_in`, `between`, `is_null`) and nested `custom_fields JSONB` paths, multi-dimensional aggregation compiler (`SUM`, `AVG`, `MIN`, `MAX`, `COUNT`, `COUNT_DISTINCT`, `date_trunc`, `FILTER WHERE ...`), post-aggregation arithmetic equation evaluator, and enveloped `PaginatedResponse` with `has_next`/`has_prev`. All 20 unit tests passing in container in 2.49s.
+- *2026-09-14 (Sub-stage 5.1 Completed - Commit: `1392398`)*: Implemented `identity_rbac` foundational base utility module: User entity with `user_type: "human" | "ai_agent"` for first-class AI agent participation, RBAC Groups, granular model Permissions, native bcrypt hashing, JWT issuance and verification, declarative `require_permission()` dependency, and live registration/login routes. All 23 unit tests passing in container in 6.54s.
 
 ### 4. Current Focus
-Begin execution of **Stage 5: Foundational Core Base Utilities (`backend/modules/base/`)** (Sub-stage 5.1: `identity_rbac` Contextual RBAC & First-Class Agent Identity).
+Begin execution of **Stage 5, Sub-stage 5.2: `settings` (Per-Module Dynamic Configuration)** in `backend/modules/base/settings/`.
 
