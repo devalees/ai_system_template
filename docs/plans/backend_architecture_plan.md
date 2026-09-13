@@ -56,10 +56,17 @@ The architectural philosophy is anchored by 8 core principles:
   * *Identity & Access Management*: Authentication, tenant context, and session management.
 * **Seamless Utility Inheritance**: Any new domain module automatically leverages these base utilities (e.g., attaching receipts to invoices, scheduling calendar alerts on opportunities).
 
-### Principle 6: Authentication & Role-Based Access Control (RBAC)
-* **Pragmatic Model-Level Access Control**: Access control is enforced primarily at the Model / Table level (`create`, `read`, `update`, `delete`).
-* **Hierarchical Role/Group Inheritance**: Users belong to Groups/Roles (e.g. *Accountant*, *Sales Manager*) and inherit combined permissions.
-* **User-Level Overrides / Exceptions**: Specific model permissions can be granted directly to an individual user as an exception/addition without altering group definitions.
+### Principle 6: Authentication & Contextual RBAC (Model, Ownership & Inherited Scopes)
+* **Hierarchical Role/Group Model**: Users belong to Groups/Roles (e.g. *Accountant*, *Sales Rep*, *Auditor*) with user-level exception overrides.
+* **Granular Model-Level Capabilities**: Permissions are explicit per module and model (e.g., `create:crm.lead`, `export:sales.order`, `import:accounting.invoice`). Cross-cutting services (like Import/Export) check target-model capability rather than granting dangerous global access.
+* **Three-Tier Record Ownership Scoping**:
+  * `GLOBAL`: Can view/mutate all records within the active `company_id`.
+  * `TEAM / DEPARTMENT`: Can view/mutate records assigned to their specific team/department.
+  * `OWN`: Restricted strictly to records where `created_by_id == user.id` or `assigned_to_id == user.id`.
+* **Inherited Permission for Contextual Attachments/Documents**:
+  * Attachments and documents attached polymorphically to a business document `(res_model, res_id)` **automatically inherit the parent record's permission**.
+  * If a user has read access to `Project #10`, they automatically have read access to attachments on `Project #10`.
+  * Standalone documents (not attached to a parent record) enforce standard `OWN` access or explicit user/group sharing.
 
 ### Principle 7: Native Multi-Tenancy & Multi-Company Isolation
 * **Multi-Company Core**: Multiple operating legal entities and companies within a single deployment.
@@ -115,6 +122,12 @@ The architectural philosophy is anchored by 8 core principles:
   * Evaluates mathematical equations across aggregated metrics (e.g., `(SUM(revenue) - SUM(cogs)) / NULLIF(SUM(revenue), 0) * 100` for Gross Margin %, or `COUNT(tickets) / NULLIF(COUNT(agents), 0)` for Workload Ratio).
   * Conditional aggregations (e.g., `SUM(amount) FILTER (WHERE status = 'paid')` vs. `SUM(amount) FILTER (WHERE status = 'overdue')`).
 * **PostgreSQL Engine Compilation**: Compiles declarative JSON aggregation specifications directly into parameterized SQL with native PostgreSQL aggregate functions, `GROUP BY`, `HAVING`, and window functions, guaranteeing sub-second execution across large datasets.
+
+### Principle 15: Universal Data Import & Export Engine (Batch, Schema-Mapped & Async)
+* **Cross-Module Availability**: A centralized import/export subsystem provided by the Kernel, enabling users and external systems to bulk import and export data across any module (e.g., CSV, Excel, JSON).
+* **Dynamic Column-to-Schema Mapping**: Users can map arbitrary external file headers to internal model fields, validated dynamically via Pydantic schemas before insertion.
+* **Non-Blocking Asynchronous Processing**: Large datasets are processed in the background via Celery workers with chunked batch inserts, avoiding HTTP request timeouts and providing live progress percentages over WebSockets.
+* **Granular RBAC Protection**: Strict capability checks (`import:<model>` and `export:<model>`) ensure users can only import/export data for models they are explicitly authorized to manage.
 
 ---
 
@@ -195,7 +208,7 @@ The architectural philosophy is anchored by 8 core principles:
 ## 7. Comprehensive Architectural Blueprint Status
 
 All 5 core dimensions have been collaboratively brainstormed and agreed upon:
-* [x] **Dimension 1**: Architecture & Philosophy (13 core principles including per-app settings, relational dynamism, i18n, audit logging, and first-class AI agent user identity).
+* [x] **Dimension 1**: Architecture & Philosophy (15 core principles including contextual RBAC, per-app settings, relational dynamism, i18n, audit logging, first-class AI agent user identity, universal aggregator, and bulk import/export).
 * [x] **Dimension 2**: Technology Stack (FastAPI, PostgreSQL 16, SQLAlchemy 2.0 Async, Alembic, Redis + Celery, Pydantic v2).
 * [x] **Dimension 3**: Database & Multi-Tenant Storage Strategy (Pattern A: Shared DB with `company_id` + `JSONB` custom fields with GIN indexes).
 * [x] **Dimension 4**: Asynchronous Execution & Event Bus (ORM hooks $\rightarrow$ Redis/Celery $\rightarrow$ WebSockets + Celery Beat).
@@ -225,9 +238,10 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 - [ ] Universal Aggregation & Equation Engine: declarative schema compiling `SUM`, `AVG`, `MIN`, `MAX`, `COUNT`, multi-level `GROUP BY`, temporal bucketing, conditional filters (`FILTER WHERE`), and computed arithmetic equations.
 
 ### Milestone 5: Core Base Utilities (Installed by Default)
-- [ ] **Identity & Symmetric RBAC**: `User` model with `user_type: "human" | "ai_agent"`, Groups, model-level CRUD permissions, and user-level overrides.
+- [ ] **Identity & Contextual RBAC**: `User` model with `user_type: "human" | "ai_agent"`, 3-tier ownership scopes (`GLOBAL`, `TEAM`, `OWN`), model-level capabilities, user overrides, and parent-inherited permissions for polymorphic attachments.
 - [ ] **Multi-Language (i18n / l10n)**: Request language negotiation (`Accept-Language`), translation catalogs, and `JSONB` multi-lingual field support.
 - [ ] **Enterprise Audit Trail**: Immutable `AuditLog` table capturing actor, timestamp, operation, and before/after JSON diffs.
+- [ ] **Universal Import & Export Service**: CSV, Excel, and JSON batch processing with dynamic schema mapping, field validation, async Celery execution, and capability-scoped access.
 - [ ] **Per-Module Settings Subsystem**: Scoped module configuration contracts and API endpoints (`GET/PATCH /api/v1/{module}/settings`).
 - [ ] **Dynamic Lookups & Seed Fixtures**: Normalized lookup models (countries, currencies, categories) with auto-seeded default data.
 - [ ] **Contextual Chatter & WebSockets**: Polymorphic threaded discussions `(res_model, res_id)` with internal notes, emails, and Redis Pub/Sub WebSocket broadcasting.
