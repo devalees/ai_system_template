@@ -145,6 +145,33 @@ The architectural philosophy is anchored by 8 core principles:
   * Administrators can schedule recurring automated backup snapshots (Daily, Weekly, Monthly) via the **Automated Actions Engine** and Celery Beat, with snapshot records and status logged into `action_execution_log`.
   * Disaster recovery (`restore.sh`) is intentionally restricted to an offline administrator CLI command with confirmation safeguards.
 
+### Principle 17: Dedicated Multi-Channel Push & Notification Engine
+* **Dedicated Base Utility Module (`notification_engine`)**: Decoupled from raw WebSocket pipes, providing an intelligent notification hub managing delivery channels, templates, and user preferences.
+* **Multi-Channel Delivery Channels**:
+  * *Channel 1: In-App WebSockets*: Real-time alerts, bell counter badges, and live chatter updates pushed to active browser/mobile sessions via Redis Pub/Sub.
+  * *Channel 2: Web Push Notifications (W3C / VAPID)*: Push notifications delivered to desktop or mobile browsers even when the application tab is closed.
+  * *Channel 3: Mobile Push (FCM / APNs)*: Device token registry dispatching native push alerts to iOS and Android clients.
+  * *Channel 4: Webhooks*: External systems subscribing to specific notification topics.
+* **Per-User Delivery Preferences**: Users configure delivery preferences per category (e.g. *"Purchase Orders: In-App + WebPush; Critical System Alerts: Email + Push; Routine Chatter: In-App only"*).
+
+### Principle 18: Soft Delete, Relational Integrity & Partial Unique Indexes
+* **Why Soft Delete is Critical for Business Systems**:
+  * *Regulatory & Financial Integrity*: Financial transactions, invoices, ledger entries, and audit logs must never be physically erased.
+  * *Accidental Deletion Recovery*: Deletions can be restored in a single click (`deleted_at = None`).
+  * *Foreign Key Preservation*: Soft-deleting a Customer preserves all historical Sales Orders and Invoices referencing that `customer_id` without breaking constraints or triggering destructive cascading deletes.
+* **Kernel-Enforced Automatic Query Filtering**:
+  * Entities include `SoftDeleteMixin` (`deleted_at: Optional[datetime] = None`, `deleted_by_id: Optional[UUID] = None`).
+  * In SQLAlchemy 2.0, the Kernel configures `with_loader_criteria` so that `WHERE deleted_at IS NULL` is automatically injected into **100% of SELECT queries across all modules**. Developers never have to remember to write it.
+  * Explicit audit override: `select(Model).execution_options(include_deleted=True)` allows recovery screens to query deleted rows.
+* **PostgreSQL Partial Unique Indexes**:
+  * Solves the unique constraint conflict (e.g., unique customer code or email):
+    `CREATE UNIQUE INDEX uq_customer_code ON customers (company_id, customer_code) WHERE deleted_at IS NULL;`
+  * Permits re-using a code if an old record was soft-deleted, while strictly guaranteeing uniqueness among active records.
+* **Three-Tier Entity Lifecycle Taxonomy**:
+  * *Soft-Deletable*: Master Data (Customers, Products, Vendors, Users) and Operational Records (Orders, Invoices, Tasks).
+  * *Immutable (Append-Only; Never Deleted)*: General Ledger entries, Audit Logs (`AuditLog`), and Action Execution Logs.
+  * *Hard-Deleted*: Transient/ephemeral records (auth cache, temp upload chunks, expired sessions).
+
 ---
 
 ## 3. Structural Taxonomy: Kernel vs. Base Utilities vs. Pluggable Apps
@@ -167,11 +194,13 @@ To maintain strict modularity, clean boundaries, and zero circular dependencies,
 │   2. settings          : Per-module dynamic settings schemas & tenant overrides        │
 │   3. lookups           : Normalized dynamic lookup models (countries, currencies, etc.)│
 │   4. audit             : Immutable record mutation logs & audit reporting              │
-│   5. chatter           : Polymorphic threaded discussions, emails & WebSocket alerts   │
+│   5. chatter           : Polymorphic threaded discussions, email sync & team notes     │
 │   6. documents         : Blob attachment manager with parent-inherited permissions     │
 │   7. automated_actions : Declarative Trigger-Condition-Action pipeline & Celery dispatch│
 │   8. import_export     : Universal bulk CSV/Excel/JSON mapping & streaming engine       │
 │   9. backup            : Disaster recovery CLI & atomic database/filestore bundles     │
+│  10. mail_gateway      : Outbound SMTP, inbound mailboxes, Jinja2 templates & queue     │
+│  11. notification_engine: Multi-channel push (In-App WebSocket, WebPush, FCM/APNs)     │
 └───────────────────────────────────────────┬────────────────────────────────────────────┘
                                             │ Powered by
 ┌───────────────────────────────────────────▼────────────────────────────────────────────┐
@@ -181,7 +210,7 @@ To maintain strict modularity, clean boundaries, and zero circular dependencies,
 │   - kernel.py          : Module discovery, manifest validator, acyclic DAG resolver    │
 │   - database.py        : Async SQLAlchemy engine, session factory & connection pools   │
 │   - context.py         : Request contextvar tracking active company_id & user_id       │
-│   - base_models.py     : Declarative base model (UUID PK, tenant auto-scoping, JSONB)  │
+│   - base_models.py     : Declarative base model (UUID PK, tenant scoping, SoftDelete)  │
 │   - query_engine.py    : Universal Filter & Aggregator AST compiler into parameterized SQL│
 │   - event_bus.py       : In-process lifecycle event dispatcher & Redis Pub/Sub bridge  │
 │   - app.py             : FastAPI ASGI application factory & central exception router   │
@@ -193,11 +222,12 @@ To maintain strict modularity, clean boundaries, and zero circular dependencies,
 #### **Tier 1: System Kernel (`backend/core/`)**
 *Non-domain platform primitives; guarantees stability, tenant isolation, and lifecycle orchestration:*
 * **`kernel.py` (Module Engine)**: Scans directories, parses `manifest.py`, validates acyclic dependencies (DAG), and manages the boot lifecycle: `discover` $\rightarrow$ `load` $\rightarrow$ `migrate` $\rightarrow$ `bootstrap`.
-* **`database.py` & `context.py` (Multi-Tenancy Engine)**: Maintains the async connection pool (`asyncpg`) and ContextVars. Automatically injects `WHERE company_id = :active_company_id` into all queries and creates at the session level.
+* **`database.py` & `context.py` (Multi-Tenancy Engine)**: Maintains the async connection pool (`asyncpg`) and ContextVars. Automatically injects `WHERE company_id = :active_company_id` and `WHERE deleted_at IS NULL` into all queries and creates at the session level.
 * **`base_models.py` (Model Foundation)**:
   * `BaseModel`: UUID primary key, `company_id`, audit timestamps (`created_at`, `updated_at`), and actor references (`created_by_id`, `updated_by_id`).
   * `ExtensibleModelMixin`: Adds `custom_fields JSONB DEFAULT '{}'::jsonb` with automatic PostgreSQL GIN indexing.
-  * `ArchivableMixin`: Provides soft-delete capabilities (`is_active: bool`).
+  * `SoftDeleteMixin`: Provides transparent soft-delete capabilities (`deleted_at: Optional[datetime] = None`, `deleted_by_id: Optional[UUID] = None`) with Kernel auto-filtration and partial unique index support.
+  * `ArchivableMixin`: Provides explicit operational archiving (`is_active: bool`).
 * **`query_engine.py` (Universal AST Compilers)**:
   * *Universal Filter Compiler*: Compiles nested boolean JSON trees (`AND`/`OR`) into parameterized SQLAlchemy filter clauses.
   * *Universal Aggregator Compiler*: Compiles declarative aggregation specs (`SUM`, `AVG`, `COUNT`, conditional filters, and computed equations) into high-speed PostgreSQL aggregate queries.
@@ -209,11 +239,13 @@ To maintain strict modularity, clean boundaries, and zero circular dependencies,
 2. **`settings`**: Provides the dynamic configuration store (`ModuleSettings`) and standardized `GET/PATCH /api/v1/{module}/settings` endpoints for all apps.
 3. **`lookups`**: Houses normalized lookup models (`Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`) and loads initial ISO seed fixtures on installation.
 4. **`audit`**: Houses the immutable `AuditLog` table, capturing entity mutation diffs, actor identities, and audit reporting endpoints.
-5. **`chatter`**: Manages polymorphic threaded discussions `(res_model, res_id)`, activity logs, email thread synchronization, and WebSocket alert dispatching.
+5. **`chatter`**: Manages polymorphic threaded discussions `(res_model, res_id)`, activity logs, email thread synchronization, and team notes.
 6. **`documents`**: Attachment manager providing Content-Addressable Storage (`filestore/`) and parent-inherited permission security.
 7. **`automated_actions`**: The Trigger-Condition-Action (TCA) engine, orchestrating event rules, expression conditions, Celery execution, and Hermes AI Agent invocations (`invoke_ai_agent`).
 8. **`import_export`**: Reusable streaming service for CSV, Excel, and JSON batch processing with dynamic field mapping and validation.
 9. **`backup`**: Disaster recovery CLI tools and Celery Beat scheduled jobs producing unified atomic archive bundles (`dump.sql` + `filestore/` + `manifest.json`).
+10. **`mail_gateway`**: Outbound SMTP server configurations, inbound mailbox synchronization (IMAP/webhooks), Jinja2 multi-lingual templates, and async queued dispatch with bounce tracking.
+11. **`notification_engine`**: Dedicated multi-channel push dispatcher handling In-App WebSocket notifications, Web Push (W3C/VAPID), Mobile Push (FCM/APNs), and per-user delivery preference matrices.
 
 #### **Tier 3: Pluggable Domain Applications (`backend/modules/apps/`)**
 *Independent business verticals; each modular app follows a uniform package layout:*
@@ -326,7 +358,7 @@ To maintain strict modularity, clean boundaries, and zero circular dependencies,
 ## 8. Comprehensive Architectural Blueprint Status
 
 All 5 core dimensions have been collaboratively brainstormed and agreed upon:
-* [x] **Dimension 1**: Architecture & Philosophy (16 core principles including contextual RBAC, per-app settings, relational dynamism, i18n, audit logging, first-class AI agent user identity, universal aggregator, bulk import/export, and unified atomic backups).
+* [x] **Dimension 1**: Architecture & Philosophy (18 core principles including contextual RBAC, per-app settings, relational dynamism, i18n, audit logging, first-class AI agent user identity, universal aggregator, bulk import/export, unified atomic backups, multi-channel notification push, and soft-delete integrity).
 * [x] **Dimension 2**: Technology Stack (FastAPI, PostgreSQL 16, SQLAlchemy 2.0 Async, Alembic, Redis + Celery, Pydantic v2).
 * [x] **Dimension 3**: Database & Multi-Tenant Storage Strategy (Pattern A: Shared DB with `company_id` + `JSONB` custom fields with GIN indexes).
 * [x] **Dimension 4**: Asynchronous Execution & Event Bus (ORM hooks $\rightarrow$ Redis/Celery $\rightarrow$ WebSockets + Celery Beat).
@@ -345,8 +377,9 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 - [ ] Implement `backend/core/kernel.py`: dynamic module discovery, manifest validation (`manifest.py`), and acyclic dependency DAG enforcement.
 - [ ] Implement Kernel lifecycle management stages: `discover` $\rightarrow$ `load` $\rightarrow$ `migrate` $\rightarrow$ `bootstrap`.
 
-### Milestone 3: Multi-Tenancy & Database ORM Engine
+### Milestone 3: Multi-Tenancy, Soft Delete & Database ORM Engine
 - [ ] Base SQLAlchemy async declarative model with automatic `company_id` multi-tenancy injection.
+- [ ] `SoftDeleteMixin` (`deleted_at`, `deleted_by_id`) with automatic Kernel-enforced query filtration (`WHERE deleted_at IS NULL`) and PostgreSQL partial unique index support.
 - [ ] Extensible `custom_fields JSONB` column with PostgreSQL GIN indexing on base entities.
 - [ ] FastAPI session middleware enforcing active `company_id` context on all requests.
 
@@ -359,6 +392,8 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 - [ ] **Identity & Contextual RBAC**: `User` model with `user_type: "human" | "ai_agent"`, 3-tier ownership scopes (`GLOBAL`, `TEAM`, `OWN`), model-level capabilities, user overrides, and parent-inherited permissions for polymorphic attachments.
 - [ ] **Multi-Language (i18n / l10n)**: Request language negotiation (`Accept-Language`), translation catalogs, and `JSONB` multi-lingual field support.
 - [ ] **Enterprise Audit Trail**: Immutable `AuditLog` table capturing actor, timestamp, operation, and before/after JSON diffs.
+- [ ] **Mail Gateway Subsystem**: Outbound SMTP server management, inbound mailbox sync (IMAP/webhooks), multi-lingual Jinja2 templates, and queued async delivery with bounce tracking.
+- [ ] **Multi-Channel Push & Notification Engine**: Dedicated dispatcher for In-App WebSockets, Web Push (W3C/VAPID), Mobile Push (FCM/APNs), and per-user delivery preference matrices.
 - [ ] **Universal Import & Export Service**: CSV, Excel, and JSON batch processing with dynamic schema mapping, field validation, async Celery execution, and capability-scoped access.
 - [ ] **Per-Module Settings Subsystem**: Scoped module configuration contracts and API endpoints (`GET/PATCH /api/v1/{module}/settings`).
 - [ ] **Dynamic Lookups & Seed Fixtures**: Normalized lookup models (countries, currencies, categories) with auto-seeded default data.
