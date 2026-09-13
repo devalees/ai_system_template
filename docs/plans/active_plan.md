@@ -1517,23 +1517,23 @@ Phase 40 completed. All 72 golden benchmark scenarios verified passing. System t
 
 ---
 
-## Phase 41: Sovereign Headless Backend Platform & Architecture Planning
+## Phase 41: Sovereign Headless Backend Platform & Architecture Planning (COMPLETED)
 
-- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `main`
-- **Last Updated**: 2026-09-13 23:48:00+03:00
+- **Last Updated**: 2026-09-14 01:34:00+03:00
 - **Dedicated Specification File**: [`docs/plans/backend_architecture_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/backend_architecture_plan.md)
 
 ### 1. Objective & Scope
 Brainstorm, specify, and architect the Sovereign Headless Backend & API Layer to power pluggable domain applications with pure data APIs, universal advanced filtering, event-driven automated actions, native multi-tenancy, model-level RBAC, and seamless integration with the Sovereign AI Agent ecosystem (`agent_service/`).
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Dimension 1 (Architecture & Philosophy) Synthesis** - COMPLETED
-- [x] **Sub-task 2: Dimension 2 (Technology Stack & Language Runtime) Agreement** - COMPLETED
-- [x] **Sub-task 3: Dimension 3 (Data Persistence & Multi-Tenancy Strategy) Agreement** - COMPLETED
-- [x] **Sub-task 4: Dimension 4 (Asynchronous Execution & Event Bus) Agreement** - COMPLETED
-- [x] **Sub-task 5: Dimension 5 (Hermes Agent Bridge & Dynamic MCP Tool Integration) Agreement** - COMPLETED
-- [/] **Sub-task 6: Comprehensive Architectural Blueprint Finalization** - IN PROGRESS
+- [x] **Sub-task 1: Dimension 1 (Architecture & Philosophy) Synthesis** - COMPLETED (Commit: `69f96ec`)
+- [x] **Sub-task 2: Dimension 2 (Technology Stack & Language Runtime) Agreement** - COMPLETED (Commit: `604f261`)
+- [x] **Sub-task 3: Dimension 3 (Data Persistence & Multi-Tenancy Strategy) Agreement** - COMPLETED (Commit: `604f261`)
+- [x] **Sub-task 4: Dimension 4 (Asynchronous Execution & Event Bus) Agreement** - COMPLETED (Commit: `604f261`)
+- [x] **Sub-task 5: Dimension 5 (Hermes Agent Bridge & Dynamic MCP Tool Integration) Agreement** - COMPLETED (Commit: `604f261`)
+- [x] **Sub-task 6: Comprehensive Architectural Blueprint Finalization** - COMPLETED (Commit: `604f261`)
 
 ### 3. Key Decisions & Deviations (Phase 41)
 - *2026-09-13*: User initiated dedicated architectural brainstorming session for the Backend & API platform.
@@ -1543,5 +1543,156 @@ Brainstorm, specify, and architect the Sovereign Headless Backend & API Layer to
 - *2026-09-14*: Codified and committed global rule [`fastapi_standards.md`](file:///home/ehab/.gemini/config/rules/fastapi_standards.md) (anchored in [`AGENTS.md`](file:///home/ehab/Desktop/economy_editor/AGENTS.md)) mandating continuous OpenAPI, Postman collection & dynamic environment export with post-login token capture, non-blocking async event loop safety, multi-tenancy context injection, and agent-first documentation precision.
 
 ### 4. Current Focus
-Finalize Comprehensive Implementation Roadmap & Milestones with user approval.
+Phase 41 completed. Architectural blueprint finalized and ratified. Transitioning to Phase 42 for stage-by-stage implementation.
+
+---
+
+## Phase 42: Sovereign Headless Backend Platform Implementation
+
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-14 01:35:00+03:00
+- **Master Architecture Blueprint**: [`docs/plans/backend_architecture_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/backend_architecture_plan.md)
+- **Global Standards**: [`fastapi_standards.md`](file:///home/ehab/.gemini/config/rules/fastapi_standards.md) | [`git_and_task_workflow.md`](file:///home/ehab/.gemini/config/rules/git_and_task_workflow.md)
+
+### 1. Objective & Scope
+Build and verify the full Sovereign Headless Backend Platform according to the ratified 18 architectural principles and 3-tier taxonomy. Implement the high-performance asynchronous micro-kernel (`backend/core/`), 11 foundational base utilities (`backend/modules/base/`), declarative universal filter & aggregator AST engine, event-driven TCA pipeline, dynamic MCP tool reflection bridge to Nous Hermes Agent (`agent_service/`), and continuous automated OpenAPI/Postman artifact export.
+
+### 2. Task Checklist & Granular Stages
+
+#### **Stage 1: Container Infrastructure, Docker Network & Environment Scaffolding**
+- [ ] **Sub-stage 1.1: Multi-Service Docker Compose Setup**
+  - Configure `backend` (FastAPI / Uvicorn ASGI on `:8000`), `postgres` (`postgres:16-alpine`), `redis` (`redis:7-alpine`), and `celery_worker` in `docker-compose.yml`.
+  - Establish isolated bridge network (`sovereign-network`) and persistent named volumes (`postgres_data`, `redis_data`, `filestore_data`).
+- [ ] **Sub-stage 1.2: Decoupled Environment & Secrets Configuration**
+  - Establish `.env.example` and runtime `.env` specifying database connection strings (`postgresql+asyncpg://`), Redis URLs, JWT secret keys, and Hermes Gateway endpoints.
+- [ ] **Sub-stage 1.3: Project Dependency Management**
+  - Define `pyproject.toml` / `requirements.txt` with locked versions (`fastapi`, `uvicorn[standard]`, `sqlalchemy[asyncio]`, `asyncpg`, `alembic`, `celery[redis]`, `redis`, `pydantic>=2.0`, `pydantic-settings`, `httpx`, `python-jose[cryptography]`, `passlib[bcrypt]`, `openpyxl`, `jinja2`, `websockets`, `aiofiles`).
+- [ ] **Sub-stage 1.4: Container Health Checks & Verification**
+  - Implement `/health` endpoint validating asynchronous database connection pool, Redis cache ping, and Celery worker heartbeat.
+
+#### **Stage 2: Micro-Kernel Core Architecture & Dynamic Module Loader**
+- [ ] **Sub-stage 2.1: Acyclic Module DAG & Manifest Validator (`backend/core/kernel.py`)**
+  - Implement manifest contract parser (`manifest.py`: `name`, `version`, `depends_on`, `ai_enabled`, `settings_schema`).
+  - Implement topological sort algorithm validating module dependencies and preventing circular references.
+- [ ] **Sub-stage 2.2: 4-Phase Kernel Boot Lifecycle Engine**
+  - Formalize lifecycle execution sequence: `discover` $\rightarrow$ `load` $\rightarrow$ `migrate` $\rightarrow$ `bootstrap`.
+- [ ] **Sub-stage 2.3: FastAPI Application Factory & Modular Router Mounting (`backend/core/app.py`)**
+  - Factory pattern `create_app()` dynamically registering loaded module routers under `/api/v1/{module_name}`.
+  - Global centralized exception handlers returning structured, machine-actionable error envelopes with resolution hints.
+- [ ] **Sub-stage 2.4: In-Process Event Bus & Redis Pub/Sub Bridge (`backend/core/event_bus.py`)**
+  - Asynchronous event dispatcher capturing entity lifecycle events (`before_save`, `after_save`, `on_state_change`).
+  - Redis Pub/Sub bridge broadcasting events across processes and WebSocket gateways.
+
+#### **Stage 3: Multi-Tenancy Engine, Base Models & Soft-Delete Architecture**
+- [ ] **Sub-stage 3.1: ContextVar & Request Middleware (`backend/core/context.py`)**
+  - Thread-safe Python `ContextVar` maintaining `active_company_id`, `current_user_id`, and `actor_type`.
+  - FastAPI middleware validating `X-Company-ID` and JWT bearer claims on every incoming request.
+- [ ] **Sub-stage 3.2: Declarative Model Primitives (`backend/core/base_models.py`)**
+  - `BaseModel`: Primary key (UUID), tenant FK (`company_id`), timestamps (`created_at`, `updated_at`), actor FKs (`created_by_id`, `updated_by_id`).
+  - `ExtensibleModelMixin`: Adds dynamic `custom_fields JSONB DEFAULT '{}'::jsonb` with automatic PostgreSQL GIN index (`USING gin(custom_fields)`).
+  - `ArchivableMixin`: Provides operational `is_active: bool = True` status.
+- [ ] **Sub-stage 3.3: Soft-Delete Engine & PostgreSQL Partial Unique Indexes (`SoftDeleteMixin`)**
+  - Fields: `deleted_at: Optional[datetime] = None`, `deleted_by_id: Optional[UUID] = None`.
+  - Automatic Kernel query filtration (`WHERE deleted_at IS NULL` and `WHERE company_id = :active_company_id`).
+  - Partial unique index compatibility (`CREATE UNIQUE INDEX ... WHERE deleted_at IS NULL`).
+- [ ] **Sub-stage 3.4: Async Database Session Factory & Connection Pool (`backend/core/database.py`)**
+  - Async SQLAlchemy engine configuration with tuned connection pooling.
+  - FastAPI dependency `get_db()` providing scoped `AsyncSession` with automatic rollback on errors.
+
+#### **Stage 4: Universal Advanced Filtering, AST Compiler & Aggregator Engine**
+- [ ] **Sub-stage 4.1: Universal Filter AST Grammar & Pydantic Schema (`backend/core/query_engine.py`)**
+  - Pydantic models for filter expressions: `FilterNode(field, operator, value)` and recursive `FilterGroup(logical_operator, conditions)`.
+  - Full operator set: `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `contains`, `icontains`, `in`, `not_in`, `between`, `is_null`.
+- [ ] **Sub-stage 4.2: SQLAlchemy Expression Compiler**
+  - Compiles arbitrary JSON AST trees into parameterized SQLAlchemy binary clauses.
+  - Safe relational join traversal (e.g. `customer.country.code == 'SA'`) with SQL injection immunity.
+- [ ] **Sub-stage 4.3: Universal Aggregator & Equation Engine**
+  - Declarative aggregation spec compiling `SUM`, `AVG`, `MIN`, `MAX`, `COUNT`, and distinct counts.
+  - Multi-level `GROUP BY`, temporal date truncations (`day`, `week`, `month`, `year`).
+  - SQL conditional aggregates (`FILTER (WHERE ...)`) and post-aggregation arithmetic equation evaluation (e.g. `(revenue - cogs) / revenue * 100`).
+- [ ] **Sub-stage 4.4: Universal Pagination & Sorting Protocol**
+  - Standardized parameters (`page`, `page_size`, `sort_by`, `sort_direction`) with maximum limit enforcement (`limit=100`) and metadata envelopes.
+
+#### **Stage 5: Foundational Core Base Utilities (`backend/modules/base/`)**
+- [ ] **Sub-stage 5.1: `identity_rbac` (Contextual RBAC & First-Class Agent Identity)**
+  - Models: `User` (with `user_type: "human" | "ai_agent"`), `Group`, `Permission`, `UserGroupLink`.
+  - 3-tier ownership model: `GLOBAL`, `TEAM`, `OWN`.
+  - Declarative FastAPI permission dependency: `Depends(require_permission("module.model.action"))`.
+  - JWT issuance, verification, and refresh lifecycle.
+- [ ] **Sub-stage 5.2: `settings` (Per-Module Dynamic Configuration)**
+  - Key-value JSONB store per module per company (`company_id`, `module_name`, `settings_data`).
+  - Standardized `GET/PATCH /api/v1/{module}/settings` endpoints validating against module manifest schemas.
+- [ ] **Sub-stage 5.3: `lookups` (Dynamic Normalized Master Data)**
+  - Models: `Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`.
+  - Auto-seeding ISO fixtures on kernel bootstrap (`seed_iso_data()`).
+- [ ] **Sub-stage 5.4: `audit` (Immutable Audit Trail & Diffs)**
+  - Model: `AuditLog` capturing `actor_id`, `actor_type`, `company_id`, `model_name`, `record_id`, `action`, and JSON state diff.
+  - SQLAlchemy session interceptor capturing and recording mutations automatically.
+- [ ] **Sub-stage 5.5: `chatter` (Polymorphic Discussion & Real-time Collaboration)**
+  - Models: `MailMessage` with polymorphic linkage `(res_model, res_id)`, `message_type: "comment" | "notification" | "ai_finding"`, and `Activity`.
+  - WebSocket broadcaster streaming new messages to connected clients via Redis Pub/Sub.
+- [ ] **Sub-stage 5.6: `documents` (Blob Storage & Inherited Permissions)**
+  - Content-Addressable Storage engine saving files to `filestore/` by SHA-256 hash.
+  - Parent-inherited permission model: access governed by read rights on target `res_model` / `res_id`.
+- [ ] **Sub-stage 5.7: `mail_gateway` (Outbound & Inbound Email Pipeline)**
+  - Outbound SMTP server configuration with Jinja2 multi-lingual email templates.
+  - Celery-queued async email sending with retry logic, failure tracking, and bounce management.
+- [ ] **Sub-stage 5.8: `notification_engine` (Multi-Channel Push Subsystem)**
+  - Notification dispatcher supporting In-App WebSocket alerts, WebPush (VAPID), and Mobile Push (FCM/APNs).
+  - Per-user delivery preference matrices.
+- [ ] **Sub-stage 5.9: `import_export` (Universal Streaming Bulk Processing)**
+  - Streaming processor for CSV, Excel (`openpyxl`), and JSON formats with dynamic schema mapping.
+  - Celery background worker execution for large datasets returning `202 Accepted` with task polling.
+- [ ] **Sub-stage 5.10: `backup` (Unified Atomic Archive Engine)**
+  - Atomic archive generator packaging `dump.sql` (PostgreSQL raw dump), `filestore/` (blob attachments), and `manifest.json`.
+  - CLI commands and Celery Beat scheduled backup routines.
+- [ ] **Sub-stage 5.11: `i18n` (Multi-Language & Localization)**
+  - Multi-lingual field JSONB structure (`{"en": "...", "ar": "..."}`).
+  - Locale resolution middleware inspecting `Accept-Language` header and user preferences.
+
+#### **Stage 6: Event-Driven Automated Actions Subsystem (TCA Engine)**
+- [ ] **Sub-stage 6.1: Trigger Registry & Lifecycle Interceptors**
+  - Model event hooks: `on_create`, `on_update`, `on_delete`, `on_state_change`.
+  - Scheduled time triggers managed by Celery Beat.
+- [ ] **Sub-stage 6.2: Condition Expression Evaluator**
+  - Evaluates boolean expressions and JSON AST rules against record fields and related entities before triggering actions.
+- [ ] **Sub-stage 6.3: Built-in Action Handlers**
+  - Core action executors: `update_record`, `create_record`, `send_email`, `post_chatter_message`, `invoke_webhook`.
+- [ ] **Sub-stage 6.4: Execution History & Resilience**
+  - `ActionExecutionLog` recording trigger timestamp, execution latency, success/failure status, and exception tracebacks.
+  - Celery retry with exponential backoff for external network calls.
+
+#### **Stage 7: Sovereign AI Agent Bridge & Dynamic MCP Tool Exposer**
+- [ ] **Sub-stage 7.1: `invoke_ai_agent` TCA Action Executor**
+  - Dynamic prompt template interpolator injecting record attributes (e.g. `{record.total_amount}`).
+  - Async HTTP client dispatching tasks to Hermes Agent Gateway (`POST http://hermes-template-agent:8643/v1/chat/completions`).
+- [ ] **Sub-stage 7.2: FastMCP Dynamic Tool Reflection Engine**
+  - Inspects all loaded modules where `ai_enabled == True` in `manifest.py`.
+  - Generates typed FastMCP tool definitions directly from Pydantic schemas and registered routes.
+- [ ] **Sub-stage 7.3: Chatter Feedback Loop & Langfuse Tracing**
+  - Agent response parser publishing structured reasoning, findings, and approvals directly into the entity's Chatter thread.
+  - End-to-end tracing propagated through Langfuse (`:3100`).
+
+#### **Stage 8: Continuous API Synchronization, Golden Benchmarks & Verification**
+- [ ] **Sub-stage 8.1: Continuous OpenAPI & Postman Exporter (`backend/core/exporter.py`)**
+  - Automated script exporting `docs/api/openapi.json`, `docs/api/postman_collection.json`, and `docs/api/postman_environment.json`.
+  - Postman dynamic login token capture script and collection-level bearer inheritance validation.
+- [ ] **Sub-stage 8.2: Comprehensive Pytest Test Suite (`backend/tests/`)**
+  - Multi-tenancy isolation tests (verifying cross-tenant queries fail with 404/empty).
+  - Soft-delete tests (verifying filtered records and PostgreSQL partial unique index behavior).
+  - Universal Filter AST & Aggregator compiler verification tests.
+  - Human vs. AI Agent RBAC equivalence tests.
+  - Automated action execution and Chatter WebSocket broadcast tests.
+  - Atomic backup and restore verification test.
+  - Hermes Agent bridge integration test.
+- [ ] **Sub-stage 8.3: LLM Wiki & Architecture Synchronization**
+  - Update `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md` with complete directory maps, models, and service links.
+
+### 3. Key Decisions & Deviations (Phase 42)
+- *2026-09-14*: Unpacked comprehensive 8-stage implementation roadmap into `active_plan.md` derived directly from ratified blueprint [`docs/plans/backend_architecture_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/backend_architecture_plan.md).
+- *2026-09-14*: Subdivided each milestone into granular, independently verifiable sub-stages to facilitate atomic Git commits and systematic step-by-step execution.
+
+### 4. Current Focus
+Begin execution of **Stage 1: Container Infrastructure, Docker Network & Environment Scaffolding** (Sub-stage 1.1: Multi-Service Docker Compose Setup).
 
