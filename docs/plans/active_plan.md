@@ -1304,7 +1304,7 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 
 ### 2. Task Milestones & Architectural Alignment
 - [x] **Sub-task 0: Architecture Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED (Commit: `a030672`)
-- [x] **Sub-task 1: Clean-Slate Decoupling & Pure Standalone Hermes Provisioning** - COMPLETED (Wiped legacy coupled profiles/skills/runtime; severed volume mounts in `backend/docker-compose.yml`; scaffolded clean sovereign directories; verified standalone Hermes Gateway on port 8643)
+- [x] **Sub-task 1: Clean-Slate Decoupling & Pure Standalone Hermes Provisioning** - COMPLETED (Commit: `f7b11d1`)
 - [ ] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - PENDING
 - [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - PENDING
 - [ ] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
