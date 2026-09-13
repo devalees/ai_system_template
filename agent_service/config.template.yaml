@@ -1,7 +1,62 @@
-# Default Sovereign AI Platform Configuration
+# Sovereign AI Platform Configuration: Modular FastMCP Servers
 # Copy or link this file to data/config.yaml for runtime configuration
 
 mcp_servers:
+  # Platform-Wide Shared Tools (Semantic Memory & System Status)
+  common_tools:
+    command: "python3"
+    args:
+      - "/workspace/mcp/common_server.py"
+    env:
+      PYTHONPATH: "/"
+      PYTHONSAFEPATH: "1"
+
+  # Specialist 1: Chief of Staff & DAG Planner
+  orchestrator_tools:
+    command: "python3"
+    args:
+      - "/workspace/mcp/orchestrator_server.py"
+    env:
+      PYTHONPATH: "/"
+      PYTHONSAFEPATH: "1"
+
+  # Specialist 2: QA & Compliance Gatekeeper
+  qa_tools:
+    command: "python3"
+    args:
+      - "/workspace/mcp/qa_server.py"
+    env:
+      PYTHONPATH: "/"
+      PYTHONSAFEPATH: "1"
+
+  # Specialist 3: Threat Auditor & SecOps
+  security_tools:
+    command: "python3"
+    args:
+      - "/workspace/mcp/security_server.py"
+    env:
+      PYTHONPATH: "/"
+      PYTHONSAFEPATH: "1"
+
+  # Specialist 4: Financial Controller & Spend Auditor
+  cost_tools:
+    command: "python3"
+    args:
+      - "/workspace/mcp/cost_server.py"
+    env:
+      PYTHONPATH: "/"
+      PYTHONSAFEPATH: "1"
+
+  # Specialist 5: Client Communications Concierge
+  comms_tools:
+    command: "python3"
+    args:
+      - "/workspace/mcp/comms_server.py"
+    env:
+      PYTHONPATH: "/"
+      PYTHONSAFEPATH: "1"
+
+  # Consolidated Fallback / Legacy Aggregate Server
   system_tools:
     command: "python3"
     args:

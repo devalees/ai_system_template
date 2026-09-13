@@ -98,3 +98,34 @@ class SecurityAuditResult(BaseModel):
     passed: bool = Field(..., description="True if zero CRITICAL or HIGH issues detected")
     issues_found: int = Field(..., description="Total count of issues discovered")
     issues: List[SecurityIssue] = Field(default_factory=list, description="Itemized list of findings")
+
+
+# ---------------------------------------------------------------------------
+# 6. Common Tools Schemas (Shared Platform Tools)
+# ---------------------------------------------------------------------------
+
+class MemoryItemSchema(BaseModel):
+    """Represents a single recalled memory item."""
+    id: str = Field(..., description="Unique memory ID")
+    content: str = Field(..., description="Text content of the memory")
+    category: str = Field(..., description="Memory classification, e.g. 'architecture', 'solution'")
+    scope: str = Field(..., description="Scope: 'global', 'project', 'milestone', 'security'")
+    tags: List[str] = Field(default_factory=list, description="Associated metadata tags")
+    distance: float = Field(..., description="Cosine distance (lower = higher semantic similarity)")
+    similarity_score: float = Field(..., description="Similarity percentage between 0.0 and 1.0")
+
+
+class MemoryRecallResult(BaseModel):
+    """Output contract for semantic_memory_recall."""
+    query: str = Field(..., description="Original semantic search query")
+    total_found: int = Field(..., description="Total count of matching memories recalled")
+    memories: List[MemoryItemSchema] = Field(default_factory=list, description="Ranked list of memories")
+
+
+class PlatformStatusResult(BaseModel):
+    """Output contract for get_platform_status."""
+    status: Literal["OPERATIONAL", "DEGRADED", "ERROR"] = Field(..., description="Platform health status")
+    version: str = Field(..., description="Sovereign platform version")
+    uptime_seconds: float = Field(..., description="Service uptime in seconds")
+    active_services: List[str] = Field(default_factory=list, description="Active registered services and daemons")
+    total_memories: int = Field(..., description="Total vectors stored in sqlite-vec memory engine")

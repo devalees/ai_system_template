@@ -1359,7 +1359,31 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 Phase 36 Enterprise Agent Upgrade completed across all 6 Sovereign Pillars. System is 100% verified and operational.
 
 
+## Phase 37: Modular FastMCP Domain Servers & Zero-Trust Profile Scoping
 
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-13 16:30:00+03:00
 
+### 1. Objective & Scope
+Decompose the monolithic `system_tools` FastMCP server into a platform-wide `common_tools` server and 5 specialist domain micro-servers, configuring strict least-privilege tool isolation across all 5 department head profiles:
+1. **`common_tools`**: Shared tools available to all agents (`semantic_memory_recall`, `get_platform_status`).
+2. **`orchestrator_tools`**: Chief of Staff tools (`decompose_task_dag`).
+3. **`qa_tools`**: QA Auditor tools (`validate_code_deliverable`).
+4. **`security_tools`**: Threat Auditor tools (`security_audit`).
+5. **`cost_tools`**: Financial Controller tools (`audit_token_budget`).
+6. **`comms_tools`**: Client Concierge tools (`client_service_action`).
 
+### 2. Task Milestones & Progress
+- [x] **Sub-task 1: Modular FastMCP Domain Servers Implementation (`agent_service/mcp/`)** - COMPLETED (Commit: pending)
+- [x] **Sub-task 2: Hermes MCP Configuration & Profile Scoping Alignment (`agent_service/profiles/`)** - COMPLETED (Commit: pending)
+- [x] **Sub-task 3: Empirical Testing & Verification Suite** - COMPLETED (Commit: pending)
 
+### 3. Key Decisions & Deviations
+- *2026-09-13*: User approved Approach 1 (Modular MCPs) to enforce zero-trust least-privilege tool isolation and eliminate tool distraction / prompt bloat across specialist personas.
+- *2026-09-13*: Implemented 6 modular FastMCP servers (`common_server.py`, `orchestrator_server.py`, `qa_server.py`, `security_server.py`, `cost_server.py`, `comms_server.py`) while preserving `system_tools_server.py` for backward-compatible consolidation.
+- *2026-09-13*: Re-scoped all 5 specialist profiles (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `security_guard`) to only declare `common_tools` plus their designated specialist MCP server.
+- *2026-09-13*: Authored `agent_service/evals/test_modular_mcp.py` (8 tests). All 51 benchmark evaluation tests passing in 2.33s (100% pass rate).
+
+### 4. Current Focus
+Phase 37 Modular FastMCP Domain Servers & Zero-Trust Profile Scoping successfully completed and verified.

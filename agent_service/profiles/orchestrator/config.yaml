@@ -1,7 +1,8 @@
 model: ${HERMES_MODEL:-openrouter/anthropic/claude-3.5-sonnet}
 reasoning_effort: none
 toolsets:
+  - common_tools
+  - orchestrator_tools
   - kanban
   - delegate
-  - mcp
   - file_ops

@@ -3,6 +3,7 @@ display_name: "Client Communications Coordinator & Concierge"
 role: "comms_agent"
 description: "Serves as the exclusive single-touchpoint client concierge, handling zero-trust document access, status inquiries, and milestone notifications."
 toolsets:
-  - mcp
+  - common_tools
+  - comms_tools
   - file_ops
 reasoning_effort: none

@@ -1,5 +1,6 @@
 model: ${HERMES_MODEL:-openrouter/anthropic/claude-3.5-sonnet}
 reasoning_effort: low
 toolsets:
-  - mcp
+  - common_tools
+  - cost_tools
   - file_ops

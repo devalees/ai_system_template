@@ -35,14 +35,16 @@ A production-grade, 100% sovereign, and portable autonomous AI agent platform po
 - **Post-Flight Indexing**: Automatically summarizes and vector-indexes approved task outcomes into `memory.db`.
 - **Zero External Overhead**: In-memory execution with ~10–25 MB RAM footprint and $0 monthly hosting overhead.
 
-### 3. Internal Model Context Protocol (FastMCP) Tool Ecosystem (`agent_service/mcp/`)
-- **Architecture**: In-process FastMCP server (`agent_service/mcp/system_tools_server.py`) communicating over standard JSON-RPC 2.0.
-- **Specialist Tools**:
-  - `decompose_task_dag`: Directed acyclic graph (DAG) project decomposition with pre-flight memory recall.
-  - `audit_token_budget`: Real-time token tracking and Langfuse telemetry evaluation against configured budget caps.
-  - `validate_code_deliverable`: Multi-tier validator combining deterministic Python AST syntax checks ($0, <5ms) with conditional LLM reviews for high-risk changes.
-  - `client_service_action`: Zero-trust document queries and client budget governance.
-  - `security_audit`: High-speed in-memory regex scanner for secret leak detection, tenant boundaries, and permissions.
+### 3. Modular Model Context Protocol (FastMCP) Ecosystem (`agent_service/mcp/`)
+- **Architecture**: In-process FastMCP micro-servers communicating over standard JSON-RPC 2.0 with zero-trust profile scoping:
+  - `common_tools` (`common_server.py`): Platform-wide tools shared by all agents (`semantic_memory_recall`, `get_platform_status`).
+  - `orchestrator_tools` (`orchestrator_server.py`): `decompose_task_dag` with pre-flight memory recall.
+  - `qa_tools` (`qa_server.py`): `validate_code_deliverable` combining deterministic Python AST syntax checks ($0, <5ms) with hygiene audits.
+  - `security_tools` (`security_server.py`): `security_audit` for high-speed in-memory credential leak scanning and permission audits.
+  - `cost_tools` (`cost_server.py`): `audit_token_budget` tracking spend against configured budget caps.
+  - `comms_tools` (`comms_server.py`): `client_service_action` for zero-trust document queries and notification routing.
+  - `system_tools` (`system_tools_server.py`): Backward-compatible aggregate server.
+- **Zero-Trust Scoping**: Profiles declare only `[common_tools, <domain>_tools]`, enforcing least privilege and eliminating prompt bloat.
 
 ### 4. Standalone Glass-Box Tracing & LLMOps (`Langfuse` :3100)
 - **Containerized Observability**: Independent Docker container (`ghcr.io/langfuse/langfuse:2`) running on host port `3100:3000`.

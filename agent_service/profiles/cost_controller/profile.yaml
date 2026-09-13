@@ -3,6 +3,7 @@ display_name: "Financial Controller & Token Spend Auditor"
 role: "cost_controller"
 description: "Audits real-time token expenditure against daily dollar budgets, monitors spend velocity, and advises on cost-efficient execution models."
 toolsets:
-  - mcp
+  - common_tools
+  - cost_tools
   - file_ops
 reasoning_effort: low

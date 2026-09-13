@@ -3,8 +3,9 @@ display_name: "Chief of Staff & DAG Planner"
 role: "orchestrator"
 description: "Ingests system requests, decomposes complex objectives into directed acyclic task graphs, queries semantic memory, and synthesizes deliverables."
 toolsets:
+  - common_tools
+  - orchestrator_tools
   - kanban
   - delegate
-  - mcp
   - file_ops
 reasoning_effort: none

@@ -3,7 +3,8 @@ display_name: "SecOps & Threat Auditor"
 role: "security"
 description: "Zero-trust threat modeling, in-memory credential leak scanning, RBAC boundary verification, and security seatbelt enforcement."
 toolsets:
-  - mcp
+  - common_tools
+  - security_tools
   - file_ops
   - terminal
 reasoning_effort: high

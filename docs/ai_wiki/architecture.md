@@ -34,8 +34,14 @@ economy_editor/
 │   ├── .env.example                 # Example configuration template
 │   ├── profiles/                    # Calibrated Profiles (SOUL.md, config.yaml, profile.yaml)
 │   ├── mcp/                         # Internal Model Context Protocol Tool Ecosystem
-│   │   ├── system_tools_server.py   # FastMCP server exposing core capabilities over JSON-RPC
-│   │   └── schemas/                 # Pydantic input/output validation schemas
+│   │   ├── common_server.py         # Shared platform tools (semantic_memory_recall, get_platform_status)
+│   │   ├── orchestrator_server.py   # Chief of Staff tools (decompose_task_dag)
+│   │   ├── qa_server.py             # QA Gatekeeper tools (validate_code_deliverable)
+│   │   ├── security_server.py       # Threat Auditor tools (security_audit)
+│   │   ├── cost_server.py           # Financial Controller tools (audit_token_budget)
+│   │   ├── comms_server.py          # Client Concierge tools (client_service_action)
+│   │   ├── system_tools_server.py   # Backward-compatible aggregate FastMCP server
+│   │   └── schemas.py               # Pydantic input/output validation schemas
 │   ├── memory/                      # Embedded Sovereign Vector Engine (sqlite-vec)
 │   │   ├── vector_store.py          # MemoryStore with cosine similarity search (<15ms)
 │   │   └── cli.py                   # Knowledge Export & Import CLI (PII-sanitized)
@@ -88,16 +94,20 @@ economy_editor/
 
 ---
 
-### 4.2 Pillar 2: Standardized Model Context Protocol (FastMCP) Tool Ecosystem
-- **Protocol**: Standard JSON-RPC 2.0 over in-process communication.
-- **FastMCP Server (`agent_service/mcp/system_tools_server.py`)**:
-  - Eliminates subprocess shell invocation overhead and terminal security risks.
-  - Exposes typed functions decorated with `@mcp.tool()`:
-    1. `decompose_task_dag`: Directed acyclic graph (DAG) objective decomposition with pre-flight memory recall.
-    2. `audit_token_budget`: Real-time token tracking and Langfuse telemetry evaluation against configured budget caps.
-    3. `validate_code_deliverable`: Multi-tier validator combining deterministic Python AST syntax checks ($0, <5ms) with conditional LLM reviews for high-risk changes.
-    4. `client_service_action`: Zero-trust document queries and client budget governance.
-    5. `security_audit`: High-speed in-memory regex scanner for secret leak detection, tenant boundaries, and permissions.
+### 4.2 Pillar 2: Standardized & Modular Model Context Protocol (FastMCP) Ecosystem
+- **Protocol**: Standard JSON-RPC 2.0 over clean stdio transport.
+- **Modular Micro-Servers (`agent_service/mcp/`)**:
+  - Eliminates monolithic tool clutter, tool distraction, and prompt bloat.
+  - Implements strict zero-trust least privilege across 6 focused FastMCP servers:
+    1. **`common_tools` (`common_server.py`)**: Platform-wide tools shared by all agents (`semantic_memory_recall`, `get_platform_status`).
+    2. **`orchestrator_tools` (`orchestrator_server.py`)**: `decompose_task_dag` with pre-flight semantic memory augmentation.
+    3. **`qa_tools` (`qa_server.py`)**: `validate_code_deliverable` with Tier 1 deterministic AST syntax checking ($0, <5ms).
+    4. **`security_tools` (`security_server.py`)**: `security_audit` with high-speed regex scanning for leaked secrets and permission violations.
+    5. **`cost_tools` (`cost_server.py`)**: `audit_token_budget` with 4-tier milestone alerts.
+    6. **`comms_tools` (`comms_server.py`)**: `client_service_action` for zero-trust document queries and notification routing.
+- **Zero-Trust Profile Scoping**:
+  - Each profile's `profile.yaml` declares only `[common_tools, <specialist>_tools, ...]`.
+  - For example, `comms_agent` physically has no access to code validation, terminal, or security tools.
 
 ---
 
