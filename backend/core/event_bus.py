@@ -65,6 +65,8 @@ class EventBus:
             except Exception as e:
                 logger.warning(f"Failed broadcasting event '{event_name}' to Redis: {e}")
 
+    publish = emit
+
     async def _safe_execute(self, handler: EventHandler, event_message: Dict[str, Any]) -> None:
         """Execute a single handler with error isolation."""
         try:

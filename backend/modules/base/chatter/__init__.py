@@ -1,0 +1,1 @@
+"""Chatter module package initialization."""
