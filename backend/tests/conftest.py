@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.pool import NullPool
 from core.config import settings
 from core.base_models import Base
+from core.database import get_db
+from main import app
 
 
 @pytest_asyncio.fixture
@@ -29,3 +31,14 @@ async def db_session() -> AsyncSession:
         await session.rollback()
 
     await test_engine.dispose()
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def override_db_dependency(db_session: AsyncSession):
+    """Override FastAPI get_db dependency to use the isolated test session."""
+    async def _get_test_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _get_test_db
+    yield
+    app.dependency_overrides.pop(get_db, None)

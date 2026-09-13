@@ -25,17 +25,18 @@ from core.exceptions import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Manage application startup and shutdown events with 4-phase micro-kernel boot."""
-    # 1. Boot Micro-Kernel (discover -> load -> migrate -> bootstrap)
-    await kernel.boot(app=app)
+    """Manage application startup and shutdown events with async micro-kernel bootstrap."""
+    # Run async migrations and bootstrap hooks
+    await kernel.migrate()
+    await kernel.bootstrap()
     yield
-    # 2. Teardown resources
+    # Teardown resources
     await event_bus.close()
     await engine.dispose()
 
 
 def create_app() -> FastAPI:
-    """Instantiate and configure the FastAPI application with micro-kernel integration."""
+    """Instantiate and configure the FastAPI application with synchronous module router mounting."""
     app = FastAPI(
         title="Sovereign Headless Backend Platform",
         description="High-performance async micro-kernel backend platform for sovereign enterprise apps.",
@@ -55,12 +56,17 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 2. Register Global Standardized Error Envelope Handlers
+    # 3. Register Global Standardized Error Envelope Handlers
     app.add_exception_handler(PlatformException, platform_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, global_exception_handler)
 
-    # 3. Micro-Kernel Registry Diagnostics Endpoint
+    # 4. Micro-Kernel Synchronous Route Discovery & Mounting
+    kernel.discover()
+    kernel.resolve_dependencies()
+    kernel.load(app=app)
+
+    # 5. Micro-Kernel Registry Diagnostics Endpoint
     @app.get("/api/v1/kernel/modules", tags=["Kernel Diagnostics"])
     async def get_kernel_modules() -> Dict[str, Any]:
         """Return registered modules, execution load order, and AI-enabled capabilities."""
@@ -72,7 +78,7 @@ def create_app() -> FastAPI:
             "ai_enabled_count": len(kernel.get_ai_enabled_modules()),
         }
 
-    # 4. System Health Check Endpoint
+    # 6. System Health Check Endpoint
     @app.get("/health", tags=["System Diagnostics"])
     async def health_check() -> JSONResponse:
         """Asynchronous system health check verifying database, redis, and celery connectivity."""
@@ -122,7 +128,7 @@ def create_app() -> FastAPI:
         http_status = status.HTTP_200_OK if all_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
         return JSONResponse(status_code=http_status, content=response_payload)
 
-    # 5. Root Information Endpoint
+    # 7. Root Information Endpoint
     @app.get("/", tags=["System Diagnostics"])
     async def root_endpoint() -> Dict[str, Any]:
         """Root API platform status and documentation links."""

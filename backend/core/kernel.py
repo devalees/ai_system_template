@@ -134,28 +134,23 @@ class Kernel:
                 continue
 
             try:
+                tier_dir = "base" if manifest.tier == "base" else "apps"
+                pkg_prefix = f"modules.{tier_dir}.{manifest.name}"
+
                 # Import module routes if exists
                 if manifest.module_dir and (manifest.module_dir / "routes.py").exists():
-                    routes_path = manifest.module_dir / "routes.py"
-                    spec = importlib.util.spec_from_file_location(f"modules.{manifest.name}.routes", routes_path)
-                    if spec and spec.loader:
-                        routes_mod = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(routes_mod)
-                        router = getattr(routes_mod, "router", None)
-                        if isinstance(router, APIRouter):
-                            self.routers[module_name] = router
-                            if app:
-                                prefix = f"/api/v1/{module_name}"
-                                app.include_router(router, prefix=prefix, tags=[manifest.title])
-                                logger.info(f"Mounted API router for '{module_name}' at '{prefix}'")
+                    routes_mod = importlib.import_module(f"{pkg_prefix}.routes")
+                    router = getattr(routes_mod, "router", None)
+                    if isinstance(router, APIRouter):
+                        self.routers[module_name] = router
+                        if app:
+                            prefix = f"/api/v1/{module_name}"
+                            app.include_router(router, prefix=prefix, tags=[manifest.title])
+                            logger.info(f"Mounted API router for '{module_name}' at '{prefix}'")
 
                 # Import module models if exists
                 if manifest.module_dir and (manifest.module_dir / "models.py").exists():
-                    models_path = manifest.module_dir / "models.py"
-                    spec = importlib.util.spec_from_file_location(f"modules.{manifest.name}.models", models_path)
-                    if spec and spec.loader:
-                        models_mod = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(models_mod)
+                    models_mod = importlib.import_module(f"{pkg_prefix}.models")
 
                 self.loaded_packages[module_name] = manifest
             except Exception as exc:
