@@ -1626,9 +1626,9 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - [x] **Sub-stage 5.3: `lookups` (Dynamic Normalized Master Data)** - COMPLETED (Commit: `e969070`)
   - Models: `Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`.
   - Auto-seeding ISO fixtures on kernel bootstrap (`seed_iso_data()`), idempotency verification, and multi-tenant isolation.
-- [ ] **Sub-stage 5.4: `audit` (Immutable Audit Trail & Diffs)**
+- [x] **Sub-stage 5.4: `audit` (Immutable Audit Trail & Diffs)** - COMPLETED (Commit: `31b3e8a`)
   - Model: `AuditLog` capturing `actor_id`, `actor_type`, `company_id`, `model_name`, `record_id`, `action`, and JSON state diff.
-  - SQLAlchemy session interceptor capturing and recording mutations automatically.
+  - State diff computation engine (`compute_instance_diff`), service layer (`AuditService`), and tenant-isolated REST endpoints (`/api/v1/audit/*`).
 - [ ] **Sub-stage 5.5: `chatter` (Polymorphic Discussion & Real-time Collaboration)**
   - Models: `MailMessage` with polymorphic linkage `(res_model, res_id)`, `message_type: "comment" | "notification" | "ai_finding"`, and `Activity`.
   - WebSocket broadcaster streaming new messages to connected clients via Redis Pub/Sub.
@@ -1700,7 +1700,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Sub-stage 5.1 Completed - Commit: `1392398`)*: Implemented `identity_rbac` foundational base utility module: User entity with `user_type: "human" | "ai_agent"` for first-class AI agent participation, RBAC Groups, granular model Permissions, native bcrypt hashing, JWT issuance and verification, declarative `require_permission()` dependency, and live registration/login routes. All 23 unit tests passing in container in 6.54s.
 - *2026-09-14 (Sub-stage 5.2 Completed - Commit: `fe2a6e0`)*: Implemented `settings` module: `ModuleSettings` persistent JSONB table, Redis-cached retrieval with 1-hour TTL, transactional merge updates, automatic cache invalidation, and authenticated REST endpoints (`GET/PATCH /api/v1/settings/{module_name}`). Verified complete multi-tenant isolation. 25/25 unit tests passing in container in 8.64s.
 - *2026-09-14 (Sub-stage 5.3 Completed - Commit: `e969070`)*: Implemented `lookups` master data module: normalized models (`Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`), ISO fixture library (`fixtures.py`), idempotent seeder (`seed_iso_data()`), and full REST CRUD endpoints (`/api/v1/lookups/*`) with company isolation and fast query filtering. 27/27 unit tests passing in container in 10.92s.
+- *2026-09-14 (Sub-stage 5.4 Completed - Commit: `31b3e8a`)*: Implemented `audit` module: immutable `AuditLog` model capturing actor attribution and state diffs, `compute_instance_diff` delta generator, `AuditService.log_mutation` helper, and tenant-scoped REST exploration endpoints (`/api/v1/audit/` and `/api/v1/audit/entity/{model_name}/{record_id}`). 30/30 unit tests passing in container in 13.01s.
 
 ### 4. Current Focus
-Begin execution of **Stage 5, Sub-stage 5.4: `audit` (Immutable Audit Trail & Diffs)** in `backend/modules/base/audit/`.
+Begin execution of **Stage 5, Sub-stage 5.5: `chatter` (Polymorphic Discussion & Real-time Collaboration)** in `backend/modules/base/chatter/`.
 
