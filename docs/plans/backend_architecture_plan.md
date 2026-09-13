@@ -174,6 +174,27 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
+### Principle 19: Visual App Studio & Dynamic Table Metamodel (Future Horizon)
+* **Status**: Formally planned and architected for a future phase (to be implemented alongside the Frontend UI).
+* **Architectural Rationale & Trade-Offs**:
+  * *Rejection of Single `JSONB` Compromise*: The platform strictly rejects dumping entire dynamic applications into unstructured `JSONB` columns. Dynamic applications created via the future Studio MUST possess **real PostgreSQL physical tables, real typed SQL columns (`VARCHAR`, `NUMERIC`, `TIMESTAMP`), real foreign keys, and real database constraints**.
+  * *Rejection of Freeform AI Code Generation*: Application templates will not rely on autonomous LLMs writing runtime Python files to prevent syntax errors, security vulnerabilities, or unpredictable logic drifts.
+  * *Complexity Management (Why Defer to UI Phase)*: Creating real PostgreSQL tables dynamically at runtime requires:
+    1. Multi-worker memory synchronization across ASGI Uvicorn workers and Celery task processes via Redis pub/sub schema invalidation.
+    2. Synchronizing dynamic DDL with Alembic migration histories.
+    Attempting this in the initial backend milestone introduces premature complexity before the core Kernel, Multi-Tenancy, and Base Utilities are stabilized.
+* **Planned Implementation for Visual App Studio (Future Phase)**:
+  * **Visual Schema Designer (UI)**: Drag-and-drop builder for creating models, fields, and relational links.
+  * **Deterministic DDL Engine**: Programmatically executes real PostgreSQL `CREATE TABLE` and constraint statements.
+  * **Distributed Schema Bus**: Broadcasts schema invalidation events via Redis to all active Uvicorn and Celery processes to refresh table metadata dynamically.
+  * **Universal Auto-CRUD & Filter AST**: Dynamic models automatically inherit the Universal Filter AST, Aggregator, Chatter, and RBAC endpoints without server restarts.
+* **Current Extensibility in Initial Release (Phase 42)**:
+  * All new vertical applications are scaffolded cleanly as deterministic Python packages in `backend/modules/apps/`.
+  * Users can dynamically add custom attributes to *any* existing model at runtime via `custom_fields JSONB` (Principle 10).
+  * Users can dynamically define dropdowns, categories, and automated workflows at runtime via `lookups` and `automated_actions` (Principle 3).
+
+---
+
 ## 3. Structural Taxonomy: Kernel vs. Base Utilities vs. Pluggable Apps
 
 To maintain strict modularity, clean boundaries, and zero circular dependencies, the backend is organized into three distinct tiers:
@@ -358,7 +379,7 @@ To maintain strict modularity, clean boundaries, and zero circular dependencies,
 ## 8. Comprehensive Architectural Blueprint Status
 
 All 5 core dimensions have been collaboratively brainstormed and agreed upon:
-* [x] **Dimension 1**: Architecture & Philosophy (18 core principles including contextual RBAC, per-app settings, relational dynamism, i18n, audit logging, first-class AI agent user identity, universal aggregator, bulk import/export, unified atomic backups, multi-channel notification push, and soft-delete integrity).
+* [x] **Dimension 1**: Architecture & Philosophy (19 core principles including contextual RBAC, per-app settings, relational dynamism, i18n, audit logging, first-class AI agent user identity, universal aggregator, bulk import/export, unified atomic backups, multi-channel notification push, soft-delete integrity, and the future Visual App Studio roadmap).
 * [x] **Dimension 2**: Technology Stack (FastAPI, PostgreSQL 16, SQLAlchemy 2.0 Async, Alembic, Redis + Celery, Pydantic v2).
 * [x] **Dimension 3**: Database & Multi-Tenant Storage Strategy (Pattern A: Shared DB with `company_id` + `JSONB` custom fields with GIN indexes).
 * [x] **Dimension 4**: Asynchronous Execution & Event Bus (ORM hooks $\rightarrow$ Redis/Celery $\rightarrow$ WebSockets + Celery Beat).
@@ -403,7 +424,7 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
 ### Milestone 6: Event-Driven Automated Actions & Backup Engine (TCA)
 - [ ] Trigger registry: ORM lifecycle hooks (`on_create`, `on_update`, `on_delete`, `on_state_change`), Celery Beat cron intervals.
 - [ ] Universal condition evaluator running against record attributes and relational paths.
-- [ ] Action execution dispatcher: `update_record`, `create_record`, `send_email`, `invoke_webhook`.
+- [ ] Action execution dispatcher: `update_record`, `create_record`, `send_email`, `post_chatter_message`, `invoke_webhook`.
 - [ ] **Unified Atomic Backup Engine**: Standalone CLI scripts (`backup.sh`, `restore.sh`), atomic archive bundle (`dump.sql` + `filestore/` + `manifest.json`), and scheduled automated backup actions via Celery Beat.
 
 ### Milestone 7: Hermes Agent Bridge & Dynamic MCP Tool Exposer
@@ -419,6 +440,9 @@ All 5 core dimensions have been collaboratively brainstormed and agreed upon:
   * Automated action execution and audit trail logging.
   * Atomic backup archive creation and restore integrity.
   * End-to-end Hermes Agent dispatch and chatter callbacks.
+
+### Future Horizon Milestone: Visual App Studio & Dynamic Metamodel Engine
+- [ ] *Deferred to future phase alongside Frontend UI*: Visual schema designer, programmatic real PostgreSQL DDL generation, and Redis-backed distributed schema invalidation across Uvicorn/Celery workers.
 
 ---
 

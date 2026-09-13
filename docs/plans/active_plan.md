@@ -1692,6 +1692,7 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 ### 3. Key Decisions & Deviations (Phase 42)
 - *2026-09-14*: Unpacked comprehensive 8-stage implementation roadmap into `active_plan.md` derived directly from ratified blueprint [`docs/plans/backend_architecture_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/backend_architecture_plan.md).
 - *2026-09-14*: Subdivided each milestone into granular, independently verifiable sub-stages to facilitate atomic Git commits and systematic step-by-step execution.
+- *2026-09-14 (Future Roadmap Note - Visual App Studio)*: Formally documented the future **No-Code Visual App Studio & Dynamic Metamodel Engine** (Principle 19). Agreed to defer runtime dynamic table creation to a future phase aligned with Frontend UI development. The future Studio will generate real physical PostgreSQL tables and real SQL schemas (strictly rejecting unstructured single-JSONB compromises or freeform AI code generation) backed by a Redis distributed schema bus to invalidate metadata across Uvicorn and Celery workers. The initial release (Phase 42) maintains deterministic, Git-versioned Python packages in `backend/modules/apps/`, while runtime entity customization is fully supported via `custom_fields JSONB` and dynamic lookups.
 
 ### 4. Current Focus
 Begin execution of **Stage 1: Container Infrastructure, Docker Network & Environment Scaffolding** (Sub-stage 1.1: Multi-Service Docker Compose Setup).
