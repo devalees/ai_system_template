@@ -1311,7 +1311,7 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 - [x] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - COMPLETED (Commit: `efdc408`)
 - [x] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - COMPLETED (Commit: `4271278`)
 - [x] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - COMPLETED (Commit: `4fc9cad`)
-- [x] **Milestone 6: Sovereign Package Portability & Knowledge CLI** - COMPLETED (Commit: pending)
+- [x] **Milestone 6: Sovereign Package Portability & Knowledge CLI** - COMPLETED (Commit: `3595b32`)
 
 ### 3. Key Decisions & Deviations (Phase 36)
 - *2026-09-13*: User requested comprehensive architecture audit and synchronization before starting code implementation. Updated [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md) (Sections 1, 2, 3, 7, and new Sections 25–31) and [`docs/ai_wiki/index.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/index.md) to fully document the Sovereign Decoupled Architecture, embedded `sqlite-vec` memory engine, FastMCP tool servers, Langfuse :3100 container, 3-tier risk-based QA state machine, golden evals, and cross-project knowledge CLI.
