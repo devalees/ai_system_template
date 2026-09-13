@@ -44,6 +44,7 @@ services:
     working_dir: /app
     volumes:
       - .:/app
+      - ../docs:/docs
       - filestore_data:/app/filestore
     ports:
       - "${BACKEND_PORT:-8000}:8000"

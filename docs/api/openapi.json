@@ -1,0 +1,2999 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sovereign Headless Backend Platform",
+    "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/identity_rbac/auth/register": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Register User",
+        "description": "Register a new user account (human employee or AI agent).",
+        "operationId": "register_user_api_v1_identity_rbac_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/auth/login": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Login",
+        "description": "Authenticate with username/email and password, returning JWT bearer token.",
+        "operationId": "login_api_v1_identity_rbac_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/auth/me": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Get Me",
+        "description": "Return currently authenticated profile metadata.",
+        "operationId": "get_me_api_v1_identity_rbac_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/identity_rbac/permissions": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Create Permission",
+        "description": "Create a granular model capability (Superuser or Admin).",
+        "operationId": "create_permission_api_v1_identity_rbac_permissions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Create Permission Api V1 Identity Rbac Permissions Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/identity_rbac/groups": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Create Group",
+        "description": "Create an RBAC Group with linked permissions.",
+        "operationId": "create_group_api_v1_identity_rbac_groups_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Create Group Api V1 Identity Rbac Groups Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/audit/": {
+      "get": {
+        "tags": [
+          "Immutable Audit Trail & Diffs",
+          "Audit Trail"
+        ],
+        "summary": "Query audit logs for the active tenant company",
+        "description": "Query chronological audit log entries scoped to current tenant.",
+        "operationId": "list_audit_logs_api_v1_audit__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target model name",
+              "title": "Model Name"
+            },
+            "description": "Filter by target model name"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by record ID",
+              "title": "Record Id"
+            },
+            "description": "Filter by record ID"
+          },
+          {
+            "name": "actor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by actor user/agent ID",
+              "title": "Actor Id"
+            },
+            "description": "Filter by actor user/agent ID"
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by action (CREATE, UPDATE, DELETE, RESTORE)",
+              "title": "Action"
+            },
+            "description": "Filter by action (CREATE, UPDATE, DELETE, RESTORE)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditLogRead"
+                  },
+                  "title": "Response List Audit Logs Api V1 Audit  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit/entity/{model_name}/{record_id}": {
+      "get": {
+        "tags": [
+          "Immutable Audit Trail & Diffs",
+          "Audit Trail"
+        ],
+        "summary": "Get complete chronological lifecycle audit trail for an entity",
+        "description": "Retrieve full history of modifications for a single business entity.",
+        "operationId": "get_entity_audit_trail_api_v1_audit_entity__model_name___record_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Name"
+            }
+          },
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Record Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditLogRead"
+                  },
+                  "title": "Response Get Entity Audit Trail Api V1 Audit Entity  Model Name   Record Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/": {
+      "get": {
+        "tags": [
+          "Module Settings Engine",
+          "Settings"
+        ],
+        "summary": "List all module settings for the active tenant company",
+        "description": "Retrieve all configured module settings records for current company.",
+        "operationId": "list_company_settings_api_v1_settings__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModuleSettingsRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Company Settings Api V1 Settings  Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/settings/{module_name}": {
+      "get": {
+        "tags": [
+          "Module Settings Engine",
+          "Settings"
+        ],
+        "summary": "Get settings configuration for a specific module",
+        "description": "Fetch cached module settings for the current user's company.",
+        "operationId": "get_module_settings_api_v1_settings__module_name__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "module_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Module Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModuleSettingsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Module Settings Engine",
+          "Settings"
+        ],
+        "summary": "Update or merge configuration settings for a specific module",
+        "description": "Merge and update key-value JSONB settings for the specified module and invalidate cache.",
+        "operationId": "update_module_settings_api_v1_settings__module_name__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "module_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Module Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModuleSettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModuleSettingsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lookups/seed": {
+      "post": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Lookups Master Data"
+        ],
+        "summary": "Bootstrap Company Iso Lookups",
+        "description": "Seed standard ISO countries, currencies, UOMs, tax types, and tags for tenant company.",
+        "operationId": "bootstrap_company_iso_lookups_api_v1_lookups_seed_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object",
+                  "title": "Response Bootstrap Company Iso Lookups Api V1 Lookups Seed Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lookups/countries": {
+      "get": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Countries"
+        ],
+        "summary": "List Countries",
+        "operationId": "list_countries_api_v1_lookups_countries_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search by name or code",
+              "title": "Search"
+            },
+            "description": "Search by name or code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountryRead"
+                  },
+                  "title": "Response List Countries Api V1 Lookups Countries Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Countries"
+        ],
+        "summary": "Create Country",
+        "operationId": "create_country_api_v1_lookups_countries_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CountryCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lookups/cities": {
+      "get": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Cities"
+        ],
+        "summary": "List Cities",
+        "operationId": "list_cities_api_v1_lookups_cities_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter cities by country ID",
+              "title": "Country Id"
+            },
+            "description": "Filter cities by country ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CityRead"
+                  },
+                  "title": "Response List Cities Api V1 Lookups Cities Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Cities"
+        ],
+        "summary": "Create City",
+        "operationId": "create_city_api_v1_lookups_cities_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CityCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lookups/currencies": {
+      "get": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Currencies"
+        ],
+        "summary": "List Currencies",
+        "operationId": "list_currencies_api_v1_lookups_currencies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CurrencyRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Currencies Api V1 Lookups Currencies Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Currencies"
+        ],
+        "summary": "Create Currency",
+        "operationId": "create_currency_api_v1_lookups_currencies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrencyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lookups/uom": {
+      "get": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Units of Measure"
+        ],
+        "summary": "List Units Of Measure",
+        "operationId": "list_units_of_measure_api_v1_lookups_uom_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category (weight, volume, unit, length, time)",
+              "title": "Category"
+            },
+            "description": "Filter by category (weight, volume, unit, length, time)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UnitOfMeasureRead"
+                  },
+                  "title": "Response List Units Of Measure Api V1 Lookups Uom Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Units of Measure"
+        ],
+        "summary": "Create Unit Of Measure",
+        "operationId": "create_unit_of_measure_api_v1_lookups_uom_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnitOfMeasureCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitOfMeasureRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lookups/tax-types": {
+      "get": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Tax Types"
+        ],
+        "summary": "List Tax Types",
+        "operationId": "list_tax_types_api_v1_lookups_tax_types_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaxTypeRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Tax Types Api V1 Lookups Tax Types Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Tax Types"
+        ],
+        "summary": "Create Tax Type",
+        "operationId": "create_tax_type_api_v1_lookups_tax_types_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxTypeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxTypeRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lookups/tags": {
+      "get": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Tags"
+        ],
+        "summary": "List Tags",
+        "operationId": "list_tags_api_v1_lookups_tags_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model_target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter tags by targeted model",
+              "title": "Model Target"
+            },
+            "description": "Filter tags by targeted model"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagRead"
+                  },
+                  "title": "Response List Tags Api V1 Lookups Tags Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Normalized Master Data & Lookups",
+          "Tags"
+        ],
+        "summary": "Create Tag",
+        "operationId": "create_tag_api_v1_lookups_tags_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chatter/{res_model}/{res_id}/messages": {
+      "get": {
+        "tags": [
+          "Polymorphic Discussion & Real-time Collaboration",
+          "Chatter Messages"
+        ],
+        "summary": "Get chronological chatter message thread for a record",
+        "description": "Retrieve all comments, notifications, and AI agent findings for target record.",
+        "operationId": "get_chatter_thread_api_v1_chatter__res_model___res_id__messages_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Res Model"
+            }
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Res Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MailMessageRead"
+                  },
+                  "title": "Response Get Chatter Thread Api V1 Chatter  Res Model   Res Id  Messages Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Polymorphic Discussion & Real-time Collaboration",
+          "Chatter Messages"
+        ],
+        "summary": "Post a comment or AI finding to an entity chatter thread",
+        "description": "Post a new message to the entity thread and broadcast via WebSocket / Redis Pub/Sub.",
+        "operationId": "post_chatter_message_api_v1_chatter__res_model___res_id__messages_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Res Model"
+            }
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Res Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailMessageCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailMessageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chatter/{res_model}/{res_id}/activities": {
+      "get": {
+        "tags": [
+          "Polymorphic Discussion & Real-time Collaboration",
+          "Chatter Activities"
+        ],
+        "summary": "List planned activities for a record",
+        "description": "List operational todo, calls, and meetings scheduled for an entity.",
+        "operationId": "get_entity_activities_api_v1_chatter__res_model___res_id__activities_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Res Model"
+            }
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Res Id"
+            }
+          },
+          {
+            "name": "include_completed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include finished activities",
+              "default": false,
+              "title": "Include Completed"
+            },
+            "description": "Include finished activities"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityRead"
+                  },
+                  "title": "Response Get Entity Activities Api V1 Chatter  Res Model   Res Id  Activities Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Polymorphic Discussion & Real-time Collaboration",
+          "Chatter Activities"
+        ],
+        "summary": "Schedule an activity for a record",
+        "description": "Schedule a new task or deadline anchored to an entity.",
+        "operationId": "schedule_entity_activity_api_v1_chatter__res_model___res_id__activities_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Res Model"
+            }
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Res Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivityCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chatter/activities/{activity_id}/complete": {
+      "patch": {
+        "tags": [
+          "Polymorphic Discussion & Real-time Collaboration",
+          "Chatter Activities"
+        ],
+        "summary": "Complete a scheduled activity",
+        "description": "Mark scheduled activity as completed and log resolution to the thread.",
+        "operationId": "complete_activity_endpoint_api_v1_chatter_activities__activity_id__complete_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "activity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Activity Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/kernel/modules": {
+      "get": {
+        "tags": [
+          "Kernel Diagnostics"
+        ],
+        "summary": "Get Kernel Modules",
+        "description": "Return registered modules, execution load order, and AI-enabled capabilities.",
+        "operationId": "get_kernel_modules_api_v1_kernel_modules_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Kernel Modules Api V1 Kernel Modules Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "System Diagnostics"
+        ],
+        "summary": "Health Check",
+        "description": "Asynchronous system health check verifying database, redis, and celery connectivity.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "System Diagnostics"
+        ],
+        "summary": "Root Endpoint",
+        "description": "Root API platform status and documentation links.",
+        "operationId": "root_endpoint__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Root Endpoint  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActivityCreate": {
+        "properties": {
+          "summary": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Summary",
+            "description": "Brief title of scheduled action"
+          },
+          "activity_type": {
+            "type": "string",
+            "enum": [
+              "todo",
+              "call",
+              "meeting",
+              "review"
+            ],
+            "title": "Activity Type",
+            "description": "Operational nature of activity",
+            "default": "todo"
+          },
+          "assigned_to_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Id",
+            "description": "Target assignee user or agent UUID"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date",
+            "description": "Deadline timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary"
+        ],
+        "title": "ActivityCreate",
+        "example": {
+          "activity_type": "review",
+          "assigned_to_id": "u0000000-0000-0000-0000-000000000001",
+          "due_date": "2026-09-20T17:00:00Z",
+          "summary": "Conduct final contract and tax audit review"
+        }
+      },
+      "ActivityRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "res_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Res Id"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "activity_type": {
+            "type": "string",
+            "title": "Activity Type"
+          },
+          "assigned_to_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Id"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "is_completed": {
+            "type": "boolean",
+            "title": "Is Completed"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "res_model",
+          "res_id",
+          "summary",
+          "activity_type",
+          "assigned_to_id",
+          "due_date",
+          "is_completed",
+          "completed_at",
+          "created_at"
+        ],
+        "title": "ActivityRead"
+      },
+      "AuditLogRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "actor_type": {
+            "type": "string",
+            "title": "Actor Type"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Record Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "changes": {
+            "type": "object",
+            "title": "Changes"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "actor_id",
+          "actor_type",
+          "model_name",
+          "record_id",
+          "action",
+          "changes",
+          "ip_address",
+          "created_at"
+        ],
+        "title": "AuditLogRead",
+        "example": {
+          "action": "UPDATE",
+          "actor_id": "u0000000-0000-0000-0000-000000000001",
+          "actor_type": "human",
+          "changes": {
+            "status": {
+              "new": "posted",
+              "old": "draft"
+            },
+            "total_amount": {
+              "new": "1150.00",
+              "old": "1000.00"
+            }
+          },
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-14T02:00:00Z",
+          "id": "log00000-0000-0000-0000-000000000001",
+          "ip_address": "192.168.1.50",
+          "model_name": "Invoice",
+          "record_id": "inv00000-0000-0000-0000-000000000001"
+        }
+      },
+      "CityCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name"
+          },
+          "country_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Country Id"
+          },
+          "state_or_province": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Or Province"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "country_id"
+        ],
+        "title": "CityCreate",
+        "example": {
+          "country_id": "c0000000-0000-0000-0000-000000000001",
+          "name": "New York",
+          "postal_code": "10001",
+          "state_or_province": "NY"
+        }
+      },
+      "CityRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name"
+          },
+          "country_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Country Id"
+          },
+          "state_or_province": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Or Province"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "country_id",
+          "id",
+          "company_id",
+          "is_active"
+        ],
+        "title": "CityRead",
+        "example": {
+          "country_id": "c0000000-0000-0000-0000-000000000001",
+          "name": "New York",
+          "postal_code": "10001",
+          "state_or_province": "NY"
+        }
+      },
+      "CountryCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 2,
+            "title": "Code",
+            "description": "ISO-3166-1 alpha-3 code (e.g. USA, SAU)"
+          },
+          "code_alpha2": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Alpha2",
+            "description": "ISO alpha-2 code (e.g. US, SA)"
+          },
+          "dialing_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dialing Code"
+          },
+          "currency_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "CountryCreate",
+        "example": {
+          "code": "USA",
+          "code_alpha2": "US",
+          "currency_code": "USD",
+          "dialing_code": "+1",
+          "name": "United States of America"
+        }
+      },
+      "CountryRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 2,
+            "title": "Code",
+            "description": "ISO-3166-1 alpha-3 code (e.g. USA, SAU)"
+          },
+          "code_alpha2": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Alpha2",
+            "description": "ISO alpha-2 code (e.g. US, SA)"
+          },
+          "dialing_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dialing Code"
+          },
+          "currency_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Code"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "is_active"
+        ],
+        "title": "CountryRead",
+        "example": {
+          "code": "USA",
+          "code_alpha2": "US",
+          "currency_code": "USD",
+          "dialing_code": "+1",
+          "name": "United States of America"
+        }
+      },
+      "CurrencyCreate": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Code",
+            "description": "ISO-4217 Currency Code (e.g. USD, EUR)"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name"
+          },
+          "symbol": {
+            "type": "string",
+            "maxLength": 10,
+            "title": "Symbol"
+          },
+          "decimal_places": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Decimal Places",
+            "default": 2
+          },
+          "is_base": {
+            "type": "boolean",
+            "title": "Is Base",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "symbol"
+        ],
+        "title": "CurrencyCreate",
+        "example": {
+          "code": "USD",
+          "decimal_places": 2,
+          "is_base": true,
+          "name": "US Dollar",
+          "symbol": "$"
+        }
+      },
+      "CurrencyRead": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Code",
+            "description": "ISO-4217 Currency Code (e.g. USD, EUR)"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name"
+          },
+          "symbol": {
+            "type": "string",
+            "maxLength": 10,
+            "title": "Symbol"
+          },
+          "decimal_places": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Decimal Places",
+            "default": 2
+          },
+          "is_base": {
+            "type": "boolean",
+            "title": "Is Base",
+            "default": false
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "symbol",
+          "id",
+          "company_id",
+          "is_active"
+        ],
+        "title": "CurrencyRead",
+        "example": {
+          "code": "USD",
+          "decimal_places": 2,
+          "is_base": true,
+          "name": "US Dollar",
+          "symbol": "$"
+        }
+      },
+      "GroupCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "default": ""
+          },
+          "permission_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Permission Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "GroupCreate",
+        "example": {
+          "description": "Read and review access to general ledger and journal entries",
+          "name": "Financial Auditors",
+          "permission_ids": [
+            "p0000000-0000-0000-0000-000000000001"
+          ]
+        }
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "Username or email address"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "User password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "example": {
+          "identifier": "sconnor",
+          "password": "StrongPassword2026!"
+        }
+      },
+      "MailMessageCreate": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Body",
+            "description": "Message text content formatted in Markdown"
+          },
+          "message_type": {
+            "type": "string",
+            "enum": [
+              "comment",
+              "notification",
+              "ai_finding",
+              "activity"
+            ],
+            "title": "Message Type",
+            "description": "Category: user comment, system notification, AI finding, or task log",
+            "default": "comment"
+          },
+          "metadata_info": {
+            "type": "object",
+            "title": "Metadata Info",
+            "description": "Arbitrary metadata attributes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "MailMessageCreate",
+        "example": {
+          "body": "Financial audit passed successfully without discrepancy.",
+          "message_type": "comment",
+          "metadata_info": {
+            "agent_model": "hermes-3",
+            "confidence": 0.99
+          }
+        }
+      },
+      "MailMessageRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "res_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Res Id"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "message_type": {
+            "type": "string",
+            "title": "Message Type"
+          },
+          "author_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Id"
+          },
+          "author_type": {
+            "type": "string",
+            "title": "Author Type"
+          },
+          "metadata_info": {
+            "type": "object",
+            "title": "Metadata Info"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "res_model",
+          "res_id",
+          "body",
+          "message_type",
+          "author_id",
+          "author_type",
+          "metadata_info",
+          "created_at"
+        ],
+        "title": "MailMessageRead"
+      },
+      "ModuleSettingsRead": {
+        "properties": {
+          "module_name": {
+            "type": "string",
+            "title": "Module Name"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "settings_data": {
+            "type": "object",
+            "title": "Settings Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "module_name",
+          "company_id",
+          "settings_data"
+        ],
+        "title": "ModuleSettingsRead",
+        "example": {
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "module_name": "inventory",
+          "settings_data": {
+            "auto_notify": true,
+            "reorder_point": 10,
+            "warehouse_code": "WH-MAIN"
+          }
+        }
+      },
+      "ModuleSettingsResponse": {
+        "properties": {
+          "module_name": {
+            "type": "string",
+            "title": "Module Name"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "settings_data": {
+            "type": "object",
+            "title": "Settings Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "module_name",
+          "company_id",
+          "settings_data"
+        ],
+        "title": "ModuleSettingsResponse",
+        "example": {
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "module_name": "inventory",
+          "settings_data": {
+            "auto_notify": true,
+            "reorder_point": 10,
+            "warehouse_code": "WH-MAIN"
+          }
+        }
+      },
+      "ModuleSettingsUpdate": {
+        "properties": {
+          "settings_data": {
+            "type": "object",
+            "title": "Settings Data",
+            "description": "Configuration dictionary to patch/merge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "settings_data"
+        ],
+        "title": "ModuleSettingsUpdate",
+        "example": {
+          "settings_data": {
+            "auto_post_entries": true,
+            "base_currency": "USD",
+            "fiscal_year_start": "01-01",
+            "tax_rounding": "round_globally"
+          }
+        }
+      },
+      "PermissionCreate": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "module_name": {
+            "type": "string",
+            "title": "Module Name"
+          },
+          "ownership_scope": {
+            "type": "string",
+            "enum": [
+              "GLOBAL",
+              "TEAM",
+              "OWN"
+            ],
+            "title": "Ownership Scope",
+            "default": "GLOBAL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "module_name"
+        ],
+        "title": "PermissionCreate",
+        "example": {
+          "code": "accounting.invoice.post",
+          "module_name": "accounting",
+          "name": "Post Invoices",
+          "ownership_scope": "GLOBAL"
+        }
+      },
+      "TagCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Name"
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Color",
+            "default": "#3b82f6"
+          },
+          "model_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "TagCreate",
+        "example": {
+          "color": "#ef4444",
+          "model_target": "lead",
+          "name": "High Priority"
+        }
+      },
+      "TagRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Name"
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Color",
+            "default": "#3b82f6"
+          },
+          "model_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Target"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "company_id",
+          "is_active"
+        ],
+        "title": "TagRead",
+        "example": {
+          "color": "#ef4444",
+          "model_target": "lead",
+          "name": "High Priority"
+        }
+      },
+      "TaxTypeCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code"
+          },
+          "rate": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Rate"
+          },
+          "is_inclusive": {
+            "type": "boolean",
+            "title": "Is Inclusive",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "rate"
+        ],
+        "title": "TaxTypeCreate",
+        "example": {
+          "code": "VAT_15",
+          "is_inclusive": false,
+          "name": "Standard VAT 15%",
+          "rate": 15.0
+        }
+      },
+      "TaxTypeRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code"
+          },
+          "rate": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Rate"
+          },
+          "is_inclusive": {
+            "type": "boolean",
+            "title": "Is Inclusive",
+            "default": false
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "rate",
+          "id",
+          "company_id",
+          "is_active"
+        ],
+        "title": "TaxTypeRead",
+        "example": {
+          "code": "VAT_15",
+          "is_inclusive": false,
+          "name": "Standard VAT 15%",
+          "rate": 15.0
+        }
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserRead"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "user",
+          "company_id"
+        ],
+        "title": "TokenResponse",
+        "example": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "token_type": "bearer",
+          "user": {
+            "company_id": "a0000000-0000-0000-0000-000000000001",
+            "email": "sarah.connor@sovereign.local",
+            "full_name": "Sarah Connor",
+            "id": "u0000000-0000-0000-0000-000000000001",
+            "is_active": true,
+            "is_superuser": false,
+            "preferred_language": "en",
+            "user_type": "human",
+            "username": "sconnor"
+          }
+        }
+      },
+      "UnitOfMeasureCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Code"
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Category",
+            "default": "unit"
+          },
+          "rounding_precision": {
+            "type": "number",
+            "title": "Rounding Precision",
+            "default": 0.01
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "UnitOfMeasureCreate",
+        "example": {
+          "category": "weight",
+          "code": "KG",
+          "name": "Kilograms",
+          "rounding_precision": 0.001
+        }
+      },
+      "UnitOfMeasureRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Code"
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Category",
+            "default": "unit"
+          },
+          "rounding_precision": {
+            "type": "number",
+            "title": "Rounding Precision",
+            "default": 0.01
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "is_active"
+        ],
+        "title": "UnitOfMeasureRead",
+        "example": {
+          "category": "weight",
+          "code": "KG",
+          "name": "Kilograms",
+          "rounding_precision": 0.001
+        }
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Unique corporate email address"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "description": "Alphanumeric unique login username"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "title": "Password",
+            "description": "Cleartext password (hashed using bcrypt upon ingestion)"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Display name for human employee or AI agent"
+          },
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "human",
+              "ai_agent"
+            ],
+            "title": "User Type",
+            "description": "Actor classification: human or ai_agent",
+            "default": "human"
+          },
+          "preferred_language": {
+            "type": "string",
+            "title": "Preferred Language",
+            "description": "ISO 639-1 language code",
+            "default": "en"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id",
+            "description": "Tenant company association (auto-injected if omitted)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "username",
+          "password",
+          "full_name"
+        ],
+        "title": "UserCreate",
+        "example": {
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "email": "sarah.connor@sovereign.local",
+          "full_name": "Sarah Connor",
+          "password": "StrongPassword2026!",
+          "preferred_language": "en",
+          "user_type": "human",
+          "username": "sconnor"
+        }
+      },
+      "UserRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "user_type": {
+            "type": "string",
+            "title": "User Type"
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser"
+          },
+          "preferred_language": {
+            "type": "string",
+            "title": "Preferred Language"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "username",
+          "full_name",
+          "user_type",
+          "is_superuser",
+          "preferred_language",
+          "is_active",
+          "company_id"
+        ],
+        "title": "UserRead"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/api/v1/identity_rbac/auth/login"
+          }
+        }
+      }
+    }
+  }
+}

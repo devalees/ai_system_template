@@ -98,7 +98,7 @@ async def test_settings_api_endpoints_and_multitenancy(db_session: AsyncSession)
             json={"settings_data": {"reorder_point": 10, "auto_notify": True}},
         )
         assert res_patch_a.status_code == 200
-        assert res_patch_a.json()["reorder_point"] == 10
+        assert res_patch_a.json()["settings_data"]["reorder_point"] == 10
 
         # 4. Tenant B updates same module with different settings
         res_patch_b = await client.patch(
@@ -107,19 +107,19 @@ async def test_settings_api_endpoints_and_multitenancy(db_session: AsyncSession)
             json={"settings_data": {"reorder_point": 50, "auto_notify": False, "warehouse_code": "WH-B"}},
         )
         assert res_patch_b.status_code == 200
-        assert res_patch_b.json()["reorder_point"] == 50
+        assert res_patch_b.json()["settings_data"]["reorder_point"] == 50
 
         # 5. Tenant A reads inventory settings -> isolated
         res_get_a = await client.get("/api/v1/settings/inventory", headers=headers_a)
         assert res_get_a.status_code == 200
-        data_a = res_get_a.json()
+        data_a = res_get_a.json()["settings_data"]
         assert data_a["reorder_point"] == 10
         assert "warehouse_code" not in data_a
 
         # 6. Tenant B reads inventory settings -> isolated
         res_get_b = await client.get("/api/v1/settings/inventory", headers=headers_b)
         assert res_get_b.status_code == 200
-        data_b = res_get_b.json()
+        data_b = res_get_b.json()["settings_data"]
         assert data_b["reorder_point"] == 50
         assert data_b["warehouse_code"] == "WH-B"
 

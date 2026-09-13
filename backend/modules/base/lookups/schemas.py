@@ -2,11 +2,23 @@
 
 import uuid
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 # 1. Country
 class CountryCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "United States of America",
+                "code": "USA",
+                "code_alpha2": "US",
+                "dialing_code": "+1",
+                "currency_code": "USD",
+            }
+        }
+    )
+
     name: str = Field(..., max_length=100)
     code: str = Field(..., min_length=2, max_length=3, description="ISO-3166-1 alpha-3 code (e.g. USA, SAU)")
     code_alpha2: Optional[str] = Field(None, max_length=2, description="ISO alpha-2 code (e.g. US, SA)")
@@ -15,6 +27,8 @@ class CountryCreate(BaseModel):
 
 
 class CountryRead(CountryCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     company_id: uuid.UUID
     is_active: bool
@@ -22,6 +36,17 @@ class CountryRead(CountryCreate):
 
 # 2. City
 class CityCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "New York",
+                "country_id": "c0000000-0000-0000-0000-000000000001",
+                "state_or_province": "NY",
+                "postal_code": "10001",
+            }
+        }
+    )
+
     name: str = Field(..., max_length=100)
     country_id: uuid.UUID
     state_or_province: Optional[str] = Field(None, max_length=100)
@@ -29,6 +54,8 @@ class CityCreate(BaseModel):
 
 
 class CityRead(CityCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     company_id: uuid.UUID
     is_active: bool
@@ -36,6 +63,18 @@ class CityRead(CityCreate):
 
 # 3. Currency
 class CurrencyCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "code": "USD",
+                "name": "US Dollar",
+                "symbol": "$",
+                "decimal_places": 2,
+                "is_base": True,
+            }
+        }
+    )
+
     code: str = Field(..., min_length=3, max_length=3, description="ISO-4217 Currency Code (e.g. USD, EUR)")
     name: str = Field(..., max_length=100)
     symbol: str = Field(..., max_length=10)
@@ -44,6 +83,8 @@ class CurrencyCreate(BaseModel):
 
 
 class CurrencyRead(CurrencyCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     company_id: uuid.UUID
     is_active: bool
@@ -51,6 +92,17 @@ class CurrencyRead(CurrencyCreate):
 
 # 4. Unit Of Measure
 class UnitOfMeasureCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Kilograms",
+                "code": "KG",
+                "category": "weight",
+                "rounding_precision": 0.001,
+            }
+        }
+    )
+
     name: str = Field(..., max_length=50)
     code: str = Field(..., max_length=20)
     category: str = Field("unit", max_length=50)
@@ -58,6 +110,8 @@ class UnitOfMeasureCreate(BaseModel):
 
 
 class UnitOfMeasureRead(UnitOfMeasureCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     company_id: uuid.UUID
     is_active: bool
@@ -65,6 +119,17 @@ class UnitOfMeasureRead(UnitOfMeasureCreate):
 
 # 5. Tax Type
 class TaxTypeCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Standard VAT 15%",
+                "code": "VAT_15",
+                "rate": 15.0,
+                "is_inclusive": False,
+            }
+        }
+    )
+
     name: str = Field(..., max_length=100)
     code: str = Field(..., max_length=50)
     rate: float = Field(..., ge=0.0, le=100.0)
@@ -72,6 +137,8 @@ class TaxTypeCreate(BaseModel):
 
 
 class TaxTypeRead(TaxTypeCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     company_id: uuid.UUID
     is_active: bool
@@ -79,12 +146,24 @@ class TaxTypeRead(TaxTypeCreate):
 
 # 6. Tag
 class TagCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "High Priority",
+                "color": "#ef4444",
+                "model_target": "lead",
+            }
+        }
+    )
+
     name: str = Field(..., max_length=50)
     color: str = Field("#3b82f6", max_length=20)
     model_target: Optional[str] = Field(None, max_length=100)
 
 
 class TagRead(TagCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     company_id: uuid.UUID
     is_active: bool

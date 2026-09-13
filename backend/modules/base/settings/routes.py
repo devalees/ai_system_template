@@ -10,7 +10,7 @@ from core.database import get_db
 from modules.base.identity_rbac.dependencies import get_current_user
 from modules.base.identity_rbac.models import User
 from modules.base.settings.models import ModuleSettings
-from modules.base.settings.schemas import ModuleSettingsUpdate, ModuleSettingsRead
+from modules.base.settings.schemas import ModuleSettingsUpdate, ModuleSettingsRead, ModuleSettingsResponse
 from modules.base.settings.service import SettingsService
 
 router = APIRouter()
@@ -42,7 +42,7 @@ async def list_company_settings(
 
 @router.get(
     "/{module_name}",
-    response_model=Dict[str, Any],
+    response_model=ModuleSettingsResponse,
     tags=["Settings"],
     summary="Get settings configuration for a specific module",
 )
@@ -50,18 +50,23 @@ async def get_module_settings(
     module_name: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> ModuleSettingsResponse:
     """Fetch cached module settings for the current user's company."""
-    return await SettingsService.get_settings(
+    data = await SettingsService.get_settings(
         db=db,
         module_name=module_name,
         company_id=current_user.company_id,
+    )
+    return ModuleSettingsResponse(
+        module_name=module_name,
+        company_id=current_user.company_id,
+        settings_data=data,
     )
 
 
 @router.patch(
     "/{module_name}",
-    response_model=Dict[str, Any],
+    response_model=ModuleSettingsResponse,
     tags=["Settings"],
     summary="Update or merge configuration settings for a specific module",
 )
@@ -70,11 +75,16 @@ async def update_module_settings(
     payload: ModuleSettingsUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> ModuleSettingsResponse:
     """Merge and update key-value JSONB settings for the specified module and invalidate cache."""
-    return await SettingsService.update_settings(
+    data = await SettingsService.update_settings(
         db=db,
         module_name=module_name,
         company_id=current_user.company_id,
         new_data=payload.settings_data,
+    )
+    return ModuleSettingsResponse(
+        module_name=module_name,
+        company_id=current_user.company_id,
+        settings_data=data,
     )
