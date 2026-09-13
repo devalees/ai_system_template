@@ -1476,5 +1476,41 @@ Establish an automated, zero-token, deterministic background synchronization eng
 ### 4. Current Focus
 Phase 39 completed. Automated multi-tenant collective intelligence synchronization verified live against remote GitHub hub.
 
+---
 
+## Phase 40: Human-in-the-Loop (HITL) Feedback & Best Practice Distillation Engine
 
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-13 21:50:00+03:00
+
+### 1. Objective & Scope
+Establish an autonomous cognitive reflection and learning engine that captures human domain feedback and deliverable corrections (e.g. Trial Balance classification diffs, conversational prompts), transforms them into generalized, de-identified domain best practices, and indexes them into embedded vector memory (`sqlite-vec`) for instant Day-1 pre-flight reuse and multi-tenant Git replication:
+1. **Pydantic Schemas (`agent_service/learning/schemas.py`)**: Define `CorrectionDiffItem`, `BatchDiffInput`, `DistilledBestPractice`, and `DistillationResult`.
+2. **Cognitive Reflection & Distillation Engine (`agent_service/learning/distiller.py`)**:
+   - `_strip_company_phrasing`: Regex-based de-identification of company names (*"In our company Acme Corp..."*, *"At XYZ Ltd..."*, etc.) and secret/PII scrubbing.
+   - `_is_private_internal_rule`: Quarantines arbitrary internal office routing preferences (e.g., *"forward all bills to John at ext 402"*) to `scope='project_local'` and `is_best_practice=False`.
+   - Domain Heuristic Detection: Transforms accounting and procurement corrections (e.g., Bank Overdraft -> Current Liabilities, Bank Fees -> Operating Expenses, 3-Way Invoice Matching) into generalized heuristics (`scope='generalized'`).
+   - Vector Store Integration: Embeds abstract rules and saves to `memory.db` with cosine distance deduplication (`threshold=0.90`).
+3. **FastMCP Orchestrator Server Integration (`agent_service/mcp/orchestrator_server.py`)**:
+   - Exposes `distill_conversational_feedback` and `distill_batch_diff` to the Chief of Staff persona for real-time extraction during user chats.
+4. **Deterministic Benchmark Test Suite (`agent_service/evals/test_learning_distiller.py`)**:
+   - 4 standalone tests validating diff parsing, de-identification, internal routing quarantine, and FastMCP tool execution.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Schemas & Distillation Interfaces (`agent_service/learning/schemas.py`)** - COMPLETED
+- [x] **Sub-task 2: Best Practice Distiller Engine (`agent_service/learning/distiller.py`)** - COMPLETED
+- [x] **Sub-task 3: FastMCP Orchestrator Server Integration (`agent_service/mcp/orchestrator_server.py`)** - COMPLETED
+- [x] **Sub-task 4: Deterministic Benchmark Test Suite (`test_learning_distiller.py`)** - COMPLETED
+- [x] **Sub-task 5: System Architecture & LLM Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 40)
+- *2026-09-13*: User emphasized the critical importance of the Human-in-the-Loop Correction Mechanism (آلية التصحيح) for domain judgment corrections (e.g. Trial Balance classification adjustments).
+- *2026-09-13*: Implemented `BestPracticeDistiller` in `agent_service/learning/distiller.py` with regex-driven corporate entity scrubbing, zero-trust PII sanitization, and deterministic domain heuristics.
+- *2026-09-13*: Guaranteed privacy isolation: arbitrary internal office routing rules are strictly classified as `scope='project_local'` to prevent leaking proprietary internal preferences to the central Git knowledge hub.
+- *2026-09-13*: Exposed `distill_conversational_feedback` and `distill_batch_diff` in `orchestrator_server.py` so the Chief of Staff can distill user corrections in real time.
+- *2026-09-13*: Authored `agent_service/evals/test_learning_distiller.py` (4 tests). Full evaluation suite passing 72/72 tests in 2.98s (100% pass rate).
+- *2026-09-13*: Synchronized `docs/ai_wiki/index.md` and `docs/ai_wiki/architecture.md` to document the 8 Sovereign Pillars and the complete HITL Distillation Lifecycle.
+
+### 4. Current Focus
+Phase 40 completed. All 72 golden benchmark scenarios verified passing. System ready for next domain milestone.

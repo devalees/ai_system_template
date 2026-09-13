@@ -22,6 +22,8 @@ for _p in ("/", str(Path(__file__).resolve().parent.parent.parent)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+from agent_service.learning.distiller import BestPracticeDistiller
+from agent_service.learning.schemas import BatchDiffInput, DistillationResult
 from agent_service.mcp.schemas import DAGTaskItem, TaskDAGResult
 from agent_service.memory.vector_store import MemoryStore
 
@@ -125,6 +127,38 @@ def decompose_task_dag(
         memory_augmented=len(recalled) > 0,
         recalled_memories=recalled,
     )
+
+
+@orchestrator_mcp.tool(
+    name="distill_conversational_feedback",
+    description="Transforms a conversational correction or human rule into an abstracted, de-identified domain best practice and indexes it into vector memory.",
+)
+def distill_conversational_feedback(
+    feedback_text: str,
+    domain: str = "general",
+) -> Dict[str, Any]:
+    """
+    Distills human feedback into a generalized best practice or private local rule.
+    """
+    distiller = BestPracticeDistiller()
+    result = distiller.distill_from_conversational_rule(rule_text=feedback_text, domain=domain)
+    return result.model_dump()
+
+
+@orchestrator_mcp.tool(
+    name="distill_batch_diff",
+    description="Analyzes a batch of human corrections (e.g. from an edited spreadsheet or table) to extract generalized classification rules and update vector memory.",
+)
+def distill_batch_diff(
+    batch_diff_payload: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Analyzes draft vs final human corrections and distills reusable heuristics.
+    """
+    distiller = BestPracticeDistiller()
+    diff_input = BatchDiffInput(**batch_diff_payload)
+    result = distiller.distill_from_batch_diff(diff_input)
+    return result.model_dump()
 
 
 if __name__ == "__main__":
