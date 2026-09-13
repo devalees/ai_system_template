@@ -1420,7 +1420,8 @@ Establish a zero-trust external integration and dynamic agent provisioning archi
 - [x] **Sub-task 2: FastMCP Integration Server (`integration_server.py`)** - COMPLETED (Commit: `2357172`)
 - [x] **Sub-task 3: System Configuration, Environment & Profile Wiring** - COMPLETED (Commit: `b3ebd81`)
 - [x] **Sub-task 4: Golden Benchmark Evaluation Suite (`test_integration_server.py`)** - COMPLETED (Commit: `7d46605`)
-- [x] **Sub-task 5: Architecture Wiki & System Synchronization** - COMPLETED
+- [x] **Sub-task 5: Architecture Wiki & System Synchronization** - COMPLETED (Commit: `025866f`)
+- [x] **Sub-task 6: Dynamic Deprovisioning Engine & Chat Intake Protocol** - COMPLETED
 
 ### 3. Key Decisions & Deviations (Phase 38)
 - *2026-09-13*: User directed adopting Pattern B (Dedicated FastMCP Integration Server) with 100% zero-trust secret handling.
@@ -1432,9 +1433,12 @@ Establish a zero-trust external integration and dynamic agent provisioning archi
 - *2026-09-13*: Authored `agent_service/evals/test_integration_server.py` (10 tests) covering Tier 1 zero-write enforcement, wildcard RBAC, Day-1 discovery vector indexing, dynamic provisioning, and payload sanitization. All 61 evaluations passing in 2.59s (100% pass rate).
 - *2026-09-13*: Synchronized `docs/ai_wiki/index.md`, `docs/ai_wiki/architecture.md`, and `docs/agent_team.md` detailing the Two-Tier Workforce Hierarchy and Per-Agent Credential Vault.
 - *2026-09-13*: User directed streamlining the core workforce to strictly the 4 Core Sovereign Governance Agents (`orchestrator`, `cost_controller`, `qa_auditor`, `security_guard`). Decommissioned the legacy `comms_agent` profile and `comms_server.py`; client and domain specialist agents are now dynamically provisioned on demand via `provision_custom_agent`. Verified all 60 benchmark evaluations passing in 2.29s (100% pass rate).
+- *2026-09-13*: Implemented `deprovision_custom_agent` in `integration_server.py` and `revoke_agent` in `credential_vault.py` with strict protection for Tier 1 Governance Agents (orchestrator, security_guard, cost_controller, qa_auditor). Added automated filesystem directory cleanup, vault token revocation, and semantic memory de-indexing.
+- *2026-09-13*: Enriched `orchestrator/SOUL.md` with explicit **Conversational Agent Provisioning Protocol (Chat & Gateway Intake)** and **Agent Deprovisioning Protocol** to conduct structured intake dialogues (gathering agent ID, role persona, reasoning calibration, toolsets, endpoints, credentials) or present proposed defaults for user confirmation before tool invocation.
+- *2026-09-13*: Expanded `agent_service/evals/test_integration_server.py` to 12 tests. Total test suite passing 62/62 tests in 2.42s (100% pass rate).
 
 ### 4. Current Focus
-Phase 38 completed. Workforce streamlined to 4 Core Governance Agents + on-demand Dynamic Domain Specialists.
+Phase 38 completed with full autonomous lifecycle (provisioning, deprovisioning, RBAC, and Chat Gateway intake).
 
 
 

@@ -139,6 +139,20 @@ class CredentialVault:
 
         self._persist_vault()
 
+    def revoke_agent(self, agent_id: str) -> bool:
+        """Revokes credentials and access policy for an agent."""
+        norm_id = agent_id.strip().lower()
+        removed = False
+        if norm_id in self._in_memory_tokens:
+            del self._in_memory_tokens[norm_id]
+            removed = True
+        if norm_id in self._in_memory_policies:
+            del self._in_memory_policies[norm_id]
+            removed = True
+        if removed:
+            self._persist_vault()
+        return removed
+
     def get_token(self, agent_id: str) -> Optional[str]:
         """Retrieves active token for an agent."""
         norm_id = agent_id.strip().lower()

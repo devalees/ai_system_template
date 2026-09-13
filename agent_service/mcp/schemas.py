@@ -165,6 +165,16 @@ class AgentProvisionResult(BaseModel):
     message: str = Field(..., description="Human-readable status summary")
 
 
+class AgentDeprovisionResult(BaseModel):
+    """Output contract for deprovision_custom_agent."""
+    success: bool = Field(..., description="True if profile successfully deprovisioned and purged")
+    agent_id: str = Field(..., description="Identifier of the deprovisioned agent")
+    purged_directory: bool = Field(..., description="True if profile filesystem directory was deleted")
+    credentials_revoked: bool = Field(..., description="True if credentials and RBAC policy were revoked from vault")
+    memory_purged: bool = Field(..., description="True if semantic memory entries were purged")
+    message: str = Field(..., description="Human-readable status summary")
+
+
 class AgentCatalogItem(BaseModel):
     """Summary record of a registered agent profile."""
     agent_id: str = Field(..., description="Unique agent identifier")

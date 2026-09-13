@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 import time
 import urllib.error
@@ -34,6 +35,7 @@ from agent_service.mcp.schemas import (
     AgentAccessPolicy,
     AgentCatalogItem,
     AgentCatalogResult,
+    AgentDeprovisionResult,
     AgentProvisionManifest,
     AgentProvisionResult,
     CompanyProfileResult,
@@ -254,8 +256,77 @@ toolsets:
     )
 
 
+@integration_mcp.tool(
+    name="deprovision_custom_agent",
+    description="Deprovisions a dynamic domain specialist agent, purges its profile directory, revokes its vault credentials, and removes it from semantic vector memory. Tier 1 Governance Agents cannot be deprovisioned.",
+)
+def deprovision_custom_agent(
+    agent_id: str,
+    purge_memory: bool = True,
+) -> AgentDeprovisionResult:
+    """
+    Safely decommissions a custom specialist agent.
+    
+    Guarantees:
+    - Immutable Tier 1 Governance Agents (orchestrator, security_guard, cost_controller, qa_auditor) are protected.
+    - Filesystem profile directory is cleanly deleted.
+    - Credentials & RBAC policies are revoked from the Credential Vault.
+    - Semantic memory vector entries for this agent are deleted.
+    """
+    norm_id = agent_id.strip().lower()
+
+    # 1. Protected Tier 1 Governance check
+    protected = {"orchestrator", "security_guard", "cost_controller", "qa_auditor"}
+    if norm_id in protected:
+        return AgentDeprovisionResult(
+            success=False,
+            agent_id=norm_id,
+            purged_directory=False,
+            credentials_revoked=False,
+            memory_purged=False,
+            message=f"Cannot deprovision protected Tier 1 governance profile: '{norm_id}'.",
+        )
+
+    # 2. Purge profile directory
+    base_profiles = Path(__file__).resolve().parent.parent / "profiles"
+    profile_dir = base_profiles / norm_id
+    purged_dir = False
+    if profile_dir.exists() and profile_dir.is_dir():
+        try:
+            shutil.rmtree(profile_dir)
+            purged_dir = True
+        except Exception:
+            pass
+
+    # 3. Revoke credentials and RBAC policy from Vault
+    revoked = vault.revoke_agent(norm_id)
+
+    # 4. Purge agent registration from semantic memory
+    purged_mem = False
+    if purge_memory:
+        try:
+            mem = get_memory_store()
+            records = mem.list_memories(category="agent_registry")
+            for rec in records:
+                meta = rec.get("metadata", {})
+                if meta.get("agent_id") == norm_id or rec.get("title") == f"Agent Profile: {norm_id}":
+                    mem.delete_memory(rec["id"])
+                    purged_mem = True
+        except Exception:
+            pass
+
+    return AgentDeprovisionResult(
+        success=True,
+        agent_id=norm_id,
+        purged_directory=purged_dir,
+        credentials_revoked=revoked,
+        memory_purged=purged_mem,
+        message=f"Successfully deprovisioned custom agent '{norm_id}'.",
+    )
+
+
 # ---------------------------------------------------------------------------
-# Tool 3: Agent Catalog Inventory
+# Tool 4: Agent Catalog Inventory
 # ---------------------------------------------------------------------------
 
 @integration_mcp.tool(

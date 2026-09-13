@@ -23,6 +23,7 @@ import pytest
 
 from agent_service.mcp.credential_vault import CredentialVault, vault
 from agent_service.mcp.integration_server import (
+    deprovision_custom_agent,
     discover_external_system,
     fetch_company_profile,
     invoke_external_api,
@@ -259,4 +260,50 @@ def test_sync_external_records_flow() -> None:
     )
     ok_sync = sync_external_records(caller_agent="test_sync_specialist", resource_type="orders")
     assert ok_sync.success is True
+
+
+# =============================================================================
+# 6. Dynamic Deprovisioning & Lifecycle Tests
+# =============================================================================
+
+def test_deprovision_custom_agent_lifecycle() -> None:
+    """Verifies full decommissioning: directory purge, vault revocation, and memory cleanup."""
+    agent_id = "test_lifecycle_specialist"
+    manifest: Dict[str, Any] = {
+        "agent_id": agent_id,
+        "display_name": "Temporary Specialist",
+        "role": "temp_specialist",
+        "description": "Short-lived agent for transient tasks.",
+        "system_prompt": "Perform transient operations then await decommissioning.",
+        "allowed_toolsets": ["common_tools", "integration_tools"],
+        "reasoning_effort": "none",
+        "target_endpoints": ["/api/v1/temp/*"],
+    }
+
+    # 1. Provision
+    prov_res = provision_custom_agent(manifest=manifest, credential_token="sec_transient_tok")
+    assert prov_res.success is True
+    profile_dir = Path(prov_res.profile_path)
+    assert profile_dir.exists()
+    assert vault.get_token(agent_id) == "sec_transient_tok"
+
+    # 2. Deprovision
+    deprov_res = deprovision_custom_agent(agent_id=agent_id, purge_memory=True)
+    assert deprov_res.success is True
+    assert deprov_res.purged_directory is True
+    assert deprov_res.credentials_revoked is True
+    assert deprov_res.memory_purged is True
+
+    # 3. Verify clean state
+    assert not profile_dir.exists()
+    assert vault.get_token(agent_id) is None
+
+
+def test_deprovision_cannot_remove_tier1_governance() -> None:
+    """Certifies that Tier 1 governance agents are strictly protected from deprovisioning."""
+    for tier1_id in ["orchestrator", "security_guard", "cost_controller", "qa_auditor"]:
+        res = deprovision_custom_agent(agent_id=tier1_id)
+        assert res.success is False
+        assert res.purged_directory is False
+        assert "Cannot deprovision protected Tier 1" in res.message
 
