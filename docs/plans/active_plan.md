@@ -1361,9 +1361,9 @@ Phase 36 Enterprise Agent Upgrade completed across all 6 Sovereign Pillars. Syst
 
 ## Phase 37: Modular FastMCP Domain Servers & Zero-Trust Profile Scoping
 
-- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `main`
-- **Last Updated**: 2026-09-13 16:30:00+03:00
+- **Last Updated**: 2026-09-13 17:00:00+03:00
 
 ### 1. Objective & Scope
 Decompose the monolithic `system_tools` FastMCP server into a platform-wide `common_tools` server and 5 specialist domain micro-servers, configuring strict least-privilege tool isolation across all 5 department head profiles:
@@ -1375,9 +1375,9 @@ Decompose the monolithic `system_tools` FastMCP server into a platform-wide `com
 6. **`comms_tools`**: Client Concierge tools (`client_service_action`).
 
 ### 2. Task Milestones & Progress
-- [x] **Sub-task 1: Modular FastMCP Domain Servers Implementation (`agent_service/mcp/`)** - COMPLETED (Commit: pending)
-- [x] **Sub-task 2: Hermes MCP Configuration & Profile Scoping Alignment (`agent_service/profiles/`)** - COMPLETED (Commit: pending)
-- [x] **Sub-task 3: Empirical Testing & Verification Suite** - COMPLETED (Commit: pending)
+- [x] **Sub-task 1: Modular FastMCP Domain Servers Implementation (`agent_service/mcp/`)** - COMPLETED (Commit: `ca3fa6d`)
+- [x] **Sub-task 2: Hermes MCP Configuration & Profile Scoping Alignment (`agent_service/profiles/`)** - COMPLETED (Commit: `ca3fa6d`)
+- [x] **Sub-task 3: Empirical Testing & Verification Suite** - COMPLETED (Commit: `ca3fa6d`)
 
 ### 3. Key Decisions & Deviations
 - *2026-09-13*: User approved Approach 1 (Modular MCPs) to enforce zero-trust least-privilege tool isolation and eliminate tool distraction / prompt bloat across specialist personas.
