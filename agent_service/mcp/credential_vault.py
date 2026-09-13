@@ -68,11 +68,7 @@ class CredentialVault:
             allowed_endpoints=["/health", "/api/openapi.json", "/api/v1/meta/*", "/api/v1/discovery/*"],
             disallowed_endpoints=[],
         )
-        self._in_memory_policies["comms_agent"] = AgentAccessPolicy(
-            allowed_methods=["GET", "POST"],
-            allowed_endpoints=["/api/v1/notifications/*", "/api/v1/tickets/*", "/api/v1/status"],
-            disallowed_endpoints=["/api/v1/admin/*"],
-        )
+
 
     def _load_vault(self) -> None:
         """Loads stored agent tokens and policies from file and environment."""

@@ -1431,8 +1431,10 @@ Establish a zero-trust external integration and dynamic agent provisioning archi
 - *2026-09-13*: Registered `integration_tools` in `config.yaml`, configured `orchestrator` and `comms_agent` profiles, and empirically verified live Hermes MCP discovery discovering all 6 tools in 2.93s.
 - *2026-09-13*: Authored `agent_service/evals/test_integration_server.py` (10 tests) covering Tier 1 zero-write enforcement, wildcard RBAC, Day-1 discovery vector indexing, dynamic provisioning, and payload sanitization. All 61 evaluations passing in 2.59s (100% pass rate).
 - *2026-09-13*: Synchronized `docs/ai_wiki/index.md`, `docs/ai_wiki/architecture.md`, and `docs/agent_team.md` detailing the Two-Tier Workforce Hierarchy and Per-Agent Credential Vault.
+- *2026-09-13*: User directed streamlining the core workforce to strictly the 4 Core Sovereign Governance Agents (`orchestrator`, `cost_controller`, `qa_auditor`, `security_guard`). Decommissioned the legacy `comms_agent` profile and `comms_server.py`; client and domain specialist agents are now dynamically provisioned on demand via `provision_custom_agent`. Verified all 60 benchmark evaluations passing in 2.29s (100% pass rate).
 
 ### 4. Current Focus
-Phase 38 External System Integration, Dynamic Agent Provisioning & Scoped Credential Vault successfully completed across all 5 sub-tasks. System 100% verified.
+Phase 38 completed. Workforce streamlined to 4 Core Governance Agents + on-demand Dynamic Domain Specialists.
+
 
 

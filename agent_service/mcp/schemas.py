@@ -19,9 +19,10 @@ class DAGTaskItem(BaseModel):
     """Represents a single atomic task in a directed acyclic execution graph."""
     id: str = Field(..., description="Unique task identifier, e.g. 'task_1'")
     title: str = Field(..., description="Short descriptive title of the task")
-    assigned_to: Literal["orchestrator", "cost_controller", "qa_auditor", "comms_agent", "security_guard"] = Field(
-        ..., description="Designated specialist agent profile"
+    assigned_to: str = Field(
+        ..., description="Designated specialist agent profile (e.g. 'orchestrator', 'cost_controller', 'qa_auditor', 'security_guard', or dynamic domain specialist)"
     )
+
     dependencies: List[str] = Field(default_factory=list, description="IDs of tasks that must finish before this runs")
     description: str = Field(..., description="Step-by-step instructions for the assigned agent")
 

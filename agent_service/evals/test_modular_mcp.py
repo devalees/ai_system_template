@@ -19,9 +19,9 @@ import pytest
 import yaml
 
 from agent_service.mcp.common_server import get_platform_status, semantic_memory_recall
-from agent_service.mcp.comms_server import client_service_action
 from agent_service.mcp.cost_server import audit_token_budget
 from agent_service.mcp.orchestrator_server import decompose_task_dag
+
 from agent_service.mcp.qa_server import validate_code_deliverable
 from agent_service.mcp.schemas import (
     BudgetStatusResult,
@@ -122,24 +122,11 @@ def test_cost_server_audit() -> None:
     assert res_warn.status == "VELOCITY_WARNING"
 
 
-def test_comms_server_action() -> None:
-    """Verifies client communications concierge action tool."""
-    res = client_service_action("query_status")
-    assert isinstance(res, ClientActionResult)
-    assert res.success is True
-    assert res.data["system_status"] == "operational"
-
-    res_notif = client_service_action("dispatch_notification", {"recipient": "stakeholder", "message": "Phase 37 ready"})
-    assert res_notif.success is True
-    assert res_notif.data["dispatched"] is True
-
-
 def test_profile_scoping_isolation() -> None:
-    """Verifies least-privilege scoping across all 5 profile YAML declarations."""
+    """Verifies least-privilege scoping across all 4 Core Governance profile declarations."""
     profiles_dir = Path(__file__).resolve().parent.parent / "profiles"
 
     expected_toolsets = {
-        "comms_agent": {"common_tools", "comms_tools", "integration_tools", "file_ops"},
         "cost_controller": {"common_tools", "cost_tools", "file_ops"},
         "orchestrator": {"common_tools", "orchestrator_tools", "integration_tools", "kanban", "delegate", "file_ops"},
         "qa_auditor": {"common_tools", "qa_tools", "file_ops", "terminal"},
@@ -154,16 +141,15 @@ def test_profile_scoping_isolation() -> None:
         assert actual == expected, f"Profile {prof_name} toolsets mismatch: {actual} != {expected}"
 
     # Verify mutual exclusivity of specialist domain tools
-    comms_tools = expected_toolsets["comms_agent"]
     qa_tools = expected_toolsets["qa_auditor"]
     sec_tools = expected_toolsets["security_guard"]
     cost_tools = expected_toolsets["cost_controller"]
 
-    assert "qa_tools" not in comms_tools
-    assert "security_tools" not in comms_tools
-    assert "comms_tools" not in qa_tools
     assert "qa_tools" not in sec_tools
+    assert "security_tools" not in qa_tools
+    assert "cost_tools" not in sec_tools
     assert "integration_tools" not in qa_tools
     assert "integration_tools" not in sec_tools
     assert "integration_tools" not in cost_tools
+
 

@@ -20,18 +20,24 @@ The autonomous workforce operates under a decentralized, sovereign division of l
 ```
 agent_service/
 ├── profiles/
-│   ├── orchestrator/      # 1. Chief of Staff & DAG Planner (@mcp.tool: decompose_task_dag)
-│   ├── cost_controller/   # 2. Financial Controller & Budget Monitor (@mcp.tool: audit_token_budget)
+│   ├── orchestrator/      # 1. Chief of Staff & DAG Planner (@mcp.tool: decompose_task_dag, discover_external_system)
+│   ├── cost_controller/   # 2. Financial Controller & Spend Auditor (@mcp.tool: audit_token_budget)
 │   ├── qa_auditor/        # 3. QA & Compliance Gatekeeper (@mcp.tool: validate_code_deliverable)
-│   ├── comms_agent/       # 4. Client Communications Concierge (@mcp.tool: client_service_action)
-│   └── security_guard/    # 5. SecOps & Threat Auditor (@mcp.tool: security_audit)
+│   ├── security_guard/    # 4. SecOps & Threat Auditor (@mcp.tool: security_audit)
+│   └── <dynamic_agents>/  # Dynamic Domain Specialists (@mcp.tool: provision_custom_agent)
 ├── mcp/
-│   └── system_tools_server.py # Central FastMCP server
+│   ├── common_server.py       # Shared platform tools
+│   ├── orchestrator_server.py # Chief of Staff tools
+│   ├── integration_server.py  # External system bridge & dynamic provisioning
+│   ├── qa_server.py           # QA verification tools
+│   ├── security_server.py     # Threat audit tools
+│   └── cost_server.py         # Token budget tools
 ├── memory/
 │   └── vector_store.py    # Embedded sqlite-vec memory store
 └── telemetry/
     └── tracer.py          # Langfuse OpenTelemetry tracer
 ```
+
 
 ---
 
@@ -104,27 +110,7 @@ agent_service/
 
 ---
 
-### Agent 4: Comms Agent (`comms_agent`)
-
-- **Role**: Client Communications Coordinator & Concierge
-- **Directory**: `agent_service/profiles/comms_agent/`
-- **Calibrated Reasoning**: `none` (zero latency for instant responses)
-- **Default Toolsets**: `mcp`, `file_ops`
-- **Bundled Skills Opt-Out**: `.no-bundled-skills` active
-
-#### Primary Responsibilities
-- **Client Service Concierge**: Natural language client interface and ticket intake.
-- **Zero-Trust Document Access**: Accesses files strictly through validated permissions with SHA-256 integrity checks.
-- **Proactive Notifications**: Formats and dispatches structured milestone notifications.
-
-#### Dedicated FastMCP Tools
-- `@mcp.tool() client_service_action(action_type: str, payload: dict)`:
-  - Handles client queries and document inventory requests over authenticated JSON-RPC.
-  - Enforces client dollar milestones (25%, 50%, 75%, 100%).
-
----
-
-### Agent 5: Security Guard (`security_guard`)
+### Agent 4: Security Guard (`security_guard`)
 
 - **Role**: Security & Threat Auditor (SecOps)
 - **Directory**: `agent_service/profiles/security_guard/`
@@ -141,6 +127,7 @@ agent_service/
 - `@mcp.tool() security_audit(scan_path: str, mode: str)`:
   - High-speed in-memory scan for leaked credentials.
   - Audits RBAC configurations and file permission boundaries.
+
 
 ---
 
@@ -161,10 +148,10 @@ flowchart TD
     
     DAG --> Spec[Specialist Execution]
     
-    subgraph Specialists ["Specialist Department Heads"]
+    subgraph Specialists ["Specialist Department Heads & Dynamic Domain Specialists"]
         Spec --> Cost[Cost Controller: audit_token_budget]
         Spec --> Sec[Security Guard: security_audit]
-        Spec --> Comms[Comms Agent: client_service_action]
+        Spec --> Domain[Dynamic Specialists: invoke_external_api]
     end
     
     Specialists --> QA[QA Auditor: Tiered Validation]
@@ -182,13 +169,14 @@ flowchart TD
 
 ## 4. Summary Matrix: The Sovereign Workforce
 
-| Profile | Calibrated Reasoning | Primary FastMCP Tool | Target Latency | Optimization Focus |
+| Profile | Tier | Calibrated Reasoning | Primary FastMCP Tools | Optimization Focus |
 | :--- | :--- | :--- | :--- | :--- |
-| **`orchestrator`** | `none` | `decompose_task_dag`, `discover_external_system` | < 1 sec | Instant triage, memory-augmented DAG decomposition |
-| **`cost_controller`** | `low` | `audit_token_budget` | < 3 sec | Real-time budget tracking via Langfuse telemetry |
-| **`qa_auditor`** | `high` | `validate_code_deliverable` | Dynamic | Tiered QA: $0 deterministic AST check, conditional LLM |
-| **`comms_agent`** | `none` | `client_service_action`, `sync_external_records` | < 1 sec | Zero-latency concierge, zero-trust document streaming |
-| **`security_guard`** | `high` | `security_audit` | < 5 sec | In-memory regex secret scanning & boundary audits |
+| **`orchestrator`** | Tier 1 (Gov) | `none` | `decompose_task_dag`, `discover_external_system` | Instant triage, memory-augmented DAG decomposition |
+| **`cost_controller`** | Tier 1 (Gov) | `low` | `audit_token_budget` | Real-time budget tracking via Langfuse telemetry |
+| **`qa_auditor`** | Tier 1 (Gov) | `high` | `validate_code_deliverable` | Tiered QA: $0 deterministic AST check, conditional LLM |
+| **`security_guard`** | Tier 1 (Gov) | `high` | `security_audit` | In-memory regex secret scanning & boundary audits |
+| **Dynamic Specialists** | Tier 2 (Domain) | Dynamic (`none`/`low`/`high`) | `invoke_external_api`, `sync_external_records` | Domain business operations provisioned via JSON manifest |
+
 
 ---
 

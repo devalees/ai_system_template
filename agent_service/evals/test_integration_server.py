@@ -196,7 +196,7 @@ def test_cannot_overwrite_protected_tier1_governance_profiles() -> None:
 def test_list_registered_agents_catalog() -> None:
     """Verifies that list_registered_agents returns active agents with correct tiering."""
     catalog = list_registered_agents()
-    assert catalog.total_agents >= 5
+    assert catalog.total_agents >= 4
     assert catalog.governance_agents == 4  # orchestrator, security_guard, cost_controller, qa_auditor
 
     agent_ids = [a.agent_id for a in catalog.agents]
@@ -204,7 +204,6 @@ def test_list_registered_agents_catalog() -> None:
     assert "security_guard" in agent_ids
     assert "cost_controller" in agent_ids
     assert "qa_auditor" in agent_ids
-    assert "comms_agent" in agent_ids
 
 
 # =============================================================================
@@ -248,6 +247,16 @@ def test_sync_external_records_flow() -> None:
     assert fail_sync.success is False
     assert fail_sync.records_count == 0
 
-    # Comms Agent is authorized for notifications
-    ok_sync = sync_external_records(caller_agent="comms_agent", resource_type="notifications")
+    # Provision dynamic specialist authorized for orders
+    vault.register_agent(
+        agent_id="test_sync_specialist",
+        policy=AgentAccessPolicy(
+            allowed_methods=["GET"],
+            allowed_endpoints=["/api/v1/orders*"],
+            disallowed_endpoints=[],
+        ),
+        token="sec_sync_tok",
+    )
+    ok_sync = sync_external_records(caller_agent="test_sync_specialist", resource_type="orders")
     assert ok_sync.success is True
+

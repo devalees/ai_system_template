@@ -43,11 +43,11 @@ A production-grade, 100% sovereign, and portable autonomous AI agent platform po
   - `qa_tools` (`qa_server.py`): `validate_code_deliverable` combining deterministic Python AST syntax checks ($0, <5ms) with hygiene audits.
   - `security_tools` (`security_server.py`): `security_audit` for high-speed in-memory credential leak scanning and permission audits.
   - `cost_tools` (`cost_server.py`): `audit_token_budget` tracking spend against configured budget caps.
-  - `comms_tools` (`comms_server.py`): `client_service_action` for zero-trust document queries and notification routing.
   - `system_tools` (`system_tools_server.py`): Backward-compatible aggregate server.
 - **Two-Tier Workforce Scoping & Per-Agent Credential Vault (`credential_vault.py`)**:
   - **Tier 1 Governance**: `orchestrator`, `security_guard`, `cost_controller`, `qa_auditor` (Zero external database write access; pure internal guardians).
-  - **Tier 2 Domain Specialists**: Pluggable business agents (e.g. `comms_agent`, `procurement_agent`, `radiology_agent`) holding scoped service tokens with granular endpoint RBAC rules.
+  - **Tier 2 Domain Specialists**: Pluggable business agents (e.g. `procurement_agent`, `radiology_agent`, `billing_agent`) provisioned on-demand via JSON manifests holding scoped service tokens with granular endpoint RBAC rules.
+
 
 ### 4. Standalone Glass-Box Tracing & LLMOps (`Langfuse` :3100)
 - **Containerized Observability**: Independent Docker container (`ghcr.io/langfuse/langfuse:2`) running on host port `3100:3000`.

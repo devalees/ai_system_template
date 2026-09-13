@@ -47,17 +47,9 @@ mcp_servers:
       PYTHONPATH: "/"
       PYTHONSAFEPATH: "1"
 
-  # Specialist 5: Client Communications Concierge
-  comms_tools:
-    command: "python3"
-    args:
-      - "/workspace/mcp/comms_server.py"
-    env:
-      PYTHONPATH: "/"
-      PYTHONSAFEPATH: "1"
-
   # Consolidated Fallback / Legacy Aggregate Server
   system_tools:
+
     command: "python3"
     args:
       - "/workspace/mcp/system_tools_server.py"

@@ -98,18 +98,18 @@ economy_editor/
 - **Protocol**: Standard JSON-RPC 2.0 over clean stdio transport.
 - **Modular Micro-Servers (`agent_service/mcp/`)**:
   - Eliminates monolithic tool clutter, tool distraction, and prompt bloat.
-  - Implements strict zero-trust least privilege across 7 focused FastMCP servers:
+  - Implements strict zero-trust least privilege across 6 focused FastMCP servers:
     1. **`common_tools` (`common_server.py`)**: Platform-wide tools shared by all agents (`semantic_memory_recall`, `get_platform_status`).
     2. **`orchestrator_tools` (`orchestrator_server.py`)**: `decompose_task_dag` with pre-flight semantic memory augmentation.
     3. **`integration_tools` (`integration_server.py`)**: External system discovery, Day-1 schema indexing, dynamic agent provisioning (`provision_custom_agent`), agent cataloging, and zero-trust authenticated API proxying (`invoke_external_api`, `fetch_company_profile`, `sync_external_records`).
     4. **`qa_tools` (`qa_server.py`)**: `validate_code_deliverable` with Tier 1 deterministic AST syntax checking ($0, <5ms).
     5. **`security_tools` (`security_server.py`)**: `security_audit` with high-speed regex scanning for leaked secrets and permission violations.
     6. **`cost_tools` (`cost_server.py`)**: `audit_token_budget` with 4-tier milestone alerts.
-    7. **`comms_tools` (`comms_server.py`)**: `client_service_action` for zero-trust document queries and notification routing.
 - **Two-Tier Workforce Model & Per-Agent Scoped Credential Vault (`credential_vault.py`)**:
   - **Tier 1 (Core Sovereign Governance)**: `orchestrator`, `security_guard`, `cost_controller`, `qa_auditor`. These profiles are immutable platform invariants with **ZERO external database write access**; they operate purely as internal guardians.
-  - **Tier 2 (Dynamic Domain Specialists)**: Pluggable business agents provisioned via JSON manifests (e.g. `procurement_agent`, `radiology_agent`, `comms_agent`). Each domain agent holds its own scoped token and wildcard endpoint RBAC policy, preventing lateral privilege escalation.
+  - **Tier 2 (Dynamic Domain Specialists)**: Pluggable business agents provisioned via JSON manifests (e.g. `procurement_agent`, `radiology_agent`, `billing_agent`). Each domain agent holds its own scoped token and wildcard endpoint RBAC policy, preventing lateral privilege escalation.
   - **Zero Raw Key Exposure**: Secrets reside in `.env` or `agent_service/data/.credentials.json` (`0600`) and are attached in-process; raw keys are never passed into LLM prompt contexts.
+
 
 
 ---

@@ -1,6 +1,0 @@
-model: ${HERMES_MODEL:-openrouter/anthropic/claude-3.5-sonnet}
-reasoning_effort: none
-toolsets:
-  - common_tools
-  - comms_tools
-  - file_ops

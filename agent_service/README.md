@@ -67,8 +67,9 @@ python3 -m memory.cli import --input knowledge_export.jsonl
 
 | Profile | Role | Reasoning Budget | Dedicated FastMCP Tool |
 | :--- | :--- | :--- | :--- |
-| **`orchestrator`** | Chief of Staff & DAG Planner | `none` (0s triage) | `decompose_task_dag` |
+| **`orchestrator`** | Chief of Staff & DAG Planner | `none` (0s triage) | `decompose_task_dag`, `discover_external_system` |
 | **`cost_controller`** | Financial Controller & Token Spend Auditor | `low` | `audit_token_budget` |
 | **`qa_auditor`** | Compliance & Quality Gatekeeper | `high` | `validate_code_deliverable` |
-| **`comms_agent`** | Client Communications Concierge | `none` | `client_service_action` |
 | **`security_guard`** | SecOps & Threat Auditor | `high` | `security_audit` |
+| **Dynamic Specialists** | Custom Domain Specialists (e.g. Procurement, Radiology) | Calibrated | `invoke_external_api`, `sync_external_records` |
+
