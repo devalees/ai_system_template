@@ -1620,9 +1620,9 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
   - 3-tier ownership model: `GLOBAL`, `TEAM`, `OWN`.
   - Declarative FastAPI permission dependency: `Depends(require_permission("module.model.action"))`.
   - JWT issuance, verification, and refresh lifecycle.
-- [ ] **Sub-stage 5.2: `settings` (Per-Module Dynamic Configuration)**
+- [x] **Sub-stage 5.2: `settings` (Per-Module Dynamic Configuration)** - COMPLETED (Commit: `fe2a6e0`)
   - Key-value JSONB store per module per company (`company_id`, `module_name`, `settings_data`).
-  - Standardized `GET/PATCH /api/v1/{module}/settings` endpoints validating against module manifest schemas.
+  - Standardized `GET/PATCH /api/v1/settings/{module}` endpoints with multi-tenant Redis caching and instant cache invalidation.
 - [ ] **Sub-stage 5.3: `lookups` (Dynamic Normalized Master Data)**
   - Models: `Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`.
   - Auto-seeding ISO fixtures on kernel bootstrap (`seed_iso_data()`).
@@ -1698,7 +1698,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Stage 3 Completed - Commit: `05d197b`)*: Implemented Multi-Tenancy Engine, Base Models & Soft-Delete Architecture: thread-safe `ContextVar` management and `MultiTenancyContextMiddleware` (`context.py`), canonical `BaseModel` and mixins (`base_models.py` with UUID PKs, audit actors, `custom_fields JSONB`, `ArchivableMixin`), automatic SQLAlchemy query filtration interceptor (`database.py` injecting `WHERE deleted_at IS NULL` and `WHERE company_id = :active_company_id` via `with_loader_criteria` on all SELECTs, with `include_deleted` and `ignore_tenant` execution options), and `before_flush` auto-population hooks. Full test suite passing 15/15 tests in 1.09s.
 - *2026-09-14 (Stage 4 Completed - Commit: `7950c8f`)*: Implemented Universal Query Engine, AST Filter Compiler, Aggregator & Pagination: Pydantic AST models (`FilterNode`, `FilterGroup`), recursive boolean tree compiler with support for 14 operators (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `contains`, `icontains`, `starts_with`, `ends_with`, `in`, `not_in`, `between`, `is_null`) and nested `custom_fields JSONB` paths, multi-dimensional aggregation compiler (`SUM`, `AVG`, `MIN`, `MAX`, `COUNT`, `COUNT_DISTINCT`, `date_trunc`, `FILTER WHERE ...`), post-aggregation arithmetic equation evaluator, and enveloped `PaginatedResponse` with `has_next`/`has_prev`. All 20 unit tests passing in container in 2.49s.
 - *2026-09-14 (Sub-stage 5.1 Completed - Commit: `1392398`)*: Implemented `identity_rbac` foundational base utility module: User entity with `user_type: "human" | "ai_agent"` for first-class AI agent participation, RBAC Groups, granular model Permissions, native bcrypt hashing, JWT issuance and verification, declarative `require_permission()` dependency, and live registration/login routes. All 23 unit tests passing in container in 6.54s.
+- *2026-09-14 (Sub-stage 5.2 Completed - Commit: `fe2a6e0`)*: Implemented `settings` module: `ModuleSettings` persistent JSONB table, Redis-cached retrieval with 1-hour TTL, transactional merge updates, automatic cache invalidation, and authenticated REST endpoints (`GET/PATCH /api/v1/settings/{module_name}`). Verified complete multi-tenant isolation. 25/25 unit tests passing in container in 8.64s.
 
 ### 4. Current Focus
-Begin execution of **Stage 5, Sub-stage 5.2: `settings` (Per-Module Dynamic Configuration)** in `backend/modules/base/settings/`.
+Begin execution of **Stage 5, Sub-stage 5.3: `lookups` (Dynamic Normalized Master Data)** in `backend/modules/base/lookups/`.
 
