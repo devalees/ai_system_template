@@ -73,25 +73,45 @@ The architectural philosophy is anchored by 8 core principles:
   * *External Messages*: Customer-facing email threads tracked directly on the record.
 * **Native AI Agent Participation**: AI agents (Hermes) can inspect thread histories, formulate contextual drafts, and participate as collaborators on any record.
 
+### Principle 9: Per-Module / Per-App Configuration & Settings Engine
+* **Dedicated Module Settings**: Every domain application and base utility declares its own structured settings schema (e.g. default currency, rounding rules, email templates, auto-assignment thresholds, prefix sequences).
+* **Multi-Tenant Scoping**: Settings can be overridden on a per-tenant/company basis or inherit global platform defaults.
+* **Declarative Schema Contracts**: Settings are validated via Pydantic models and exposed through standardized API endpoints (`GET /api/v1/{module}/settings`, `PATCH /api/v1/{module}/settings`), allowing headless clients to render configuration forms dynamically.
+
+### Principle 10: Relational Dynamism & Seed Fixtures (Dynamic Lookups over Static Enums)
+* **Dynamic Relational Lookups**: Multi-option choices (e.g., countries, cities, stages, categories, payment terms, units of measure) are modeled as distinct, dynamic database entities rather than static hardcoded code enums.
+* **Seed Data & Fixtures on Bootstrap**: System ships with default data fixtures (e.g., ISO countries, standard currencies, default tax types) that are seeded automatically upon initial installation.
+* **Tenant Extensibility**: Tenants can add, modify, reorder, or deactivate lookup choices at runtime via standard API endpoints without code deployments or database migrations.
+* **Pragmatic Boundary**: Strictly applies relational normalization to domain lookup dimensions while avoiding brittle anti-patterns (such as universal EAV across core entity columns).
+
 ---
 
-## 3. Pending Dimensions for Collaborative Brainstorming
+## 3. Technology Stack & Runtime (Dimension 2 — In Progress)
 
-- [ ] **Dimension 2: Technology Stack & Language Runtime** *(Currently in focus)*
-  - Programming Language (Python, Go, Node/TypeScript, Rust)
-  - Web & API Framework (FastAPI, Gin/Go, NestJS, etc.)
-  - ORM / Query Layer (SQLAlchemy 2.0 async, Prisma, Ent, etc.)
+- [x] **Web & API Framework**: **FastAPI** + **Uvicorn** (AGREED)
+  * High-throughput asynchronous ASGI runtime.
+  * Direct Pydantic v2 schema sharing with `agent_service/`.
+  * Native WebSocket/SSE support for chatter, real-time alerts, and agent thought streams.
+  * Auto-generated OpenAPI/Swagger documentation.
+- [ ] **Database ORM & Query Layer**: *(Under review — Recommended: SQLAlchemy 2.0 Async + Alembic)*
+- [ ] **Primary Relational Database**: *(Under review — Recommended: PostgreSQL 16)*
+- [ ] **Asynchronous Task Queue & Cache**: *(Under review — Recommended: Redis + ARQ/Celery)*
+
+---
+
+## 4. Pending Dimensions for Collaborative Brainstorming
+
 - [ ] **Dimension 3: Database & Multi-Tenant Storage Strategy**
-  - Database Engine (PostgreSQL, SQLite for local/embedded, etc.)
   - Multi-tenancy implementation pattern (Shared DB + discriminator column vs. schema-per-tenant)
+  - Handling dynamic schema extensions / custom fields
 - [ ] **Dimension 4: Asynchronous Execution, Task Queue & Event Bus**
-  - Task runner / background queue (Redis + Celery / ARQ / TaskIQ, or in-process async)
-  - WebSocket / SSE streaming for real-time agent responses and notifications
+  - Background worker architecture for automated actions and CPU-bound workloads
+  - WebSocket / SSE event distribution
 - [ ] **Dimension 5: Hermes Agent Bridge & MCP Integration**
   - Dynamic tool generation from module schemas
   - Bi-directional communication between backend API and `agent_service` container
 
 ---
 
-## 4. Current Focus
-Review and refine Dimension 1 with the user, then proceed to brainstorm **Dimension 2: Technology Stack**.
+## 5. Current Focus
+Finalize Dimension 2 supporting stack (ORM, Database, Task Queue) with user.
