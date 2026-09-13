@@ -25,6 +25,25 @@ data/
 *.db
 *.db-journal
 *.log
+*.lock
+*.sock
+agent_service/profiles/**/sessions/
+agent_service/profiles/**/logs/
+agent_service/profiles/**/cron/
+agent_service/profiles/**/audio_cache/
+agent_service/profiles/**/image_cache/
+agent_service/profiles/**/pairing/
+agent_service/profiles/**/hooks/
+agent_service/profiles/**/memories/
+agent_service/profiles/**/skills/
+agent_service/profiles/**/state/
+agent_service/profiles/**/cache/
+agent_service/profiles/**/pending_messages/
+agent_service/profiles/**/platforms/
+agent_service/profiles/**/bin/
+agent_service/profiles/**/auth.json
+agent_service/profiles/**/gateway_state.json
+agent_service/profiles/**/channel_directory.json
 
 # IDE & OS
 .idea/

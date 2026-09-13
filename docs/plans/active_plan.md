@@ -1307,7 +1307,7 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 - [x] **Sub-task 1: Clean-Slate Decoupling & Pure Standalone Hermes Provisioning** - COMPLETED (Commit: `f7b11d1`)
 - [x] **Sub-task 1.5: Repository Transformation to 100% Standalone AI Agent Platform** - COMPLETED (Commit: `10e64a4`)
 - [x] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - COMPLETED (Commit: `6da4fd0`)
-- [x] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - COMPLETED (Commit: pending)
+- [x] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - COMPLETED (Commit: `68ed083`)
 - [/] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - IN_PROGRESS
 - [ ] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - PENDING
 - [ ] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - PENDING
