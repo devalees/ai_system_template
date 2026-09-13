@@ -1288,26 +1288,26 @@ Phase 35 completed. Ready for user browser verification.
 
 ## Phase 36: Enterprise Agent Upgrade & Self-Refining Platform (PENDING REVIEW)
 
-- **Status**: PENDING <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `main`
-- **Last Updated**: 2026-09-13 13:14:00+03:00
+- **Last Updated**: 2026-09-13 15:05:00+03:00
 - **Dedicated Implementation Plan**: [`docs/plans/enterprise_agent_upgrade_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/enterprise_agent_upgrade_plan.md)
 
 ### 1. Objective & Scope
-Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (`agent_service/`) completely decoupled from the Django backend across 6 core pillars:
+Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (`agent_service/`) completely decoupled from the legacy backend across 6 core pillars:
 1. **Embedded Sovereign Semantic Memory (`sqlite-vec`)**: In-process vector database in `agent_service/data/memory.db` with zero external database dependencies.
 2. **Standardized Tooling (MCP)**: Internal Model Context Protocol servers running inside `agent_service/mcp/` over JSON-RPC.
 3. **Glass-Box Tracing & LLMOps (Langfuse)**: Independent Docker monitoring container (`localhost:3100`) capturing thought trees, latency, and costs.
 4. **Schema-Strict Self-Correction**: Pydantic tool input/output validation, mid-flight retry, and loop circuit breakers.
-5. **Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)**: Standalone `pytest` test harness evaluating agent intelligence without needing Django running.
+5. **Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)**: Standalone `pytest` test harness evaluating agent intelligence without needing external services running.
 6. **Sovereign Package Portability**: Fully portable `agent_service/` directory with sanitized export/import CLI pipelines for procedural wisdom.
 
 ### 2. Task Milestones & Architectural Alignment
 - [x] **Sub-task 0: Architecture Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED (Commit: `a030672`)
 - [x] **Sub-task 1: Clean-Slate Decoupling & Pure Standalone Hermes Provisioning** - COMPLETED (Commit: `f7b11d1`)
 - [x] **Sub-task 1.5: Repository Transformation to 100% Standalone AI Agent Platform** - COMPLETED (Commit: `10e64a4`)
-- [ ] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - PENDING
-- [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - PENDING
+- [x] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - COMPLETED (Commit: pending)
+- [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - IN_PROGRESS
 - [ ] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
 - [ ] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - PENDING
 - [ ] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - PENDING
@@ -1315,11 +1315,17 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 
 ### 3. Key Decisions & Deviations (Phase 36)
 - *2026-09-13*: User requested comprehensive architecture audit and synchronization before starting code implementation. Updated [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md) (Sections 1, 2, 3, 7, and new Sections 25–31) and [`docs/ai_wiki/index.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/index.md) to fully document the Sovereign Decoupled Architecture, embedded `sqlite-vec` memory engine, FastMCP tool servers, Langfuse :3100 container, 3-tier risk-based QA state machine, golden evals, and cross-project knowledge CLI.
-- *2026-09-13*: User instructed that legacy profiles/skills had not performed meaningful work and should not be archived. Wiped `agent_service/` completely to a spotless slate, severed shared filesystem volume mounts in `backend/docker-compose.yml`, and rebooted Hermes as a 100% standalone, decoupled gateway daemon on port 8643 with zero profiles and zero Django dependencies.
+- *2026-09-13*: User instructed that legacy profiles/skills had not performed meaningful work and should not be archived. Wiped `agent_service/` completely to a spotless slate, severed shared filesystem volume mounts in `backend/docker-compose.yml`, and rebooted Hermes as a 100% standalone, decoupled gateway daemon on port 8643 with zero profiles and zero legacy dependencies.
 - *2026-09-13*: **Total Decoupling & Repository Transformation**: Per user direction ("شيل لي الـ Django خالص من الـ project... حتى ذكره ميكونش موجود ولا في الـ architecture ولا في أي حاجة"), the entire legacy full-stack application was archived to a dedicated Git branch `archive/full-stack-django-frontend`. The `backend/`, `frontend/`, `scripts/`, and `install.sh` folders were removed from the workspace. All backend/frontend Docker containers were stopped and removed. All documentation, architecture specifications, and environment configurations were scrubbed to focus 100% on the **Sovereign Autonomous AI Agent Platform**.
+- *2026-09-13*: **Milestone 1 Implementation & Verification**:
+  - Implemented `agent_service/memory/vector_store.py` with `MemoryStore` backed by `sqlite-vec` (v0.1.9) utilizing virtual table `vec_entries USING vec0(embedding float[384] distance_metric=cosine)`.
+  - Implemented deterministic multi-seed character and token n-gram dense embedding engine normalized to unit Euclidean length $||v||_2 = 1.0$ (<1ms in-memory).
+  - Implemented `agent_service/memory/cli.py` supporting `export` (with regex PII/secret scrubbing), `import` (JSONL roundtrip), `query` (semantic search with formatted ranking), and `stats`.
+  - Authored comprehensive test suite `agent_service/memory/test_vector_store.py` (9 tests covering DB schema, deterministic embeddings, CRUD, semantic ranking, scope/category filters, deletions, secret scrubbing, and CLI commands).
+  - Empirically verified all 9 tests passing in container (`9 passed in 0.62s`).
 
 ### 4. Current Focus
-Repository fully converted to pure Sovereign AI Agent Platform. Ready to begin Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`).
+Milestone 1 completed. Moving to Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`).
 
 
 
