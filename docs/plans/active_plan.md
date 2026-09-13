@@ -1302,7 +1302,8 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 5. **Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)**: Standalone `pytest` test harness evaluating agent intelligence without needing Django running.
 6. **Sovereign Package Portability**: Fully portable `agent_service/` directory with sanitized export/import CLI pipelines for procedural wisdom.
 
-### 2. Task Milestones (Pending Approval)
+### 2. Task Milestones & Architectural Alignment
+- [x] **Sub-task 0: Architecture Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED (Synchronized Sovereign Decoupled Architecture, 6 Pillars, Langfuse :3100, sqlite-vec memory, FastMCP, and Tiered QA in `architecture.md` and `index.md`)
 - [ ] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - PENDING
 - [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - PENDING
 - [ ] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
@@ -1310,9 +1311,12 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 - [ ] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - PENDING
 - [ ] **Milestone 6: Sovereign Package Portability & Knowledge CLI** - PENDING
 
+### 3. Key Decisions & Deviations (Phase 36)
+- *2026-09-13*: User requested comprehensive architecture audit and synchronization before starting code implementation. Updated [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md) (Sections 1, 2, 3, 7, and new Sections 25–31) and [`docs/ai_wiki/index.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/index.md) to fully document the Sovereign Decoupled Architecture, two sovereign microservices, embedded `sqlite-vec` memory engine, FastMCP tool servers, Langfuse :3100 container, 3-tier risk-based QA state machine, golden evals, and cross-project knowledge CLI.
 
-### 3. Current Focus
-Plan updated in [`docs/plans/enterprise_agent_upgrade_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/enterprise_agent_upgrade_plan.md). Awaiting user selection of initial execution milestone.
+### 4. Current Focus
+Architecture documentation fully synchronized. Ready to begin Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`).
+
 
 
 

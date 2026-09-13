@@ -6,6 +6,9 @@ A profile-centric reference and planning document detailing each autonomous agen
 - **File**: [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md)
 - **Container Runtime**: Hermes Agent Container (`hermes-template-agent`), isolated network (`hermes_isolated_network`)
 - **Backend Bridge**: Django REST API (`http://host.docker.internal:8000/api`) with Token Authentication & RBAC
+- **Sovereign Upgrade Architecture**: [`docs/ai_wiki/architecture.md#25-sovereign-decoupled-architecture--the-two-sovereign-pillars`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
+- **Enterprise Upgrade Plan**: [`docs/plans/enterprise_agent_upgrade_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/enterprise_agent_upgrade_plan.md) (FastMCP Tool Migration & Tiered QA)
+
 
 ---
 
