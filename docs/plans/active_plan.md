@@ -1290,7 +1290,7 @@ Phase 35 completed. Ready for user browser verification.
 
 - **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `main`
-- **Last Updated**: 2026-09-13 15:05:00+03:00
+- **Last Updated**: 2026-09-13 15:30:00+03:00
 - **Dedicated Implementation Plan**: [`docs/plans/enterprise_agent_upgrade_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/enterprise_agent_upgrade_plan.md)
 
 ### 1. Objective & Scope
@@ -1306,9 +1306,9 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 - [x] **Sub-task 0: Architecture Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED (Commit: `a030672`)
 - [x] **Sub-task 1: Clean-Slate Decoupling & Pure Standalone Hermes Provisioning** - COMPLETED (Commit: `f7b11d1`)
 - [x] **Sub-task 1.5: Repository Transformation to 100% Standalone AI Agent Platform** - COMPLETED (Commit: `10e64a4`)
-- [x] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - COMPLETED (Commit: pending)
-- [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - IN_PROGRESS
-- [ ] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
+- [x] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - COMPLETED (Commit: `6da4fd0`)
+- [x] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - COMPLETED (Commit: pending)
+- [/] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - IN_PROGRESS
 - [ ] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - PENDING
 - [ ] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - PENDING
 - [ ] **Milestone 6: Sovereign Package Portability & Knowledge CLI** - PENDING
@@ -1323,9 +1323,16 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
   - Implemented `agent_service/memory/cli.py` supporting `export` (with regex PII/secret scrubbing), `import` (JSONL roundtrip), `query` (semantic search with formatted ranking), and `stats`.
   - Authored comprehensive test suite `agent_service/memory/test_vector_store.py` (9 tests covering DB schema, deterministic embeddings, CRUD, semantic ranking, scope/category filters, deletions, secret scrubbing, and CLI commands).
   - Empirically verified all 9 tests passing in container (`9 passed in 0.62s`).
+- *2026-09-13*: **Milestone 2 Implementation & Verification**:
+  - Implemented `agent_service/mcp/system_tools_server.py` exposing 5 standardized tools: `decompose_task_dag`, `audit_token_budget`, `validate_code_deliverable`, `client_service_action`, and `security_audit`.
+  - Configured rigid Pydantic argument/return models in `agent_service/mcp/schemas.py`.
+  - Solved Python library vs local directory shadowing by configuring `PYTHONSAFEPATH=1`, `PYTHONPATH=/:/workspace`, and runtime path filtering in stdio runner.
+  - Linked Hermes virtualenv to system packages via `system_packages.pth` and verified `hermes mcp test system_tools` discovering all 5 tools with 100% connection success.
+  - Scaffolding and activated 5 core department head profiles (`orchestrator`, `cost_controller`, `qa_auditor`, `comms_agent`, `security_guard`) with calibrated reasoning budgets, authoritative `SOUL.md` personas, and `.no-bundled-skills` to eliminate prompt bloat.
+  - Authored and consolidated test suite in `agent_service/evals/` (19 tests covering MCP tools, DAG validation, memory embeddings, and CRUD). Empirically verified all 19 tests passing in 2.08s.
 
 ### 4. Current Focus
-Milestone 1 completed. Moving to Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`).
+Milestone 2 completed. Moving to Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker (`agent_service/docker-compose.yml` and `agent_service/telemetry/`).
 
 
 

@@ -1,0 +1,6 @@
+model: ${HERMES_MODEL:-openrouter/anthropic/claude-3.5-sonnet}
+reasoning_effort: high
+toolsets:
+  - mcp
+  - file_ops
+  - terminal

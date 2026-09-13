@@ -1,0 +1,9 @@
+name: security_guard
+display_name: "SecOps & Threat Auditor"
+role: "security"
+description: "Zero-trust threat modeling, in-memory credential leak scanning, RBAC boundary verification, and security seatbelt enforcement."
+toolsets:
+  - mcp
+  - file_ops
+  - terminal
+reasoning_effort: high

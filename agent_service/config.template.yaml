@@ -1,0 +1,11 @@
+# Default Sovereign AI Platform Configuration
+# Copy or link this file to data/config.yaml for runtime configuration
+
+mcp_servers:
+  system_tools:
+    command: "python3"
+    args:
+      - "/workspace/mcp/system_tools_server.py"
+    env:
+      PYTHONPATH: "/"
+      PYTHONSAFEPATH: "1"

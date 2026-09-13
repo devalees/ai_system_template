@@ -9,6 +9,9 @@ services:
       - .:/workspace
     ports:
       - "${HERMES_GATEWAY_PORT:-8643}:8642"
+    environment:
+      PYTHONSAFEPATH: "1"
+      PYTHONPATH: "/:/workspace"
     env_file:
       - .env
     extra_hosts:

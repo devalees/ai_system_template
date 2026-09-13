@@ -1,0 +1,9 @@
+name: qa_auditor
+display_name: "Quality Assurance & Compliance Gatekeeper"
+role: "qa_auditor"
+description: "Enforces Tiered Risk-Based QA: deterministic AST syntax checking, zero-placeholder deliverable hygiene, and rigorous deep-reasoning verification."
+toolsets:
+  - mcp
+  - file_ops
+  - terminal
+reasoning_effort: high

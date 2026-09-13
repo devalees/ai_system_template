@@ -2,3 +2,5 @@ sqlite-vec>=0.1.9
 pydantic>=2.0.0
 pytest>=8.0.0
 numpy>=1.24.0
+fastmcp>=4.0.0
+mcp>=1.0.0
