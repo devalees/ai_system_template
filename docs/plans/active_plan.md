@@ -1309,9 +1309,9 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 - [x] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - COMPLETED (Commit: `6da4fd0`)
 - [x] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - COMPLETED (Commit: `68ed083`)
 - [x] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - COMPLETED (Commit: `efdc408`)
-- [x] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - COMPLETED (Commit: pending)
-- [/] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - IN_PROGRESS
-- [ ] **Milestone 6: Sovereign Package Portability & Knowledge CLI** - PENDING
+- [x] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - COMPLETED (Commit: `4271278`)
+- [x] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - COMPLETED (Commit: pending)
+- [/] **Milestone 6: Sovereign Package Portability & Knowledge CLI** - IN_PROGRESS
 
 ### 3. Key Decisions & Deviations (Phase 36)
 - *2026-09-13*: User requested comprehensive architecture audit and synchronization before starting code implementation. Updated [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md) (Sections 1, 2, 3, 7, and new Sections 25–31) and [`docs/ai_wiki/index.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/index.md) to fully document the Sovereign Decoupled Architecture, embedded `sqlite-vec` memory engine, FastMCP tool servers, Langfuse :3100 container, 3-tier risk-based QA state machine, golden evals, and cross-project knowledge CLI.
@@ -1344,9 +1344,13 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
   - Implemented anti-loop circuit breaker (`CircuitBreaker`) tracking tool call argument signatures and tripping after 2 consecutive identical failures to prevent runaway execution.
   - Authored test suite [`agent_service/evals/test_qa_pipeline.py`](file:///home/ehab/Desktop/economy_editor/agent_service/evals/test_qa_pipeline.py) (6 tests covering clean approvals, syntax reflection, hygiene rejections, risk escalation, and circuit breakers).
   - Empirically verified all 30 evals passing in 2.24s (`30 passed in 2.24s`).
+- *2026-09-13*: **Milestone 5 Implementation & Verification**:
+  - Authored golden benchmark scenarios [`agent_service/evals/test_golden_scenarios.py`](file:///home/ehab/Desktop/economy_editor/agent_service/evals/test_golden_scenarios.py) (13 multi-turn scenarios testing Orchestrator memory injection & circular DAG guard, Cost Controller milestone transitions, QA Auditor AST pass & reflection, Comms Agent concierge queries, and Security Guard credential leak interception).
+  - Implemented benchmark runner CLI [`agent_service/evals/run_evals.sh`](file:///home/ehab/Desktop/economy_editor/agent_service/evals/run_evals.sh) measuring execution duration, per-test timing, and pass percentages.
+  - Empirically verified all 43 golden evaluation tests passing across the 5 department heads in 2.24s (`43 passed in 2.24s, 100% pass rate`).
 
 ### 4. Current Focus
-Milestone 4 completed. Moving to Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/` and runner CLI).
+Milestone 5 completed. Moving to Milestone 6: Sovereign Package Portability & Knowledge CLI (`agent_service/` packaging, documentation, and standalone portability verification).
 
 
 
