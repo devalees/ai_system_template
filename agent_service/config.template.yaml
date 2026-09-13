@@ -64,3 +64,13 @@ mcp_servers:
     env:
       PYTHONPATH: "/"
       PYTHONSAFEPATH: "1"
+
+  # Integration Bridge & Dynamic Agent Provisioning Tools
+  integration_tools:
+    command: "python3"
+    args:
+      - "/workspace/mcp/integration_server.py"
+    env:
+      PYTHONPATH: "/"
+      PYTHONSAFEPATH: "1"
+

@@ -5,5 +5,7 @@ description: "Serves as the exclusive single-touchpoint client concierge, handli
 toolsets:
   - common_tools
   - comms_tools
+  - integration_tools
   - file_ops
 reasoning_effort: none
+

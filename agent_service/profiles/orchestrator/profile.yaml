@@ -5,7 +5,9 @@ description: "Ingests system requests, decomposes complex objectives into direct
 toolsets:
   - common_tools
   - orchestrator_tools
+  - integration_tools
   - kanban
   - delegate
   - file_ops
 reasoning_effort: none
+
