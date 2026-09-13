@@ -1304,6 +1304,7 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 
 ### 2. Task Milestones & Architectural Alignment
 - [x] **Sub-task 0: Architecture Wiki Synchronization (`docs/ai_wiki/`)** - COMPLETED (Commit: `a030672`)
+- [x] **Sub-task 1: Clean-Slate Decoupling & Pure Standalone Hermes Provisioning** - COMPLETED (Wiped legacy coupled profiles/skills/runtime; severed volume mounts in `backend/docker-compose.yml`; scaffolded clean sovereign directories; verified standalone Hermes Gateway on port 8643)
 - [ ] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - PENDING
 - [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - PENDING
 - [ ] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
@@ -1313,9 +1314,11 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 
 ### 3. Key Decisions & Deviations (Phase 36)
 - *2026-09-13*: User requested comprehensive architecture audit and synchronization before starting code implementation. Updated [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md) (Sections 1, 2, 3, 7, and new Sections 25–31) and [`docs/ai_wiki/index.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/index.md) to fully document the Sovereign Decoupled Architecture, two sovereign microservices, embedded `sqlite-vec` memory engine, FastMCP tool servers, Langfuse :3100 container, 3-tier risk-based QA state machine, golden evals, and cross-project knowledge CLI.
+- *2026-09-13*: User instructed that legacy profiles/skills had not performed meaningful work and should not be archived. Wiped `agent_service/` completely to a spotless slate, severed shared filesystem volume mounts in `backend/docker-compose.yml`, and rebooted Hermes as a 100% standalone, decoupled gateway daemon on port 8643 with zero profiles and zero Django dependencies.
 
 ### 4. Current Focus
-Architecture documentation fully synchronized. Ready to begin Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`).
+Clean-slate Hermes runtime verified. Ready to implement Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`).
+
 
 
 

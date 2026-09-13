@@ -44,10 +44,6 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-      - ../agent_service/profiles:/app/agent_profiles:rw
-      - ../agent_service/data/profiles:/app/hermes_runtime_profiles:rw
-      - ../agent_service/data:/app/hermes_runtime_data:rw
-      - ../agent_service/.env:/app/hermes_root_env:rw
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     extra_hosts:
@@ -75,11 +71,6 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-      - ../agent_service/profiles:/app/agent_profiles:rw
-      - ../agent_service/data/profiles:/app/hermes_runtime_profiles:rw
-      - ../agent_service/data:/app/hermes_runtime_data:rw
-      - ../agent_service/.env:/app/hermes_root_env:rw
-
     extra_hosts:
       - "host.docker.internal:host-gateway"
     env_file:

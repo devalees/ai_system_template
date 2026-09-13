@@ -1,6 +1,0 @@
-name: security_guard
-display_name: "Security & Threat Auditor"
-role: "security"
-description: "Audits credential leaks, validates multi-tenant boundaries, monitors API gateway anomalies, and enforces least privilege."
-default_model: "google/gemini-2.5-flash"
-default_provider: "openrouter"

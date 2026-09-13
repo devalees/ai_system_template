@@ -1,6 +1,0 @@
-name: cost_controller
-display_name: Financial & Cost Controller
-role: finance
-reasoning_effort: low
-tools: [terminal, file_ops]
-description: Monitors token consumption, tracks operational budgets, audits expenses, and enforces spending limits.
