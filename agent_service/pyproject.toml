@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sovereign-agent-service"
+version = "1.0.0"
+description = "Sovereign Autonomous AI Agent Platform with embedded sqlite-vec vector memory, FastMCP tooling, and glass-box LLMOps."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Sovereign Autonomous Engineering Team" }
+]
+dependencies = [
+    "sqlite-vec>=0.1.9",
+    "pydantic>=2.0.0",
+    "pytest>=8.0.0",
+    "numpy>=1.24.0",
+    "fastmcp>=4.0.0",
+    "mcp>=1.0.0",
+]
+
+[project.scripts]
+sovereign-memory = "memory.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_service*", "memory*", "mcp*", "qa*", "telemetry*", "evals*"]
