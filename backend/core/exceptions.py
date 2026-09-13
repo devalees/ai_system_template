@@ -51,6 +51,32 @@ class EntityNotFoundException(PlatformException):
         )
 
 
+class NotFoundException(PlatformException):
+    """Raised when a requested resource is not found."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            code="NOT_FOUND",
+            message=message,
+            resolution_hint="Verify the resource identifier and tenant context.",
+            details=details,
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+
+class ValidationException(PlatformException):
+    """Raised when business logic or input validation fails."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            code="VALIDATION_ERROR",
+            message=message,
+            resolution_hint="Check submitted fields and ensure all required conditions are met.",
+            details=details,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+
 class PermissionDeniedException(PlatformException):
     """Raised when an actor lacks the required capability or ownership scope."""
 

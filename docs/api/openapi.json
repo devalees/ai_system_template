@@ -422,6 +422,891 @@
         }
       }
     },
+    "/api/v1/mail_gateway/servers": {
+      "get": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Servers"
+        ],
+        "summary": "List tenant SMTP outbound mail servers",
+        "description": "Retrieve all configured outbound SMTP servers for the authenticated tenant.",
+        "operationId": "list_mail_servers_api_v1_mail_gateway_servers_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MailServerRead"
+                  },
+                  "title": "Response List Mail Servers Api V1 Mail Gateway Servers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Servers"
+        ],
+        "summary": "Create SMTP server configuration",
+        "description": "Register a new outbound SMTP server for the active company.",
+        "operationId": "create_mail_server_api_v1_mail_gateway_servers_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailServerCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailServerRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mail_gateway/servers/{server_id}": {
+      "get": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Servers"
+        ],
+        "summary": "Get SMTP server details",
+        "description": "Retrieve details for a specific outbound SMTP server configuration.",
+        "operationId": "get_mail_server_api_v1_mail_gateway_servers__server_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailServerRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Servers"
+        ],
+        "summary": "Update SMTP server configuration",
+        "description": "Update fields on an existing outbound SMTP server configuration.",
+        "operationId": "update_mail_server_api_v1_mail_gateway_servers__server_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailServerUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailServerRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Servers"
+        ],
+        "summary": "Soft-delete SMTP server configuration",
+        "description": "Soft delete an outbound SMTP configuration.",
+        "operationId": "delete_mail_server_api_v1_mail_gateway_servers__server_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mail_gateway/servers/{server_id}/test": {
+      "post": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Servers"
+        ],
+        "summary": "Test SMTP connection and authentication",
+        "description": "Test network handshake, TLS negotiation, and credentials for an SMTP configuration.",
+        "operationId": "test_mail_server_connection_api_v1_mail_gateway_servers__server_id__test_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionTestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mail_gateway/templates": {
+      "get": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Templates"
+        ],
+        "summary": "List email templates",
+        "description": "List Jinja2 email templates for the authenticated tenant.",
+        "operationId": "list_mail_templates_api_v1_mail_gateway_templates_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target model name",
+              "title": "Model Name"
+            },
+            "description": "Filter by target model name"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by language code",
+              "title": "Language"
+            },
+            "description": "Filter by language code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MailTemplateRead"
+                  },
+                  "title": "Response List Mail Templates Api V1 Mail Gateway Templates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Templates"
+        ],
+        "summary": "Create email template",
+        "description": "Register a new parameterized Jinja2 email template.",
+        "operationId": "create_mail_template_api_v1_mail_gateway_templates_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailTemplateCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailTemplateRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mail_gateway/templates/{template_id}": {
+      "get": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Templates"
+        ],
+        "summary": "Get email template details",
+        "description": "Retrieve an email template record by UUID.",
+        "operationId": "get_mail_template_api_v1_mail_gateway_templates__template_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailTemplateRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Templates"
+        ],
+        "summary": "Update email template",
+        "description": "Update fields of an existing email template.",
+        "operationId": "update_mail_template_api_v1_mail_gateway_templates__template_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailTemplateUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailTemplateRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Templates"
+        ],
+        "summary": "Soft-delete email template",
+        "description": "Soft delete an email template.",
+        "operationId": "delete_mail_template_api_v1_mail_gateway_templates__template_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mail_gateway/templates/render": {
+      "post": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Templates"
+        ],
+        "summary": "Render Jinja2 template preview with test variables",
+        "description": "Dynamically compile and preview rendered email subject and HTML using provided sample data.",
+        "operationId": "render_mail_template_preview_api_v1_mail_gateway_templates_render_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailTemplateRenderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailTemplateRenderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/mail_gateway/send": {
+      "post": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Pipeline"
+        ],
+        "summary": "Enqueue and dispatch outbound email",
+        "description": "Enqueue an outbound email with Jinja2 rendering and asynchronous Celery background transmission.",
+        "operationId": "send_mail_api_v1_mail_gateway_send_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendMailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/mail_gateway/queue": {
+      "get": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Pipeline"
+        ],
+        "summary": "List outbound mail queue entries",
+        "description": "List queued, sent, and failed outbound email transmissions.",
+        "operationId": "list_mail_queue_api_v1_mail_gateway_queue_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by delivery state: pending, sending, sent, failed",
+              "title": "State"
+            },
+            "description": "Filter by delivery state: pending, sending, sent, failed"
+          },
+          {
+            "name": "recipient",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by recipient email substring",
+              "title": "Recipient"
+            },
+            "description": "Filter by recipient email substring"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Pagination size",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Pagination size"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Pagination offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MailQueueRead"
+                  },
+                  "title": "Response List Mail Queue Api V1 Mail Gateway Queue Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mail_gateway/queue/{queue_id}": {
+      "get": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Pipeline"
+        ],
+        "summary": "Get mail queue delivery status",
+        "description": "Retrieve detailed telemetry and delivery status for an enqueued email.",
+        "operationId": "get_mail_queue_item_api_v1_mail_gateway_queue__queue_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "queue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Queue Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailQueueRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mail_gateway/queue/{queue_id}/retry": {
+      "post": {
+        "tags": [
+          "Mail Gateway & Async Email Pipeline",
+          "Mail Gateway - Pipeline"
+        ],
+        "summary": "Manually trigger retry for a failed email",
+        "description": "Reset attempt counter and re-dispatch delivery for a failed email.",
+        "operationId": "retry_queued_mail_api_v1_mail_gateway_queue__queue_id__retry_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "queue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Queue Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendMailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/": {
       "get": {
         "tags": [
@@ -2228,6 +3113,40 @@
           "state_or_province": "NY"
         }
       },
+      "ConnectionTestResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "ConnectionTestResponse",
+        "example": {
+          "latency_ms": 42.5,
+          "message": "SMTP handshake and authentication successful",
+          "success": true
+        }
+      },
       "CountryCreate": {
         "properties": {
           "name": {
@@ -2778,6 +3697,879 @@
         ],
         "title": "MailMessageRead"
       },
+      "MailQueueRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "server_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Id"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "recipient_email": {
+            "type": "string",
+            "title": "Recipient Email"
+          },
+          "recipient_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient Name"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "attempts": {
+            "type": "integer",
+            "title": "Attempts"
+          },
+          "max_attempts": {
+            "type": "integer",
+            "title": "Max Attempts"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "server_id",
+          "template_id",
+          "recipient_email",
+          "recipient_name",
+          "subject",
+          "state",
+          "attempts",
+          "max_attempts",
+          "last_error",
+          "sent_at",
+          "res_model",
+          "res_id",
+          "created_at"
+        ],
+        "title": "MailQueueRead",
+        "example": {
+          "attempts": 1,
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-14T02:15:28Z",
+          "id": "q0000000-0000-0000-0000-000000000001",
+          "max_attempts": 3,
+          "recipient_email": "billing@clientcorp.com",
+          "recipient_name": "Client Accounting Team",
+          "res_id": "c0000000-0000-0000-0000-000000000001",
+          "res_model": "account.invoice",
+          "sent_at": "2026-09-14T02:15:30Z",
+          "server_id": "s0000000-0000-0000-0000-000000000001",
+          "state": "sent",
+          "subject": "Payment Reminder: Invoice #INV-2026-089 for Client Corp",
+          "template_id": "t0000000-0000-0000-0000-000000000001"
+        }
+      },
+      "MailServerCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Friendly SMTP server configuration name"
+          },
+          "smtp_host": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Smtp Host",
+            "description": "Host address or hostname of the SMTP server"
+          },
+          "smtp_port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Smtp Port",
+            "description": "Port number (e.g., 587, 465, 25)",
+            "default": 587
+          },
+          "smtp_user": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smtp User",
+            "description": "Authentication username"
+          },
+          "encryption": {
+            "type": "string",
+            "title": "Encryption",
+            "description": "Encryption standard: tls, ssl, or none",
+            "default": "tls"
+          },
+          "from_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "From Email",
+            "description": "Default Sender email address"
+          },
+          "from_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Name",
+            "description": "Default Sender display name"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "Whether this is the primary server for this tenant",
+            "default": false
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Operational status",
+            "default": true
+          },
+          "smtp_password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smtp Password",
+            "description": "Authentication password / API key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "smtp_host",
+          "from_email"
+        ],
+        "title": "MailServerCreate",
+        "example": {
+          "encryption": "tls",
+          "from_email": "notifications@sovereign-erp.com",
+          "from_name": "Sovereign Notifications",
+          "is_active": true,
+          "is_default": true,
+          "name": "Production SendGrid Gateway",
+          "smtp_host": "smtp.sendgrid.net",
+          "smtp_password": "SG.secret_api_key_value",
+          "smtp_port": 587,
+          "smtp_user": "apikey"
+        }
+      },
+      "MailServerRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Friendly SMTP server configuration name"
+          },
+          "smtp_host": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Smtp Host",
+            "description": "Host address or hostname of the SMTP server"
+          },
+          "smtp_port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Smtp Port",
+            "description": "Port number (e.g., 587, 465, 25)",
+            "default": 587
+          },
+          "smtp_user": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smtp User",
+            "description": "Authentication username"
+          },
+          "encryption": {
+            "type": "string",
+            "title": "Encryption",
+            "description": "Encryption standard: tls, ssl, or none",
+            "default": "tls"
+          },
+          "from_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "From Email",
+            "description": "Default Sender email address"
+          },
+          "from_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Name",
+            "description": "Default Sender display name"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "Whether this is the primary server for this tenant",
+            "default": false
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Operational status",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "smtp_host",
+          "from_email",
+          "id",
+          "company_id",
+          "created_at"
+        ],
+        "title": "MailServerRead",
+        "example": {
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-14T02:00:00Z",
+          "encryption": "tls",
+          "from_email": "notifications@sovereign-erp.com",
+          "from_name": "Sovereign Notifications",
+          "id": "s0000000-0000-0000-0000-000000000001",
+          "is_active": true,
+          "is_default": true,
+          "name": "Production SendGrid Gateway",
+          "smtp_host": "smtp.sendgrid.net",
+          "smtp_port": 587,
+          "smtp_user": "apikey"
+        }
+      },
+      "MailServerUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "smtp_host": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smtp Host"
+          },
+          "smtp_port": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 65535.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smtp Port"
+          },
+          "smtp_user": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smtp User"
+          },
+          "smtp_password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smtp Password"
+          },
+          "encryption": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          },
+          "from_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Email"
+          },
+          "from_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Name"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "MailServerUpdate",
+        "example": {
+          "encryption": "tls",
+          "is_default": true,
+          "name": "Primary Outbound Mail Server",
+          "smtp_port": 587
+        }
+      },
+      "MailTemplateCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "title": "Name",
+            "description": "Template human-readable label"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Code",
+            "description": "Unique alphanumeric identifier code"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Subject",
+            "description": "Jinja2 parameterized subject line"
+          },
+          "body_html": {
+            "type": "string",
+            "title": "Body Html",
+            "description": "Jinja2 parameterized HTML email template"
+          },
+          "body_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Text",
+            "description": "Plaintext fallback template"
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 10,
+            "title": "Language",
+            "description": "ISO language code",
+            "default": "en"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name",
+            "description": "Target entity model"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Operational status",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "subject",
+          "body_html"
+        ],
+        "title": "MailTemplateCreate",
+        "example": {
+          "body_html": "<p>Dear {{ recipient_name }},</p><p>Invoice <strong>#{{ invoice_number }}</strong> of amount {{ amount_due }} is due on {{ due_date }}.</p>",
+          "body_text": "Dear {{ recipient_name }},\n\nInvoice #{{ invoice_number }} of amount {{ amount_due }} is due on {{ due_date }}.",
+          "code": "invoice_due_reminder",
+          "is_active": true,
+          "language": "en",
+          "model_name": "account.invoice",
+          "name": "Invoice Due Reminder",
+          "subject": "Payment Reminder: Invoice #{{ invoice_number }} for {{ company_name }}"
+        }
+      },
+      "MailTemplateRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "title": "Name",
+            "description": "Template human-readable label"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Code",
+            "description": "Unique alphanumeric identifier code"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Subject",
+            "description": "Jinja2 parameterized subject line"
+          },
+          "body_html": {
+            "type": "string",
+            "title": "Body Html",
+            "description": "Jinja2 parameterized HTML email template"
+          },
+          "body_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Text",
+            "description": "Plaintext fallback template"
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 10,
+            "title": "Language",
+            "description": "ISO language code",
+            "default": "en"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name",
+            "description": "Target entity model"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Operational status",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "subject",
+          "body_html",
+          "id",
+          "company_id",
+          "created_at"
+        ],
+        "title": "MailTemplateRead",
+        "example": {
+          "body_html": "<p>Dear {{ recipient_name }},</p><p>Invoice <strong>#{{ invoice_number }}</strong> of amount {{ amount_due }} is due on {{ due_date }}.</p>",
+          "body_text": "Dear {{ recipient_name }},\n\nInvoice #{{ invoice_number }} of amount {{ amount_due }} is due on {{ due_date }}.",
+          "code": "invoice_due_reminder",
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-14T02:05:00Z",
+          "id": "t0000000-0000-0000-0000-000000000001",
+          "is_active": true,
+          "language": "en",
+          "model_name": "account.invoice",
+          "name": "Invoice Due Reminder",
+          "subject": "Payment Reminder: Invoice #{{ invoice_number }} for {{ company_name }}"
+        }
+      },
+      "MailTemplateRenderRequest": {
+        "properties": {
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "template_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Code"
+          },
+          "context_data": {
+            "type": "object",
+            "title": "Context Data",
+            "description": "Variables to inject into Jinja2 templates"
+          }
+        },
+        "type": "object",
+        "title": "MailTemplateRenderRequest",
+        "example": {
+          "context_data": {
+            "amount_due": "$12,450.00",
+            "company_name": "Cyberdyne Systems",
+            "due_date": "2026-09-30",
+            "invoice_number": "INV-2026-089",
+            "recipient_name": "Sarah Connor"
+          },
+          "template_id": "t0000000-0000-0000-0000-000000000001"
+        }
+      },
+      "MailTemplateRenderResponse": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "body_html": {
+            "type": "string",
+            "title": "Body Html"
+          },
+          "body_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "body_html"
+        ],
+        "title": "MailTemplateRenderResponse",
+        "example": {
+          "body_html": "<p>Dear Sarah Connor,</p><p>Invoice <strong>#INV-2026-089</strong> of amount $12,450.00 is due on 2026-09-30.</p>",
+          "body_text": "Dear Sarah Connor,\n\nInvoice #INV-2026-089 of amount $12,450.00 is due on 2026-09-30.",
+          "subject": "Payment Reminder: Invoice #INV-2026-089 for Cyberdyne Systems"
+        }
+      },
+      "MailTemplateUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "body_html": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Html"
+          },
+          "body_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Text"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "MailTemplateUpdate",
+        "example": {
+          "is_active": true,
+          "name": "Updated Invoice Due Reminder",
+          "subject": "Urgent: Invoice #{{ invoice_number }} Due Soon"
+        }
+      },
       "ModuleSettingsRead": {
         "properties": {
           "module_name": {
@@ -2903,6 +4695,215 @@
           "module_name": "accounting",
           "name": "Post Invoices",
           "ownership_scope": "GLOBAL"
+        }
+      },
+      "SendMailRequest": {
+        "properties": {
+          "to_email": {
+            "type": "string",
+            "format": "email",
+            "title": "To Email",
+            "description": "Recipient destination email address"
+          },
+          "recipient_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient Name"
+          },
+          "cc": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cc"
+          },
+          "bcc": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bcc"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject",
+            "description": "Subject (or rendered from template)"
+          },
+          "body_html": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Html",
+            "description": "HTML body (or rendered from template)"
+          },
+          "body_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Text",
+            "description": "Plain text body (or rendered from template)"
+          },
+          "template_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Code",
+            "description": "Code of registered MailTemplate to render"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id",
+            "description": "UUID of registered MailTemplate to render"
+          },
+          "context_data": {
+            "type": "object",
+            "title": "Context Data",
+            "description": "Variables for template rendering"
+          },
+          "server_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Id",
+            "description": "Specific MailServer ID or fallback to default"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Polymorphic source entity model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Polymorphic source entity record UUID"
+          },
+          "async_send": {
+            "type": "boolean",
+            "title": "Async Send",
+            "description": "Whether to enqueue in Celery or send synchronously",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "to_email"
+        ],
+        "title": "SendMailRequest",
+        "example": {
+          "async_send": true,
+          "body_html": "<p>Please find your monthly statement attached.</p>",
+          "context_data": {
+            "amount_due": "$12,450.00",
+            "company_name": "Client Corp",
+            "due_date": "2026-09-30",
+            "invoice_number": "INV-2026-089",
+            "recipient_name": "Client Accounting Team"
+          },
+          "recipient_name": "Client Accounting Team",
+          "res_id": "c0000000-0000-0000-0000-000000000001",
+          "res_model": "account.invoice",
+          "subject": "Monthly Statement - August 2026",
+          "template_code": "invoice_due_reminder",
+          "to_email": "billing@clientcorp.com"
+        }
+      },
+      "SendMailResponse": {
+        "properties": {
+          "queue_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Queue Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "queue_id",
+          "state",
+          "message"
+        ],
+        "title": "SendMailResponse",
+        "example": {
+          "message": "Email dispatched successfully",
+          "queue_id": "q0000000-0000-0000-0000-000000000001",
+          "state": "sent"
         }
       },
       "TagCreate": {

@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "7182af5a-c7fd-44c0-974f-6ab617a0a0af",
+    "_postman_id": "a9d47305-6f55-49c8-9665-90c127ef5ee5",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -584,6 +584,680 @@
               "variable": []
             },
             "description": "Return registered modules, execution load order, and AI-enabled capabilities."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Mail Gateway & Async Email Pipeline",
+      "item": [
+        {
+          "name": "List tenant SMTP outbound mail servers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/servers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "servers"
+              ],
+              "variable": []
+            },
+            "description": "Retrieve all configured outbound SMTP servers for the authenticated tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Create SMTP server configuration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/servers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "servers"
+              ],
+              "variable": []
+            },
+            "description": "Register a new outbound SMTP server for the active company.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"encryption\": \"tls\",\n  \"from_email\": \"notifications@sovereign-erp.com\",\n  \"from_name\": \"Sovereign Notifications\",\n  \"is_active\": true,\n  \"is_default\": true,\n  \"name\": \"Production SendGrid Gateway\",\n  \"smtp_host\": \"smtp.sendgrid.net\",\n  \"smtp_password\": \"SG.secret_api_key_value\",\n  \"smtp_port\": 587,\n  \"smtp_user\": \"apikey\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get SMTP server details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/servers/:server_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "servers",
+                ":server_id"
+              ],
+              "variable": [
+                {
+                  "key": "server_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Retrieve details for a specific outbound SMTP server configuration."
+          },
+          "response": []
+        },
+        {
+          "name": "Update SMTP server configuration",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/servers/:server_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "servers",
+                ":server_id"
+              ],
+              "variable": [
+                {
+                  "key": "server_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Update fields on an existing outbound SMTP server configuration.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"encryption\": \"tls\",\n  \"is_default\": true,\n  \"name\": \"Primary Outbound Mail Server\",\n  \"smtp_port\": 587\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Soft-delete SMTP server configuration",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/servers/:server_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "servers",
+                ":server_id"
+              ],
+              "variable": [
+                {
+                  "key": "server_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Soft delete an outbound SMTP configuration."
+          },
+          "response": []
+        },
+        {
+          "name": "Test SMTP connection and authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/servers/:server_id/test",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "servers",
+                ":server_id",
+                "test"
+              ],
+              "variable": [
+                {
+                  "key": "server_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Test network handshake, TLS negotiation, and credentials for an SMTP configuration."
+          },
+          "response": []
+        },
+        {
+          "name": "List email templates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/templates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "templates"
+              ],
+              "variable": []
+            },
+            "description": "List Jinja2 email templates for the authenticated tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Create email template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/templates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "templates"
+              ],
+              "variable": []
+            },
+            "description": "Register a new parameterized Jinja2 email template.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body_html\": \"<p>Dear {{ recipient_name }},</p><p>Invoice <strong>#{{ invoice_number }}</strong> of amount {{ amount_due }} is due on {{ due_date }}.</p>\",\n  \"body_text\": \"Dear {{ recipient_name }},\\n\\nInvoice #{{ invoice_number }} of amount {{ amount_due }} is due on {{ due_date }}.\",\n  \"code\": \"invoice_due_reminder\",\n  \"is_active\": true,\n  \"language\": \"en\",\n  \"model_name\": \"account.invoice\",\n  \"name\": \"Invoice Due Reminder\",\n  \"subject\": \"Payment Reminder: Invoice #{{ invoice_number }} for {{ company_name }}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get email template details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/templates/:template_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "templates",
+                ":template_id"
+              ],
+              "variable": [
+                {
+                  "key": "template_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Retrieve an email template record by UUID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update email template",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/templates/:template_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "templates",
+                ":template_id"
+              ],
+              "variable": [
+                {
+                  "key": "template_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Update fields of an existing email template.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": true,\n  \"name\": \"Updated Invoice Due Reminder\",\n  \"subject\": \"Urgent: Invoice #{{ invoice_number }} Due Soon\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Soft-delete email template",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/templates/:template_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "templates",
+                ":template_id"
+              ],
+              "variable": [
+                {
+                  "key": "template_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Soft delete an email template."
+          },
+          "response": []
+        },
+        {
+          "name": "Render Jinja2 template preview with test variables",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/templates/render",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "templates",
+                "render"
+              ],
+              "variable": []
+            },
+            "description": "Dynamically compile and preview rendered email subject and HTML using provided sample data.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"context_data\": {\n    \"amount_due\": \"$12,450.00\",\n    \"company_name\": \"Cyberdyne Systems\",\n    \"due_date\": \"2026-09-30\",\n    \"invoice_number\": \"INV-2026-089\",\n    \"recipient_name\": \"Sarah Connor\"\n  },\n  \"template_id\": \"t0000000-0000-0000-0000-000000000001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enqueue and dispatch outbound email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "send"
+              ],
+              "variable": []
+            },
+            "description": "Enqueue an outbound email with Jinja2 rendering and asynchronous Celery background transmission.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"async_send\": true,\n  \"body_html\": \"<p>Please find your monthly statement attached.</p>\",\n  \"context_data\": {\n    \"amount_due\": \"$12,450.00\",\n    \"company_name\": \"Client Corp\",\n    \"due_date\": \"2026-09-30\",\n    \"invoice_number\": \"INV-2026-089\",\n    \"recipient_name\": \"Client Accounting Team\"\n  },\n  \"recipient_name\": \"Client Accounting Team\",\n  \"res_id\": \"c0000000-0000-0000-0000-000000000001\",\n  \"res_model\": \"account.invoice\",\n  \"subject\": \"Monthly Statement - August 2026\",\n  \"template_code\": \"invoice_due_reminder\",\n  \"to_email\": \"billing@clientcorp.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List outbound mail queue entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/queue",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "queue"
+              ],
+              "variable": []
+            },
+            "description": "List queued, sent, and failed outbound email transmissions."
+          },
+          "response": []
+        },
+        {
+          "name": "Get mail queue delivery status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/queue/:queue_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "queue",
+                ":queue_id"
+              ],
+              "variable": [
+                {
+                  "key": "queue_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Retrieve detailed telemetry and delivery status for an enqueued email."
+          },
+          "response": []
+        },
+        {
+          "name": "Manually trigger retry for a failed email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mail_gateway/queue/:queue_id/retry",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mail_gateway",
+                "queue",
+                ":queue_id",
+                "retry"
+              ],
+              "variable": [
+                {
+                  "key": "queue_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Reset attempt counter and re-dispatch delivery for a failed email."
           },
           "response": []
         }
