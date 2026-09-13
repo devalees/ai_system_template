@@ -277,7 +277,28 @@ flowchart TD
 
 ---
 
-## 6. Phased Implementation Roadmap
+## 6. Practical Profile Refactoring Matrix (The 5 Existing Department Heads)
+
+This section defines the precise, practical refactoring actions applied to the existing 5 agent profiles to transition them from legacy bash subprocess scripts into high-speed MCP tools and memory-augmented specialists:
+
+| Profile Name | Current Legacy Mechanism | Refactored Sovereign Mechanism | Practical Action & Behavior Shift |
+| :--- | :--- | :--- | :--- |
+| **`qa_auditor`**<br>*(QA & Compliance Gatekeeper)* | Mandatory 2nd LLM turn with `reasoning: high` executing `output_validator/run.py` via bash terminal for **every** task. | **Tiered Risk-Based Validation**:<br>• **Tier 1 ($0, < 5ms)**: Deterministic in-process AST compiler & Pydantic validation (zero LLM tokens).<br>• **Tier 2 (Mid-Flight)**: Instant traceback injection into active agent turn for auto-correction.<br>• **Tier 3 (Conditional LLM)**: `qa_auditor` invoked **only** for high-risk / financial tasks or when self-confidence < 85%. | • Converts `output_validator/run.py` to `@mcp.tool() validate_code_deliverable`.<br>• Slashes routine QA review cost & latency by **80%**.<br>• Eliminates the mandatory bottleneck for trivial tasks. |
+| **`orchestrator`**<br>*(Chief of Staff & DAG Planner)* | Spawns bash subprocess running `skills/task_decomposer/run.py`. No historical memory. | **Memory-Augmented FastMCP**:<br>• Automatic pre-flight query to `sqlite-vec` in `memory.db` before task decomposition.<br>• Reuses proven past decomposition patterns.<br>• Assigns QA review conditionally (only to high-risk sub-tasks). | • Converts `task_decomposer/run.py` to `@mcp.tool() decompose_task_dag`.<br>• Injects top-2 similar solved task plans into turn 1.<br>• Slashes planning turns from 3+ down to 1. |
+| **`cost_controller`**<br>*(Financial Controller)* | Spawns bash subprocess running `skills/cost_monitor/run.py` to poll SQLite `state.db` files on disk. | **Real-Time Langfuse Telemetry Hook**:<br>• Directly queries Langfuse token pricing streams via MCP.<br>• Real-time budget alerting and enforcement. | • Converts `cost_monitor/run.py` to `@mcp.tool() audit_token_budget`.<br>• Replaces disk-polling with streaming telemetry metrics. |
+| **`comms_agent`**<br>*(Client Concierge)* | Spawns bash subprocess running `skills/client_service_bridge/run.py` with multi-mode CLI subcommands. | **Native Client Service MCP**:<br>• Standardized JSON-RPC tool calls for document queries and client budget checks.<br>• Direct streaming access without terminal overhead. | • Converts `client_service_bridge/run.py` to `@mcp.tool() client_service_action`.<br>• Eliminates CLI argument parsing delays. |
+| **`security_guard`**<br>*(SecOps & Threat Auditor)* | Spawns bash subprocess running `skills/security_scanner/run.py` with `--mode leaks/tenant/rbac`. | **In-Memory SecOps MCP Tool**:<br>• High-speed in-memory regex scanning and tenant isolation audit.<br>• Strict Pydantic input schemas preventing malformed audit commands. | • Converts `security_scanner/run.py` to `@mcp.tool() security_audit`.<br>• Runs security checks in milliseconds without OS process spawning. |
+
+### Profile Configuration Refactoring (`config.yaml`)
+For each profile in `agent_service/profiles/<name>/config.yaml`:
+1. **Preserve Personas**: Retain all existing `SOUL.md` persona instructions, boundaries, and calibrated reasoning efforts (`none`, `low`, `high`).
+2. **Remove Bash References**: Remove legacy `skills:` path references and terminal execution dependencies.
+3. **Register MCP Server**: Bind the unified internal MCP server (`agent_service/mcp/system_tools_server.py`).
+4. **Enable Memory Hook**: Set `enable_memory_recall: true` to auto-query `agent_service/data/memory.db`.
+
+---
+
+## 7. Phased Implementation Roadmap
 
 ```
 Phase 36: Embedded Sovereign Memory (Milestone 1)
@@ -292,11 +313,12 @@ Phase 37: Standalone Observability & Glass-Box Tracing (Milestone 3)
   ├── Step 3: Verify visual trace waterfalls, token costs, and per-tool latencies
   └── Step 4: Add dashboard navigation links to Django Admin & TopBar
 
-Phase 38: Standardized Tooling & Self-Correction (Milestones 2 & 4)
+Phase 38: Standardized Tooling, Self-Correction & Profile Refactoring (Milestones 2 & 4)
   ├── Step 1: Implement FastMCP server in agent_service/mcp/system_tools_server.py
-  ├── Step 2: Port core capabilities (security, QA, decompose, spend) to MCP tools
-  ├── Step 3: Add Pydantic input/output validation to all MCP tools
-  └── Step 4: Implement mid-flight error reflection and loop circuit breakers
+  ├── Step 2: Refactor the 5 profiles from CLI scripts to native MCP tools (Matrix in Section 6)
+  ├── Step 3: Implement Tiered Risk-Based QA review (Deterministic Tier 1 vs Conditional Tier 3)
+  ├── Step 4: Add Pydantic input/output validation to all MCP tools
+  └── Step 5: Implement mid-flight error reflection and loop circuit breakers
 
 Phase 39: Independent Golden Benchmark Evaluation Suite (Milestone 5)
   ├── Step 1: Scaffold agent_service/evals/ test harness with pytest
@@ -313,11 +335,12 @@ Phase 40: Sovereign Package Portability & Knowledge CLI (Milestone 6)
 
 ---
 
-## 7. Hardware & Infrastructure Footprint
+## 8. Hardware & Infrastructure Footprint
 
 | Component | Additional Server Needed? | RAM Footprint | CPU Overhead | Monthly Hosting Cost |
 | :--- | :--- | :--- | :--- | :--- |
 | **`sqlite-vec`** | **No** (In-process inside `agent_service`) | ~10–25 MB | Negligible (in-memory C extension) | **$0** |
+
 | **MCP Tool Server** | **No** (In-process inside `agent_service`) | ~15–30 MB | Negligible (JSON-RPC) | **$0** |
 | **Langfuse** | **No** (Lightweight Docker service) | ~200–350 MB | Low (~1–3% CPU during logging) | **$0** |
 | **Golden Evals**| **No** (Pytest CLI executed on demand) | Transient | Only during benchmark execution | **$0** |
@@ -325,7 +348,7 @@ Phase 40: Sovereign Package Portability & Knowledge CLI (Milestone 6)
 
 ---
 
-## 8. Verification & Success Criteria
+## 9. Verification & Success Criteria
 
 1. **Total Sovereignty**:
    - `agent_service/` can be started, executed, and benchmarked with the Django backend container completely stopped (`docker stop django-template-backend`).

@@ -1304,11 +1304,12 @@ Transform Hermes Agent into a **Sovereign, 100% Standalone AI Agent Platform** (
 
 ### 2. Task Milestones (Pending Approval)
 - [ ] **Milestone 1: Embedded Sovereign Memory Engine (`sqlite-vec` in `agent_service/memory/`)** - PENDING
-- [ ] **Milestone 2: Standardized MCP Server Ecosystem (`agent_service/mcp/`)** - PENDING
+- [ ] **Milestone 2: Standardized FastMCP Server & 5-Profile Refactoring (`agent_service/mcp/`)** - PENDING
 - [ ] **Milestone 3: Standalone Langfuse LLMOps Tracing Dashboard in Docker** - PENDING
-- [ ] **Milestone 4: Pydantic Schema Contracts & Mid-Flight Error Recovery** - PENDING
+- [ ] **Milestone 4: Pydantic Schema Contracts & Tiered Risk-Based QA Review** - PENDING
 - [ ] **Milestone 5: Independent Golden Benchmark Evaluation Suite (`agent_service/evals/`)** - PENDING
 - [ ] **Milestone 6: Sovereign Package Portability & Knowledge CLI** - PENDING
+
 
 ### 3. Current Focus
 Plan updated in [`docs/plans/enterprise_agent_upgrade_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/enterprise_agent_upgrade_plan.md). Awaiting user selection of initial execution milestone.
