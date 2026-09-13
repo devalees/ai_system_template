@@ -1416,9 +1416,9 @@ Establish a zero-trust external integration and dynamic agent provisioning archi
    - Tier 2 Domain Specialists (`procurement_agent`, `comms_agent`, etc.): Pluggable business specialists with scoped write tokens.
 
 ### 2. Task Checklist & Progress
-- [x] **Sub-task 1: Schemas & Credential Vault with RBAC Enforcement** - COMPLETED
-- [/] **Sub-task 2: FastMCP Integration Server (`integration_server.py`)** - IN PROGRESS
-- [ ] **Sub-task 3: System Configuration, Environment & Profile Wiring** - PENDING
+- [x] **Sub-task 1: Schemas & Credential Vault with RBAC Enforcement** - COMPLETED (Commit: `59bb1d3`)
+- [x] **Sub-task 2: FastMCP Integration Server (`integration_server.py`)** - COMPLETED
+- [/] **Sub-task 3: System Configuration, Environment & Profile Wiring** - IN PROGRESS
 - [ ] **Sub-task 4: Golden Benchmark Evaluation Suite (`test_integration_server.py`)** - PENDING
 - [ ] **Sub-task 5: Architecture Wiki & System Synchronization** - PENDING
 
@@ -1427,7 +1427,8 @@ Establish a zero-trust external integration and dynamic agent provisioning archi
 - *2026-09-13*: User clarified requirement for **Dynamic Agent Provisioning**: The external client must be able to provision custom specialist agents (e.g., Procurement, Radiology) via JSON manifests rather than manual profile editing.
 - *2026-09-13*: User clarified **Per-Agent Scoped Credentials (RBAC)**: Governance agents (`security_guard`, `cost_controller`, `qa_auditor`) must have ZERO external database write credentials to prevent accidental mutations. Only Tier 2 domain specialists receive scoped write tokens for their designated endpoints.
 - *2026-09-13*: Implemented `agent_service/mcp/credential_vault.py` with `CredentialVault` providing in-process token lookup, wildcard endpoint RBAC checks, Tier 1 zero-write defaults, and recursive secret scrubbing.
+- *2026-09-13*: Implemented `agent_service/mcp/integration_server.py` exposing 6 FastMCP tools: `discover_external_system`, `provision_custom_agent`, `list_registered_agents`, `invoke_external_api`, `fetch_company_profile`, and `sync_external_records`.
 
 ### 4. Current Focus
-Executing Sub-task 2: FastMCP Integration Server (`integration_server.py`).
+Executing Sub-task 3: System Configuration, Environment & Profile Wiring.
 
