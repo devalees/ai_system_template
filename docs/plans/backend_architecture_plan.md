@@ -143,14 +143,33 @@ The architectural philosophy is anchored by 8 core principles:
 
 ---
 
-## 6. Pending Dimensions for Collaborative Brainstorming
+## 6. Hermes Agent Bridge & MCP Integration (Dimension 5 — AGREED)
 
-- [ ] **Dimension 5: Hermes Agent Bridge & MCP Integration** *(Currently in focus)*
-  * Dynamic FastMCP tool exposure from AI-enabled modules.
-  * Context propagation: passing tenant ID, user permissions, and record context to Hermes.
-  * In-process / REST bridge connecting FastAPI backend to `agent_service/` container (:8643).
+- [x] **Automated Action as the AI Execution Bridge** (AGREED)
+  * Seamlessly unifies AI automation with the **Trigger-Condition-Action (TCA)** engine (Principle 3).
+  * System administrators can attach an Automated Action to *any* module (Sales, Invoicing, Procurement, CRM, etc.) with custom conditions and select the action type: **`invoke_ai_agent`**.
+- [x] **Configurable Dynamic Prompt Templates** (AGREED)
+  * Administrators define the prompt template with dynamic record interpolations (e.g., `"Analyze vendor invoice #{record.number} for company {record.company.name} and verify line items against PO #{record.po_number}."`).
+  * Dispatches an asynchronous Celery task to the Hermes Agent Gateway (`POST http://hermes-template-agent:8643/v1/chat/completions`) with calibrated profile parameters (`orchestrator`, `qa_auditor`, or dynamic specialist).
+- [x] **Strict RBAC & Permission Gating** (AGREED)
+  * The executing agent profile is treated as a first-class system identity.
+  * Hermes can only execute mutations or queries if its scoped token in [`credential_vault.py`](file:///home/ehab/Desktop/economy_editor/agent_service/mcp/credential_vault.py) holds the required model-level permissions for that specific `company_id`.
+- [x] **Contextual Feedback Loop** (AGREED)
+  * Hermes posts its structured findings, audit verdicts, or synthesized drafts directly into the target record's **Chatter Thread** (Principle 8).
+  * The entire interaction is captured in both the backend `action_execution_log` and the Langfuse tracing dashboard (`:3100`).
 
 ---
 
-## 7. Current Focus
-Brainstorm **Dimension 5: Hermes Agent Bridge & MCP Integration** (connecting FastAPI backend with the Sovereign Agent runtime).
+## 7. Comprehensive Architectural Blueprint Status
+
+All 5 core dimensions have been collaboratively brainstormed and agreed upon:
+* [x] **Dimension 1**: Architecture & Philosophy (8 core principles + per-app settings + relational dynamism).
+* [x] **Dimension 2**: Technology Stack (FastAPI, PostgreSQL 16, SQLAlchemy 2.0 Async, Alembic, Redis + Celery, Pydantic v2).
+* [x] **Dimension 3**: Database & Multi-Tenant Storage Strategy (Pattern A: Shared DB with `company_id` + `JSONB` custom fields).
+* [x] **Dimension 4**: Asynchronous Execution & Event Bus (ORM hooks $\rightarrow$ Redis/Celery $\rightarrow$ WebSockets + Celery Beat).
+* [x] **Dimension 5**: Hermes Agent Bridge & MCP Integration (Configurable Automated Actions with dynamic prompt templates & RBAC gating).
+
+---
+
+## 8. Current Focus
+All architectural dimensions are finalized and agreed. Ready to synthesize the comprehensive implementation roadmap and milestone plan for execution.
