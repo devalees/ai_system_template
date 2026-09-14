@@ -551,24 +551,39 @@ The `reporting` module (`backend/modules/base/reporting/`) provides enterprise-g
 
 #### 6.11.2 Core Data Models
 1. **`ReportDefinition` (`reports_definitions`)**:
-   - Stores tenant-scoped dynamic report definitions.
+   - Stores tenant-scoped dynamic report definitions supporting both Tabular and Document layouts.
    - Declarative JSONB configurations: `selected_fields` (column projections), `filters` (AST filter trees matching Universal Query Engine grammar), `group_by` (grouping columns), `aggregations` (mapping of field to function: `sum`, `count`, `avg`, `min`, `max`), and `order_by`.
+   - **Document Reporting Attributes**:
+     - `report_type`: `"tabular"` or `"document"` (default `"tabular"`).
+     - `document_title`: Formal document display title (e.g. `"Tax Invoice"`, `"Sales Order"`, `"Quotation"`).
+     - `header_fields`: Key fields rendered in the document header card (supports dot-notation, e.g. `order_date`, `currency.code`).
+     - `recipient_fields`: Customer/partner fields rendered in the recipient card (e.g. `partner.name`, `partner.email`, `partner.city.name`).
+     - `lines_relationship`: 1:M relationship attribute name on target model for line items (e.g. `"order_lines"`, `"invoice_lines"`, `"cities"`).
+     - `lines_fields`: Fields projected on each line item (supports line-level dot-notation, e.g. `product.name`, `quantity`, `unit_price`, `subtotal`).
    - Optional foreign key link to default `ReportTemplate`.
 2. **`ReportTemplate` (`report_templates`)**:
    - Enterprise document styling configuration supporting company branding.
    - Configuration attributes: `page_size` (`A4`, `Letter`), `orientation` (`portrait`, `landscape`), `primary_color` (hex), `secondary_color`, `font_family`, `show_company_logo`, `show_page_numbers`, `header_text`, `footer_text`, and `custom_css_variables` (JSONB).
    - In-memory fallback mechanism: When a tenant hasn't defined a custom template, the system transparently resolves a sensible corporate default (`standard_clean`).
 
-#### 6.11.3 Dynamic Query Engine (`DynamicReportQueryEngine`)
-- Compiles ad-hoc reporting specifications into single, highly optimized SQLAlchemy 2.0 async queries.
-- Injects strict multi-tenant isolation (`company_id = active_company`) and soft-delete guards (`deleted_at IS NULL`).
-- Automatically handles SQL `GROUP BY` column grouping and computes both group-level and grand-total aggregations across numeric columns (`SUM`, `AVG`, `MIN`, `MAX`, `COUNT`).
+#### 6.11.3 Dynamic Query & Relational Join Engine (`DynamicReportQueryEngine`)
+- **Multi-Hop Relational Dot-Notation Resolution**:
+  - Automatically resolves dot-separated field paths (`rel.col`, `rel1.rel2.col`, `partner.city.country.name`) across any depth.
+  - Dynamically inspects SQLAlchemy ORM `mapper.relationships`, generating unique, isolated aliased entities (`aliased(TargetModel, name="rel_...")`) to eliminate table name collisions (including self-referencing hierarchies like `Category -> parent -> parent`).
+  - Caches join paths within each query lifecycle to ensure multiple fields sharing prefixes generate only a single SQL `LEFT OUTER JOIN`.
+  - Injects strict multi-tenant isolation (`company_id = active_company`) and soft-delete guards (`deleted_at IS NULL`).
+- **Transactional Document Mode (`execute_document_query`)**:
+  - Targets a specific business entity instance by `record_id`.
+  - Resolves parent record with all M:1 dot-notation header and recipient fields.
+  - Dynamically queries 1:M child line items via `lines_relationship`, resolving line fields and computing line-level financial summaries (subtotals, taxes, totals).
 
 #### 6.11.4 Multi-Format Headless Renderers
-- **`JSONReportRenderer`**: Pure structured dictionary with metadata, columns, rows, and grand totals.
+- **`JSONReportRenderer`**: Pure structured dictionary with metadata, columns, rows, aggregates, and document cards.
 - **`CSVReportRenderer`**: High-performance RFC 4180 CSV generation with UTF-8 Byte Order Mark (`\ufeff`) for seamless Arabic and multilingual UTF-8 decoding in Microsoft Excel.
 - **`ExcelReportRenderer`**: OpenPyXL-based spreadsheet generation featuring styled company header blocks, colored column headers, zebra striping, accounting-formatted numeric grand totals, and auto-fitted column widths.
-- **`PDFReportRenderer`**: ReportLab Platypus executive layout engine featuring corporate headers, company logo, metadata cards, word-wrapped paragraph cells, alternating row fills, grand totals, and a two-pass `NumberedCanvas` delivering dynamic `"Page X of Y"` running footers.
+- **`PDFReportRenderer`**: ReportLab Platypus executive layout engine:
+  - **Document Mode**: Renders formal business documents (Invoices, Sales Orders) with company logo, document reference box, recipient/billing card, lines table grid with word-wrapped descriptions, financial totals summary card (Subtotal, Taxes, Grand Total), and two-pass `NumberedCanvas` delivering dynamic `"Page X of Y"` running footers.
+  - **Tabular Mode**: Renders multi-column aggregated data tables with zebra striping and summary rows.
 
 #### 6.11.5 Event-Driven TCA Integration (`GenerateReportActionHandler`)
 - Registered in `ActionRegistry` under `action_type = "generate_report"`.
@@ -578,4 +593,12 @@ The `reporting` module (`backend/modules/base/reporting/`) provides enterprise-g
 #### 6.11.6 Document Attachment Storage Integration
 - Report exports can be persisted directly into the platform's Content-Addressable Storage (CAS) via `DocumentService.create_attachment()`.
 - Returned metadata includes `attachment_id`, `file_name`, `file_size`, `mime_type`, `res_model`, and `res_id`, enabling immediate access via standard document endpoints.
+
+#### 6.11.7 Multi-Hop Model & Field Introspection API
+- **Recursive Depth Inspection (`GET /api/v1/automated_actions/introspection/models/{model_name}/fields?depth=N`)**:
+  - Exposes all ORM relationships (`MANYTOONE`, `ONETOMANY`, `MANYTOMANY`) with foreign keys and collection indicators.
+  - When `depth > 1`, recursively nests target model fields and relationships up to depth 3, empowering frontend field tree selectors and autonomous AI agents.
+- **Relational Path Validation (`resolve_field_path`)**:
+  - Validates dot-paths against mappers before query compilation, returning the terminal column type, title, and relationship traversal chain.
+
 

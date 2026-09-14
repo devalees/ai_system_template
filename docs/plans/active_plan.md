@@ -1779,7 +1779,7 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 
 ---
 
-## Stage 6.1: TCA Schema Introspection, Pre-Flight Validation & Universal Headless Dynamic Reporting Engine (IN_PROGRESS)
+## Stage 6.1: TCA Schema Introspection, Pre-Flight Validation & Universal Headless Dynamic Reporting Engine (COMPLETED)
 
 ### 1. Objective & Scope
 1. **Automated Actions (TCA) Introspection & Pre-Flight Validation**:
@@ -1808,8 +1808,44 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14*: **Postman Collection Sub-Folder Ordering**: Added `Automated Actions - Introspection` and 4 `Reporting` sub-folders (`Catalog`, `Execution`, `Templates`, `Definitions`) to `SUBFOLDER_ORDER` in `backend/core/exporter.py`.
 - *2026-09-14*: **Test Suite Verification**: 100% pass rate across 80/80 tests in Docker container (`test_reporting_and_introspection.py` + all existing module tests).
 
+---
+
+## Stage 6.2: Odoo-Style Transactional Document Reporting Engine & Relational Traversal (COMPLETED)
+
+### 1. Objective & Scope
+Implement an Odoo-style Transactional Document Reporting Engine and multi-hop Foreign Key relational traversal (dot-notation):
+1. **Relational Model & Field Introspection**:
+   - Recursive relationship introspection (`GET /api/v1/automated_actions/introspection/models/{model_name}/fields?depth=1..3`) exposing M:1, 1:M, and M:M relationships.
+   - Deep path resolution helper (`resolve_field_path`) validating dot-paths against SQLAlchemy ORM mappers.
+2. **Dynamic Relational Query Builder**:
+   - Multi-hop dot-notation foreign key joins (e.g. `partner.city.name`, `category.parent.name`) using aliased joins (`sa.orm.aliased`) and cached join paths to prevent redundant SQL joins.
+   - Seamless support in `selected_fields`, `group_by`, `aggregations`, and `order_by`.
+3. **Document Reporting Engine**:
+   - Extended `ReportDefinition` with `report_type` (`"tabular"` | `"document"`), `document_title`, `header_fields`, `recipient_fields`, `lines_relationship`, and `lines_fields`.
+   - Implemented `execute_document_query` querying a single record by `record_id`, traversing header/recipient attributes via dot-paths, iterating 1:M line items, and computing totals.
+4. **Executive PDF Document Layout**:
+   - Clean executive document layout in `PDFReportRenderer`: company banner/logo, document title/reference, recipient box, dynamic line items table with word-wrapped descriptions, financial totals summary, and two-pass `NumberedCanvas` ("Page X of Y").
+5. **REST API & Headless Exports**:
+   - Dedicated export endpoint: `POST /api/v1/reporting/documents/{report_code}/{record_id}/export`.
+   - Maintained headless architecture: pure JSON data response (`ReportDataResponse`) and streaming exports (PDF, XLSX, CSV).
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Recursive ORM Relationship Introspection (`depth=1..3`)** - COMPLETED
+- [x] **Sub-task 2: ReportDefinition Schema & Model Extensions (`report_type='document'`)** - COMPLETED
+- [x] **Sub-task 3: Relational Multi-Hop Query Engine & Aliased Join Path Compiler** - COMPLETED
+- [x] **Sub-task 4: Document Query Execution & 1:M Child Line Items Aggregation** - COMPLETED
+- [x] **Sub-task 5: Executive Document PDF Renderer & Single-Record Export Endpoints** - COMPLETED
+- [x] **Sub-task 6: Comprehensive Automated Test Suite (86/86 Passing) & API Exporter / Postman Sync** - COMPLETED
+
+### 3. Key Decisions & Deviations (Stage 6.2)
+- *2026-09-14*: **SQLAlchemy 2.0 Aliased Inspection**: Handled `AliasedInsp` specifically for joined entities where columns and relationships reside under `.mapper` rather than directly on the inspector.
+- *2026-09-14*: **Self-Referential Joins**: Validated arbitrary depth hierarchy joins (e.g., `Category -> parent -> parent`) using isolated aliased entities.
+- *2026-09-14*: **Lookup Schema Invariants**: Respected exact database column constraints (`Country.code` ISO-3, `Country.dialing_code`, `City.postal_code`).
+- *2026-09-14*: **Unified Test Verification**: Created `backend/tests/test_relational_reporting.py` with 6 exhaustive test cases covering M:1 joins, self-referencing joins, multi-hop introspection, document query execution with 1:M lines, multi-format rendering, and API export endpoints. Verified 86/86 tests passing (100% pass rate).
+
 ### 4. Current Focus
-Stage 6.1 completed. Ready for next milestone or stage.
+Stage 6.2 completed. All features verified and synchronized.
+
 
 
 

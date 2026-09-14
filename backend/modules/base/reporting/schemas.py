@@ -29,6 +29,7 @@ class ReportDataResponse(BaseModel):
     total_rows: int
     generated_at: str
     company_info: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class ReportExportRequest(BaseModel):
@@ -106,6 +107,12 @@ class ReportDefinitionBase(BaseModel):
     aggregations: Optional[Dict[str, str]] = Field(None, description="Aggregations mapping: {field: 'sum'|'count'|'avg'|'min'|'max'}")
     order_by: Optional[List[str]] = Field(None, description="Order specifications: ['field asc', 'field desc']")
     template_id: Optional[uuid.UUID] = Field(None, description="Default ReportTemplate ID")
+    report_type: str = Field(default="tabular", description="Report layout type: 'tabular' or 'document'")
+    document_title: Optional[str] = Field(None, description="Formal document title (e.g. 'Tax Invoice', 'Sales Order')")
+    header_fields: Optional[List[str]] = Field(None, description="Header card fields (e.g. ['order_date', 'status'])")
+    recipient_fields: Optional[List[str]] = Field(None, description="Recipient card fields (e.g. ['partner.name', 'partner.city.name'])")
+    lines_relationship: Optional[str] = Field(None, description="1:M relationship attribute name for document lines")
+    lines_fields: Optional[List[str]] = Field(None, description="Fields projected for each line item")
 
 
 class ReportDefinitionCreate(ReportDefinitionBase):
@@ -121,6 +128,12 @@ class ReportDefinitionUpdate(BaseModel):
     aggregations: Optional[Dict[str, str]] = None
     order_by: Optional[List[str]] = None
     template_id: Optional[uuid.UUID] = None
+    report_type: Optional[str] = None
+    document_title: Optional[str] = None
+    header_fields: Optional[List[str]] = None
+    recipient_fields: Optional[List[str]] = None
+    lines_relationship: Optional[str] = None
+    lines_fields: Optional[List[str]] = None
 
 
 class ReportDefinitionRead(ReportDefinitionBase):

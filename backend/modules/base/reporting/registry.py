@@ -21,6 +21,7 @@ class ReportDataResult(BaseModel):
     total_rows: int
     generated_at: str
     company_info: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class BaseReport(ABC):

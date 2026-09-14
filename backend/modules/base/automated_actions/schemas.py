@@ -195,11 +195,24 @@ class FieldIntrospectionItem(BaseModel):
     default: Optional[str] = Field(None, description="Default value if configured")
 
 
+class RelationshipIntrospectionItem(BaseModel):
+    """Metadata for an ORM relationship (M:1, 1:M, M:M)."""
+    name: str = Field(..., description="Relationship attribute name on model (e.g. 'country', 'cities')")
+    title: str = Field(..., description="Human-friendly relationship title")
+    target_model: str = Field(..., description="Target model class name (e.g. 'Country', 'City')")
+    direction: str = Field(..., description="Relationship direction: 'MANYTOONE', 'ONETOMANY', 'MANYTOMANY'")
+    is_collection: bool = Field(..., description="True if relationship is 1:M or M:M collection of records")
+    foreign_keys: List[str] = Field(default_factory=list, description="Foreign key columns participating in the relation")
+    fields: Optional[List[FieldIntrospectionItem]] = Field(None, description="Nested target fields if depth > 1")
+
+
 class ModelFieldsIntrospectionResponse(BaseModel):
-    """Complete field specification for a queried model."""
+    """Complete field and relationship specification for a queried model."""
     model_name: str
     module_name: str
     table_name: str
     title: str
     description: Optional[str] = None
     fields: List[FieldIntrospectionItem]
+    relationships: List[RelationshipIntrospectionItem] = Field(default_factory=list, description="ORM relationships defined on this model")
+

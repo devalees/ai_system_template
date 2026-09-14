@@ -6967,6 +6967,106 @@
         }
       }
     },
+    "/api/v1/reporting/documents/{report_code}/{record_id}/export": {
+      "post": {
+        "tags": [
+          "Universal Headless Reporting & Document Engine",
+          "Reporting - Execution"
+        ],
+        "summary": "Export Document Record",
+        "description": "Render a transactional business document (e.g. Invoice, Sales Order) for a specific record into PDF/Excel/CSV.",
+        "operationId": "export_document_record_api_v1_reporting_documents__report_code___record_id__export_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Report Code"
+            }
+          },
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Record Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Export format: 'pdf', 'xlsx', 'csv', or 'json'",
+              "default": "pdf",
+              "title": "Format"
+            },
+            "description": "Export format: 'pdf', 'xlsx', 'csv', or 'json'"
+          },
+          {
+            "name": "template_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional styling template UUID override",
+              "title": "Template Id"
+            },
+            "description": "Optional styling template UUID override"
+          },
+          {
+            "name": "save_to_documents",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether to persist generated file in DocumentAttachment",
+              "default": false,
+              "title": "Save To Documents"
+            },
+            "description": "Whether to persist generated file in DocumentAttachment"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/reporting/templates": {
       "get": {
         "tags": [
@@ -7506,6 +7606,20 @@
               "type": "string",
               "title": "Model Name"
             }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 3,
+              "minimum": 1,
+              "description": "Recursive relationship inspection depth",
+              "default": 1,
+              "title": "Depth"
+            },
+            "description": "Recursive relationship inspection depth"
           }
         ],
         "responses": {
@@ -12529,6 +12643,14 @@
             },
             "type": "array",
             "title": "Fields"
+          },
+          "relationships": {
+            "items": {
+              "$ref": "#/components/schemas/RelationshipIntrospectionItem"
+            },
+            "type": "array",
+            "title": "Relationships",
+            "description": "ORM relationships defined on this model"
           }
         },
         "type": "object",
@@ -12540,7 +12662,7 @@
           "fields"
         ],
         "title": "ModelFieldsIntrospectionResponse",
-        "description": "Complete field specification for a queried model."
+        "description": "Complete field and relationship specification for a queried model."
       },
       "ModelIntrospectionItem": {
         "properties": {
@@ -13214,6 +13336,68 @@
           "user_id": "u0000000-0000-0000-0000-000000000001"
         }
       },
+      "RelationshipIntrospectionItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Relationship attribute name on model (e.g. 'country', 'cities')"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Human-friendly relationship title"
+          },
+          "target_model": {
+            "type": "string",
+            "title": "Target Model",
+            "description": "Target model class name (e.g. 'Country', 'City')"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction",
+            "description": "Relationship direction: 'MANYTOONE', 'ONETOMANY', 'MANYTOMANY'"
+          },
+          "is_collection": {
+            "type": "boolean",
+            "title": "Is Collection",
+            "description": "True if relationship is 1:M or M:M collection of records"
+          },
+          "foreign_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Foreign Keys",
+            "description": "Foreign key columns participating in the relation"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FieldIntrospectionItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields",
+            "description": "Nested target fields if depth > 1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "title",
+          "target_model",
+          "direction",
+          "is_collection"
+        ],
+        "title": "RelationshipIntrospectionItem",
+        "description": "Metadata for an ORM relationship (M:1, 1:M, M:M)."
+      },
       "ReportCatalogItem": {
         "properties": {
           "code": {
@@ -13349,6 +13533,17 @@
               }
             ],
             "title": "Company Info"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
           }
         },
         "type": "object",
@@ -13468,6 +13663,81 @@
             ],
             "title": "Template Id",
             "description": "Default ReportTemplate ID"
+          },
+          "report_type": {
+            "type": "string",
+            "title": "Report Type",
+            "description": "Report layout type: 'tabular' or 'document'",
+            "default": "tabular"
+          },
+          "document_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Title",
+            "description": "Formal document title (e.g. 'Tax Invoice', 'Sales Order')"
+          },
+          "header_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Fields",
+            "description": "Header card fields (e.g. ['order_date', 'status'])"
+          },
+          "recipient_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient Fields",
+            "description": "Recipient card fields (e.g. ['partner.name', 'partner.city.name'])"
+          },
+          "lines_relationship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines Relationship",
+            "description": "1:M relationship attribute name for document lines"
+          },
+          "lines_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines Fields",
+            "description": "Fields projected for each line item"
           }
         },
         "type": "object",
@@ -13583,6 +13853,81 @@
             ],
             "title": "Template Id",
             "description": "Default ReportTemplate ID"
+          },
+          "report_type": {
+            "type": "string",
+            "title": "Report Type",
+            "description": "Report layout type: 'tabular' or 'document'",
+            "default": "tabular"
+          },
+          "document_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Title",
+            "description": "Formal document title (e.g. 'Tax Invoice', 'Sales Order')"
+          },
+          "header_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Fields",
+            "description": "Header card fields (e.g. ['order_date', 'status'])"
+          },
+          "recipient_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient Fields",
+            "description": "Recipient card fields (e.g. ['partner.name', 'partner.city.name'])"
+          },
+          "lines_relationship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines Relationship",
+            "description": "1:M relationship attribute name for document lines"
+          },
+          "lines_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines Fields",
+            "description": "Fields projected for each line item"
           },
           "id": {
             "type": "string",
@@ -13734,6 +14079,81 @@
               }
             ],
             "title": "Template Id"
+          },
+          "report_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Type"
+          },
+          "document_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Title"
+          },
+          "header_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Fields"
+          },
+          "recipient_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient Fields"
+          },
+          "lines_relationship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines Relationship"
+          },
+          "lines_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines Fields"
           }
         },
         "type": "object",

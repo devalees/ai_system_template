@@ -39,6 +39,12 @@ class ReportDefinition(BaseModel):
     group_by: Mapped[Optional[List[str]]] = mapped_column(JSONB, nullable=True)
     aggregations: Mapped[Optional[Dict[str, str]]] = mapped_column(JSONB, nullable=True)
     order_by: Mapped[Optional[List[str]]] = mapped_column(JSONB, nullable=True)
+    report_type: Mapped[str] = mapped_column(String(20), default="tabular", nullable=False)
+    document_title: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
+    header_fields: Mapped[Optional[List[str]]] = mapped_column(JSONB, nullable=True)
+    recipient_fields: Mapped[Optional[List[str]]] = mapped_column(JSONB, nullable=True)
+    lines_relationship: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    lines_fields: Mapped[Optional[List[str]]] = mapped_column(JSONB, nullable=True)
     template_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("report_templates.id", ondelete="SET NULL"),
@@ -48,3 +54,4 @@ class ReportDefinition(BaseModel):
     is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     template: Mapped[Optional[ReportTemplate]] = relationship("ReportTemplate", lazy="joined")
+

@@ -110,8 +110,8 @@ def find_model_class(model_name: str) -> Optional[Any]:
     return None
 
 
-def get_model_fields(model_name: str) -> Optional[Dict[str, Any]]:
-    """Return comprehensive field metadata for a specific model."""
+def get_model_fields(model_name: str, depth: int = 1) -> Optional[Dict[str, Any]]:
+    """Return comprehensive field and relationship metadata for a specific model."""
     cls = find_model_class(model_name)
     if not cls:
         return None
@@ -158,6 +158,32 @@ def get_model_fields(model_name: str) -> Optional[Dict[str, Any]]:
             "default": str(col.default.arg) if col.default and hasattr(col.default, "arg") else None,
         })
 
+    # Inspect relationships (M:1, 1:M, M:M)
+    relationships: List[Dict[str, Any]] = []
+    for rel_name, rel in mapper.relationships.items():
+        if rel_name.startswith("_"):
+            continue
+
+        target_class = getattr(rel.entity, "class_", None) or getattr(rel.mapper, "class_", None)
+        target_model_name = target_class.__name__ if target_class else str(rel.target)
+        fk_cols = [c.name for c in rel.local_columns] if hasattr(rel, "local_columns") else []
+
+        nested_fields = None
+        if depth > 1 and target_class:
+            nested_spec = get_model_fields(target_model_name, depth=depth - 1)
+            if nested_spec:
+                nested_fields = nested_spec.get("fields")
+
+        relationships.append({
+            "name": rel_name,
+            "title": _humanize_name(rel_name),
+            "target_model": target_model_name,
+            "direction": rel.direction.name if hasattr(rel, "direction") else "MANYTOONE",
+            "is_collection": bool(rel.uselist),
+            "foreign_keys": fk_cols,
+            "fields": nested_fields,
+        })
+
     parts = cls.__module__.split(".")
     module_name = parts[2] if len(parts) >= 3 else parts[0]
 
@@ -168,7 +194,46 @@ def get_model_fields(model_name: str) -> Optional[Dict[str, Any]]:
         "title": _humanize_name(cls.__name__),
         "description": (cls.__doc__ or "").strip().split("\n")[0] if cls.__doc__ else None,
         "fields": fields,
+        "relationships": relationships,
     }
+
+
+def resolve_field_path(model_cls: Any, field_path: str) -> Optional[Dict[str, Any]]:
+    """Resolve a single or dot-separated field path against an ORM model and return target metadata."""
+    if not field_path:
+        return None
+
+    segments = field_path.strip().split(".")
+    current_cls = model_cls
+    rel_chain: List[str] = []
+
+    for segment in segments[:-1]:
+        mapper: Mapper = sa.inspect(current_cls)
+        if segment not in mapper.relationships:
+            return None
+        rel = mapper.relationships[segment]
+        target_cls = getattr(rel.entity, "class_", None) or getattr(rel.mapper, "class_", None)
+        if not target_cls:
+            return None
+        current_cls = target_cls
+        rel_chain.append(segment)
+
+    terminal_field = segments[-1]
+    terminal_mapper: Mapper = sa.inspect(current_cls)
+    if terminal_field not in terminal_mapper.columns:
+        return None
+
+    col = terminal_mapper.columns[terminal_field]
+    return {
+        "field_path": field_path,
+        "terminal_column": col,
+        "terminal_model": current_cls,
+        "column_name": terminal_field,
+        "type": _resolve_type_name(col.type),
+        "title": " > ".join([_humanize_name(s) for s in segments]),
+        "relationship_chain": rel_chain,
+    }
+
 
 
 def validate_create_record_config(model_name: str, values: Dict[str, Any]) -> List[str]:

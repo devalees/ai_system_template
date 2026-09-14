@@ -64,17 +64,32 @@ class ReportService:
         if not dyn_def:
             raise ValueError(f"Report '{report_code}' is not registered as standard or dynamic report.")
 
-        result = await DynamicReportQueryEngine.execute_query(
-            db=db,
-            company_id=company_id,
-            target_model=dyn_def.target_model,
-            selected_fields=dyn_def.selected_fields,
-            filters=dyn_def.filters,
-            group_by=dyn_def.group_by,
-            aggregations=dyn_def.aggregations,
-            order_by=dyn_def.order_by,
-        )
-        result.report_name = dyn_def.name
+        rec_id_raw = query_params.get("record_id") or query_params.get("id")
+        if dyn_def.report_type == "document" and rec_id_raw:
+            rec_id = uuid.UUID(str(rec_id_raw))
+            result = await DynamicReportQueryEngine.execute_document_query(
+                db=db,
+                company_id=company_id,
+                target_model=dyn_def.target_model,
+                record_id=rec_id,
+                header_fields=dyn_def.header_fields,
+                recipient_fields=dyn_def.recipient_fields,
+                lines_relationship=dyn_def.lines_relationship,
+                lines_fields=dyn_def.lines_fields,
+                document_title=dyn_def.document_title or dyn_def.name,
+            )
+        else:
+            result = await DynamicReportQueryEngine.execute_query(
+                db=db,
+                company_id=company_id,
+                target_model=dyn_def.target_model,
+                selected_fields=dyn_def.selected_fields,
+                filters=dyn_def.filters,
+                group_by=dyn_def.group_by,
+                aggregations=dyn_def.aggregations,
+                order_by=dyn_def.order_by,
+            )
+        result.report_name = dyn_def.document_title or dyn_def.name
         result.company_info = await cls.get_company_info(db, company_id)
         return result
 

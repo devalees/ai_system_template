@@ -133,6 +133,57 @@ async def export_report(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Report render failed: {str(exc)}")
 
 
+@router.post("/documents/{report_code}/{record_id}/export", tags=["Reporting - Execution"])
+async def export_document_record(
+    report_code: str,
+    record_id: uuid.UUID,
+    format: str = Query("pdf", description="Export format: 'pdf', 'xlsx', 'csv', or 'json'"),
+    template_id: Optional[uuid.UUID] = Query(None, description="Optional styling template UUID override"),
+    save_to_documents: bool = Query(False, description="Whether to persist generated file in DocumentAttachment"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Render a transactional business document (e.g. Invoice, Sales Order) for a specific record into PDF/Excel/CSV."""
+    try:
+        params = {"record_id": str(record_id)}
+        if save_to_documents:
+            attachment_info = await ReportService.export_and_attach(
+                db=db,
+                company_id=current_user.company_id,
+                user_id=current_user.id,
+                report_code=report_code,
+                output_format=format,
+                params=params,
+                template_id=template_id,
+                res_model=report_code.split(".")[-1] if "." in report_code else report_code,
+                res_id=record_id,
+            )
+            return attachment_info
+
+        rendered, mime_type, filename = await ReportService.render_report(
+            db=db,
+            company_id=current_user.company_id,
+            report_code=report_code,
+            output_format=format,
+            params=params,
+            template_id=template_id,
+        )
+
+        if isinstance(rendered, dict):
+            return rendered
+
+        return StreamingResponse(
+            io.BytesIO(rendered),
+            media_type=mime_type,
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Document render failed: {str(exc)}")
+
+
+
 # ---------------- Report Templates CRUD ----------------
 @router.get("/templates", response_model=List[ReportTemplateRead], tags=["Reporting - Templates"])
 async def list_report_templates(

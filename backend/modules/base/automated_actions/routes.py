@@ -47,16 +47,18 @@ async def list_models_introspection(
 @router.get("/introspection/models/{model_name}/fields", response_model=ModelFieldsIntrospectionResponse, tags=["Automated Actions - Introspection"])
 async def get_model_fields_introspection(
     model_name: str,
+    depth: int = Query(1, ge=1, le=3, description="Recursive relationship inspection depth"),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """Retrieve comprehensive field specification, data types, choices, and requirement flags for a model."""
-    spec = get_model_fields(model_name)
+    spec = get_model_fields(model_name, depth=depth)
     if not spec:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Model '{model_name}' not found in registry.",
         )
     return spec
+
 
 
 # ---------------- Action Types Metadata ----------------
