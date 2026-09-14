@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "46b4dd33-a468-4f72-8cc4-d922da21b392",
+    "_postman_id": "c53824d4-2a11-4702-ab5e-06f4d04bc482",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2576,6 +2576,245 @@
               "variable": []
             },
             "description": "Root API platform status and documentation links."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Unified Atomic Backup & Archive Engine",
+      "item": [
+        {
+          "name": "Trigger atomic backup archive generation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/backup/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backup",
+                "create"
+              ],
+              "variable": []
+            },
+            "description": "Trigger packaging of database dump, filestore blobs, and manifest into a .tar.gz bundle.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"async_run\": true,\n  \"backup_type\": \"full\",\n  \"includes_filestore\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List tenant backup archives",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/backup/list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backup",
+                "list"
+              ],
+              "variable": []
+            },
+            "description": "Retrieve historical backup archives for the authenticated company."
+          },
+          "response": []
+        },
+        {
+          "name": "Get backup archive metadata and status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/backup/:backup_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backup",
+                ":backup_id"
+              ],
+              "variable": [
+                {
+                  "key": "backup_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Retrieve detailed telemetry and checksums for a backup archive."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete backup archive",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/backup/:backup_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backup",
+                ":backup_id"
+              ],
+              "variable": [
+                {
+                  "key": "backup_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Delete backup database record and remove physical file from disk."
+          },
+          "response": []
+        },
+        {
+          "name": "Download compressed backup bundle (.tar.gz)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/backup/:backup_id/download",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backup",
+                ":backup_id",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "backup_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Stream binary .tar.gz backup archive to client."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify cryptographic integrity of backup archive",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/backup/:backup_id/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backup",
+                ":backup_id",
+                "verify"
+              ],
+              "variable": [
+                {
+                  "key": "backup_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Verify SHA-256 checksum and internal structure (manifest.json and dump.sql)."
           },
           "response": []
         }

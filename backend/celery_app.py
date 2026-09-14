@@ -21,6 +21,7 @@ celery.conf.update(
     imports=[
         "modules.base.mail_gateway.tasks",
         "modules.base.import_export.tasks",
+        "modules.base.backup.tasks",
     ],
 )
 

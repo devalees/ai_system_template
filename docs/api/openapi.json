@@ -3336,6 +3336,328 @@
         }
       }
     },
+    "/api/v1/backup/create": {
+      "post": {
+        "tags": [
+          "Unified Atomic Backup & Archive Engine",
+          "Backup & Archive Engine"
+        ],
+        "summary": "Trigger atomic backup archive generation",
+        "description": "Trigger packaging of database dump, filestore blobs, and manifest into a .tar.gz bundle.",
+        "operationId": "create_backup_api_v1_backup_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBackupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateBackupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backup/list": {
+      "get": {
+        "tags": [
+          "Unified Atomic Backup & Archive Engine",
+          "Backup & Archive Engine"
+        ],
+        "summary": "List tenant backup archives",
+        "description": "Retrieve historical backup archives for the authenticated company.",
+        "operationId": "list_backups_api_v1_backup_list_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status: completed, generating, failed",
+              "title": "Status Filter"
+            },
+            "description": "Filter by status: completed, generating, failed"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BackupRecordRead"
+                  },
+                  "title": "Response List Backups Api V1 Backup List Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backup/{backup_id}": {
+      "get": {
+        "tags": [
+          "Unified Atomic Backup & Archive Engine",
+          "Backup & Archive Engine"
+        ],
+        "summary": "Get backup archive metadata and status",
+        "description": "Retrieve detailed telemetry and checksums for a backup archive.",
+        "operationId": "get_backup_details_api_v1_backup__backup_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "backup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Backup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupRecordRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Unified Atomic Backup & Archive Engine",
+          "Backup & Archive Engine"
+        ],
+        "summary": "Delete backup archive",
+        "description": "Delete backup database record and remove physical file from disk.",
+        "operationId": "delete_backup_api_v1_backup__backup_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "backup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Backup Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backup/{backup_id}/download": {
+      "get": {
+        "tags": [
+          "Unified Atomic Backup & Archive Engine",
+          "Backup & Archive Engine"
+        ],
+        "summary": "Download compressed backup bundle (.tar.gz)",
+        "description": "Stream binary .tar.gz backup archive to client.",
+        "operationId": "download_backup_api_v1_backup__backup_id__download_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "backup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Backup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backup/{backup_id}/verify": {
+      "post": {
+        "tags": [
+          "Unified Atomic Backup & Archive Engine",
+          "Backup & Archive Engine"
+        ],
+        "summary": "Verify cryptographic integrity of backup archive",
+        "description": "Verify SHA-256 checksum and internal structure (manifest.json and dump.sql).",
+        "operationId": "verify_backup_api_v1_backup__backup_id__verify_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "backup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Backup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/kernel/modules": {
       "get": {
         "tags": [
@@ -3652,6 +3974,140 @@
           "ip_address": "192.168.1.50",
           "model_name": "Invoice",
           "record_id": "inv00000-0000-0000-0000-000000000001"
+        }
+      },
+      "BackupRecordRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "file_size": {
+            "type": "integer",
+            "title": "File Size"
+          },
+          "checksum_sha256": {
+            "type": "string",
+            "title": "Checksum Sha256"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "backup_type": {
+            "type": "string",
+            "title": "Backup Type"
+          },
+          "includes_filestore": {
+            "type": "boolean",
+            "title": "Includes Filestore"
+          },
+          "details": {
+            "type": "object",
+            "title": "Details"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "file_name",
+          "file_size",
+          "checksum_sha256",
+          "status",
+          "backup_type",
+          "includes_filestore",
+          "details",
+          "completed_at",
+          "created_at"
+        ],
+        "title": "BackupRecordRead",
+        "example": {
+          "backup_type": "full",
+          "checksum_sha256": "8f4e27e8a93e3d4f107f9c7e0c4f8b9e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a",
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "completed_at": "2026-09-14T02:45:15Z",
+          "created_at": "2026-09-14T02:45:00Z",
+          "details": {
+            "blob_count": 4,
+            "table_count": 12
+          },
+          "file_name": "sovereign_backup_20260914_024500.tar.gz",
+          "file_size": 1572864,
+          "id": "b0000000-0000-0000-0000-000000000001",
+          "includes_filestore": true,
+          "status": "completed"
+        }
+      },
+      "BackupVerifyResponse": {
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "checksum_sha256": {
+            "type": "string",
+            "title": "Checksum Sha256"
+          },
+          "total_files": {
+            "type": "integer",
+            "title": "Total Files"
+          },
+          "archive_size": {
+            "type": "integer",
+            "title": "Archive Size"
+          },
+          "manifest": {
+            "type": "object",
+            "title": "Manifest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid",
+          "checksum_sha256",
+          "total_files",
+          "archive_size",
+          "manifest"
+        ],
+        "title": "BackupVerifyResponse",
+        "example": {
+          "archive_size": 1572864,
+          "checksum_sha256": "8f4e27e8a93e3d4f107f9c7e0c4f8b9e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a",
+          "manifest": {
+            "backup_type": "full",
+            "sovereign_version": "1.0.0",
+            "timestamp": "2026-09-14T02:45:00Z"
+          },
+          "total_files": 15,
+          "valid": true
         }
       },
       "Body_upload_and_import_api_v1_import_export_import_post": {
@@ -4043,6 +4499,64 @@
           "currency_code": "USD",
           "dialing_code": "+1",
           "name": "United States of America"
+        }
+      },
+      "CreateBackupRequest": {
+        "properties": {
+          "backup_type": {
+            "type": "string",
+            "title": "Backup Type",
+            "description": "Type of backup: full, database_only, filestore_only",
+            "default": "full"
+          },
+          "includes_filestore": {
+            "type": "boolean",
+            "title": "Includes Filestore",
+            "description": "Whether to include content-addressable storage attachments",
+            "default": true
+          },
+          "async_run": {
+            "type": "boolean",
+            "title": "Async Run",
+            "description": "Whether to generate archive in Celery background or synchronously",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "CreateBackupRequest",
+        "example": {
+          "async_run": true,
+          "backup_type": "full",
+          "includes_filestore": true
+        }
+      },
+      "CreateBackupResponse": {
+        "properties": {
+          "backup_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Backup Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "backup_id",
+          "status",
+          "message"
+        ],
+        "title": "CreateBackupResponse",
+        "example": {
+          "backup_id": "b0000000-0000-0000-0000-000000000001",
+          "message": "Backup generation task queued successfully",
+          "status": "generating"
         }
       },
       "CurrencyCreate": {
