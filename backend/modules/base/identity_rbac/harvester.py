@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.base_models import Base
 from core.kernel import kernel
 from modules.base.identity_rbac.models import Permission, Group, GroupPermissionLink, Company
+from modules.base.identity_rbac.flac_service import register_guarded_fields
 
 logger = logging.getLogger("sovereign.identity_rbac.harvester")
 
@@ -30,6 +31,7 @@ STANDARD_ACTIONS: List[Tuple[str, str]] = [
     ("update", "Update"),
     ("delete", "Delete"),
 ]
+
 
 
 def _to_snake_case(name: str) -> str:
@@ -106,11 +108,12 @@ async def harvest_model_permissions(
 
     new_permissions: List[Permission] = []
 
-    # 1. Harvest 4 CRUD actions for every discovered business model
+    # 1. Harvest 4 CRUD actions and guarded fields for every discovered business model
     for model in sorted(models, key=lambda m: (m.__module__, m.__name__)):
         module_name, resource = _extract_module_and_resource(model)
         display_resource = resource.replace("_", " ").title()
 
+        # 1.a Model-level CRUD permissions
         for action_code, action_title in STANDARD_ACTIONS:
             code = f"{module_name}.{resource}.{action_code}"
             if code not in existing_codes:
@@ -121,11 +124,37 @@ async def harvest_model_permissions(
                     resource=resource,
                     action=action_code,
                     ownership_scope="GLOBAL",
+                    permission_type="model",
                     company_id=target_company_id,
                 )
                 db.add(perm)
                 new_permissions.append(perm)
                 existing_codes[code] = perm.id
+
+        # 1.b Guarded field-level permissions (FLAC)
+        guarded_fields = getattr(model, "__guarded_fields__", []) or []
+        if guarded_fields:
+            register_guarded_fields(resource, list(guarded_fields))
+            for field in guarded_fields:
+                display_field = field.replace("_", " ").title()
+                for f_action, f_title in [("read", "Read"), ("write", "Write")]:
+                    f_code = f"{module_name}.{resource}.{field}:{f_action}"
+                    if f_code not in existing_codes:
+                        perm = Permission(
+                            code=f_code,
+                            name=f"{f_title} {display_resource} {display_field}",
+                            module_name=module_name,
+                            resource=resource,
+                            action=f_action,
+                            ownership_scope="GLOBAL",
+                            permission_type="field",
+                            field_name=field,
+                            company_id=target_company_id,
+                        )
+                        db.add(perm)
+                        new_permissions.append(perm)
+                        existing_codes[f_code] = perm.id
+
 
     # 2. Harvest custom non-CRUD capabilities declared in module manifests
     for mod_name, manifest in kernel.manifests.items():

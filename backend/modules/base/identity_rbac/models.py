@@ -35,12 +35,17 @@ class Company(
     email_domain: Mapped[Optional[str]] = mapped_column(String(100), default=None, nullable=True)
     currency_id: Mapped[Optional[str]] = mapped_column(String(3), default="USD", nullable=True)
 
+    __guarded_fields__ = ["email_domain", "currency_id"]
+
 
 class User(BaseModel):
     """User account entity representing human employees and first-class AI agents."""
     __tablename__ = "users"
 
+    __guarded_fields__ = ["two_factor_secret", "two_factor_recovery_codes"]
+
     email: Mapped[str] = mapped_column(String(150), unique=True, index=True, nullable=False)
+
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -61,18 +66,21 @@ class Group(BaseModel):
 
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(200), default="", nullable=True)
+    group_type: Mapped[str] = mapped_column(String(20), default="role", nullable=False)  # "role" | "department" | "custom"
 
 
 class Permission(BaseModel):
-    """Granular model-level capability with 3-tier ownership scope."""
+    """Granular capability with 3-tier ownership scope and optional field-level targeting."""
     __tablename__ = "permissions"
 
-    code: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)  # e.g. "sales.order.read"
+    code: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)  # e.g. "sales.order.read" or "sales.order.discount:write"
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     module_name: Mapped[str] = mapped_column(String(50), index=True, nullable=False)  # e.g. "sales"
     resource: Mapped[str] = mapped_column(String(50), index=True, nullable=False)  # e.g. "order"
-    action: Mapped[str] = mapped_column(String(20), index=True, nullable=False)  # "read" | "create" | "update" | "delete" | "manage" | "approve"
+    action: Mapped[str] = mapped_column(String(20), index=True, nullable=False)  # "read" | "create" | "update" | "delete" | "manage" | "approve" | "export"
     ownership_scope: Mapped[str] = mapped_column(String(20), default="GLOBAL", nullable=False)  # "GLOBAL", "TEAM", "OWN"
+    permission_type: Mapped[str] = mapped_column(String(20), default="model", nullable=False)  # "model" | "field"
+    field_name: Mapped[Optional[str]] = mapped_column(String(50), default=None, nullable=True)  # target field e.g. "discount"
 
 
 class UserGroupLink(BaseModel):
@@ -89,3 +97,13 @@ class GroupPermissionLink(BaseModel):
 
     group_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE"), nullable=False)
     permission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("permissions.id", ondelete="CASCADE"), nullable=False)
+
+
+class UserPermissionLink(BaseModel):
+    """Direct user permission override (grant or explicit revocation) defeating role explosion."""
+    __tablename__ = "user_permission_links"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    permission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("permissions.id", ondelete="CASCADE"), nullable=False)
+    is_granted: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+

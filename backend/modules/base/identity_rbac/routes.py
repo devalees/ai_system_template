@@ -16,8 +16,10 @@ from modules.base.identity_rbac.models import (
     Permission,
     UserGroupLink,
     GroupPermissionLink,
+    UserPermissionLink,
     Company,
 )
+from modules.base.identity_rbac.flac_service import FLACService
 from modules.base.identity_rbac.schemas import (
     UserCreate,
     InternalUserCreate,
@@ -47,7 +49,11 @@ from modules.base.identity_rbac.schemas import (
     CompanyCreate,
     CompanyUpdate,
     CompanyRead,
+    UserPermissionOverrideCreate,
+    UserPermissionOverrideRead,
+    UserEffectivePermissionsResponse,
 )
+
 from modules.base.identity_rbac.security import (
     hash_password,
     verify_password,
@@ -262,6 +268,14 @@ async def get_me(
     group_rows = (await db.execute(stmt_groups)).all()
     group_list = [{"id": r[0], "name": r[1]} for r in group_rows]
 
+    stmt_direct = (
+        select(UserPermissionLink.permission_id, Permission.code, Permission.name, UserPermissionLink.is_granted)
+        .join(Permission, Permission.id == UserPermissionLink.permission_id)
+        .where(UserPermissionLink.user_id == current_user.id, Permission.deleted_at.is_(None))
+    )
+    direct_rows = (await db.execute(stmt_direct)).all()
+    direct_list = [{"permission_id": str(r[0]), "code": r[1], "name": r[2], "is_granted": r[3]} for r in direct_rows]
+
     return UserDetailRead(
         id=current_user.id,
         email=current_user.email,
@@ -278,7 +292,23 @@ async def get_me(
         team_id=current_user.team_id,
         created_at=current_user.created_at,
         groups=group_list,
+        direct_permissions=direct_list,
     )
+
+
+@router.get(
+    "/auth/me/permissions",
+    response_model=UserEffectivePermissionsResponse,
+    tags=["Authentication"],
+    summary="Get Current User Effective Permissions & FLAC Matrix",
+)
+async def get_my_effective_permissions(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserEffectivePermissionsResponse:
+    """Return caller's complete effective permission matrix including model capabilities and field-level permissions."""
+    return await FLACService.get_effective_permissions(current_user, db)
+
 
 
 @router.post(
@@ -822,6 +852,14 @@ async def get_user(
     group_rows = (await db.execute(stmt_groups)).all()
     group_list = [{"id": r[0], "name": r[1]} for r in group_rows]
 
+    stmt_direct = (
+        select(UserPermissionLink.permission_id, Permission.code, Permission.name, UserPermissionLink.is_granted)
+        .join(Permission, Permission.id == UserPermissionLink.permission_id)
+        .where(UserPermissionLink.user_id == user.id, Permission.deleted_at.is_(None))
+    )
+    direct_rows = (await db.execute(stmt_direct)).all()
+    direct_list = [{"permission_id": str(r[0]), "code": r[1], "name": r[2], "is_granted": r[3]} for r in direct_rows]
+
     return UserDetailRead(
         id=user.id,
         email=user.email,
@@ -837,7 +875,9 @@ async def get_user(
         team_id=user.team_id,
         created_at=user.created_at,
         groups=group_list,
+        direct_permissions=direct_list,
     )
+
 
 
 @router.patch(
@@ -1000,8 +1040,121 @@ async def delete_user(
 
 
 # =========================================================================
+# User Direct Permission Overrides (FLAC & Anti-Role-Explosion)
+# =========================================================================
+
+@router.get(
+    "/users/{user_id}/permissions",
+    response_model=UserEffectivePermissionsResponse,
+    tags=["Identity Administration"],
+    summary="Get User Effective Permissions and Direct Overrides",
+)
+async def get_user_effective_permissions(
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserEffectivePermissionsResponse:
+    """Retrieve full effective permissions breakdown and direct overrides for a user."""
+    stmt = select(User).where(User.id == user_id, User.deleted_at.is_(None))
+    if not current_user.is_superuser:
+        stmt = stmt.where(User.company_id == current_user.company_id)
+    user = (await db.execute(stmt)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    return await FLACService.get_effective_permissions(user, db)
+
+
+@router.post(
+    "/users/{user_id}/permissions",
+    response_model=UserPermissionOverrideRead,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Identity Administration"],
+    summary="Set Direct Permission Override on User",
+)
+async def set_user_permission_override(
+    user_id: uuid.UUID,
+    payload: UserPermissionOverrideCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserPermissionOverrideRead:
+    """Directly grant or revoke an atomic permission on a user without modifying role/group membership."""
+    stmt_u = select(User).where(User.id == user_id, User.deleted_at.is_(None))
+    if not current_user.is_superuser:
+        stmt_u = stmt_u.where(User.company_id == current_user.company_id)
+    user = (await db.execute(stmt_u)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    stmt_p = select(Permission).where(Permission.id == payload.permission_id, Permission.deleted_at.is_(None))
+    perm = (await db.execute(stmt_p)).scalar_one_or_none()
+    if not perm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Permission capability not found.")
+
+    stmt_link = select(UserPermissionLink).where(
+        UserPermissionLink.user_id == user.id,
+        UserPermissionLink.permission_id == perm.id,
+    )
+    existing_link = (await db.execute(stmt_link)).scalar_one_or_none()
+    if existing_link:
+        existing_link.is_granted = payload.is_granted
+        link = existing_link
+    else:
+        link = UserPermissionLink(
+            user_id=user.id,
+            permission_id=perm.id,
+            is_granted=payload.is_granted,
+            company_id=user.company_id,
+        )
+        db.add(link)
+
+    await db.commit()
+    await db.refresh(link)
+
+    return UserPermissionOverrideRead(
+        id=link.id,
+        user_id=link.user_id,
+        permission_id=link.permission_id,
+        permission=PermissionRead.model_validate(perm),
+        is_granted=link.is_granted,
+        created_at=link.created_at,
+    )
+
+
+@router.delete(
+    "/users/{user_id}/permissions/{permission_id}",
+    tags=["Identity Administration"],
+    summary="Remove Direct Permission Override from User",
+)
+async def remove_user_permission_override(
+    user_id: uuid.UUID,
+    permission_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Remove an explicit direct user permission override, reverting to baseline role/group inheritance."""
+    stmt_link = select(UserPermissionLink).where(
+        UserPermissionLink.user_id == user_id,
+        UserPermissionLink.permission_id == permission_id,
+    )
+    link = (await db.execute(stmt_link)).scalar_one_or_none()
+    if not link:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Direct permission override not found.")
+
+    await db.delete(link)
+    await db.commit()
+    return {
+        "status": "deleted",
+        "user_id": str(user_id),
+        "permission_id": str(permission_id),
+        "message": "Direct permission override removed successfully.",
+    }
+
+
+# =========================================================================
 # Company / Tenant Administration
 # =========================================================================
+
 
 @router.post(
     "/companies",
@@ -1150,7 +1303,10 @@ async def create_permission(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superuser required.")
 
     # Canonical code generation
-    canonical_code = payload.code or f"{payload.module_name}.{payload.resource}.{payload.action}".lower()
+    if payload.permission_type == "field" and payload.field_name:
+        canonical_code = payload.code or f"{payload.module_name}.{payload.resource}.{payload.field_name}:{payload.action}".lower()
+    else:
+        canonical_code = payload.code or f"{payload.module_name}.{payload.resource}.{payload.action}".lower()
 
     existing = (await db.execute(select(Permission).where(Permission.code == canonical_code))).scalar_one_or_none()
     if existing:
@@ -1163,6 +1319,8 @@ async def create_permission(
         resource=payload.resource.lower(),
         action=payload.action.lower(),
         ownership_scope=payload.ownership_scope,
+        permission_type=payload.permission_type,
+        field_name=payload.field_name,
         company_id=current_user.company_id,
     )
     db.add(perm)
@@ -1181,6 +1339,8 @@ async def list_permissions(
     resource: Optional[str] = Query(None, description="Filter by business model/entity name"),
     action: Optional[str] = Query(None, description="Filter by operation action type"),
     ownership_scope: Optional[str] = Query(None, description="Filter by ownership boundary ('GLOBAL', 'TEAM', 'OWN')"),
+    permission_type: Optional[str] = Query(None, description="Filter by permission type ('model' or 'field')"),
+    field_name: Optional[str] = Query(None, description="Filter by target field name"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[Permission]:
@@ -1195,10 +1355,15 @@ async def list_permissions(
         query = query.where(Permission.action == action.lower())
     if ownership_scope:
         query = query.where(Permission.ownership_scope == ownership_scope)
+    if permission_type:
+        query = query.where(Permission.permission_type == permission_type.lower())
+    if field_name:
+        query = query.where(Permission.field_name == field_name.lower())
 
     query = query.order_by(Permission.module_name.asc(), Permission.resource.asc(), Permission.action.asc())
     result = await db.execute(query)
     return list(result.scalars().all())
+
 
 
 @router.get(
@@ -1289,7 +1454,12 @@ async def create_group(
     db: AsyncSession = Depends(get_db),
 ) -> GroupRead:
     """Create an RBAC Group/Role with linked permissions and users (Superuser or Tenant Admin)."""
-    group = Group(name=payload.name, description=payload.description, company_id=current_user.company_id)
+    group = Group(
+        name=payload.name,
+        description=payload.description,
+        group_type=payload.group_type,
+        company_id=current_user.company_id,
+    )
     db.add(group)
     await db.flush()
 
@@ -1307,6 +1477,7 @@ async def create_group(
         id=group.id,
         name=group.name,
         description=group.description,
+        group_type=group.group_type,
         permissions_count=len(payload.permission_ids),
         users_count=len(payload.user_ids),
         created_at=group.created_at,
@@ -1319,11 +1490,15 @@ async def create_group(
     tags=["RBAC Administration"],
 )
 async def list_groups(
+    group_type: Optional[str] = Query(None, description="Filter by group type ('role', 'department', 'custom')"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[GroupRead]:
     """List RBAC groups for active tenant with count of assigned permissions and users."""
-    stmt = select(Group).where(Group.company_id == current_user.company_id, Group.deleted_at.is_(None)).order_by(Group.name.asc())
+    stmt = select(Group).where(Group.company_id == current_user.company_id, Group.deleted_at.is_(None))
+    if group_type:
+        stmt = stmt.where(Group.group_type == group_type.lower())
+    stmt = stmt.order_by(Group.name.asc())
     groups = (await db.execute(stmt)).scalars().all()
 
     result = []
@@ -1339,6 +1514,7 @@ async def list_groups(
                 id=g.id,
                 name=g.name,
                 description=g.description,
+                group_type=g.group_type,
                 permissions_count=p_count,
                 users_count=u_count,
                 created_at=g.created_at,
@@ -1385,6 +1561,7 @@ async def get_group(
         id=group.id,
         name=group.name,
         description=group.description,
+        group_type=group.group_type,
         permissions=[PermissionRead.model_validate(p) for p in perms],
         users=[UserSummary.model_validate(u) for u in users],
         created_at=group.created_at,
@@ -1402,7 +1579,7 @@ async def update_group(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> GroupDetailRead:
-    """Update group title, description, or reassign permission links and user memberships."""
+    """Update group title, description, type, or reassign permission links and user memberships."""
     stmt = select(Group).where(
         Group.id == group_id,
         Group.company_id == current_user.company_id,
@@ -1416,6 +1593,8 @@ async def update_group(
         group.name = payload.name
     if payload.description is not None:
         group.description = payload.description
+    if payload.group_type is not None:
+        group.group_type = payload.group_type
 
     # Re-sync permission links if specified
     if payload.permission_ids is not None:
@@ -1460,10 +1639,12 @@ async def update_group(
         id=group.id,
         name=group.name,
         description=group.description,
+        group_type=group.group_type,
         permissions=[PermissionRead.model_validate(p) for p in perms],
         users=[UserSummary.model_validate(u) for u in users],
         created_at=group.created_at,
     )
+
 
 
 @router.delete(

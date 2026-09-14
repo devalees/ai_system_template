@@ -59,28 +59,53 @@ async def get_current_user(
     return user
 
 
+from modules.base.identity_rbac.flac_service import FLACService
+
+
 def require_permission(permission_code: str) -> Callable:
     """Declarative dependency factory verifying actor holds specific permission code or is superuser."""
     async def permission_checker(
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db),
     ) -> User:
-        # Superusers bypass all permission checks
-        if current_user.is_superuser:
-            return current_user
-
-        # Query user permissions through group links
-        stmt = (
-            select(Permission.code)
-            .join(GroupPermissionLink, GroupPermissionLink.permission_id == Permission.id)
-            .join(UserGroupLink, UserGroupLink.group_id == GroupPermissionLink.group_id)
-            .where(UserGroupLink.user_id == current_user.id, Permission.code == permission_code)
-        )
-        has_perm = (await db.execute(stmt)).scalar_one_or_none()
-
+        has_perm = await FLACService.has_permission(current_user, permission_code, db)
         if not has_perm:
             raise PermissionDeniedException(action=permission_code, resource=permission_code.split(".")[0])
 
         return current_user
 
     return permission_checker
+
+
+def require_field_permission(
+    resource_name: str,
+    field_name: str,
+    action: str = "write",
+    module_name: Optional[str] = None,
+) -> Callable:
+    """Declarative dependency factory verifying actor holds field-level permission or is superuser."""
+    async def field_permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        if current_user.is_superuser:
+            return current_user
+
+        # Check candidate codes
+        candidate_codes = [f"{resource_name}.{field_name}:{action}"]
+        if module_name:
+            candidate_codes.append(f"{module_name}.{resource_name}.{field_name}:{action}")
+
+        has_perm = False
+        for code in candidate_codes:
+            if await FLACService.has_permission(current_user, code, db):
+                has_perm = True
+                break
+
+        if not has_perm:
+            raise PermissionDeniedException(action=f"{action} on field '{field_name}'", resource=resource_name)
+
+        return current_user
+
+    return field_permission_checker
+

@@ -231,8 +231,10 @@ async def setup_database(
         admin_group = Group(
             name="Super Administrators",
             description="Universal system administration and governance authority",
+            group_type="role",
             company_id=company.id,
         )
+
         db.add(admin_group)
         await db.flush()
 

@@ -126,6 +126,7 @@ class UserDetailRead(BaseModel):
     team_id: Optional[uuid.UUID] = None
     created_at: datetime
     groups: List[Dict[str, Any]] = Field(default_factory=list, description="Assigned RBAC groups with IDs and names")
+    direct_permissions: List[Dict[str, Any]] = Field(default_factory=list, description="Direct user-level permission overrides")
 
 
 # =========================================================================
@@ -376,10 +377,19 @@ class PermissionCreate(BaseModel):
         "GLOBAL",
         description="3-tier record ownership boundary: 'GLOBAL' (access any company record), 'TEAM' (restricted to user's team_id), 'OWN' (restricted to records created by user)",
     )
+    permission_type: Literal["model", "field"] = Field(
+        "model",
+        description="Capability type: 'model' (standard entity-level CRUD) or 'field' (granular field-level access control)",
+    )
+    field_name: Optional[str] = Field(
+        None,
+        max_length=50,
+        description="Target model field name if permission_type is 'field' (e.g. 'discount', 'unit_price', 'phone')",
+    )
     name: str = Field(..., min_length=2, max_length=100, description="Human-readable title describing the capability")
     code: Optional[str] = Field(
         None,
-        description="Unique canonical identifier. If omitted, auto-generated as '{module_name}.{resource}.{action}'",
+        description="Unique canonical identifier. If omitted, auto-generated as '{module_name}.{resource}.{action}' or '{module_name}.{resource}.{field_name}:{action}'",
     )
 
 
@@ -400,6 +410,8 @@ class PermissionRead(BaseModel):
     resource: str
     action: str
     ownership_scope: str
+    permission_type: str = "model"
+    field_name: Optional[str] = None
     created_at: datetime
 
 
@@ -425,6 +437,7 @@ class GroupCreate(BaseModel):
             "example": {
                 "name": "Financial Auditors",
                 "description": "Read and review access to general ledger and journal entries",
+                "group_type": "role",
                 "permission_ids": [],
                 "user_ids": [],
             }
@@ -433,6 +446,10 @@ class GroupCreate(BaseModel):
 
     name: str = Field(..., min_length=2, max_length=50, description="Unique role/group title within the organization")
     description: Optional[str] = Field("", max_length=200, description="Operational scope and responsibility summary")
+    group_type: Literal["role", "department", "custom"] = Field(
+        "role",
+        description="Type of group: 'role' (functional permission set), 'department' (organizational), 'custom'",
+    )
     permission_ids: List[uuid.UUID] = Field(default_factory=list, description="List of granular Permission UUIDs to link to this group")
     user_ids: List[uuid.UUID] = Field(default_factory=list, description="Optional list of User UUIDs to immediately assign to this group")
 
@@ -441,6 +458,7 @@ class GroupUpdate(BaseModel):
     """Schema for updating group metadata or reassigning permissions and users."""
     name: Optional[str] = Field(None, min_length=2, max_length=50, description="Updated group title")
     description: Optional[str] = Field(None, max_length=200, description="Updated group description")
+    group_type: Optional[Literal["role", "department", "custom"]] = Field(None, description="Updated group classification")
     permission_ids: Optional[List[uuid.UUID]] = Field(None, description="Full replacement list of linked Permission UUIDs")
     user_ids: Optional[List[uuid.UUID]] = Field(None, description="Full replacement list of assigned User UUIDs")
 
@@ -452,6 +470,7 @@ class GroupRead(BaseModel):
     id: uuid.UUID
     name: str
     description: Optional[str] = ""
+    group_type: str = "role"
     permissions_count: int = 0
     users_count: int = 0
     created_at: datetime
@@ -464,9 +483,70 @@ class GroupDetailRead(BaseModel):
     id: uuid.UUID
     name: str
     description: Optional[str] = ""
+    group_type: str = "role"
     permissions: List[PermissionRead] = Field(default_factory=list, description="List of linked permission objects")
     users: List[UserSummary] = Field(default_factory=list, description="List of users currently assigned to this group")
     created_at: datetime
+
+
+# =========================================================================
+# Direct User Permission Overrides & Effective Permissions
+# =========================================================================
+
+class UserPermissionOverrideCreate(BaseModel):
+    """Payload to directly grant or explicitly revoke an atomic permission on a user."""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "permission_id": "9f8d7c6b-5a43-2109-8765-43210fedcba9",
+                "is_granted": True,
+            }
+        }
+    )
+
+    permission_id: uuid.UUID = Field(..., description="UUID of the Permission to grant or override")
+    is_granted: bool = Field(True, description="True to grant the capability; False to explicitly revoke it")
+
+
+class UserPermissionOverrideRead(BaseModel):
+    """Serialized representation of an explicit user-level permission override."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    permission_id: uuid.UUID
+    permission: PermissionRead
+    is_granted: bool
+    created_at: datetime
+
+
+class UserEffectivePermissionsResponse(BaseModel):
+    """Comprehensive effective permissions matrix for an authenticated user or AI bot."""
+    user_id: uuid.UUID
+    username: str
+    user_type: str
+    is_superuser: bool
+    assigned_roles: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Assigned RBAC roles/groups contributing baseline permissions",
+    )
+    direct_overrides: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="User-specific direct permission grants and explicit revocations",
+    )
+    model_permissions: List[str] = Field(
+        default_factory=list,
+        description="Flattened list of all effective model-level capability codes (e.g. ['sales.order.read'])",
+    )
+    field_permissions: Dict[str, Dict[str, List[str]]] = Field(
+        default_factory=dict,
+        description="Field-level permissions organized by resource: {resource: {'read': [allowed_fields], 'write': [allowed_fields]}}",
+    )
+    all_effective_codes: List[str] = Field(
+        default_factory=list,
+        description="Comprehensive set of all active permission codes granted to the actor",
+    )
+
 
 
 # =========================================================================

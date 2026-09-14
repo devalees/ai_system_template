@@ -120,6 +120,34 @@
         ]
       }
     },
+    "/api/v1/identity_rbac/auth/me/permissions": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Get Current User Effective Permissions & FLAC Matrix",
+        "description": "Return caller's complete effective permission matrix including model capabilities and field-level permissions.",
+        "operationId": "get_my_effective_permissions_api_v1_identity_rbac_auth_me_permissions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserEffectivePermissionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/identity_rbac/auth/change-password": {
       "post": {
         "tags": [
@@ -765,6 +793,175 @@
         }
       }
     },
+    "/api/v1/identity_rbac/users/{user_id}/permissions": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Get User Effective Permissions and Direct Overrides",
+        "description": "Retrieve full effective permissions breakdown and direct overrides for a user.",
+        "operationId": "get_user_effective_permissions_api_v1_identity_rbac_users__user_id__permissions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserEffectivePermissionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Set Direct Permission Override on User",
+        "description": "Directly grant or revoke an atomic permission on a user without modifying role/group membership.",
+        "operationId": "set_user_permission_override_api_v1_identity_rbac_users__user_id__permissions_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPermissionOverrideCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPermissionOverrideRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/users/{user_id}/permissions/{permission_id}": {
+      "delete": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Remove Direct Permission Override from User",
+        "description": "Remove an explicit direct user permission override, reverting to baseline role/group inheritance.",
+        "operationId": "remove_user_permission_override_api_v1_identity_rbac_users__user_id__permissions__permission_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Remove User Permission Override Api V1 Identity Rbac Users  User Id  Permissions  Permission Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/identity_rbac/companies": {
       "get": {
         "tags": [
@@ -1132,6 +1329,42 @@
               "title": "Ownership Scope"
             },
             "description": "Filter by ownership boundary ('GLOBAL', 'TEAM', 'OWN')"
+          },
+          {
+            "name": "permission_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by permission type ('model' or 'field')",
+              "title": "Permission Type"
+            },
+            "description": "Filter by permission type ('model' or 'field')"
+          },
+          {
+            "name": "field_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target field name",
+              "title": "Field Name"
+            },
+            "description": "Filter by target field name"
           }
         ],
         "responses": {
@@ -1320,36 +1553,6 @@
       }
     },
     "/api/v1/identity_rbac/groups": {
-      "get": {
-        "tags": [
-          "Identity & Contextual RBAC",
-          "RBAC Administration"
-        ],
-        "summary": "List Groups",
-        "description": "List RBAC groups for active tenant with count of assigned permissions and users.",
-        "operationId": "list_groups_api_v1_identity_rbac_groups_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/GroupRead"
-                  },
-                  "type": "array",
-                  "title": "Response List Groups Api V1 Identity Rbac Groups Get"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      },
       "post": {
         "tags": [
           "Identity & Contextual RBAC",
@@ -1358,15 +1561,20 @@
         "summary": "Create Group",
         "description": "Create an RBAC Group/Role with linked permissions and users (Superuser or Tenant Admin).",
         "operationId": "create_group_api_v1_identity_rbac_groups_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GroupCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -1389,12 +1597,67 @@
               }
             }
           }
-        },
+        }
+      },
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "List Groups",
+        "description": "List RBAC groups for active tenant with count of assigned permissions and users.",
+        "operationId": "list_groups_api_v1_identity_rbac_groups_get",
         "security": [
           {
             "OAuth2PasswordBearer": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "group_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by group type ('role', 'department', 'custom')",
+              "title": "Group Type"
+            },
+            "description": "Filter by group type ('role', 'department', 'custom')"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupRead"
+                  },
+                  "title": "Response List Groups Api V1 Identity Rbac Groups Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/identity_rbac/groups/{group_id}": {
@@ -1452,7 +1715,7 @@
           "RBAC Administration"
         ],
         "summary": "Update Group",
-        "description": "Update group title, description, or reassign permission links and user memberships.",
+        "description": "Update group title, description, type, or reassign permission links and user memberships.",
         "operationId": "update_group_api_v1_identity_rbac_groups__group_id__patch",
         "security": [
           {
@@ -11089,6 +11352,17 @@
             "description": "Operational scope and responsibility summary",
             "default": ""
           },
+          "group_type": {
+            "type": "string",
+            "enum": [
+              "role",
+              "department",
+              "custom"
+            ],
+            "title": "Group Type",
+            "description": "Type of group: 'role' (functional permission set), 'department' (organizational), 'custom'",
+            "default": "role"
+          },
           "permission_ids": {
             "items": {
               "type": "string",
@@ -11116,6 +11390,7 @@
         "description": "Schema for creating a new RBAC role/group with assigned permissions and users.",
         "example": {
           "description": "Read and review access to general ledger and journal entries",
+          "group_type": "role",
           "name": "Financial Auditors",
           "permission_ids": [],
           "user_ids": []
@@ -11143,6 +11418,11 @@
             ],
             "title": "Description",
             "default": ""
+          },
+          "group_type": {
+            "type": "string",
+            "title": "Group Type",
+            "default": "role"
           },
           "permissions": {
             "items": {
@@ -11198,6 +11478,11 @@
             "title": "Description",
             "default": ""
           },
+          "group_type": {
+            "type": "string",
+            "title": "Group Type",
+            "default": "role"
+          },
           "permissions_count": {
             "type": "integer",
             "title": "Permissions Count",
@@ -11251,6 +11536,23 @@
             ],
             "title": "Description",
             "description": "Updated group description"
+          },
+          "group_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "role",
+                  "department",
+                  "custom"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Type",
+            "description": "Updated group classification"
           },
           "permission_ids": {
             "anyOf": [
@@ -13094,6 +13396,29 @@
             "description": "3-tier record ownership boundary: 'GLOBAL' (access any company record), 'TEAM' (restricted to user's team_id), 'OWN' (restricted to records created by user)",
             "default": "GLOBAL"
           },
+          "permission_type": {
+            "type": "string",
+            "enum": [
+              "model",
+              "field"
+            ],
+            "title": "Permission Type",
+            "description": "Capability type: 'model' (standard entity-level CRUD) or 'field' (granular field-level access control)",
+            "default": "model"
+          },
+          "field_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Name",
+            "description": "Target model field name if permission_type is 'field' (e.g. 'discount', 'unit_price', 'phone')"
+          },
           "name": {
             "type": "string",
             "maxLength": 100,
@@ -13111,7 +13436,7 @@
               }
             ],
             "title": "Code",
-            "description": "Unique canonical identifier. If omitted, auto-generated as '{module_name}.{resource}.{action}'"
+            "description": "Unique canonical identifier. If omitted, auto-generated as '{module_name}.{resource}.{action}' or '{module_name}.{resource}.{field_name}:{action}'"
           }
         },
         "type": "object",
@@ -13162,6 +13487,22 @@
           "ownership_scope": {
             "type": "string",
             "title": "Ownership Scope"
+          },
+          "permission_type": {
+            "type": "string",
+            "title": "Permission Type",
+            "default": "model"
+          },
+          "field_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Name"
           },
           "created_at": {
             "type": "string",
@@ -16132,6 +16473,14 @@
             "type": "array",
             "title": "Groups",
             "description": "Assigned RBAC groups with IDs and names"
+          },
+          "direct_permissions": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Direct Permissions",
+            "description": "Direct user-level permission overrides"
           }
         },
         "type": "object",
@@ -16149,6 +16498,150 @@
         ],
         "title": "UserDetailRead",
         "description": "Detailed user representation including assigned groups and timestamps."
+      },
+      "UserEffectivePermissionsResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "user_type": {
+            "type": "string",
+            "title": "User Type"
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser"
+          },
+          "assigned_roles": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Assigned Roles",
+            "description": "Assigned RBAC roles/groups contributing baseline permissions"
+          },
+          "direct_overrides": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Direct Overrides",
+            "description": "User-specific direct permission grants and explicit revocations"
+          },
+          "model_permissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Model Permissions",
+            "description": "Flattened list of all effective model-level capability codes (e.g. ['sales.order.read'])"
+          },
+          "field_permissions": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Field Permissions",
+            "description": "Field-level permissions organized by resource: {resource: {'read': [allowed_fields], 'write': [allowed_fields]}}"
+          },
+          "all_effective_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "All Effective Codes",
+            "description": "Comprehensive set of all active permission codes granted to the actor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "username",
+          "user_type",
+          "is_superuser"
+        ],
+        "title": "UserEffectivePermissionsResponse",
+        "description": "Comprehensive effective permissions matrix for an authenticated user or AI bot."
+      },
+      "UserPermissionOverrideCreate": {
+        "properties": {
+          "permission_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Permission Id",
+            "description": "UUID of the Permission to grant or override"
+          },
+          "is_granted": {
+            "type": "boolean",
+            "title": "Is Granted",
+            "description": "True to grant the capability; False to explicitly revoke it",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "permission_id"
+        ],
+        "title": "UserPermissionOverrideCreate",
+        "description": "Payload to directly grant or explicitly revoke an atomic permission on a user.",
+        "example": {
+          "is_granted": true,
+          "permission_id": "9f8d7c6b-5a43-2109-8765-43210fedcba9"
+        }
+      },
+      "UserPermissionOverrideRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "permission_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Permission Id"
+          },
+          "permission": {
+            "$ref": "#/components/schemas/PermissionRead"
+          },
+          "is_granted": {
+            "type": "boolean",
+            "title": "Is Granted"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "permission_id",
+          "permission",
+          "is_granted",
+          "created_at"
+        ],
+        "title": "UserPermissionOverrideRead",
+        "description": "Serialized representation of an explicit user-level permission override."
       },
       "UserRead": {
         "properties": {

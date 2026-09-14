@@ -1846,6 +1846,48 @@ Implement an Odoo-style Transactional Document Reporting Engine and multi-hop Fo
 ### 4. Current Focus
 Stage 6.2 completed. All features verified and synchronized.
 
+---
+
+## Stage 6.3: Enterprise Field-Level Access Control (FLAC) & Effective Permissions Engine (COMPLETED)
+
+### 1. Objective & Scope
+Transform the Sovereign RBAC platform into an enterprise-grade **Field-Level Access Control (FLAC)** and **Effective Permissions Engine** before integrating the Stage 7 AI Agent Bridge:
+1. **Direct User Overrides (`UserPermissionLink`)**:
+   - Defeat "Role Explosion" by allowing direct additive grants or explicit revocations on specific User or AI Agent identities without spawning new roles.
+   - Calculate Effective Permissions: $\text{Effective} = (\text{Roles/Groups Union}) \cup (\text{Direct Grants}) \setminus (\text{Direct Revocations})$.
+2. **Field-Level Access Control (FLAC)**:
+   - Extend `Permission` with `permission_type` (`"model"` vs `"field"`) and `field_name`.
+   - Canonical syntax: `{module}.{resource}.{field_name}:{read|write}`.
+   - Egress filter (Read Layer) automatically pruning or masking confidential/guarded fields from JSON payloads for unauthorized users or AI agents.
+   - Ingress validation (Write Layer) blocking `POST`/`PUT`/`PATCH` mutations on guarded fields without explicit write capability.
+3. **Role vs. Group Clarification**:
+   - Enhance `Group` with `group_type: "role" | "department" | "custom"`.
+4. **Automated Field Permission Harvester**:
+   - Reflect guarded/sensitive fields on models and auto-register them in permissions catalog linked to Super Administrators.
+5. **REST API & Introspection**:
+   - Manage direct user overrides (`GET/POST/DELETE /users/{user_id}/permissions`).
+   - Query caller's effective permission matrix (`GET /auth/me/permissions`).
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Data Model Evolution & Database Schema (`Permission`, `Group`, `UserPermissionLink`)** - COMPLETED
+- [x] **Sub-task 2: Pydantic Contracts & Serialization Schemas in `schemas.py`** - COMPLETED
+- [x] **Sub-task 3: Effective Permissions Engine & FLAC Sanitizer (`flac_service.py` & `dependencies.py`)** - COMPLETED
+- [x] **Sub-task 4: Automated Harvester & Guarded Field Reflection in `harvester.py`** - COMPLETED
+- [x] **Sub-task 5: REST API Routes in `routes.py`** - COMPLETED
+- [x] **Sub-task 6: Comprehensive Automated Test Suite & Verification (93/93 Passing)** - COMPLETED
+- [x] **Sub-task 7: OpenAPI / Postman Specs & Documentation Synchronization** - COMPLETED
+
+### 3. Key Decisions & Deviations (Stage 6.3)
+- *2026-09-15*: **Additive Non-Breaking FLAC**: Unguarded fields inherit parent model CRUD permissions. Field-level permissions only activate when a field is marked guarded (`__guarded_fields__`) or queried/mutated specifically.
+- *2026-09-15*: **Multi-Tenancy Kernel Invariant on System Permissions**: Because `Permission` entries are platform-wide / seeded on the primary company, all internal permission queries and junction lookups in `FLACService.has_permission` and `FLACService.get_effective_permissions` strictly specify `.execution_options(ignore_tenant=True)` to prevent company isolation filters from blinding authorization checks across tenants.
+- *2026-09-15*: **Symmetric AI Governance**: Autonomous AI agents (`user_type="agent"`) execute under the exact same FLAC policies and user-level overrides as human users, preventing AI bots from reading or mutating guarded financial/PII attributes unless explicitly granted.
+- *2026-09-15*: **Deterministic Effective Permissions Matrix**: Implemented strict set mathematics: Group permissions $\cup$ Direct Grants $\setminus$ Direct Revocations (`is_granted=False`).
+- *2026-09-15*: **Zero Regressions Verification**: All 93 automated tests across the platform passed (100% pass rate in 78.45s).
+
+### 4. Current Focus
+Stage 6.3 completed. Ready for Stage 7: Hermes AI Agent Bridge (Model Context Protocol / Tool Calling & Agentic Execution).
+
+
 
 
 

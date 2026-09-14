@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "f5ad8ac0-4e07-4941-b401-7016553aa0e3",
+    "_postman_id": "58ea666e-cac3-4c16-80c4-541513aa6ba3",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -933,6 +933,41 @@
               "response": []
             },
             {
+              "name": "Get Current User Effective Permissions & FLAC Matrix",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/identity_rbac/auth/me/permissions",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "identity_rbac",
+                    "auth",
+                    "me",
+                    "permissions"
+                  ],
+                  "variable": []
+                },
+                "description": "## Get Current User Effective Permissions & FLAC Matrix\n\nReturn caller's complete effective permission matrix including model capabilities and field-level permissions.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/auth/me/permissions`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+              },
+              "response": []
+            },
+            {
               "name": "Change Password (In-App Settings)",
               "request": {
                 "method": "POST",
@@ -1794,6 +1829,179 @@
                 "description": "## Delete User\n\nSoft-delete a user account.\n\nSecurity Guards:\n- Users cannot delete their own active authenticated account.\n- Primary system administrator is permanent and cannot be deleted by anyone.\n- Secondary superusers can only be deleted by the primary system administrator.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
               },
               "response": []
+            },
+            {
+              "name": "Get User Effective Permissions and Direct Overrides",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/identity_rbac/users/:user_id/permissions",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "identity_rbac",
+                    "users",
+                    ":user_id",
+                    "permissions"
+                  ],
+                  "variable": [
+                    {
+                      "key": "user_id",
+                      "value": "{{active_user_id}}",
+                      "description": "Dynamic path parameter bound to {{active_user_id}}"
+                    }
+                  ]
+                },
+                "description": "## Get User Effective Permissions and Direct Overrides\n\nRetrieve full effective permissions breakdown and direct overrides for a user.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/users/{user_id}/permissions`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Set Direct Permission Override on User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/identity_rbac/users/:user_id/permissions",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "identity_rbac",
+                    "users",
+                    ":user_id",
+                    "permissions"
+                  ],
+                  "variable": [
+                    {
+                      "key": "user_id",
+                      "value": "{{active_user_id}}",
+                      "description": "Dynamic path parameter bound to {{active_user_id}}"
+                    }
+                  ]
+                },
+                "description": "## Set Direct Permission Override on User\n\nDirectly grant or revoke an atomic permission on a user without modifying role/group membership.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/users/{user_id}/permissions`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `permission_id` | `string` | **Yes** | Any valid string | UUID of the Permission to grant or override |\n| `is_granted` | `boolean` | No | Any valid boolean | True to grant the capability; False to explicitly revoke it |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"is_granted\": true,\n  \"permission_id\": \"9f8d7c6b-5a43-2109-8765-43210fedcba9\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_permission_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Remove Direct Permission Override from User",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/identity_rbac/users/:user_id/permissions/:permission_id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "identity_rbac",
+                    "users",
+                    ":user_id",
+                    "permissions",
+                    ":permission_id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "user_id",
+                      "value": "{{active_user_id}}",
+                      "description": "Dynamic path parameter bound to {{active_user_id}}"
+                    },
+                    {
+                      "key": "permission_id",
+                      "value": "{{active_permission_id}}",
+                      "description": "Dynamic path parameter bound to {{active_permission_id}}"
+                    }
+                  ]
+                },
+                "description": "## Remove Direct Permission Override from User\n\nRemove an explicit direct user permission override, reverting to baseline role/group inheritance.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/users/{user_id}/permissions/{permission_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n| `permission_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
             }
           ]
         },
@@ -1829,7 +2037,7 @@
                   ],
                   "variable": []
                 },
-                "description": "## List Permissions\n\nList registered capabilities with optional category and scope filters.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/permissions`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `query` | `string` | No | Filter by system module namespace |\n| `resource` | `query` | `string` | No | Filter by business model/entity name |\n| `action` | `query` | `string` | No | Filter by operation action type |\n| `ownership_scope` | `query` | `string` | No | Filter by ownership boundary ('GLOBAL', 'TEAM', 'OWN') |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+                "description": "## List Permissions\n\nList registered capabilities with optional category and scope filters.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/permissions`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `query` | `string` | No | Filter by system module namespace |\n| `resource` | `query` | `string` | No | Filter by business model/entity name |\n| `action` | `query` | `string` | No | Filter by operation action type |\n| `ownership_scope` | `query` | `string` | No | Filter by ownership boundary ('GLOBAL', 'TEAM', 'OWN') |\n| `permission_type` | `query` | `string` | No | Filter by permission type ('model' or 'field') |\n| `field_name` | `query` | `string` | No | Filter by target field name |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
               },
               "response": []
             },
@@ -1867,7 +2075,7 @@
                   ],
                   "variable": []
                 },
-                "description": "## Create Permission\n\nCreate a granular model capability (Superuser only).\n\nCanonical Code Generation:\n- If `code` is omitted, auto-generates: `{module_name}.{resource}.{action}`.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/permissions`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `string` | **Yes** | Any valid string | Parent system module namespace (e.g. 'accounting', 'crm', 'sales', 'identity_rbac') |\n| `resource` | `string` | **Yes** | Any valid string | Target business entity or model name (e.g. 'invoice', 'lead', 'order', 'user') |\n| `action` | `string` | **Yes** | `read, create, update, delete, manage, approve, export` | Operational action type: 'read' (view), 'create' (insert), 'update' (edit), 'delete' (soft-delete), 'manage' (full admin), 'approve' (sign-off), or 'export' (bulk download) |\n| `ownership_scope` | `string` | No | `GLOBAL, TEAM, OWN` | 3-tier record ownership boundary: 'GLOBAL' (access any company record), 'TEAM' (restricted to user's team_id), 'OWN' (restricted to records created by user) |\n| `name` | `string` | **Yes** | Any valid string | Human-readable title describing the capability |\n| `code` | `string` | No | Any valid string | Unique canonical identifier. If omitted, auto-generated as '{module_name}.{resource}.{action}' |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "description": "## Create Permission\n\nCreate a granular model capability (Superuser only).\n\nCanonical Code Generation:\n- If `code` is omitted, auto-generates: `{module_name}.{resource}.{action}`.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/permissions`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `string` | **Yes** | Any valid string | Parent system module namespace (e.g. 'accounting', 'crm', 'sales', 'identity_rbac') |\n| `resource` | `string` | **Yes** | Any valid string | Target business entity or model name (e.g. 'invoice', 'lead', 'order', 'user') |\n| `action` | `string` | **Yes** | `read, create, update, delete, manage, approve, export` | Operational action type: 'read' (view), 'create' (insert), 'update' (edit), 'delete' (soft-delete), 'manage' (full admin), 'approve' (sign-off), or 'export' (bulk download) |\n| `ownership_scope` | `string` | No | `GLOBAL, TEAM, OWN` | 3-tier record ownership boundary: 'GLOBAL' (access any company record), 'TEAM' (restricted to user's team_id), 'OWN' (restricted to records created by user) |\n| `permission_type` | `string` | No | `model, field` | Capability type: 'model' (standard entity-level CRUD) or 'field' (granular field-level access control) |\n| `field_name` | `string` | No | Any valid string | Target model field name if permission_type is 'field' (e.g. 'discount', 'unit_price', 'phone') |\n| `name` | `string` | **Yes** | Any valid string | Human-readable title describing the capability |\n| `code` | `string` | No | Any valid string | Unique canonical identifier. If omitted, auto-generated as '{module_name}.{resource}.{action}' or '{module_name}.{resource}.{field_name}:{action}' |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"action\": \"read\",\n  \"code\": \"accounting.invoice.read\",\n  \"module_name\": \"accounting\",\n  \"name\": \"Read Accounting Invoices\",\n  \"ownership_scope\": \"GLOBAL\",\n  \"resource\": \"invoice\"\n}",
@@ -2059,7 +2267,7 @@
                   ],
                   "variable": []
                 },
-                "description": "## List Groups\n\nList RBAC groups for active tenant with count of assigned permissions and users.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+                "description": "## List Groups\n\nList RBAC groups for active tenant with count of assigned permissions and users.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_type` | `query` | `string` | No | Filter by group type ('role', 'department', 'custom') |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
               },
               "response": []
             },
@@ -2097,10 +2305,10 @@
                   ],
                   "variable": []
                 },
-                "description": "## Create Group\n\nCreate an RBAC Group/Role with linked permissions and users (Superuser or Tenant Admin).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Unique role/group title within the organization |\n| `description` | `string` | No | Any valid string | Operational scope and responsibility summary |\n| `permission_ids` | `array` | No | Any valid array | List of granular Permission UUIDs to link to this group |\n| `user_ids` | `array` | No | Any valid array | Optional list of User UUIDs to immediately assign to this group |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "description": "## Create Group\n\nCreate an RBAC Group/Role with linked permissions and users (Superuser or Tenant Admin).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Unique role/group title within the organization |\n| `description` | `string` | No | Any valid string | Operational scope and responsibility summary |\n| `group_type` | `string` | No | `role, department, custom` | Type of group: 'role' (functional permission set), 'department' (organizational), 'custom' |\n| `permission_ids` | `array` | No | Any valid array | List of granular Permission UUIDs to link to this group |\n| `user_ids` | `array` | No | Any valid array | Optional list of User UUIDs to immediately assign to this group |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"description\": \"Read and review access to general ledger and journal entries\",\n  \"name\": \"Financial Auditors\",\n  \"permission_ids\": [],\n  \"user_ids\": []\n}",
+                  "raw": "{\n  \"description\": \"Read and review access to general ledger and journal entries\",\n  \"group_type\": \"role\",\n  \"name\": \"Financial Auditors\",\n  \"permission_ids\": [],\n  \"user_ids\": []\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2216,7 +2424,7 @@
                     }
                   ]
                 },
-                "description": "## Update Group\n\nUpdate group title, description, or reassign permission links and user memberships.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated group title |\n| `description` | `string` | No | Any valid string | Updated group description |\n| `permission_ids` | `array` | No | Any valid array | Full replacement list of linked Permission UUIDs |\n| `user_ids` | `array` | No | Any valid array | Full replacement list of assigned User UUIDs |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+                "description": "## Update Group\n\nUpdate group title, description, type, or reassign permission links and user memberships.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated group title |\n| `description` | `string` | No | Any valid string | Updated group description |\n| `group_type` | `string` | No | `role, department, custom` | Updated group classification |\n| `permission_ids` | `array` | No | Any valid array | Full replacement list of linked Permission UUIDs |\n| `user_ids` | `array` | No | Any valid array | Full replacement list of assigned User UUIDs |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
               },
               "response": []
             },

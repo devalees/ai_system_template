@@ -601,4 +601,62 @@ The `reporting` module (`backend/modules/base/reporting/`) provides enterprise-g
 - **Relational Path Validation (`resolve_field_path`)**:
   - Validates dot-paths against mappers before query compilation, returning the terminal column type, title, and relationship traversal chain.
 
+### 6.12 Field-Level Access Control (FLAC) & Effective Permissions Engine
+
+#### 6.12.1 Overview & "Role Explosion" Prevention
+Traditional enterprise RBAC systems suffer from "Role Explosion" where every slight variation in user permission requirements leads to proliferating synthetic roles (e.g. `Accountant_Without_Salary_View`, `Sales_With_Tax_Edit`).
+The Sovereign Platform eliminates Role Explosion through a dual-mechanism security architecture:
+1. **Direct User-Level Overrides (`UserPermissionLink`)**:
+   - Allows fine-grained, direct permission grants (`is_granted=True`) or explicit revocations (`is_granted=False`) on individual User accounts or autonomous AI Agent identities.
+   - Calculates effective permission sets deterministically via:
+     $$\text{Effective Permissions} = \left( \bigcup_{g \in \text{Groups}} \text{Permissions}(g) \right) \cup \text{Direct Grants} \setminus \text{Direct Revocations}$$
+2. **Field-Level Access Control (FLAC)**:
+   - Extends the authorization boundary beneath the coarse record/model level down to individual model attributes.
+   - Uses the canonical permission syntax: `{module}.{resource}.{field_name}:{read|write}` (e.g., `identity_rbac.company.tax_id:read`).
+
+#### 6.12.2 Model Architecture & Guard Declarations
+1. **`Permission` (`permissions`)**:
+   - `permission_type`: String enum (`"model"` | `"field"`).
+   - `field_name`: Optional string storing the target attribute name for field permissions.
+2. **`Group` (`groups`)**:
+   - `group_type`: String enum (`"role"` | `"department"` | `"custom"`), clarifying functional job roles from organizational departments.
+3. **`UserPermissionLink` (`user_permission_links`)**:
+   - Junction table linking `user_id` and `permission_id` with `is_granted: bool`.
+   - Supports additive micro-privileges and negative explicit carve-outs.
+4. **Declarative Guard Reflection (`__guarded_fields__`)**:
+   - Models declare sensitive attributes declaratively on their classes:
+     ```python
+     class Company(BaseModel):
+         ...
+         __guarded_fields__ = {
+             "tax_id": {"read_permission": "identity_rbac.company.tax_id:read", "write_permission": "identity_rbac.company.tax_id:write"},
+             "settings": {"read_permission": "identity_rbac.company.settings:read", "write_permission": "identity_rbac.company.settings:write"},
+         }
+     ```
+   - Central registry `_GUARDED_FIELDS_MAP` automatically catalogues guarded attributes across all loaded models upon startup.
+
+#### 6.12.3 Egress Filtering & Ingress Mutation Validation (`FLACService`)
+- **Egress Read Sanitization (`sanitize_read_fields`)**:
+  - Automatically filters model instances, Pydantic schemas, or dictionaries before HTTP serialization.
+  - If the caller (human user or AI agent) lacks `{module}.{resource}.{field}:read`, the guarded attribute is completely pruned from dictionaries or set to `None` on object instances.
+  - Supports recursive sanitization across lists and nested child records.
+- **Ingress Write Validation (`validate_write_fields`)**:
+  - Intercepts incoming mutation payloads (`POST`, `PUT`, `PATCH`) before database execution.
+  - If any payload field is guarded and the caller lacks `{module}.{resource}.{field}:write`, the operation is aborted with HTTP 403 Forbidden: `"Forbidden: write access denied on field '{field}'"`.
+- **First-Class AI Agent Governance & Superuser Bypass**:
+  - AI agents (`user_type="agent"`) are evaluated symmetrically against the exact same FLAC policies as human users, preventing autonomous agents from inadvertently leaking or modifying sensitive financial/PII attributes.
+  - Platform Super Administrators (`is_superuser=True`) automatically bypass all model and field checks.
+
+#### 6.12.4 Automated Permission Harvester
+- `PermissionHarvester.harvest_all()` automatically discovers all `__guarded_fields__` declared across registered models.
+- Generates corresponding read and write `Permission` records (`permission_type="field"`).
+- Idempotently links all harvested field permissions to the primary "Super Administrators" group.
+
+#### 6.12.5 Effective Permissions & Overrides REST API
+- `GET /api/v1/identity_rbac/auth/me/permissions`: Returns caller's full effective permission matrix (model permissions, field permissions, and groups).
+- `GET /api/v1/identity_rbac/users/{user_id}/permissions`: Administrator introspection of target user's effective permissions and explicit direct overrides.
+- `POST /api/v1/identity_rbac/users/{user_id}/permissions`: Sets or updates a direct grant or explicit negative revocation override (`is_granted: bool`).
+- `DELETE /api/v1/identity_rbac/users/{user_id}/permissions/{permission_id}`: Removes a direct override, reverting the user to standard group-inherited permissions.
+
+
 
