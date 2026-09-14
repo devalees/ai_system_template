@@ -1777,8 +1777,41 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Sub-stage 5.18 Completed - Commit: `c23b28d`)*: Lookups Master Data Full CRUD, PATCH Support & Hierarchical Postman Sub-Folders. Completed enterprise CRUD surface across all master data lookup entities (`Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`) with typed Pydantic update schemas and soft-delete endpoints. Upgraded `backend/core/exporter.py` to support nested subfolders in Postman collections based on OpenAPI route tags, cleanly dividing `Normalized Master Data & Lookups` into 7 distinct entity subfolders and 1 direct seed request. Added smart path variable resolution binding `{id}` to `active_<resource>_id` with automated POST capture scripts. Full test suite passing 69/69 tests in Docker container. Continuous OpenAPI and Postman collections synchronized.
 - *2026-09-14 (Stage 6 Completed - Commit: `312722f`)*: Implemented Stage 6: Event-Driven Automated Actions Subsystem (TCA Engine) and Pluggable Action Handlers. Created `automated_actions` base module with `AutomatedAction` (rules) and `ActionExecutionLog` (audit telemetry), `AutomatedActionsSettings` schema. Created safe, sandboxed `ASTConditionEvaluator` reusing Universal Query Engine AST grammar (14 operators + compound logic). Built extensible `ActionRegistry` and pluggable handlers: `SendEmailActionHandler`, `SendNotificationActionHandler`, `PostChatterActionHandler`, `UpdateRecordActionHandler`, `CreateRecordActionHandler`, `InvokeWebhookActionHandler`. Implemented `TCADispatcher` with `ContextVar` recursion depth guard (`max_action_depth`), async Celery worker task (`execute_automated_action_task`), and SQLAlchemy session interceptors wired in `Kernel.bootstrap()`. Seeded default automated actions (`fixtures.py`), updated `setup_database.py` (harvested 108 permissions across 27 models, 2 default rules). Added Rule 6 in `AGENTS.md` and Section 6.10 in `architecture.md`. Added Postman subfolder ordering and environment keys (`active_rule_id`, `active_action_id`). Unit tests passing 74/74 (100% pass rate in container).
 
+---
+
+## Stage 6.1: TCA Schema Introspection, Pre-Flight Validation & Universal Headless Dynamic Reporting Engine (IN_PROGRESS)
+
+### 1. Objective & Scope
+1. **Automated Actions (TCA) Introspection & Pre-Flight Validation**:
+   - Provide ORM Model Introspection (`GET /api/v1/automated_actions/introspection/models`) and Field Introspection (`GET /api/v1/automated_actions/introspection/models/{model_name}/fields`) exposing column names, types, requirement flags (`required: bool`), choices, and relation targets.
+   - Enforce pre-flight validation in `create_automated_action` and `update_automated_action` to prevent broken field mappings and missing required fields in `create_record` and `update_record` handlers before persisting to database.
+2. **Universal Headless Dynamic Reporting & Document Engine (`backend/modules/base/reporting/`)**:
+   - **Pure Data Engine**: Returns structured, aggregated JSON for UI specialists and AI agents (`POST /api/v1/reporting/{code}/data`).
+   - **Dynamic Report Query Compiler**: Ad-hoc ORM aggregation across any model with column selection, AST filters, group-by, and aggregate functions (`sum`, `count`, `avg`, `min`, `max`).
+   - **Modular ReportTemplate Subsystem**: Company branding header (Name, Logo, Tax ID, Address, Currency), document line items grid, totals, and running footers with pagination.
+   - **Multi-Format Headless Renderer**: Streaming CSV, styled OpenPyXL Excel (`.xlsx`), and ReportLab executive PDF (`.pdf`) saved to `DocumentAttachment`.
+   - **TCA Action Handler**: `GenerateReportActionHandler` (`action_type = "generate_report"`) enabling headless report generation and email dispatch inside Celery background tasks.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Dependencies & Automated Actions Introspection Engine** - COMPLETED (Commit: `2db1961`)
+- [x] **Sub-task 2: Universal Headless Reporting Module Architecture & Models (`ReportDefinition`, `ReportTemplate`)** - COMPLETED (Commit: `2db1961`)
+- [x] **Sub-task 3: Dynamic Query Compiler & Multi-Format Renderers (JSON, CSV, XLSX, PDF)** - COMPLETED (Commit: `2db1961`)
+- [x] **Sub-task 4: TCA Report Action Handler & REST Endpoints** - COMPLETED (Commit: `2db1961`)
+- [x] **Sub-task 5: Automated Testing, Empirical Verification & OpenAPI / Postman Synchronization** - COMPLETED (Commit: `2db1961`)
+
+### 3. Key Decisions & Deviations (Stage 6.1)
+- *2026-09-14*: **Headless Boundary Strictness**: Adhered strictly to pure data JSON + headless binary generation. Zero frontend UI or template engines in backend; reports serve structured data for UI specialists and autonomous AI agents, and binary streams (PDF, XLSX, CSV) for exports and attachments.
+- *2026-09-14*: **ReportLab Integration**: Added `reportlab>=4.2.0,<5.1.0` to `backend/requirements.txt` and installed into Docker containers (`sovereign-backend-api`, `sovereign-backend-celery`). Implemented two-pass `NumberedCanvas` for accurate "Page X of Y" pagination in executive PDF layouts.
+- *2026-09-14*: **Soft-Delete SQL Column Invariant**: Enforced `Model.deleted_at.is_(None)` across all dynamic report queries and template resolvers, avoiding Python `@property` evaluation errors.
+- *2026-09-14*: **UTF-8 Excel Compatibility**: Emitted UTF-8 Byte Order Mark (`\ufeff`) in `CSVReportRenderer` to ensure Arabic and multilingual character decoding without manual Excel import configuration.
+- *2026-09-14*: **Document Storage Bridge**: Wired `ReportService.export_and_attach` to `DocumentService.create_attachment`, linking generated reports to `DocumentAttachment` records with tenant isolation.
+- *2026-09-14*: **Postman Collection Sub-Folder Ordering**: Added `Automated Actions - Introspection` and 4 `Reporting` sub-folders (`Catalog`, `Execution`, `Templates`, `Definitions`) to `SUBFOLDER_ORDER` in `backend/core/exporter.py`.
+- *2026-09-14*: **Test Suite Verification**: 100% pass rate across 80/80 tests in Docker container (`test_reporting_and_introspection.py` + all existing module tests).
+
 ### 4. Current Focus
-Stage 6 completed. Moving to **Stage 7: Sovereign AI Agent Bridge & Dynamic MCP Tool Exposer**.
+Stage 6.1 completed. Ready for next milestone or stage.
+
+
 
 
 

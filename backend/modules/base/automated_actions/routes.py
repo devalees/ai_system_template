@@ -19,12 +19,44 @@ from modules.base.automated_actions.schemas import (
     ActionExecutionLogRead,
     ConditionTestRequest,
     ConditionTestResponse,
+    ModelIntrospectionItem,
+    ModelFieldsIntrospectionResponse,
+)
+from modules.base.automated_actions.introspection import (
+    get_registered_models,
+    get_model_fields,
+    validate_create_record_config,
+    validate_update_record_config,
 )
 from modules.base.automated_actions.engine.registry import action_registry
 from modules.base.automated_actions.engine.evaluator import ASTConditionEvaluator
 from modules.base.automated_actions.engine.interceptors import extract_instance_state
 
 router = APIRouter()
+
+
+# ---------------- Model & Field Introspection ----------------
+@router.get("/introspection/models", response_model=List[ModelIntrospectionItem], tags=["Automated Actions - Introspection"])
+async def list_models_introspection(
+    current_user: User = Depends(get_current_user),
+) -> List[Dict[str, Any]]:
+    """Retrieve catalog of all registered SQLAlchemy ORM models available for event triggers and actions."""
+    return get_registered_models()
+
+
+@router.get("/introspection/models/{model_name}/fields", response_model=ModelFieldsIntrospectionResponse, tags=["Automated Actions - Introspection"])
+async def get_model_fields_introspection(
+    model_name: str,
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Retrieve comprehensive field specification, data types, choices, and requirement flags for a model."""
+    spec = get_model_fields(model_name)
+    if not spec:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Model '{model_name}' not found in registry.",
+        )
+    return spec
 
 
 # ---------------- Action Types Metadata ----------------
@@ -84,6 +116,26 @@ async def create_automated_action(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid action_config for handler '{payload.action_type}': {str(exc)}",
         )
+
+    # 3. Pre-flight schema validation for record mutations
+    if payload.action_type == "create_record":
+        target_cls_name = payload.action_config.get("model_name", "")
+        record_values = payload.action_config.get("values", {})
+        val_errors = validate_create_record_config(target_cls_name, record_values)
+        if val_errors:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={"message": "Invalid create_record configuration", "errors": val_errors},
+            )
+    elif payload.action_type == "update_record":
+        target_model = payload.target_model
+        update_fields = payload.action_config.get("fields", {})
+        val_errors = validate_update_record_config(target_model, update_fields)
+        if val_errors:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={"message": "Invalid update_record configuration", "errors": val_errors},
+            )
 
     action = AutomatedAction(
         company_id=current_user.company_id,
@@ -153,6 +205,29 @@ async def update_automated_action(
         except Exception as exc:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid action_config: {str(exc)}")
 
+    # Pre-flight validation if action_type or action_config or target_model are being updated
+    eff_action_type = data.get("action_type", action.action_type)
+    eff_action_config = data.get("action_config", action.action_config)
+    eff_target_model = data.get("target_model", action.target_model)
+
+    if eff_action_type == "create_record" and ("action_config" in data or "action_type" in data):
+        target_cls_name = eff_action_config.get("model_name", "")
+        record_values = eff_action_config.get("values", {})
+        val_errors = validate_create_record_config(target_cls_name, record_values)
+        if val_errors:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={"message": "Invalid create_record configuration", "errors": val_errors},
+            )
+    elif eff_action_type == "update_record" and ("action_config" in data or "target_model" in data or "action_type" in data):
+        update_fields = eff_action_config.get("fields", {})
+        val_errors = validate_update_record_config(eff_target_model, update_fields)
+        if val_errors:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={"message": "Invalid update_record configuration", "errors": val_errors},
+            )
+
     for field_name, val in data.items():
         if hasattr(val, "value"):
             val = val.value
@@ -161,6 +236,7 @@ async def update_automated_action(
     action.updated_by_id = current_user.id
     await db.commit()
     await db.refresh(action)
+
     return action
 
 

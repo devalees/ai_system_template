@@ -313,10 +313,17 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
             "Chatter Messages",
         ],
         "Event-Driven Automated Actions & TCA Engine": [
+            "Automated Actions - Introspection",
             "Automated Actions - Rules",
             "Automated Actions - Registry",
             "Automated Actions - Testing",
             "Automated Actions - Logs",
+        ],
+        "Universal Headless Reporting & Document Engine": [
+            "Reporting - Catalog",
+            "Reporting - Execution",
+            "Reporting - Templates",
+            "Reporting - Definitions",
         ],
     }
 

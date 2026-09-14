@@ -165,3 +165,41 @@ class ConditionTestResponse(BaseModel):
     target_model: str
     target_id: uuid.UUID
     evaluated_record: Dict[str, Any]
+
+
+# ---------------- Model & Field Introspection Schemas ----------------
+class ModelIntrospectionItem(BaseModel):
+    """Metadata summary of a registered ORM model."""
+    model_name: str = Field(..., description="ORM model class name (e.g. 'User', 'DocumentAttachment')")
+    module_name: str = Field(..., description="Module namespace that owns the model")
+    table_name: str = Field(..., description="Physical PostgreSQL table name")
+    title: str = Field(..., description="Human-friendly model title")
+    description: Optional[str] = Field(None, description="Model docstring or description")
+    is_tenant_scoped: bool = Field(..., description="True if model enforces multi-tenant company_id isolation")
+    fields_count: int = Field(..., description="Number of columns defined on this model")
+
+
+class FieldIntrospectionItem(BaseModel):
+    """Detailed metadata for a single model field/column."""
+    name: str = Field(..., description="Column/field name")
+    title: str = Field(..., description="Human-friendly field title")
+    type: str = Field(..., description="Normalized field data type (string, integer, float, boolean, uuid, datetime, date, json, enum)")
+    nullable: bool = Field(..., description="Whether database column accepts null values")
+    required: bool = Field(..., description="Whether field is strictly required when creating records via automation")
+    read_only: bool = Field(..., description="Whether field is read-only (primary keys, audit timestamps)")
+    is_relation: bool = Field(..., description="Whether field is a foreign key relationship")
+    foreign_model: Optional[str] = Field(None, description="Target foreign model class name if relation")
+    foreign_table: Optional[str] = Field(None, description="Target foreign table name if relation")
+    foreign_column: Optional[str] = Field(None, description="Target foreign column name if relation")
+    choices: Optional[List[Dict[str, Any]]] = Field(None, description="Allowed choices if enum type")
+    default: Optional[str] = Field(None, description="Default value if configured")
+
+
+class ModelFieldsIntrospectionResponse(BaseModel):
+    """Complete field specification for a queried model."""
+    model_name: str
+    module_name: str
+    table_name: str
+    title: str
+    description: Optional[str] = None
+    fields: List[FieldIntrospectionItem]

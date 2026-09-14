@@ -525,3 +525,57 @@ All business capabilities register with the central `ActionRegistry` ([`backend/
 - **Execution Modes**: Synchronous (`SYNC`) for immediate atomic mutations, or Asynchronous (`ASYNC_CELERY`) for I/O operations (emails, webhooks).
 - **Infinite Loop Protection**: `TCADispatcher` enforces a configurable cascading recursion depth limit (`max_action_depth`, default 5) via `ContextVar` to halt runaway recursive trigger cascades.
 - **Audit Telemetry**: Every execution generates an immutable `ActionExecutionLog` tracking latency, status (`SUCCESS`, `FAILED`, `SKIPPED`), and context diffs.
+
+#### 6.10.5 Model & Field Introspection & Pre-Flight Validation API
+To guarantee data integrity and empower dynamic frontend configuration and autonomous AI agents:
+- **Model Discovery API (`GET /api/v1/automated_actions/introspection/models`)**:
+  - Dynamically inspects all registered SQLAlchemy ORM models inheriting from `Base`.
+  - Exposes `name`, `table_name`, `module`, and docstring description.
+- **Field Specification API (`GET /api/v1/automated_actions/introspection/models/{model_name}/fields`)**:
+  - Reflects all columns, SQL data types, nullability, requirement flags (`required: bool`), primary keys, foreign key targets, and enum choices.
+- **Pre-Flight Schema Validation**:
+  - Intercepts `POST /api/v1/automated_actions/rules` and `PATCH /api/v1/automated_actions/rules/{id}` before writing to the database.
+  - For `create_record`: Validates that `target_model` exists, all non-nullable columns without defaults are present in `field_values`, and field names are valid attributes.
+  - For `update_record`: Validates that all keys in `field_values` correspond to valid existing columns on the target model.
+  - Raises machine-actionable `422 Unprocessable Entity` errors with explicit field error descriptions before broken rules can be committed.
+
+---
+
+### 6.11 Universal Headless Dynamic Reporting & Document Engine
+
+#### 6.11.1 Philosophy & Headless Boundary
+The `reporting` module (`backend/modules/base/reporting/`) provides enterprise-grade, domain-agnostic reporting and document generation strictly adhering to the Sovereign **headless architecture boundary**:
+- **Zero Frontend UI in Backend**: No templates, HTML forms, or UI controls are stored or rendered in the backend.
+- **Structured Data for UI & AI**: Serves pure aggregated JSON datasets (`POST /api/v1/reporting/{report_code}/data`) containing metadata, columns, row records, and summary aggregates for frontend dashboard widgets or autonomous AI analysis.
+- **Headless Binary Generation**: Dynamically compiles and streams downloadable or persistable binary artifacts (PDF, Excel `.xlsx`, CSV) on demand for exports, Celery background worker tasks, and automated action email attachments.
+
+#### 6.11.2 Core Data Models
+1. **`ReportDefinition` (`reports_definitions`)**:
+   - Stores tenant-scoped dynamic report definitions.
+   - Declarative JSONB configurations: `selected_fields` (column projections), `filters` (AST filter trees matching Universal Query Engine grammar), `group_by` (grouping columns), `aggregations` (mapping of field to function: `sum`, `count`, `avg`, `min`, `max`), and `order_by`.
+   - Optional foreign key link to default `ReportTemplate`.
+2. **`ReportTemplate` (`report_templates`)**:
+   - Enterprise document styling configuration supporting company branding.
+   - Configuration attributes: `page_size` (`A4`, `Letter`), `orientation` (`portrait`, `landscape`), `primary_color` (hex), `secondary_color`, `font_family`, `show_company_logo`, `show_page_numbers`, `header_text`, `footer_text`, and `custom_css_variables` (JSONB).
+   - In-memory fallback mechanism: When a tenant hasn't defined a custom template, the system transparently resolves a sensible corporate default (`standard_clean`).
+
+#### 6.11.3 Dynamic Query Engine (`DynamicReportQueryEngine`)
+- Compiles ad-hoc reporting specifications into single, highly optimized SQLAlchemy 2.0 async queries.
+- Injects strict multi-tenant isolation (`company_id = active_company`) and soft-delete guards (`deleted_at IS NULL`).
+- Automatically handles SQL `GROUP BY` column grouping and computes both group-level and grand-total aggregations across numeric columns (`SUM`, `AVG`, `MIN`, `MAX`, `COUNT`).
+
+#### 6.11.4 Multi-Format Headless Renderers
+- **`JSONReportRenderer`**: Pure structured dictionary with metadata, columns, rows, and grand totals.
+- **`CSVReportRenderer`**: High-performance RFC 4180 CSV generation with UTF-8 Byte Order Mark (`\ufeff`) for seamless Arabic and multilingual UTF-8 decoding in Microsoft Excel.
+- **`ExcelReportRenderer`**: OpenPyXL-based spreadsheet generation featuring styled company header blocks, colored column headers, zebra striping, accounting-formatted numeric grand totals, and auto-fitted column widths.
+- **`PDFReportRenderer`**: ReportLab Platypus executive layout engine featuring corporate headers, company logo, metadata cards, word-wrapped paragraph cells, alternating row fills, grand totals, and a two-pass `NumberedCanvas` delivering dynamic `"Page X of Y"` running footers.
+
+#### 6.11.5 Event-Driven TCA Integration (`GenerateReportActionHandler`)
+- Registered in `ActionRegistry` under `action_type = "generate_report"`.
+- Configuration schema `GenerateReportActionConfig`: `report_code`, `format` (`pdf`, `xlsx`, `csv`), `parameters`, `template_id`, `attach_to_record` (bool), `send_email` (bool), `recipient_email`.
+- Seamlessly bridges document generation with the Event-Driven Automated Actions subsystem, headlessly rendering documents on triggers (e.g. invoice creation, state transitions), attaching files to records via `DocumentService`, and dispatching delivery emails via `MailService`.
+
+#### 6.11.6 Document Attachment Storage Integration
+- Report exports can be persisted directly into the platform's Content-Addressable Storage (CAS) via `DocumentService.create_attachment()`.
+- Returned metadata includes `attachment_id`, `file_name`, `file_size`, `mime_type`, `res_model`, and `res_id`, enabling immediate access via standard document endpoints.
+

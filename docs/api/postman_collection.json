@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "1a164144-ff15-4754-837d-e38236543d01",
+    "_postman_id": "719d4cff-7fca-4072-85e9-bb539bd8aaff",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -251,6 +251,87 @@
     {
       "name": "Event-Driven Automated Actions & TCA Engine",
       "item": [
+        {
+          "name": "Automated Actions - Introspection",
+          "item": [
+            {
+              "name": "List Models Introspection",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/introspection/models",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "introspection",
+                    "models"
+                  ],
+                  "variable": []
+                },
+                "description": "## List Models Introspection\n\nRetrieve catalog of all registered SQLAlchemy ORM models available for event triggers and actions.\n\n**Endpoint**: `GET {{base_url}}/api/v1/automated_actions/introspection/models`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Introspection`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Model Fields Introspection",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/introspection/models/:model_name/fields",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "introspection",
+                    "models",
+                    ":model_name",
+                    "fields"
+                  ],
+                  "variable": [
+                    {
+                      "key": "model_name",
+                      "value": "{{active_model_name}}",
+                      "description": "Dynamic path parameter bound to {{active_model_name}}"
+                    }
+                  ]
+                },
+                "description": "## Get Model Fields Introspection\n\nRetrieve comprehensive field specification, data types, choices, and requirement flags for a model.\n\n**Endpoint**: `GET {{base_url}}/api/v1/automated_actions/introspection/models/{model_name}/fields`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Introspection`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `model_name` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            }
+          ]
+        },
         {
           "name": "Automated Actions - Rules",
           "item": [
@@ -7105,6 +7186,678 @@
                 ],
                 "type": "text/javascript"
               }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Universal Headless Reporting & Document Engine",
+      "item": [
+        {
+          "name": "Reporting - Catalog",
+          "item": [
+            {
+              "name": "List Report Catalog",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/catalog",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "catalog"
+                  ],
+                  "variable": []
+                },
+                "description": "## List Report Catalog\n\nRetrieve all available standard and user-defined dynamic reports.\n\n**Endpoint**: `GET {{base_url}}/api/v1/reporting/catalog`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Catalog`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reporting - Execution",
+          "item": [
+            {
+              "name": "Get Report Data",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/:report_code/data",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    ":report_code",
+                    "data"
+                  ],
+                  "variable": [
+                    {
+                      "key": "report_code",
+                      "value": "{{active_report_code}}",
+                      "description": "Dynamic path parameter bound to {{active_report_code}}"
+                    }
+                  ]
+                },
+                "description": "## Get Report Data\n\nExecute report and return pure structured data, rows, and computed metric aggregates.\n\n**Endpoint**: `POST {{base_url}}/api/v1/reporting/{report_code}/data`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Execution`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `report_code` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_data_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export Report",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/:report_code/export",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    ":report_code",
+                    "export"
+                  ],
+                  "variable": [
+                    {
+                      "key": "report_code",
+                      "value": "{{active_report_code}}",
+                      "description": "Dynamic path parameter bound to {{active_report_code}}"
+                    }
+                  ]
+                },
+                "description": "## Export Report\n\nRender report into requested format (PDF, Excel, CSV) with binary stream or DocumentAttachment persistence.\n\n**Endpoint**: `POST {{base_url}}/api/v1/reporting/{report_code}/export`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Execution`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `report_code` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `format` | `string` | No | Any valid string | Export format: 'json', 'csv', 'xlsx', or 'pdf' |\n| `template_id` | `string` | No | Any valid string | Optional styling template UUID override |\n| `params` | `object` | No | Any valid object | Report-specific parameters and filters |\n| `save_to_documents` | `boolean` | No | Any valid boolean | Whether to persist generated file in DocumentAttachment |\n| `res_model` | `string` | No | Any valid string | Target model to attach document to if save_to_documents=True |\n| `res_id` | `string` | No | Any valid string | Target record UUID if save_to_documents=True |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"format\": \"pdf\",\n  \"params\": {},\n  \"save_to_documents\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_export_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Reporting - Templates",
+          "item": [
+            {
+              "name": "List Report Templates",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/templates",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "templates"
+                  ],
+                  "variable": []
+                },
+                "description": "## List Report Templates\n\nList document styling templates configured for active tenant company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/reporting/templates`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Templates`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Report Template",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/templates",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "templates"
+                  ],
+                  "variable": []
+                },
+                "description": "## Create Report Template\n\nCreate a new report styling template.\n\n**Endpoint**: `POST {{base_url}}/api/v1/reporting/templates`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Templates`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Template title |\n| `code` | `string` | **Yes** | Any valid string | Unique template identifier |\n| `target_model` | `string` | No | Any valid string | Target model scope |\n| `orientation` | `string` | No | Any valid string | 'portrait' or 'landscape' |\n| `primary_color` | `string` | No | Any valid string | Primary brand hex color |\n| `show_company_logo` | `boolean` | No | Any valid boolean | show_company_logo attribute |\n| `show_page_numbers` | `boolean` | No | Any valid boolean | show_page_numbers attribute |\n| `header_text` | `string` | No | Any valid string | header_text attribute |\n| `footer_text` | `string` | No | Any valid string | footer_text attribute |\n| `is_default` | `boolean` | No | Any valid boolean | is_default attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\",\n  \"orientation\": \"string\",\n  \"primary_color\": \"string\",\n  \"show_company_logo\": true,\n  \"show_page_numbers\": true,\n  \"is_default\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_template_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get Report Template",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/templates/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "templates",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_template_id}}",
+                      "description": "Dynamic path parameter bound to {{active_template_id}}"
+                    }
+                  ]
+                },
+                "description": "## Get Report Template\n\nGet single report template by ID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/reporting/templates/{id}`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Templates`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Report Template",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/templates/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "templates",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_template_id}}",
+                      "description": "Dynamic path parameter bound to {{active_template_id}}"
+                    }
+                  ]
+                },
+                "description": "## Update Report Template\n\nUpdate styling template attributes.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/reporting/templates/{id}`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Templates`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `orientation` | `string` | No | Any valid string | orientation attribute |\n| `primary_color` | `string` | No | Any valid string | primary_color attribute |\n| `show_company_logo` | `boolean` | No | Any valid boolean | show_company_logo attribute |\n| `show_page_numbers` | `boolean` | No | Any valid boolean | show_page_numbers attribute |\n| `header_text` | `string` | No | Any valid string | header_text attribute |\n| `footer_text` | `string` | No | Any valid string | footer_text attribute |\n| `is_default` | `boolean` | No | Any valid boolean | is_default attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Report Template",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/templates/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "templates",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_template_id}}",
+                      "description": "Dynamic path parameter bound to {{active_template_id}}"
+                    }
+                  ]
+                },
+                "description": "## Delete Report Template\n\nSoft-delete a report template.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/reporting/templates/{id}`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Templates`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reporting - Definitions",
+          "item": [
+            {
+              "name": "List Report Definitions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/definitions",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "definitions"
+                  ],
+                  "variable": []
+                },
+                "description": "## List Report Definitions\n\nList dynamic report definitions configured for active tenant company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/reporting/definitions`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Definitions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `target_model` | `query` | `string` | No | Filter by target model |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Report Definition",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/definitions",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "definitions"
+                  ],
+                  "variable": []
+                },
+                "description": "## Create Report Definition\n\nCreate a new dynamic report definition.\n\n**Endpoint**: `POST {{base_url}}/api/v1/reporting/definitions`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Definitions`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Report display title |\n| `code` | `string` | **Yes** | Any valid string | Unique report code (e.g. 'sales_by_country') |\n| `description` | `string` | No | Any valid string | description attribute |\n| `target_model` | `string` | **Yes** | Any valid string | Target ORM model name to query |\n| `selected_fields` | `array` | No | Any valid array | Fields to project in tabular output |\n| `filters` | `object` | No | Any valid object | AST filter tree |\n| `group_by` | `array` | No | Any valid array | Fields to group rows by |\n| `aggregations` | `object` | No | Any valid object | Aggregations mapping: {field: 'sum'|'count'|'avg'|'min'|'max'} |\n| `order_by` | `array` | No | Any valid array | Order specifications: ['field asc', 'field desc'] |\n| `template_id` | `string` | No | Any valid string | Default ReportTemplate ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\",\n  \"target_model\": \"string\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_definition_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get Report Definition",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/definitions/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "definitions",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_definition_id}}",
+                      "description": "Dynamic path parameter bound to {{active_definition_id}}"
+                    }
+                  ]
+                },
+                "description": "## Get Report Definition\n\nGet single dynamic report definition by ID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/reporting/definitions/{id}`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Definitions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Report Definition",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/definitions/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "definitions",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_definition_id}}",
+                      "description": "Dynamic path parameter bound to {{active_definition_id}}"
+                    }
+                  ]
+                },
+                "description": "## Update Report Definition\n\nUpdate dynamic report definition.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/reporting/definitions/{id}`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Definitions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `selected_fields` | `array` | No | Any valid array | selected_fields attribute |\n| `filters` | `object` | No | Any valid object | filters attribute |\n| `group_by` | `array` | No | Any valid array | group_by attribute |\n| `aggregations` | `object` | No | Any valid object | aggregations attribute |\n| `order_by` | `array` | No | Any valid array | order_by attribute |\n| `template_id` | `string` | No | Any valid string | template_id attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Report Definition",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reporting/definitions/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reporting",
+                    "definitions",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_definition_id}}",
+                      "description": "Dynamic path parameter bound to {{active_definition_id}}"
+                    }
+                  ]
+                },
+                "description": "## Delete Report Definition\n\nSoft-delete dynamic report definition.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/reporting/definitions/{id}`  \n**Tags**: `Universal Headless Reporting & Document Engine, Reporting - Definitions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
             }
           ]
         }

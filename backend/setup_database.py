@@ -254,6 +254,12 @@ async def setup_database(
         action_count = await seed_default_automated_actions(db, company.id)
         print(f"  [OK] Seeded {action_count} default automated action rules.")
 
+        # 7. Seed Default Report Templates
+        from modules.base.reporting.fixtures import seed_default_report_templates
+        await seed_default_report_templates(db)
+        print(f"  [OK] Seeded default report templates.")
+
+
     await engine.dispose()
 
     # Step 6: Synchronize Postman Specifications

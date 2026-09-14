@@ -191,7 +191,20 @@ class Kernel:
         except Exception as exc:
             logger.warning(f"Lifecycle interceptors registration skipped: {exc}")
 
+        # Seed default report templates
+        try:
+            from modules.base.reporting.fixtures import seed_default_report_templates
+            from core.database import AsyncSessionLocal
+            if db_session:
+                await seed_default_report_templates(db_session)
+            else:
+                async with AsyncSessionLocal() as session:
+                    await seed_default_report_templates(session)
+        except Exception as exc:
+            logger.warning(f"Report templates seeding skipped during bootstrap: {exc}")
+
         self._booted = True
+
 
     async def boot(self, app: Optional[FastAPI] = None) -> None:
         """Execute full 4-Phase Kernel Boot Sequence."""
