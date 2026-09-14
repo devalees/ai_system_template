@@ -263,7 +263,7 @@ async def setup_database(
     print(f"   * Allow Registration : {allow_registration}")
     print(f"   * Super Admin User   : {username}")
     print(f"   * Super Admin Email  : {email}")
-    print(f"   * Super Admin Role   : is_superuser=True (Global Access)")
+    print(f"   * Super Admin Role   : is_superuser=True, is_primary_admin=True (Primary Root Administrator)")
     print("=" * 70)
     print("   Postman Environment is ready with your Super Admin credentials!")
     print("   Simply import into Postman and execute POST /auth/login.\n")
