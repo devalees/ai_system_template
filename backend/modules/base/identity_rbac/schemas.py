@@ -480,7 +480,6 @@ class CompanyCreate(BaseModel):
             "example": {
                 "name": "Sovereign Enterprise System",
                 "code": "SOV-MAIN",
-                "allow_registration": False,
                 "email_domain": "sovereign.local",
                 "currency_id": "USD",
             }
@@ -489,10 +488,6 @@ class CompanyCreate(BaseModel):
 
     name: str = Field(..., min_length=2, max_length=100, description="Organization legal or trading name")
     code: str = Field(..., min_length=2, max_length=50, description="Unique tenant identification code (alphanumeric)")
-    allow_registration: bool = Field(
-        False,
-        description="Whether public self-registration via /auth/register is permitted for this tenant. If False, users must be invited/created by an admin",
-    )
     email_domain: Optional[str] = Field(None, max_length=100, description="Optional corporate email domain restriction")
     currency_id: Optional[str] = Field("USD", max_length=3, description="Base accounting currency ISO 4217 code")
 
@@ -501,7 +496,6 @@ class CompanyUpdate(BaseModel):
     """Schema for updating tenant configuration."""
     name: Optional[str] = Field(None, min_length=2, max_length=100, description="Updated company name")
     code: Optional[str] = Field(None, min_length=2, max_length=50, description="Updated company code")
-    allow_registration: Optional[bool] = Field(None, description="Toggle public registration policy (True = open, False = internal only)")
     email_domain: Optional[str] = Field(None, max_length=100, description="Updated corporate domain")
     currency_id: Optional[str] = Field(None, max_length=3, description="Updated base currency code")
     is_active: Optional[bool] = Field(None, description="Active status toggle (deactivating locks all users out)")
@@ -514,8 +508,8 @@ class CompanyRead(BaseModel):
     id: uuid.UUID
     name: str
     code: str
-    allow_registration: bool
     email_domain: Optional[str] = None
     currency_id: Optional[str] = "USD"
     is_active: bool
     created_at: datetime
+

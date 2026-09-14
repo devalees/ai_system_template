@@ -182,14 +182,22 @@ async def setup_database(
         company = Company(
             name=company_name,
             code=company_code,
-            allow_registration=allow_registration,
             email_domain=email.split("@")[-1] if "@" in email else None,
             currency_id="USD",
         )
         db.add(company)
         await db.flush()
         print(f"  [OK] Primary Company created: '{company.name}' (Code: {company.code}, ID: {company.id})")
-        print(f"       Allow Registration: {company.allow_registration}")
+
+        # Seed identity_rbac module settings
+        from modules.base.settings.service import SettingsService
+        await SettingsService.update_settings(
+            db=db,
+            module_name="identity_rbac",
+            company_id=company.id,
+            new_data={"allow_registration": allow_registration},
+        )
+        print(f"       Identity Settings Seeded (Allow Registration: {allow_registration})")
 
         # 2. Seed ISO Master Data Lookups
         print("  Seeding ISO Master Data (Countries, Currencies, UoMs, Tax Types)...")

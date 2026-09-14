@@ -54,10 +54,14 @@ async def test_settings_api_endpoints_and_multitenancy(db_session: AsyncSession)
         company_a = uuid.uuid4()
         company_b = uuid.uuid4()
         db_session.add_all([
-            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}", allow_registration=True),
-            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}", allow_registration=True),
+            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}"),
+            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}"),
         ])
         await db_session.commit()
+
+        # Seed allow_registration=True via SettingsService
+        await SettingsService.update_settings(db_session, "identity_rbac", company_a, {"allow_registration": True})
+        await SettingsService.update_settings(db_session, "identity_rbac", company_b, {"allow_registration": True})
 
         # 1. Register Tenant A user
         user_a = f"tenant_a_{uuid.uuid4().hex[:6]}"
@@ -137,3 +141,29 @@ async def test_settings_api_endpoints_and_multitenancy(db_session: AsyncSession)
         settings_list = res_list_a.json()
         assert len(settings_list) >= 1
         assert any(s["module_name"] == "inventory" for s in settings_list)
+
+        # 8. Registered module schema introspection (identity_rbac)
+        res_schema = await client.get("/api/v1/settings/identity_rbac", headers=headers_a)
+        assert res_schema.status_code == 200
+        schema_data = res_schema.json()
+        assert "fields" in schema_data
+        field_keys = [f["key"] for f in schema_data["fields"]]
+        assert "allow_registration" in field_keys
+        assert "enforce_2fa" in field_keys
+        assert "password_min_length" in field_keys
+
+        # Verify field metadata contains label, description, type, default
+        allow_reg_field = next(f for f in schema_data["fields"] if f["key"] == "allow_registration")
+        assert allow_reg_field["label"] == "Allow Public Self-Registration"
+        assert len(allow_reg_field["description"]) > 10
+        assert allow_reg_field["type"] == "boolean"
+
+        # 9. Choice-based setting schema introspection (i18n)
+        res_i18n = await client.get("/api/v1/settings/i18n", headers=headers_a)
+        assert res_i18n.status_code == 200
+        i18n_fields = res_i18n.json()["fields"]
+        locale_field = next(f for f in i18n_fields if f["key"] == "default_locale")
+        assert locale_field["type"] == "select"
+        assert locale_field["options"] is not None
+        assert any(opt["value"] == "ar" for opt in locale_field["options"])
+

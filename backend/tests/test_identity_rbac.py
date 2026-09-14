@@ -26,6 +26,7 @@ from modules.base.identity_rbac.security import (
 )
 from modules.base.identity_rbac.dependencies import require_permission
 from modules.base.identity_rbac.harvester import harvest_model_permissions
+from modules.base.settings.service import SettingsService
 
 from main import app
 
@@ -37,16 +38,20 @@ async def protected_endpoint(current_user: User = Depends(require_permission("or
 
 @pytest.mark.asyncio
 async def test_user_registration_allowed_when_company_permits(db_session: AsyncSession):
-    """Verify registration succeeds when target company has allow_registration=True."""
-    # 1. Seed company with allow_registration=True
+    """Verify registration succeeds when target company has allow_registration=True in identity_rbac settings."""
+    # 1. Seed company
     open_company = Company(
         name="Open Registration Corp",
         code=f"OPEN_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     db_session.add(open_company)
     await db_session.commit()
     await db_session.refresh(open_company)
+
+    # Enable registration via SettingsService
+    await SettingsService.update_settings(
+        db_session, "identity_rbac", open_company.id, {"allow_registration": True}
+    )
 
     unique_user = f"user_{uuid.uuid4().hex[:6]}"
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -88,11 +93,10 @@ async def test_user_registration_allowed_when_company_permits(db_session: AsyncS
 @pytest.mark.asyncio
 async def test_user_registration_blocked_when_company_disallows(db_session: AsyncSession):
     """Verify registration is rejected with 403 Forbidden when target company has allow_registration=False."""
-    # Seed closed company
+    # Seed closed company (defaults to allow_registration=False)
     closed_company = Company(
         name="Closed Enterprise Ltd",
         code=f"CLOSED_{uuid.uuid4().hex[:4]}",
-        allow_registration=False,
     )
     db_session.add(closed_company)
     await db_session.commit()
@@ -137,7 +141,6 @@ async def test_internal_user_creation_bypasses_registration_flag(db_session: Asy
         id=company_id,
         name="Strict Enterprise Corp",
         code=f"STRICT_{uuid.uuid4().hex[:4]}",
-        allow_registration=False,
     )
     admin_user = User(
         email=f"admin_{uuid.uuid4().hex[:6]}@strict.com",
@@ -181,7 +184,7 @@ async def test_internal_user_creation_bypasses_registration_flag(db_session: Asy
 
 @pytest.mark.asyncio
 async def test_company_management_endpoints(db_session: AsyncSession):
-    """Verify superuser can create, list, and patch company allow_registration status."""
+    """Verify superuser can create, list, and patch tenant companies."""
     super_admin = User(
         email=f"root_{uuid.uuid4().hex[:6]}@platform.local",
         username=f"root_{uuid.uuid4().hex[:6]}",
@@ -201,31 +204,40 @@ async def test_company_management_endpoints(db_session: AsyncSession):
         token = res_login.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
-        # 1. Create company with allow_registration=False
+        # 1. Create company
         comp_code = f"TENANT_{uuid.uuid4().hex[:4]}"
         create_res = await client.post(
             "/api/v1/identity_rbac/companies",
-            json={"name": "New Tenant Ltd", "code": comp_code, "allow_registration": False},
+            json={"name": "New Tenant Ltd", "code": comp_code},
             headers=headers,
         )
         assert create_res.status_code == 201
         comp_data = create_res.json()
         comp_id = comp_data["id"]
-        assert comp_data["allow_registration"] is False
+        assert comp_data["name"] == "New Tenant Ltd"
 
-        # 2. Patch company to allow registration
+        # 2. Patch company name
         patch_res = await client.patch(
             f"/api/v1/identity_rbac/companies/{comp_id}",
-            json={"allow_registration": True},
+            json={"name": "Renamed Tenant Ltd"},
             headers=headers,
         )
         assert patch_res.status_code == 200
-        assert patch_res.json()["allow_registration"] is True
+        assert patch_res.json()["name"] == "Renamed Tenant Ltd"
 
         # 3. Retrieve company details
         get_res = await client.get(f"/api/v1/identity_rbac/companies/{comp_id}", headers=headers)
         assert get_res.status_code == 200
-        assert get_res.json()["name"] == "New Tenant Ltd"
+        assert get_res.json()["name"] == "Renamed Tenant Ltd"
+
+        # 4. Configure registration setting via Settings API
+        patch_settings = await client.patch(
+            "/api/v1/settings/identity_rbac",
+            headers=headers,
+            json={"settings_data": {"allow_registration": True}},
+        )
+        assert patch_settings.status_code == 200
+        assert patch_settings.json()["settings_data"]["allow_registration"] is True
 
 
 @pytest.mark.asyncio
@@ -234,10 +246,11 @@ async def test_first_class_ai_agent_identity(db_session: AsyncSession):
     company = Company(
         name="AI Hub Corp",
         code=f"AI_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     db_session.add(company)
     await db_session.commit()
+    await db_session.refresh(company)
+    await SettingsService.update_settings(db_session, "identity_rbac", company.id, {"allow_registration": True})
 
     agent_id = f"bot_agent_{uuid.uuid4().hex[:6]}"
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -329,7 +342,6 @@ async def test_permission_canonical_code_and_patch(db_session: AsyncSession):
         id=comp_id,
         name="Perm Corp",
         code=f"PERM_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     super_admin = User(
         email=f"perm_admin_{uuid.uuid4().hex[:6]}@test.com",
@@ -401,7 +413,6 @@ async def test_group_crud_and_permission_linking(db_session: AsyncSession):
         id=comp_id,
         name="Group Corp",
         code=f"GRP_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     super_admin = User(
         email=f"group_admin_{uuid.uuid4().hex[:6]}@test.com",
@@ -492,7 +503,6 @@ async def test_user_patch_and_group_linking(db_session: AsyncSession):
         id=comp_id,
         name="Update Tenant",
         code=f"UPD_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     super_admin = User(
         email=f"user_admin_{uuid.uuid4().hex[:6]}@test.com",
@@ -573,7 +583,6 @@ async def test_soft_delete_and_guards(db_session: AsyncSession):
         id=comp_id,
         name="Deletable Corp",
         code=f"DEL_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     admin_user = User(
         email=f"del_admin_{uuid.uuid4().hex[:6]}@del.com",
@@ -710,7 +719,6 @@ async def test_automated_permission_harvester(db_session: AsyncSession):
         id=comp_id,
         name="Harvester Test Corp",
         code=f"HARV_{uuid.uuid4().hex[:4]}",
-        allow_registration=False,
     )
     admin_group = Group(
         name="Super Administrators",
@@ -754,7 +762,6 @@ async def test_bidirectional_group_user_management(db_session: AsyncSession):
         id=comp_id,
         name="Membership Corp",
         code=f"MEM_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     super_admin = User(
         email=f"mem_admin_{uuid.uuid4().hex[:6]}@mem.com",
@@ -857,7 +864,6 @@ async def test_primary_root_admin_immunity_and_hierarchy(db_session: AsyncSessio
         id=comp_id,
         name="Hierarchy Enterprise",
         code=f"HIER_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     # 1. Primary Root Admin (seeded by setup_database)
     root_admin = User(
@@ -1044,7 +1050,6 @@ async def test_authenticated_change_password_and_decoupling(db_session: AsyncSes
         id=comp_id,
         name="Security Audit Corp",
         code=f"SEC_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     user = User(
         email=f"employee_{uuid.uuid4().hex[:6]}@test.com",
@@ -1164,7 +1169,6 @@ async def test_forgot_and_reset_password_flow(db_session: AsyncSession):
         id=comp_id,
         name="Reset Test Corp",
         code=f"RST_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     user = User(
         email=f"alice_{uuid.uuid4().hex[:6]}@test.com",
@@ -1275,10 +1279,10 @@ async def test_email_verification_lifecycle(db_session: AsyncSession):
         id=comp_id,
         name="Verification Tenant",
         code=f"VER_{uuid.uuid4().hex[:4]}",
-        allow_registration=True,
     )
     db_session.add(company)
     await db_session.commit()
+    await SettingsService.update_settings(db_session, "identity_rbac", company.id, {"allow_registration": True})
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # 1. Register a new user
@@ -1344,7 +1348,7 @@ async def test_two_factor_authentication_lifecycle(db_session: AsyncSession):
     # 1. Seed company & user
     comp_id = uuid.uuid4()
     comp_code = f"2FA_{uuid.uuid4().hex[:6]}"
-    company = Company(id=comp_id, name="2FA Secure Org", code=comp_code, allow_registration=True)
+    company = Company(id=comp_id, name="2FA Secure Org", code=comp_code)
     user_name = f"totp_user_{uuid.uuid4().hex[:6]}"
     raw_password = "StrongPassword2026!"
     user = User(

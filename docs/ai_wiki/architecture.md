@@ -387,6 +387,65 @@ The Orchestrator MCP server exposes two typed tools for the Chief of Staff:
   - **Challenge Verification (`POST /api/v1/identity_rbac/auth/2fa/verify`)**: Validates `mfa_token` and accepts either a live 6-digit TOTP code or an emergency recovery code (atomically burned from user records upon use).
   - **Disabling (`POST /api/v1/identity_rbac/auth/2fa/disable`)**: Requires re-authenticating current password plus TOTP or recovery code to prevent session hijacking.
 
+---
+
+### 6.7 Universal Modular Settings & Configuration Engine Standard
+
+#### 6.7.1 Architectural Boundary: Tenant Identity vs. Modular Policies
+To maintain high architectural integrity and prevent continuous schema churn, the Sovereign platform strictly enforces a clean boundary between tenant identity and operational configurations:
+- **Tenant Identity (SQL Table `companies`)**: Strictly reserved for core physical entity attributes: `id`, `name`, `code`, `currency_id`, `email_domain`, `is_active`, `deleted_at`.
+- **Operational Policies & Configuration (`ModuleSettings` JSONB + Redis)**: All module-level switches, feature toggles, security rules, numerical thresholds, and business policies (e.g. `allow_registration`, `enforce_2fa`, `default_from_email`, `retention_days`) MUST be managed via the Settings Engine.
+- **Rule for All AI Agents**: **NEVER** add ad-hoc boolean flags, policy columns, or feature toggles directly to `Company` or other core domain models. Always declare them as typed Module Settings.
+
+#### 6.7.2 Self-Describing Typed Settings Specification
+Every module that supports configurable behavior defines a `settings.py` inside its module directory containing a Pydantic `BaseModel`. Every setting field must include rich metadata:
+1. `title`: Human-readable display label for UI checkboxes, dropdowns, and form inputs.
+2. `description`: Comprehensive explanation of the setting's business logic, default behavior, and operational impact.
+3. `type`: Explicit data type (`boolean`, `integer`, `float`, `string`, `select`, `secret`).
+4. `default`: Sensible fallback value when the tenant has not configured custom overrides.
+5. `options`: If choice-based (`select`), an explicit list of `[{"value": ..., "label": ...}]` pairs.
+6. `category`: Grouping for UI sectioning (e.g. `"User Onboarding"`, `"Security & Authentication"`).
+
+```python
+# Example: backend/modules/base/identity_rbac/settings.py
+class IdentitySettings(BaseModel):
+    allow_registration: bool = Field(
+        default=False,
+        title="Allow Public Self-Registration",
+        description="Allow external users to create accounts without prior administrator invitation.",
+        json_schema_extra={"category": "User Onboarding"}
+    )
+    enforce_2fa: bool = Field(
+        default=False,
+        title="Enforce Two-Factor Authentication (2FA)",
+        description="Require all users within this organization to enable 2FA before accessing system resources.",
+        json_schema_extra={"category": "Security & Authentication"}
+    )
+    password_min_length: int = Field(
+        default=8,
+        ge=6,
+        le=128,
+        title="Minimum Password Length",
+        description="Minimum number of characters required for user passwords.",
+        json_schema_extra={"category": "Security & Authentication"}
+    )
+
+SettingsService.register_module_settings("identity_rbac", IdentitySettings)
+```
+
+#### 6.7.3 Kernel Discovery & Transparent Fallback Merging
+- **Automatic Kernel Discovery**: During `Kernel.load()`, the micro-kernel automatically detects and imports `settings.py` across all loaded modules in topological order.
+- **Transparent Fallback Merging**: When `SettingsService.get_settings(db, module_name, company_id)` is invoked:
+  $$\text{effective\_settings} = \{\dots\text{defaults}, \dots\text{stored\_tenant\_overrides}\}$$
+  If a tenant company has never customized settings, the call seamlessly returns validated defaults without requiring prior database row instantiation.
+- **Sub-Millisecond Redis Caching**: Cached under `sovereign:settings:{company_id}:{module_name}` with 1-hour TTL and automated invalidation on `update_settings()`.
+
+#### 6.7.4 Dynamic API Introspection & FastMCP / Hermes Reflection
+- `GET /api/v1/settings/{module_name}`: Returns `settings_data` (current effective values) alongside `fields` (the self-describing list of `SettingFieldMeta` containing keys, labels, descriptions, types, defaults, choices, and categories).
+- Enables frontend admin dashboards to dynamically render full settings panels with zero hardcoded form templates.
+- Enables autonomous Hermes AI agents and FastMCP tools to inspect configurable options, validate parameters, and adjust tenant configurations deterministically.
+
+
 
 
 

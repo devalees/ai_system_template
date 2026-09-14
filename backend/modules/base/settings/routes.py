@@ -35,6 +35,7 @@ async def list_company_settings(
             module_name=r.module_name,
             company_id=r.company_id,
             settings_data=r.settings_data or {},
+            fields=SettingsService.get_module_schema(r.module_name),
         )
         for r in records
     ]
@@ -51,16 +52,18 @@ async def get_module_settings(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ModuleSettingsResponse:
-    """Fetch cached module settings for the current user's company."""
+    """Fetch cached module settings for the current user's company along with self-describing field schema."""
     data = await SettingsService.get_settings(
         db=db,
         module_name=module_name,
         company_id=current_user.company_id,
     )
+    fields = SettingsService.get_module_schema(module_name)
     return ModuleSettingsResponse(
         module_name=module_name,
         company_id=current_user.company_id,
         settings_data=data,
+        fields=fields,
     )
 
 
@@ -83,8 +86,11 @@ async def update_module_settings(
         company_id=current_user.company_id,
         new_data=payload.settings_data,
     )
+    fields = SettingsService.get_module_schema(module_name)
     return ModuleSettingsResponse(
         module_name=module_name,
         company_id=current_user.company_id,
         settings_data=data,
+        fields=fields,
     )
+

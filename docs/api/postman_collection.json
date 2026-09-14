@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "978bfc34-c831-40d7-ba46-7667b82de7b7",
+    "_postman_id": "291995ee-8695-4b42-b21b-87ea558c0fde",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -1349,10 +1349,10 @@
               ],
               "variable": []
             },
-            "description": "## Create Company\n\nCreate a new tenant organization (Superuser only).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/companies`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Organization legal or trading name |\n| `code` | `string` | **Yes** | Any valid string | Unique tenant identification code (alphanumeric) |\n| `allow_registration` | `boolean` | No | Any valid boolean | Whether public self-registration via /auth/register is permitted for this tenant. If False, users must be invited/created by an admin |\n| `email_domain` | `string` | No | Any valid string | Optional corporate email domain restriction |\n| `currency_id` | `string` | No | Any valid string | Base accounting currency ISO 4217 code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Create Company\n\nCreate a new tenant organization (Superuser only).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/companies`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Organization legal or trading name |\n| `code` | `string` | **Yes** | Any valid string | Unique tenant identification code (alphanumeric) |\n| `email_domain` | `string` | No | Any valid string | Optional corporate email domain restriction |\n| `currency_id` | `string` | No | Any valid string | Base accounting currency ISO 4217 code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"allow_registration\": false,\n  \"code\": \"SOV-MAIN\",\n  \"currency_id\": \"USD\",\n  \"email_domain\": \"sovereign.local\",\n  \"name\": \"Sovereign Enterprise System\"\n}",
+              "raw": "{\n  \"code\": \"SOV-MAIN\",\n  \"currency_id\": \"USD\",\n  \"email_domain\": \"sovereign.local\",\n  \"name\": \"Sovereign Enterprise System\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1467,7 +1467,7 @@
                 }
               ]
             },
-            "description": "## Update Company\n\nUpdate tenant configuration, including toggling allow_registration (Superuser or Tenant Admin).\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/companies/{company_id}`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `company_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated company name |\n| `code` | `string` | No | Any valid string | Updated company code |\n| `allow_registration` | `boolean` | No | Any valid boolean | Toggle public registration policy (True = open, False = internal only) |\n| `email_domain` | `string` | No | Any valid string | Updated corporate domain |\n| `currency_id` | `string` | No | Any valid string | Updated base currency code |\n| `is_active` | `boolean` | No | Any valid boolean | Active status toggle (deactivating locks all users out) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+            "description": "## Update Company\n\nUpdate tenant configuration (Superuser or Tenant Admin).\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/companies/{company_id}`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `company_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated company name |\n| `code` | `string` | No | Any valid string | Updated company code |\n| `email_domain` | `string` | No | Any valid string | Updated corporate domain |\n| `currency_id` | `string` | No | Any valid string | Updated base currency code |\n| `is_active` | `boolean` | No | Any valid boolean | Active status toggle (deactivating locks all users out) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3183,7 +3183,7 @@
                 }
               ]
             },
-            "description": "## Get settings configuration for a specific module\n\nFetch cached module settings for the current user's company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/settings/{module_name}`  \n**Tags**: `Module Settings Engine, Settings`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+            "description": "## Get settings configuration for a specific module\n\nFetch cached module settings for the current user's company along with self-describing field schema.\n\n**Endpoint**: `GET {{base_url}}/api/v1/settings/{module_name}`  \n**Tags**: `Module Settings Engine, Settings`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3230,7 +3230,7 @@
             "description": "## Update or merge configuration settings for a specific module\n\nMerge and update key-value JSONB settings for the specified module and invalidate cache.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/settings/{module_name}`  \n**Tags**: `Module Settings Engine, Settings`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `settings_data` | `object` | **Yes** | Any valid object | Configuration dictionary to patch/merge |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"settings_data\": {\n    \"auto_post_entries\": true,\n    \"base_currency\": \"USD\",\n    \"fiscal_year_start\": \"01-01\",\n    \"tax_rounding\": \"round_globally\"\n  }\n}",
+              "raw": "{\n  \"settings_data\": {\n    \"allow_registration\": true,\n    \"password_min_length\": 10,\n    \"session_expiry_hours\": 48\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"

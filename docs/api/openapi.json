@@ -898,7 +898,7 @@
           "Tenant Administration"
         ],
         "summary": "Update Company",
-        "description": "Update tenant configuration, including toggling allow_registration (Superuser or Tenant Admin).",
+        "description": "Update tenant configuration (Superuser or Tenant Admin).",
         "operationId": "update_company_api_v1_identity_rbac_companies__company_id__patch",
         "security": [
           {
@@ -3264,7 +3264,7 @@
           "Settings"
         ],
         "summary": "Get settings configuration for a specific module",
-        "description": "Fetch cached module settings for the current user's company.",
+        "description": "Fetch cached module settings for the current user's company along with self-describing field schema.",
         "operationId": "get_module_settings_api_v1_settings__module_name__get",
         "security": [
           {
@@ -6355,12 +6355,6 @@
             "title": "Code",
             "description": "Unique tenant identification code (alphanumeric)"
           },
-          "allow_registration": {
-            "type": "boolean",
-            "title": "Allow Registration",
-            "description": "Whether public self-registration via /auth/register is permitted for this tenant. If False, users must be invited/created by an admin",
-            "default": false
-          },
           "email_domain": {
             "anyOf": [
               {
@@ -6397,7 +6391,6 @@
         "title": "CompanyCreate",
         "description": "Schema for creating a new tenant organization.",
         "example": {
-          "allow_registration": false,
           "code": "SOV-MAIN",
           "currency_id": "USD",
           "email_domain": "sovereign.local",
@@ -6418,10 +6411,6 @@
           "code": {
             "type": "string",
             "title": "Code"
-          },
-          "allow_registration": {
-            "type": "boolean",
-            "title": "Allow Registration"
           },
           "email_domain": {
             "anyOf": [
@@ -6461,7 +6450,6 @@
           "id",
           "name",
           "code",
-          "allow_registration",
           "is_active",
           "created_at"
         ],
@@ -6497,18 +6485,6 @@
             ],
             "title": "Code",
             "description": "Updated company code"
-          },
-          "allow_registration": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Allow Registration",
-            "description": "Toggle public registration policy (True = open, False = internal only)"
           },
           "email_domain": {
             "anyOf": [
@@ -8673,6 +8649,20 @@
           "settings_data": {
             "type": "object",
             "title": "Settings Data"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SettingFieldMeta"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields"
           }
         },
         "type": "object",
@@ -8682,13 +8672,16 @@
           "settings_data"
         ],
         "title": "ModuleSettingsRead",
+        "description": "Persisted module configuration record.",
         "example": {
           "company_id": "a0000000-0000-0000-0000-000000000001",
-          "module_name": "inventory",
+          "fields": [],
+          "module_name": "identity_rbac",
           "settings_data": {
-            "auto_notify": true,
-            "reorder_point": 10,
-            "warehouse_code": "WH-MAIN"
+            "allow_registration": true,
+            "enforce_2fa": false,
+            "password_min_length": 8,
+            "session_expiry_hours": 24
           }
         }
       },
@@ -8696,16 +8689,27 @@
         "properties": {
           "module_name": {
             "type": "string",
-            "title": "Module Name"
+            "title": "Module Name",
+            "description": "Namespace of the module"
           },
           "company_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Company Id"
+            "title": "Company Id",
+            "description": "Active tenant company UUID"
           },
           "settings_data": {
             "type": "object",
-            "title": "Settings Data"
+            "title": "Settings Data",
+            "description": "Current effective configuration values (merged with defaults)"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/SettingFieldMeta"
+            },
+            "type": "array",
+            "title": "Fields",
+            "description": "Self-describing field metadata and options for UI and agent reflection"
           }
         },
         "type": "object",
@@ -8715,15 +8719,7 @@
           "settings_data"
         ],
         "title": "ModuleSettingsResponse",
-        "example": {
-          "company_id": "a0000000-0000-0000-0000-000000000001",
-          "module_name": "inventory",
-          "settings_data": {
-            "auto_notify": true,
-            "reorder_point": 10,
-            "warehouse_code": "WH-MAIN"
-          }
-        }
+        "description": "Comprehensive module settings response containing active values and self-describing field schema."
       },
       "ModuleSettingsUpdate": {
         "properties": {
@@ -8738,12 +8734,12 @@
           "settings_data"
         ],
         "title": "ModuleSettingsUpdate",
+        "description": "Payload for updating or merging key-value configuration settings for a module.",
         "example": {
           "settings_data": {
-            "auto_post_entries": true,
-            "base_currency": "USD",
-            "fiscal_year_start": "01-01",
-            "tax_rounding": "round_globally"
+            "allow_registration": true,
+            "password_min_length": 10,
+            "session_expiry_hours": 48
           }
         }
       },
@@ -9640,6 +9636,91 @@
           "notification_id": "n0000000-0000-0000-0000-000000000001",
           "status": "delivered"
         }
+      },
+      "SettingFieldMeta": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Setting attribute key name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "User-friendly display title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Comprehensive explanation of the setting's business logic and impact"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Data type: 'boolean', 'integer', 'float', 'string', 'select', 'secret'"
+          },
+          "default": {
+            "title": "Default",
+            "description": "System default fallback value"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SettingOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options",
+            "description": "Allowed choices if type is 'select'"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Settings grouping category for UI sectioning",
+            "default": "General"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "description",
+          "type"
+        ],
+        "title": "SettingFieldMeta",
+        "description": "Self-describing metadata for a single configurable module setting."
+      },
+      "SettingOption": {
+        "properties": {
+          "value": {
+            "title": "Value",
+            "description": "Machine-readable option value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable option display label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "SettingOption",
+        "description": "Select option specification for choice-based settings."
       },
       "TagCreate": {
         "properties": {

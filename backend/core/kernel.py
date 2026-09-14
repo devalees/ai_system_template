@@ -152,6 +152,11 @@ class Kernel:
                 if manifest.module_dir and (manifest.module_dir / "models.py").exists():
                     models_mod = importlib.import_module(f"{pkg_prefix}.models")
 
+                # Import module settings schema if exists
+                if manifest.module_dir and (manifest.module_dir / "settings.py").exists():
+                    importlib.import_module(f"{pkg_prefix}.settings")
+                    logger.debug(f"Loaded settings schema for '{module_name}'")
+
                 self.loaded_packages[module_name] = manifest
             except Exception as exc:
                 logger.error(f"Failed loading module package '{module_name}': {exc}", exc_info=True)

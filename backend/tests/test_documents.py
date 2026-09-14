@@ -9,6 +9,7 @@ from main import app
 from modules.base.identity_rbac.models import Company
 from modules.base.documents.service import DocumentService
 from modules.base.documents.storage import StorageEngine
+from modules.base.settings.service import SettingsService
 
 
 @pytest.mark.asyncio
@@ -58,10 +59,13 @@ async def test_document_endpoints_and_multitenancy(db_session: AsyncSession):
         company_a = uuid.uuid4()
         company_b = uuid.uuid4()
         db_session.add_all([
-            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}", allow_registration=True),
-            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}", allow_registration=True),
+            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}"),
+            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}"),
         ])
         await db_session.commit()
+
+        await SettingsService.update_settings(db_session, "identity_rbac", company_a, {"allow_registration": True})
+        await SettingsService.update_settings(db_session, "identity_rbac", company_b, {"allow_registration": True})
 
         # 1. Register Tenant A
         user_a = f"doc_a_{uuid.uuid4().hex[:6]}"

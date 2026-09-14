@@ -67,6 +67,7 @@ from modules.base.identity_rbac.security import (
 from modules.base.identity_rbac.dependencies import get_current_user, require_permission
 from modules.base.mail_gateway.service import MailService
 from modules.base.mail_gateway.schemas import SendMailRequest
+from modules.base.settings.service import SettingsService
 
 logger = logging.getLogger("sovereign.identity_rbac")
 router = APIRouter()
@@ -112,16 +113,22 @@ async def register_user(
     target_company_id = payload.company_id or get_active_company_id()
     if not target_company_id:
         stmt_comp = select(Company).where(
-            Company.allow_registration == True,
             Company.is_active == True,
             Company.deleted_at.is_(None),
-        ).limit(1)
-        company = (await db.execute(stmt_comp)).scalar_one_or_none()
-        if not company:
+        )
+        companies = (await db.execute(stmt_comp)).scalars().all()
+        allowed_company = None
+        for comp in companies:
+            comp_settings = await SettingsService.get_settings(db, "identity_rbac", comp.id)
+            if comp_settings.get("allow_registration", False):
+                allowed_company = comp
+                break
+        if not allowed_company:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Public self-registration is not available. Please specify a valid company_id or contact an administrator.",
             )
+        company = allowed_company
         target_company_id = company.id
     else:
         stmt_comp = select(Company).where(Company.id == target_company_id, Company.deleted_at.is_(None))
@@ -130,7 +137,8 @@ async def register_user(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target company not found.")
         if not company.is_active:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Target company is deactivated.")
-        if not company.allow_registration:
+        comp_settings = await SettingsService.get_settings(db, "identity_rbac", company.id)
+        if not comp_settings.get("allow_registration", False):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Self-registration is disabled for this company. Please contact an administrator.",
@@ -1017,7 +1025,6 @@ async def create_company(
     company = Company(
         name=payload.name,
         code=payload.code,
-        allow_registration=payload.allow_registration,
         email_domain=payload.email_domain,
         currency_id=payload.currency_id or "USD",
     )
@@ -1077,7 +1084,7 @@ async def update_company(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Company:
-    """Update tenant configuration, including toggling allow_registration (Superuser or Tenant Admin)."""
+    """Update tenant configuration (Superuser or Tenant Admin)."""
     if not current_user.is_superuser and current_user.company_id != company_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to tenant organization.")
 
