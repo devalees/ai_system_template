@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "36623544-5678-4abe-b77a-788ee8eba976",
+    "_postman_id": "46b4dd33-a468-4f72-8cc4-d922da21b392",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2576,6 +2576,203 @@
               "variable": []
             },
             "description": "Root API platform status and documentation links."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Universal Streaming Import & Export",
+      "item": [
+        {
+          "name": "Upload dataset file and trigger bulk import",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/import_export/import",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "import_export",
+                "import"
+              ],
+              "variable": []
+            },
+            "description": "Upload dataset and initiate schema-mapped entity import."
+          },
+          "response": []
+        },
+        {
+          "name": "Trigger bulk model export",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/import_export/export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "import_export",
+                "export"
+              ],
+              "variable": []
+            },
+            "description": "Trigger background or direct export of entity records to CSV, Excel, or JSON.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"async_job\": true,\n  \"fields\": [\n    \"code\",\n    \"name\",\n    \"phone_code\"\n  ],\n  \"file_format\": \"csv\",\n  \"filter_criteria\": {},\n  \"model_name\": \"lookups.country\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List tenant import/export jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/import_export/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "import_export",
+                "jobs"
+              ],
+              "variable": []
+            },
+            "description": "List recent bulk import and export jobs for the current tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Get job execution telemetry and progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/import_export/jobs/:job_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "import_export",
+                "jobs",
+                ":job_id"
+              ],
+              "variable": [
+                {
+                  "key": "job_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Retrieve detailed progress, row counts, and error telemetry for a job."
+          },
+          "response": []
+        },
+        {
+          "name": "Download generated export file",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/import_export/jobs/:job_id/download",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "import_export",
+                "jobs",
+                ":job_id",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "job_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Stream exported CSV, Excel, or JSON file to client."
           },
           "response": []
         }

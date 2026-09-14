@@ -1642,9 +1642,9 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - [x] **Sub-stage 5.8: `notification_engine` (Multi-Channel Push Subsystem)** - COMPLETED (Commit: `f750bb5`)
   - Multi-channel notification dispatcher supporting In-App WebSocket alerts, WebPush (VAPID), and Mobile Push formatting.
   - Per-user delivery preference matrices, unread badge counters, and real-time Redis Pub/Sub stream (`/api/v1/notification_engine/*`).
-- [ ] **Sub-stage 5.9: `import_export` (Universal Streaming Bulk Processing)**
-  - Streaming processor for CSV, Excel (`openpyxl`), and JSON formats with dynamic schema mapping.
-  - Celery background worker execution for large datasets returning `202 Accepted` with task polling.
+- [x] **Sub-stage 5.9: `import_export` (Universal Streaming Bulk Processing)** - COMPLETED (Commit: pending)
+  - Streaming processor for CSV, Excel (`openpyxl`), and JSON formats with dynamic schema mapping (`DataProcessor`).
+  - Job tracking (`ImportExportJob`), Celery background execution (`202 Accepted`), and streaming download endpoints (`/api/v1/import_export/*`).
 - [ ] **Sub-stage 5.10: `backup` (Unified Atomic Archive Engine)**
   - Atomic archive generator packaging `dump.sql` (PostgreSQL raw dump), `filestore/` (blob attachments), and `manifest.json`.
   - CLI commands and Celery Beat scheduled backup routines.
@@ -1708,7 +1708,8 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Sub-stage 5.6 Completed - Commit: `5734a75`)*: Implemented `documents` module: Content-Addressable Storage (CAS) with SHA-256 deduplication and async file streaming (`aiofiles`), polymorphic `DocumentAttachment` metadata table, and complete REST endpoints (`POST /upload`, `GET /{id}`, `GET /{id}/download`, `GET /entity/...`, `DELETE /{id}`). Synchronized OpenAPI and Postman collection. 35/35 unit tests passing in container in 18.21s.
 - *2026-09-14 (Sub-stage 5.7 Completed - Commit: `af504ad`)*: Implemented `mail_gateway` module: models `MailServer`, `MailTemplate`, and `MailQueue`, Jinja2 dynamic rendering engine (`MailService.render_mail_template`), Celery async queue dispatch (`send_queued_mail_task`) with retry mechanisms and mock SMTP simulation, and complete REST API (`/api/v1/mail_gateway/*`). Regenerated continuous OpenAPI and Postman collections. All 39 unit tests passing in container in 19.97s.
 - *2026-09-14 (Sub-stage 5.8 Completed - Commit: `f750bb5`)*: Implemented `notification_engine` module: models `Notification`, `NotificationPreference`, and `PushSubscription`, multi-channel dispatcher (`NotificationService.send_notification`) supporting in-app, WebPush (VAPID), and mobile push formatting, Redis Pub/Sub broadcast (`sovereign:notifications:{user_id}`) with live WebSocket streaming endpoint (`/api/v1/notification_engine/ws/{user_id}`), unread badge counts, and user opt-in/opt-out preference filtering. Synchronized continuous OpenAPI and Postman collections. All 43 unit tests passing in container in 22.74s.
+- *2026-09-14 (Sub-stage 5.9 Completed - Commit: pending)*: Implemented `import_export` module: universal `DataProcessor` parsing and generating CSV, Excel (.xlsx via `openpyxl`), and JSON, `ImportExportJob` lifecycle tracking with error logs and row metrics, asynchronous Celery execution (`process_import_export_job_task`), and REST endpoints for multipart upload, export triggering, status polling, and binary file download (`/api/v1/import_export/*`). Synchronized continuous OpenAPI and Postman collections. All 46 unit tests passing in container in 25.04s.
 
 ### 4. Current Focus
-Begin execution of **Stage 5, Sub-stage 5.9: `import_export` (Universal Streaming Bulk Processing)** in `backend/modules/base/import_export/`, including streaming CSV/Excel/JSON chunked import/export and Celery background task processing with `202 Accepted` status polling.
+Begin execution of **Stage 5, Sub-stage 5.10: `backup` (Unified Atomic Archive Engine)** in `backend/modules/base/backup/`, including atomic packaging of `dump.sql` (PostgreSQL raw dump), `filestore/` (blob attachments), and `manifest.json`.
 

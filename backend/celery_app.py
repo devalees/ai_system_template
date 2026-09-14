@@ -20,6 +20,7 @@ celery.conf.update(
     broker_connection_retry_on_startup=True,
     imports=[
         "modules.base.mail_gateway.tasks",
+        "modules.base.import_export.tasks",
     ],
 )
 

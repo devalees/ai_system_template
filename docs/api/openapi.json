@@ -2485,6 +2485,285 @@
         }
       }
     },
+    "/api/v1/import_export/import": {
+      "post": {
+        "tags": [
+          "Universal Streaming Import & Export",
+          "Import/Export Engine"
+        ],
+        "summary": "Upload dataset file and trigger bulk import",
+        "description": "Upload dataset and initiate schema-mapped entity import.",
+        "operationId": "upload_and_import_api_v1_import_export_import_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_and_import_api_v1_import_export_import_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/import_export/export": {
+      "post": {
+        "tags": [
+          "Universal Streaming Import & Export",
+          "Import/Export Engine"
+        ],
+        "summary": "Trigger bulk model export",
+        "description": "Trigger background or direct export of entity records to CSV, Excel, or JSON.",
+        "operationId": "trigger_export_api_v1_import_export_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/import_export/jobs": {
+      "get": {
+        "tags": [
+          "Universal Streaming Import & Export",
+          "Import/Export Engine"
+        ],
+        "summary": "List tenant import/export jobs",
+        "description": "List recent bulk import and export jobs for the current tenant.",
+        "operationId": "list_jobs_api_v1_import_export_jobs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by job_type: import or export",
+              "title": "Job Type"
+            },
+            "description": "Filter by job_type: import or export"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ImportExportJobRead"
+                  },
+                  "title": "Response List Jobs Api V1 Import Export Jobs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/import_export/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "Universal Streaming Import & Export",
+          "Import/Export Engine"
+        ],
+        "summary": "Get job execution telemetry and progress",
+        "description": "Retrieve detailed progress, row counts, and error telemetry for a job.",
+        "operationId": "get_job_details_api_v1_import_export_jobs__job_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportExportJobRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/import_export/jobs/{job_id}/download": {
+      "get": {
+        "tags": [
+          "Universal Streaming Import & Export",
+          "Import/Export Engine"
+        ],
+        "summary": "Download generated export file",
+        "description": "Stream exported CSV, Excel, or JSON file to client.",
+        "operationId": "download_export_file_api_v1_import_export_jobs__job_id__download_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/documents/upload": {
       "post": {
         "tags": [
@@ -3375,6 +3654,45 @@
           "record_id": "inv00000-0000-0000-0000-000000000001"
         }
       },
+      "Body_upload_and_import_api_v1_import_export_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "CSV, Excel (.xlsx), or JSON file"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name",
+            "description": "Target model name (e.g., lookups.country)"
+          },
+          "field_mapping": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Mapping",
+            "description": "Optional JSON mapping of file headers to model fields"
+          },
+          "async_job": {
+            "type": "boolean",
+            "title": "Async Job",
+            "description": "Whether to process in Celery background or synchronously",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "model_name"
+        ],
+        "title": "Body_upload_and_import_api_v1_import_export_import_post"
+      },
       "Body_upload_attachment_api_v1_documents_upload_post": {
         "properties": {
           "file": {
@@ -3939,6 +4257,98 @@
           "storage_path": "a0000000-0000-0000-0000-000000000001/e3/e3b0c442..."
         }
       },
+      "ExportJobResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "title": "ExportJobResponse",
+        "example": {
+          "download_url": "/api/v1/import_export/jobs/j0000000-0000-0000-0000-000000000001/download",
+          "job_id": "j0000000-0000-0000-0000-000000000001",
+          "status": "completed"
+        }
+      },
+      "ExportRequest": {
+        "properties": {
+          "model_name": {
+            "type": "string",
+            "title": "Model Name",
+            "description": "Target entity model name (e.g. lookups.country)"
+          },
+          "file_format": {
+            "type": "string",
+            "title": "File Format",
+            "description": "Export format: csv, xlsx, json",
+            "default": "csv"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields",
+            "description": "Subset of fields to include in export"
+          },
+          "filter_criteria": {
+            "type": "object",
+            "title": "Filter Criteria",
+            "description": "Filter criteria AST"
+          },
+          "async_job": {
+            "type": "boolean",
+            "title": "Async Job",
+            "description": "Whether to run in Celery background or return immediate stream",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_name"
+        ],
+        "title": "ExportRequest",
+        "example": {
+          "async_job": true,
+          "fields": [
+            "code",
+            "name",
+            "phone_code"
+          ],
+          "file_format": "csv",
+          "filter_criteria": {},
+          "model_name": "lookups.country"
+        }
+      },
       "GroupCreate": {
         "properties": {
           "name": {
@@ -3993,6 +4403,166 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImportExportJobRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "job_type": {
+            "type": "string",
+            "title": "Job Type"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "file_format": {
+            "type": "string",
+            "title": "File Format"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "total_records": {
+            "type": "integer",
+            "title": "Total Records"
+          },
+          "processed_records": {
+            "type": "integer",
+            "title": "Processed Records"
+          },
+          "failed_records": {
+            "type": "integer",
+            "title": "Failed Records"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "file_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Size"
+          },
+          "field_mapping": {
+            "type": "object",
+            "title": "Field Mapping"
+          },
+          "error_log": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Error Log"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "job_type",
+          "model_name",
+          "file_format",
+          "status",
+          "total_records",
+          "processed_records",
+          "failed_records",
+          "file_name",
+          "file_size",
+          "field_mapping",
+          "error_log",
+          "completed_at",
+          "created_at"
+        ],
+        "title": "ImportExportJobRead",
+        "example": {
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "completed_at": "2026-09-14T02:45:00Z",
+          "created_at": "2026-09-14T02:44:55Z",
+          "error_log": [],
+          "failed_records": 0,
+          "field_mapping": {
+            "Country_Name": "name",
+            "ISO_Code": "code"
+          },
+          "file_format": "csv",
+          "file_name": "iso_countries.csv",
+          "file_size": 14200,
+          "id": "j0000000-0000-0000-0000-000000000001",
+          "job_type": "import",
+          "model_name": "lookups.country",
+          "processed_records": 150,
+          "status": "completed",
+          "total_records": 150
+        }
+      },
+      "ImportJobResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "message"
+        ],
+        "title": "ImportJobResponse",
+        "example": {
+          "job_id": "j0000000-0000-0000-0000-000000000001",
+          "message": "Import job queued successfully",
+          "status": "processing"
+        }
       },
       "LoginRequest": {
         "properties": {
