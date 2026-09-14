@@ -12,7 +12,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Register User",
+        "summary": "Register New Account",
         "description": "Register a new user account (human employee or first-class AI agent).\n\nSecurity & Access:\n- Public endpoint.\n- Strictly gated by target tenant's `allow_registration` policy.\n\nValidation Rules:\n- Rejects if `email` or `username` already exists (400 Bad Request).\n- If `company_id` is provided, verifies that company exists (404) and has `allow_registration == True` (403).\n- If `company_id` is omitted, attempts to bind to an active open-registration company; otherwise rejects (403).",
         "operationId": "register_user_api_v1_identity_rbac_auth_register_post",
         "requestBody": {
@@ -55,7 +55,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Login",
+        "summary": "Login (Username & Password)",
         "description": "Authenticate with username/email and password, returning a signed JWT bearer token.\n\nSecurity & Access:\n- Public endpoint.\n- Returns JWT token containing user identity and active tenant `company_id`.",
         "operationId": "login_api_v1_identity_rbac_auth_login_post",
         "requestBody": {
@@ -98,7 +98,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Get Me",
+        "summary": "Get Current User Profile",
         "description": "Return currently authenticated profile metadata including assigned RBAC groups.",
         "operationId": "get_me_api_v1_identity_rbac_auth_me_get",
         "responses": {
@@ -126,7 +126,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Change password for authenticated user",
+        "summary": "Change Password (In-App Settings)",
         "description": "Change credentials for the currently authenticated session with cryptographic verification.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Validates `current_password` against bcrypt hash.\n- Enforces matching `new_password` and `confirm_password`.\n- Prevents redundant password churn (`new_password != current_password`).",
         "operationId": "change_password_api_v1_identity_rbac_auth_change_password_post",
         "requestBody": {
@@ -174,7 +174,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Request password reset token via email",
+        "summary": "Forgot Password (Step 1: Request Reset Email)",
         "description": "Initiate a single-use password reset token dispatch via Mail Gateway.\n\nSecurity & Access:\n- Public endpoint.\n- Constant response structure to defend against email enumeration attacks.\n- Issues a 15-minute expiring token in Redis.",
         "operationId": "forgot_password_api_v1_identity_rbac_auth_forgot_password_post",
         "requestBody": {
@@ -217,7 +217,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Reset password using single-use verification token",
+        "summary": "Forgot Password (Step 2: Confirm via Token)",
         "description": "Complete credential reset using an unconsumed, non-expired Redis token.\n\nSecurity & Access:\n- Public endpoint.\n- Atomic token consumption (GETDEL) prevents token replay attacks.\n- Enforces new password matching and complexity standards.",
         "operationId": "reset_password_api_v1_identity_rbac_auth_reset_password_post",
         "requestBody": {
@@ -260,7 +260,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Verify user email address with single-use token",
+        "summary": "Verify Email (Registration Confirmation)",
         "description": "Verify an account email address using an unconsumed verification token.",
         "operationId": "verify_email_api_v1_identity_rbac_auth_verify_email_post",
         "requestBody": {
@@ -303,7 +303,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Initiate Two-Factor Authentication configuration",
+        "summary": "2FA: Setup (Generate Secret & QR)",
         "description": "Generate a TOTP secret and provisioning URI for the authenticated user.\n\nSecurity & Access:\n- Requires authenticated session.\n- Prevents re-running setup if 2FA is already active.\n- Staged secret is stored pending confirmation via /auth/2fa/enable.",
         "operationId": "setup_two_factor_api_v1_identity_rbac_auth_2fa_setup_post",
         "responses": {
@@ -331,7 +331,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Verify code and enable Two-Factor Authentication",
+        "summary": "2FA: Enable (Verify Code & Get Backup Codes)",
         "description": "Verify an initial TOTP code, activate 2FA, and return emergency recovery backup codes.\n\nSecurity & Access:\n- Requires authenticated session.\n- Confirms user possesses authenticator configured with the staged secret.\n- Generates 8 single-use emergency recovery codes, stored as cryptographic SHA-256 hashes.",
         "operationId": "enable_two_factor_api_v1_identity_rbac_auth_2fa_enable_post",
         "requestBody": {
@@ -379,7 +379,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Disable Two-Factor Authentication",
+        "summary": "2FA: Disable (Password & Code Re-check)",
         "description": "Deactivate Two-Factor Authentication with password re-verification and code validation.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Requires current password verification to prevent session hijacking.\n- Requires valid TOTP code or active emergency recovery code.\n- Completely wipes 2FA secret and stored recovery codes.",
         "operationId": "disable_two_factor_api_v1_identity_rbac_auth_2fa_disable_post",
         "requestBody": {
@@ -427,7 +427,7 @@
           "Identity & Contextual RBAC",
           "Authentication"
         ],
-        "summary": "Complete two-factor authentication challenge during login",
+        "summary": "2FA: Login Challenge Verification",
         "description": "Validate secondary MFA token with TOTP code or emergency recovery code to issue access token.\n\nSecurity & Access:\n- Public endpoint.\n- Consumes temporary MFA challenge token.\n- Accepts standard 6-digit TOTP code or single-use recovery code.\n- If recovery code is used, it is atomically burned from the user's stored recovery codes.",
         "operationId": "verify_two_factor_login_api_v1_identity_rbac_auth_2fa_verify_post",
         "requestBody": {

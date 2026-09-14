@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "021cd922-6aaf-47a7-98e5-d3872df9fd3c",
+    "_postman_id": "978bfc34-c831-40d7-ba46-7667b82de7b7",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -251,7 +251,7 @@
       "name": "Identity & Contextual RBAC",
       "item": [
         {
-          "name": "Register User",
+          "name": "Register New Account",
           "request": {
             "method": "POST",
             "header": [
@@ -285,7 +285,7 @@
               ],
               "variable": []
             },
-            "description": "## Register User\n\nRegister a new user account (human employee or first-class AI agent).\n\nSecurity & Access:\n- Public endpoint.\n- Strictly gated by target tenant's `allow_registration` policy.\n\nValidation Rules:\n- Rejects if `email` or `username` already exists (400 Bad Request).\n- If `company_id` is provided, verifies that company exists (404) and has `allow_registration == True` (403).\n- If `company_id` is omitted, attempts to bind to an active open-registration company; otherwise rejects (403).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/register`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Unique corporate email address used for notifications and login identification |\n| `username` | `string` | **Yes** | Any valid string | Alphanumeric unique login username (strictly no spaces) |\n| `password` | `string` | **Yes** | Any valid string | Cleartext password (hashed with bcrypt upon ingestion) |\n| `full_name` | `string` | **Yes** | Any valid string | Full display name for the employee or autonomous AI agent |\n| `user_type` | `string` | No | `human, ai_agent` | Actor classification: 'human' employee or first-class 'ai_agent' |\n| `preferred_language` | `string` | No | Any valid string | ISO 639-1 language code for localized emails and UI rendering (e.g. 'en', 'ar') |\n| `company_id` | `string` | No | Any valid string | Target company UUID. Required if multiple tenants exist or if registration is gated |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Register New Account\n\nRegister a new user account (human employee or first-class AI agent).\n\nSecurity & Access:\n- Public endpoint.\n- Strictly gated by target tenant's `allow_registration` policy.\n\nValidation Rules:\n- Rejects if `email` or `username` already exists (400 Bad Request).\n- If `company_id` is provided, verifies that company exists (404) and has `allow_registration == True` (403).\n- If `company_id` is omitted, attempts to bind to an active open-registration company; otherwise rejects (403).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/register`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Unique corporate email address used for notifications and login identification |\n| `username` | `string` | **Yes** | Any valid string | Alphanumeric unique login username (strictly no spaces) |\n| `password` | `string` | **Yes** | Any valid string | Cleartext password (hashed with bcrypt upon ingestion) |\n| `full_name` | `string` | **Yes** | Any valid string | Full display name for the employee or autonomous AI agent |\n| `user_type` | `string` | No | `human, ai_agent` | Actor classification: 'human' employee or first-class 'ai_agent' |\n| `preferred_language` | `string` | No | Any valid string | ISO 639-1 language code for localized emails and UI rendering (e.g. 'en', 'ar') |\n| `company_id` | `string` | No | Any valid string | Target company UUID. Required if multiple tenants exist or if registration is gated |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"company_id\": \"{{active_company_id}}\",\n  \"email\": \"sarah.connor@sovereign.local\",\n  \"full_name\": \"Sarah Connor\",\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"sconnor\"\n}",
@@ -331,7 +331,7 @@
           ]
         },
         {
-          "name": "Login",
+          "name": "Login (Username & Password)",
           "request": {
             "method": "POST",
             "header": [
@@ -360,7 +360,7 @@
               ],
               "variable": []
             },
-            "description": "## Login\n\nAuthenticate with username/email and password, returning a signed JWT bearer token.\n\nSecurity & Access:\n- Public endpoint.\n- Returns JWT token containing user identity and active tenant `company_id`.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/login`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `identifier` | `string` | **Yes** | Any valid string | Login username or registered corporate email address |\n| `password` | `string` | **Yes** | Any valid string | Cleartext password to verify against hashed bcrypt record |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Login (Username & Password)\n\nAuthenticate with username/email and password, returning a signed JWT bearer token.\n\nSecurity & Access:\n- Public endpoint.\n- Returns JWT token containing user identity and active tenant `company_id`.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/login`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `identifier` | `string` | **Yes** | Any valid string | Login username or registered corporate email address |\n| `password` | `string` | **Yes** | Any valid string | Cleartext password to verify against hashed bcrypt record |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"identifier\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}",
@@ -400,7 +400,7 @@
           ]
         },
         {
-          "name": "Get Me",
+          "name": "Get Current User Profile",
           "request": {
             "method": "GET",
             "header": [
@@ -429,12 +429,12 @@
               ],
               "variable": []
             },
-            "description": "## Get Me\n\nReturn currently authenticated profile metadata including assigned RBAC groups.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/auth/me`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+            "description": "## Get Current User Profile\n\nReturn currently authenticated profile metadata including assigned RBAC groups.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/auth/me`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
         {
-          "name": "Change password for authenticated user",
+          "name": "Change Password (In-App Settings)",
           "request": {
             "method": "POST",
             "header": [
@@ -468,7 +468,7 @@
               ],
               "variable": []
             },
-            "description": "## Change password for authenticated user\n\nChange credentials for the currently authenticated session with cryptographic verification.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Validates `current_password` against bcrypt hash.\n- Enforces matching `new_password` and `confirm_password`.\n- Prevents redundant password churn (`new_password != current_password`).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/change-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `current_password` | `string` | **Yes** | Any valid string | Existing user password for authentication verification |\n| `new_password` | `string` | **Yes** | Any valid string | New secret password meeting complexity standards (minimum 8 characters) |\n| `confirm_password` | `string` | **Yes** | Any valid string | Confirmation matching the new password |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Change Password (In-App Settings)\n\nChange credentials for the currently authenticated session with cryptographic verification.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Validates `current_password` against bcrypt hash.\n- Enforces matching `new_password` and `confirm_password`.\n- Prevents redundant password churn (`new_password != current_password`).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/change-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `current_password` | `string` | **Yes** | Any valid string | Existing user password for authentication verification |\n| `new_password` | `string` | **Yes** | Any valid string | New secret password meeting complexity standards (minimum 8 characters) |\n| `confirm_password` | `string` | **Yes** | Any valid string | Confirmation matching the new password |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"confirm_password\": \"NewSecurePassword2026!\",\n  \"current_password\": \"OldPassword2026!\",\n  \"new_password\": \"NewSecurePassword2026!\"\n}",
@@ -511,7 +511,7 @@
           ]
         },
         {
-          "name": "Request password reset token via email",
+          "name": "Forgot Password (Step 1: Request Reset Email)",
           "request": {
             "method": "POST",
             "header": [
@@ -545,7 +545,7 @@
               ],
               "variable": []
             },
-            "description": "## Request password reset token via email\n\nInitiate a single-use password reset token dispatch via Mail Gateway.\n\nSecurity & Access:\n- Public endpoint.\n- Constant response structure to defend against email enumeration attacks.\n- Issues a 15-minute expiring token in Redis.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/forgot-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Registered user account email address |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Forgot Password (Step 1: Request Reset Email)\n\nInitiate a single-use password reset token dispatch via Mail Gateway.\n\nSecurity & Access:\n- Public endpoint.\n- Constant response structure to defend against email enumeration attacks.\n- Issues a 15-minute expiring token in Redis.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/forgot-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Registered user account email address |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"sarah.connor@sovereign.local\"\n}",
@@ -588,7 +588,7 @@
           ]
         },
         {
-          "name": "Reset password using single-use verification token",
+          "name": "Forgot Password (Step 2: Confirm via Token)",
           "request": {
             "method": "POST",
             "header": [
@@ -622,7 +622,7 @@
               ],
               "variable": []
             },
-            "description": "## Reset password using single-use verification token\n\nComplete credential reset using an unconsumed, non-expired Redis token.\n\nSecurity & Access:\n- Public endpoint.\n- Atomic token consumption (GETDEL) prevents token replay attacks.\n- Enforces new password matching and complexity standards.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/reset-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `token` | `string` | **Yes** | Any valid string | Cryptographically signed, single-use password reset token |\n| `new_password` | `string` | **Yes** | Any valid string | New secret password meeting complexity standards (minimum 8 characters) |\n| `confirm_password` | `string` | **Yes** | Any valid string | Confirmation matching the new password |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Forgot Password (Step 2: Confirm via Token)\n\nComplete credential reset using an unconsumed, non-expired Redis token.\n\nSecurity & Access:\n- Public endpoint.\n- Atomic token consumption (GETDEL) prevents token replay attacks.\n- Enforces new password matching and complexity standards.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/reset-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `token` | `string` | **Yes** | Any valid string | Cryptographically signed, single-use password reset token |\n| `new_password` | `string` | **Yes** | Any valid string | New secret password meeting complexity standards (minimum 8 characters) |\n| `confirm_password` | `string` | **Yes** | Any valid string | Confirmation matching the new password |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"confirm_password\": \"NewSecurePassword2026!\",\n  \"new_password\": \"NewSecurePassword2026!\",\n  \"token\": \"pr_9f8d7c6b5a4321_sample_token\"\n}",
@@ -665,7 +665,7 @@
           ]
         },
         {
-          "name": "Verify user email address with single-use token",
+          "name": "Verify Email (Registration Confirmation)",
           "request": {
             "method": "POST",
             "header": [
@@ -699,7 +699,7 @@
               ],
               "variable": []
             },
-            "description": "## Verify user email address with single-use token\n\nVerify an account email address using an unconsumed verification token.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/verify-email`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `token` | `string` | **Yes** | Any valid string | Single-use email verification token |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Verify Email (Registration Confirmation)\n\nVerify an account email address using an unconsumed verification token.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/verify-email`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `token` | `string` | **Yes** | Any valid string | Single-use email verification token |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"token\": \"em_1a2b3c4d5e6f_sample_token\"\n}",
@@ -742,7 +742,7 @@
           ]
         },
         {
-          "name": "Initiate Two-Factor Authentication configuration",
+          "name": "2FA: Setup (Generate Secret & QR)",
           "request": {
             "method": "POST",
             "header": [
@@ -772,7 +772,7 @@
               ],
               "variable": []
             },
-            "description": "## Initiate Two-Factor Authentication configuration\n\nGenerate a TOTP secret and provisioning URI for the authenticated user.\n\nSecurity & Access:\n- Requires authenticated session.\n- Prevents re-running setup if 2FA is already active.\n- Staged secret is stored pending confirmation via /auth/2fa/enable.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/setup`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+            "description": "## 2FA: Setup (Generate Secret & QR)\n\nGenerate a TOTP secret and provisioning URI for the authenticated user.\n\nSecurity & Access:\n- Requires authenticated session.\n- Prevents re-running setup if 2FA is already active.\n- Staged secret is stored pending confirmation via /auth/2fa/enable.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/setup`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": [],
           "event": [
@@ -806,7 +806,7 @@
           ]
         },
         {
-          "name": "Verify code and enable Two-Factor Authentication",
+          "name": "2FA: Enable (Verify Code & Get Backup Codes)",
           "request": {
             "method": "POST",
             "header": [
@@ -841,7 +841,7 @@
               ],
               "variable": []
             },
-            "description": "## Verify code and enable Two-Factor Authentication\n\nVerify an initial TOTP code, activate 2FA, and return emergency recovery backup codes.\n\nSecurity & Access:\n- Requires authenticated session.\n- Confirms user possesses authenticator configured with the staged secret.\n- Generates 8 single-use emergency recovery codes, stored as cryptographic SHA-256 hashes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/enable`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code generated by authenticator app |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## 2FA: Enable (Verify Code & Get Backup Codes)\n\nVerify an initial TOTP code, activate 2FA, and return emergency recovery backup codes.\n\nSecurity & Access:\n- Requires authenticated session.\n- Confirms user possesses authenticator configured with the staged secret.\n- Generates 8 single-use emergency recovery codes, stored as cryptographic SHA-256 hashes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/enable`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code generated by authenticator app |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"123456\"\n}",
@@ -884,7 +884,7 @@
           ]
         },
         {
-          "name": "Disable Two-Factor Authentication",
+          "name": "2FA: Disable (Password & Code Re-check)",
           "request": {
             "method": "POST",
             "header": [
@@ -919,7 +919,7 @@
               ],
               "variable": []
             },
-            "description": "## Disable Two-Factor Authentication\n\nDeactivate Two-Factor Authentication with password re-verification and code validation.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Requires current password verification to prevent session hijacking.\n- Requires valid TOTP code or active emergency recovery code.\n- Completely wipes 2FA secret and stored recovery codes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/disable`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `password` | `string` | **Yes** | Any valid string | Current password for identity re-verification |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code or emergency recovery code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## 2FA: Disable (Password & Code Re-check)\n\nDeactivate Two-Factor Authentication with password re-verification and code validation.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Requires current password verification to prevent session hijacking.\n- Requires valid TOTP code or active emergency recovery code.\n- Completely wipes 2FA secret and stored recovery codes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/disable`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `password` | `string` | **Yes** | Any valid string | Current password for identity re-verification |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code or emergency recovery code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"123456\",\n  \"password\": \"CurrentPassword2026!\"\n}",
@@ -962,7 +962,7 @@
           ]
         },
         {
-          "name": "Complete two-factor authentication challenge during login",
+          "name": "2FA: Login Challenge Verification",
           "request": {
             "method": "POST",
             "header": [
@@ -997,7 +997,7 @@
               ],
               "variable": []
             },
-            "description": "## Complete two-factor authentication challenge during login\n\nValidate secondary MFA token with TOTP code or emergency recovery code to issue access token.\n\nSecurity & Access:\n- Public endpoint.\n- Consumes temporary MFA challenge token.\n- Accepts standard 6-digit TOTP code or single-use recovery code.\n- If recovery code is used, it is atomically burned from the user's stored recovery codes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/verify`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `mfa_token` | `string` | **Yes** | Any valid string | MFA pending challenge token returned during primary login |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code or emergency recovery code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## 2FA: Login Challenge Verification\n\nValidate secondary MFA token with TOTP code or emergency recovery code to issue access token.\n\nSecurity & Access:\n- Public endpoint.\n- Consumes temporary MFA challenge token.\n- Accepts standard 6-digit TOTP code or single-use recovery code.\n- If recovery code is used, it is atomically burned from the user's stored recovery codes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/verify`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `mfa_token` | `string` | **Yes** | Any valid string | MFA pending challenge token returned during primary login |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code or emergency recovery code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"123456\",\n  \"mfa_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",

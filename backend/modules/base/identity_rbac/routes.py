@@ -81,6 +81,7 @@ router = APIRouter()
     response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
     tags=["Authentication"],
+    summary="Register New Account",
 )
 async def register_user(
     payload: UserCreate,
@@ -171,6 +172,7 @@ async def register_user(
     "/auth/login",
     response_model=TokenResponse,
     tags=["Authentication"],
+    summary="Login (Username & Password)",
 )
 async def login(
     payload: LoginRequest,
@@ -237,6 +239,7 @@ async def login(
     "/auth/me",
     response_model=UserDetailRead,
     tags=["Authentication"],
+    summary="Get Current User Profile",
 )
 async def get_me(
     current_user: User = Depends(get_current_user),
@@ -274,7 +277,7 @@ async def get_me(
     "/auth/change-password",
     response_model=AuthMessageResponse,
     tags=["Authentication"],
-    summary="Change password for authenticated user",
+    summary="Change Password (In-App Settings)",
 )
 async def change_password(
     payload: ChangePasswordRequest,
@@ -316,7 +319,7 @@ async def change_password(
     "/auth/forgot-password",
     response_model=AuthMessageResponse,
     tags=["Authentication"],
-    summary="Request password reset token via email",
+    summary="Forgot Password (Step 1: Request Reset Email)",
 )
 async def forgot_password(
     payload: ForgotPasswordRequest,
@@ -367,7 +370,7 @@ async def forgot_password(
     "/auth/reset-password",
     response_model=AuthMessageResponse,
     tags=["Authentication"],
-    summary="Reset password using single-use verification token",
+    summary="Forgot Password (Step 2: Confirm via Token)",
 )
 async def reset_password(
     payload: ResetPasswordRequest,
@@ -424,7 +427,7 @@ async def reset_password(
     "/auth/verify-email",
     response_model=AuthMessageResponse,
     tags=["Authentication"],
-    summary="Verify user email address with single-use token",
+    summary="Verify Email (Registration Confirmation)",
 )
 async def verify_email(
     payload: VerifyEmailRequest,
@@ -459,7 +462,7 @@ async def verify_email(
     "/auth/2fa/setup",
     response_model=TwoFactorSetupResponse,
     tags=["Authentication"],
-    summary="Initiate Two-Factor Authentication configuration",
+    summary="2FA: Setup (Generate Secret & QR)",
 )
 async def setup_two_factor(
     current_user: User = Depends(get_current_user),
@@ -490,7 +493,7 @@ async def setup_two_factor(
     "/auth/2fa/enable",
     response_model=TwoFactorEnableResponse,
     tags=["Authentication"],
-    summary="Verify code and enable Two-Factor Authentication",
+    summary="2FA: Enable (Verify Code & Get Backup Codes)",
 )
 async def enable_two_factor(
     payload: TwoFactorEnableRequest,
@@ -539,7 +542,7 @@ async def enable_two_factor(
     "/auth/2fa/disable",
     response_model=AuthMessageResponse,
     tags=["Authentication"],
-    summary="Disable Two-Factor Authentication",
+    summary="2FA: Disable (Password & Code Re-check)",
 )
 async def disable_two_factor(
     payload: TwoFactorDisableRequest,
@@ -595,7 +598,7 @@ async def disable_two_factor(
     "/auth/2fa/verify",
     response_model=TokenResponse,
     tags=["Authentication"],
-    summary="Complete two-factor authentication challenge during login",
+    summary="2FA: Login Challenge Verification",
 )
 async def verify_two_factor_login(
     payload: TwoFactorVerifyRequest,
