@@ -337,4 +337,23 @@ The Orchestrator MCP server exposes two typed tools for the Chief of Staff:
 - **Dependency Inversion Guard**: A module cannot be deactivated if any currently active downstream modules declare it as a dependency in their `manifest.py`.
 - **Topological Order**: The Kernel dependency resolver verifies that deactivation follows reverse topological DAG order, preventing orphaned references and dead execution loops.
 
+---
+
+### 6.4 Automated Model-Level Permission Harvester & Bidirectional Group Governance
+- **Zero-Manual-Permission Engine (`backend/modules/base/identity_rbac/harvester.py`)**:
+  - Automatically inspects all SQLAlchemy declarative models inheriting from `Base` across all registered modules in the system.
+  - Automatically derives canonical permission codes formatted as `{module}.{resource}.{action}` (e.g. `identity_rbac.user.create`, `audit.audit_log.read`, `documents.document_attachment.delete`).
+  - Auto-provisions the 4 canonical CRUD capabilities (`create`, `read`, `update`, `delete`) for every business model, ignoring transient association link tables (`*Link`).
+  - Collects custom manifest-declared capabilities via `ModuleManifest.custom_permissions`.
+  - Idempotently links all harvested permissions to the primary `"Super Administrators"` group.
+  - Integrated directly into both `backend/setup_database.py` and `Kernel.bootstrap()`.
+- **Bidirectional Group-User Management**:
+  - Group payloads accept `user_ids: List[UUID]` during creation (`GroupCreate`) and partial updates (`GroupUpdate`).
+  - Read schemas return `users_count: int` on lists and a detailed `users: List[UserSummary]` member list on `GET /groups/{id}` (`GroupDetailRead`).
+  - Dedicated granular membership routes:
+    - `GET /api/v1/identity_rbac/groups/{group_id}/users`
+    - `POST /api/v1/identity_rbac/groups/{group_id}/users/{user_id}`
+    - `DELETE /api/v1/identity_rbac/groups/{group_id}/users/{user_id}`
+
+
 

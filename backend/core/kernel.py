@@ -166,8 +166,19 @@ class Kernel:
         # In later stages, alembic migrations will execute here in topological order.
 
     async def bootstrap(self, db_session: Optional[Any] = None) -> None:
-        """Phase 4: Run module bootstrap hooks in topological order."""
+        """Phase 4: Run module bootstrap hooks and automated capability harvesting."""
         logger.info("Executing Kernel Phase 4: Module Bootstrap Hooks")
+        try:
+            from modules.base.identity_rbac.harvester import harvest_model_permissions
+            from core.database import AsyncSessionLocal
+            if db_session:
+                await harvest_model_permissions(db_session)
+            else:
+                async with AsyncSessionLocal() as session:
+                    await harvest_model_permissions(session)
+        except Exception as exc:
+            logger.warning(f"Permission harvesting deferred or skipped during bootstrap: {exc}")
+
         self._booted = True
 
     async def boot(self, app: Optional[FastAPI] = None) -> None:

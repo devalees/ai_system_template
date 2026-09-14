@@ -3,6 +3,7 @@
 import uuid
 import pytest
 from httpx import AsyncClient, ASGITransport
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
@@ -18,6 +19,7 @@ from modules.base.identity_rbac.models import (
 )
 from modules.base.identity_rbac.security import hash_password
 from modules.base.identity_rbac.dependencies import require_permission
+from modules.base.identity_rbac.harvester import harvest_model_permissions
 
 from main import app
 
@@ -692,4 +694,152 @@ async def test_soft_delete_and_guards(db_session: AsyncSession):
             headers=headers,
         )
         assert get_c_res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_automated_permission_harvester(db_session: AsyncSession):
+    """Verify automated model-level permission harvester generates CRUD rows across all models idempotently."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Harvester Test Corp",
+        code=f"HARV_{uuid.uuid4().hex[:4]}",
+        allow_registration=False,
+    )
+    admin_group = Group(
+        name="Super Administrators",
+        description="Universal administration authority",
+        company_id=comp_id,
+    )
+    db_session.add_all([company, admin_group])
+    await db_session.commit()
+
+    # 1. First run: Harvest permissions
+    res1 = await harvest_model_permissions(db_session, company_id=comp_id, auto_link_super_admin_group=True)
+    assert res1["models_inspected"] >= 20
+    assert res1["total_active_permissions"] >= 80
+
+    # 2. Verify specific canonical codes exist
+    sample_codes = [
+        "identity_rbac.user.create",
+        "identity_rbac.user.read",
+        "identity_rbac.user.update",
+        "identity_rbac.user.delete",
+        "lookups.country.read",
+        "audit.audit_log.read",
+        "documents.document_attachment.create",
+    ]
+    for sc in sample_codes:
+        query_perm = (await db_session.execute(
+            select(Permission).where(Permission.code == sc)
+        )).scalar_one_or_none()
+        assert query_perm is not None, f"Expected canonical permission '{sc}' was not harvested!"
+
+    # 3. Idempotency check: second run should create 0 new permissions
+    res2 = await harvest_model_permissions(db_session, company_id=comp_id, auto_link_super_admin_group=True)
+    assert res2["new_permissions_created"] == 0
+
+
+@pytest.mark.asyncio
+async def test_bidirectional_group_user_management(db_session: AsyncSession):
+    """Verify assigning users during group creation/update and via dedicated membership endpoints."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Membership Corp",
+        code=f"MEM_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    super_admin = User(
+        email=f"mem_admin_{uuid.uuid4().hex[:6]}@mem.com",
+        username=f"mem_admin_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("Pass123!"),
+        full_name="Membership Admin",
+        is_superuser=True,
+        company_id=comp_id,
+    )
+    target_user = User(
+        email=f"member_bob_{uuid.uuid4().hex[:6]}@mem.com",
+        username=f"member_bob_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("Pass123!"),
+        full_name="Bob Member",
+        company_id=comp_id,
+    )
+    db_session.add_all([company, super_admin, target_user])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        res_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": super_admin.username, "password": "Pass123!"},
+        )
+        token = res_login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 1. Create group with user_ids=[target_user.id]
+        res_g = await client.post(
+            "/api/v1/identity_rbac/groups",
+            json={
+                "name": f"Finance_{uuid.uuid4().hex[:4]}",
+                "description": "Finance Department",
+                "user_ids": [str(target_user.id)],
+            },
+            headers=headers,
+        )
+        assert res_g.status_code == 201
+        group_data = res_g.json()
+        assert group_data["users_count"] == 1
+        group_id = group_data["id"]
+
+        # 2. Get group detail and verify users list contains target_user
+        res_get_g = await client.get(
+            f"/api/v1/identity_rbac/groups/{group_id}",
+            headers=headers,
+        )
+        assert res_get_g.status_code == 200
+        detail = res_get_g.json()
+        assert len(detail["users"]) == 1
+        assert detail["users"][0]["id"] == str(target_user.id)
+        assert detail["users"][0]["username"] == target_user.username
+
+        # 3. List members via GET /groups/{id}/users
+        res_list_u = await client.get(
+            f"/api/v1/identity_rbac/groups/{group_id}/users",
+            headers=headers,
+        )
+        assert res_list_u.status_code == 200
+        members = res_list_u.json()
+        assert len(members) == 1
+        assert members[0]["id"] == str(target_user.id)
+
+        # 4. Remove user via DELETE /groups/{id}/users/{user_id}
+        res_del_u = await client.delete(
+            f"/api/v1/identity_rbac/groups/{group_id}/users/{target_user.id}",
+            headers=headers,
+        )
+        assert res_del_u.status_code == 200
+
+        # Verify group now has 0 members
+        res_list_empty = await client.get(
+            f"/api/v1/identity_rbac/groups/{group_id}/users",
+            headers=headers,
+        )
+        assert res_list_empty.status_code == 200
+        assert len(res_list_empty.json()) == 0
+
+        # 5. Add user back via POST /groups/{id}/users/{user_id}
+        res_add_u = await client.post(
+            f"/api/v1/identity_rbac/groups/{group_id}/users/{target_user.id}",
+            headers=headers,
+        )
+        assert res_add_u.status_code == 200
+
+        # Verify membership restored
+        res_list_restored = await client.get(
+            f"/api/v1/identity_rbac/groups/{group_id}/users",
+            headers=headers,
+        )
+        assert res_list_restored.status_code == 200
+        assert len(res_list_restored.json()) == 1
+
 

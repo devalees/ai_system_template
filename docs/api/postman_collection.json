@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "93270c06-940a-4a5d-91f2-ea2206e0b118",
+    "_postman_id": "9e6290ed-ac4e-41e1-beda-e16e9823b112",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -439,7 +439,7 @@
             "description": "## Create User\n\nProvision an internal user account within an organization (Admin or Superuser).\n\nSecurity & Access:\n- Requires authenticated Administrator or Superuser.\n- Bypasses public `allow_registration` restrictions.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/users`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Unique corporate email address |\n| `username` | `string` | **Yes** | Any valid string | Alphanumeric login username without whitespace |\n| `password` | `string` | **Yes** | Any valid string | Cleartext initial password |\n| `full_name` | `string` | **Yes** | Any valid string | Full display name |\n| `user_type` | `string` | No | `human, ai_agent` | User actor classification |\n| `preferred_language` | `string` | No | Any valid string | Preferred locale code ('en', 'ar') |\n| `is_superuser` | `boolean` | No | Any valid boolean | Global superuser flag (bypasses all RBAC capability checks) |\n| `group_ids` | `array` | No | Any valid array | List of RBAC Group UUIDs to immediately assign |\n| `company_id` | `string` | No | Any valid string | Target company UUID (defaults to caller's company) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"auditor@sovereign.local\",\n  \"full_name\": \"QA Auditor\",\n  \"group_ids\": [],\n  \"is_superuser\": false,\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"qa_auditor\"\n}",
+              "raw": "{\n  \"email\": \"auditor@sovereign.local\",\n  \"full_name\": \"QA Auditor\",\n  \"group_ids\": [\n    \"110b59d6-00bc-4273-8014-9876de10909c\"\n  ],\n  \"is_superuser\": false,\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"qa_auditor\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -531,7 +531,7 @@
             "description": "## Update User\n\nUpdate user account attributes, active toggle, group assignments, or reset password.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `full_name` | `string` | No | Any valid string | Updated display name |\n| `email` | `string` | No | Any valid string | Updated email address |\n| `preferred_language` | `string` | No | Any valid string | Updated ISO 639-1 language code |\n| `team_id` | `string` | No | Any valid string | Assigned organizational department / team UUID |\n| `is_active` | `boolean` | No | Any valid boolean | Active status toggle (deactivated users cannot authenticate) |\n| `is_superuser` | `boolean` | No | Any valid boolean | Superuser privilege toggle (Superuser only) |\n| `group_ids` | `array` | No | Any valid array | Full replacement list of RBAC Group UUIDs assigned to this user |\n| `password` | `string` | No | Any valid string | New password if resetting user credentials |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Sarah Connor, Lead Auditor\",\n  \"is_active\": true,\n  \"preferred_language\": \"en\"\n}",
+              "raw": "{\n  \"full_name\": \"Sarah Connor, Lead Auditor\",\n  \"group_ids\": [\n    \"110b59d6-00bc-4273-8014-9876de10909c\"\n  ],\n  \"is_active\": true,\n  \"preferred_language\": \"en\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1003,7 +1003,7 @@
               ],
               "variable": []
             },
-            "description": "## List Groups\n\nList RBAC groups for active tenant with count of assigned permissions.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+            "description": "## List Groups\n\nList RBAC groups for active tenant with count of assigned permissions and users.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -1041,10 +1041,10 @@
               ],
               "variable": []
             },
-            "description": "## Create Group\n\nCreate an RBAC Group/Role with linked permissions (Superuser or Tenant Admin).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Unique role/group title within the organization |\n| `description` | `string` | No | Any valid string | Operational scope and responsibility summary |\n| `permission_ids` | `array` | No | Any valid array | List of granular Permission UUIDs to link to this group |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Create Group\n\nCreate an RBAC Group/Role with linked permissions and users (Superuser or Tenant Admin).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Unique role/group title within the organization |\n| `description` | `string` | No | Any valid string | Operational scope and responsibility summary |\n| `permission_ids` | `array` | No | Any valid array | List of granular Permission UUIDs to link to this group |\n| `user_ids` | `array` | No | Any valid array | Optional list of User UUIDs to immediately assign to this group |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Read and review access to general ledger and journal entries\",\n  \"name\": \"Financial Auditors\",\n  \"permission_ids\": []\n}",
+              "raw": "{\n  \"description\": \"Read and review access to general ledger and journal entries\",\n  \"name\": \"Financial Auditors\",\n  \"permission_ids\": [],\n  \"user_ids\": []\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1089,7 +1089,7 @@
                 }
               ]
             },
-            "description": "## Get Group\n\nRetrieve detailed RBAC group with full list of assigned permissions.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+            "description": "## Get Group\n\nRetrieve detailed RBAC group with full list of assigned permissions and member users.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1128,7 +1128,7 @@
                 }
               ]
             },
-            "description": "## Update Group\n\nUpdate group title, description, or reassign permission links.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated group title |\n| `description` | `string` | No | Any valid string | Updated group description |\n| `permission_ids` | `array` | No | Any valid array | Full replacement list of linked Permission UUIDs |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+            "description": "## Update Group\n\nUpdate group title, description, or reassign permission links and user memberships.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated group title |\n| `description` | `string` | No | Any valid string | Updated group description |\n| `permission_ids` | `array` | No | Any valid array | Full replacement list of linked Permission UUIDs |\n| `user_ids` | `array` | No | Any valid array | Full replacement list of assigned User UUIDs |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1168,6 +1168,136 @@
               ]
             },
             "description": "## Delete Group\n\nSoft-delete an RBAC group.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Group Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/groups/:group_id/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "groups",
+                ":group_id",
+                "users"
+              ],
+              "variable": [
+                {
+                  "key": "group_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## List Group Users\n\nList all active member users assigned to an RBAC group.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups/{group_id}/users`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Add User To Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/groups/:group_id/users/:user_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "groups",
+                ":group_id",
+                "users",
+                ":user_id"
+              ],
+              "variable": [
+                {
+                  "key": "group_id",
+                  "value": ""
+                },
+                {
+                  "key": "user_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Add User To Group\n\nDirectly assign an existing user to an RBAC group.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/groups/{group_id}/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove User From Group",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/groups/:group_id/users/:user_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "groups",
+                ":group_id",
+                "users",
+                ":user_id"
+              ],
+              "variable": [
+                {
+                  "key": "group_id",
+                  "value": ""
+                },
+                {
+                  "key": "user_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Remove User From Group\n\nDirectly remove a user from an RBAC group.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/groups/{group_id}/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }

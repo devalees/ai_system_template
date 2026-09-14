@@ -47,7 +47,9 @@ class InternalUserCreate(BaseModel):
                 "user_type": "human",
                 "preferred_language": "en",
                 "is_superuser": False,
-                "group_ids": [],
+                "group_ids": [
+                    "110b59d6-00bc-4273-8014-9876de10909c"
+                ],
             }
         }
     )
@@ -71,6 +73,9 @@ class UserUpdate(BaseModel):
                 "full_name": "Sarah Connor, Lead Auditor",
                 "preferred_language": "en",
                 "is_active": True,
+                "group_ids": [
+                    "110b59d6-00bc-4273-8014-9876de10909c"
+                ],
             }
         }
     )
@@ -236,14 +241,26 @@ class PermissionRead(BaseModel):
 # RBAC Groups & Roles
 # =========================================================================
 
+class UserSummary(BaseModel):
+    """Compact summary of an assigned user."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    username: str
+    full_name: str
+    email: str
+    user_type: str
+
+
 class GroupCreate(BaseModel):
-    """Schema for creating a new RBAC role/group with assigned permissions."""
+    """Schema for creating a new RBAC role/group with assigned permissions and users."""
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "name": "Financial Auditors",
                 "description": "Read and review access to general ledger and journal entries",
                 "permission_ids": [],
+                "user_ids": [],
             }
         }
     )
@@ -251,13 +268,15 @@ class GroupCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=50, description="Unique role/group title within the organization")
     description: Optional[str] = Field("", max_length=200, description="Operational scope and responsibility summary")
     permission_ids: List[uuid.UUID] = Field(default_factory=list, description="List of granular Permission UUIDs to link to this group")
+    user_ids: List[uuid.UUID] = Field(default_factory=list, description="Optional list of User UUIDs to immediately assign to this group")
 
 
 class GroupUpdate(BaseModel):
-    """Schema for updating group metadata or reassigning permissions."""
+    """Schema for updating group metadata or reassigning permissions and users."""
     name: Optional[str] = Field(None, min_length=2, max_length=50, description="Updated group title")
     description: Optional[str] = Field(None, max_length=200, description="Updated group description")
     permission_ids: Optional[List[uuid.UUID]] = Field(None, description="Full replacement list of linked Permission UUIDs")
+    user_ids: Optional[List[uuid.UUID]] = Field(None, description="Full replacement list of assigned User UUIDs")
 
 
 class GroupRead(BaseModel):
@@ -268,17 +287,19 @@ class GroupRead(BaseModel):
     name: str
     description: Optional[str] = ""
     permissions_count: int = 0
+    users_count: int = 0
     created_at: datetime
 
 
 class GroupDetailRead(BaseModel):
-    """Detailed group representation including full linked permission objects."""
+    """Detailed group representation including full linked permissions and member users."""
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     name: str
     description: Optional[str] = ""
     permissions: List[PermissionRead] = Field(default_factory=list, description="List of linked permission objects")
+    users: List[UserSummary] = Field(default_factory=list, description="List of users currently assigned to this group")
     created_at: datetime
 
 

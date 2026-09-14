@@ -31,6 +31,7 @@ from modules.base.identity_rbac.models import (
     GroupPermissionLink,
 )
 from modules.base.identity_rbac.security import hash_password
+from modules.base.identity_rbac.harvester import harvest_model_permissions
 from modules.base.lookups.fixtures import seed_iso_data
 from core.exporter import export_api_specifications
 
@@ -210,7 +211,12 @@ async def setup_database(
         await db.flush()
         print(f"  [OK] Super Admin user created: '{super_admin.username}' (Email: {super_admin.email}, ID: {super_admin.id})")
 
-        # 4. Create Super Admin Group and assign all existing permissions
+        # 4. Harvest All Model-Level CRUD Permissions
+        print("  Harvesting automated CRUD permissions across all module declarative models...")
+        harvest_result = await harvest_model_permissions(db, company_id=company.id, auto_link_super_admin_group=False)
+        print(f"  [OK] Harvested {harvest_result['new_permissions_created']} CRUD permissions across {harvest_result['models_inspected']} models.")
+
+        # 5. Create Super Admin Group and assign all existing permissions
         admin_group = Group(
             name="Super Administrators",
             description="Universal system administration and governance authority",
@@ -223,7 +229,7 @@ async def setup_database(
         user_link = UserGroupLink(user_id=super_admin.id, group_id=admin_group.id, company_id=company.id)
         db.add(user_link)
 
-        # Link any registered permissions
+        # Link all harvested permissions
         all_perms = (await db.execute(select(Permission))).scalars().all()
         for perm in all_perms:
             g_link = GroupPermissionLink(group_id=admin_group.id, permission_id=perm.id, company_id=company.id)

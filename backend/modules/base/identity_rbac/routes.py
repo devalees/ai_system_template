@@ -32,6 +32,7 @@ from modules.base.identity_rbac.schemas import (
     GroupUpdate,
     GroupRead,
     GroupDetailRead,
+    UserSummary,
     CompanyCreate,
     CompanyUpdate,
     CompanyRead,
@@ -741,7 +742,7 @@ async def create_group(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> GroupRead:
-    """Create an RBAC Group/Role with linked permissions (Superuser or Tenant Admin)."""
+    """Create an RBAC Group/Role with linked permissions and users (Superuser or Tenant Admin)."""
     group = Group(name=payload.name, description=payload.description, company_id=current_user.company_id)
     db.add(group)
     await db.flush()
@@ -750,6 +751,10 @@ async def create_group(
         link = GroupPermissionLink(group_id=group.id, permission_id=perm_id, company_id=current_user.company_id)
         db.add(link)
 
+    for uid in payload.user_ids:
+        u_link = UserGroupLink(user_id=uid, group_id=group.id, company_id=current_user.company_id)
+        db.add(u_link)
+
     await db.commit()
     await db.refresh(group)
     return GroupRead(
@@ -757,6 +762,7 @@ async def create_group(
         name=group.name,
         description=group.description,
         permissions_count=len(payload.permission_ids),
+        users_count=len(payload.user_ids),
         created_at=group.created_at,
     )
 
@@ -770,21 +776,25 @@ async def list_groups(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[GroupRead]:
-    """List RBAC groups for active tenant with count of assigned permissions."""
+    """List RBAC groups for active tenant with count of assigned permissions and users."""
     stmt = select(Group).where(Group.company_id == current_user.company_id, Group.deleted_at.is_(None)).order_by(Group.name.asc())
     groups = (await db.execute(stmt)).scalars().all()
 
     result = []
     for g in groups:
-        p_count = (await db.execute(
+        p_count = len((await db.execute(
             select(GroupPermissionLink.id).where(GroupPermissionLink.group_id == g.id)
-        )).scalars().all()
+        )).scalars().all())
+        u_count = len((await db.execute(
+            select(UserGroupLink.id).where(UserGroupLink.group_id == g.id)
+        )).scalars().all())
         result.append(
             GroupRead(
                 id=g.id,
                 name=g.name,
                 description=g.description,
-                permissions_count=len(p_count),
+                permissions_count=p_count,
+                users_count=u_count,
                 created_at=g.created_at,
             )
         )
@@ -801,7 +811,7 @@ async def get_group(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> GroupDetailRead:
-    """Retrieve detailed RBAC group with full list of assigned permissions."""
+    """Retrieve detailed RBAC group with full list of assigned permissions and member users."""
     stmt = select(Group).where(
         Group.id == group_id,
         Group.company_id == current_user.company_id,
@@ -818,11 +828,19 @@ async def get_group(
     )
     perms = (await db.execute(stmt_perms)).scalars().all()
 
+    stmt_users = (
+        select(User)
+        .join(UserGroupLink, UserGroupLink.user_id == User.id)
+        .where(UserGroupLink.group_id == group.id, User.deleted_at.is_(None))
+    )
+    users = (await db.execute(stmt_users)).scalars().all()
+
     return GroupDetailRead(
         id=group.id,
         name=group.name,
         description=group.description,
         permissions=[PermissionRead.model_validate(p) for p in perms],
+        users=[UserSummary.model_validate(u) for u in users],
         created_at=group.created_at,
     )
 
@@ -838,7 +856,7 @@ async def update_group(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> GroupDetailRead:
-    """Update group title, description, or reassign permission links."""
+    """Update group title, description, or reassign permission links and user memberships."""
     stmt = select(Group).where(
         Group.id == group_id,
         Group.company_id == current_user.company_id,
@@ -864,6 +882,17 @@ async def update_group(
             new_link = GroupPermissionLink(group_id=group.id, permission_id=pid, company_id=group.company_id)
             db.add(new_link)
 
+    # Re-sync user memberships if specified
+    if payload.user_ids is not None:
+        existing_u_links = (await db.execute(select(UserGroupLink).where(UserGroupLink.group_id == group.id))).scalars().all()
+        for u_link in existing_u_links:
+            await db.delete(u_link)
+        await db.flush()
+
+        for uid in payload.user_ids:
+            new_u_link = UserGroupLink(user_id=uid, group_id=group.id, company_id=group.company_id)
+            db.add(new_u_link)
+
     await db.commit()
     await db.refresh(group)
 
@@ -874,11 +903,19 @@ async def update_group(
     )
     perms = (await db.execute(stmt_perms)).scalars().all()
 
+    stmt_users = (
+        select(User)
+        .join(UserGroupLink, UserGroupLink.user_id == User.id)
+        .where(UserGroupLink.group_id == group.id, User.deleted_at.is_(None))
+    )
+    users = (await db.execute(stmt_users)).scalars().all()
+
     return GroupDetailRead(
         id=group.id,
         name=group.name,
         description=group.description,
         permissions=[PermissionRead.model_validate(p) for p in perms],
+        users=[UserSummary.model_validate(u) for u in users],
         created_at=group.created_at,
     )
 
@@ -906,3 +943,88 @@ async def delete_group(
     group.soft_delete(user_id=current_user.id)
     await db.commit()
     return {"status": "deleted", "id": str(group_id), "message": f"Group '{group.name}' soft-deleted successfully."}
+
+
+@router.get(
+    "/groups/{group_id}/users",
+    response_model=List[UserSummary],
+    tags=["RBAC Administration"],
+)
+async def list_group_users(
+    group_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[UserSummary]:
+    """List all active member users assigned to an RBAC group."""
+    stmt_group = select(Group).where(Group.id == group_id, Group.company_id == current_user.company_id, Group.deleted_at.is_(None))
+    if not (await db.execute(stmt_group)).scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found.")
+
+    stmt_users = (
+        select(User)
+        .join(UserGroupLink, UserGroupLink.user_id == User.id)
+        .where(UserGroupLink.group_id == group_id, User.deleted_at.is_(None))
+    )
+    users = (await db.execute(stmt_users)).scalars().all()
+    return [UserSummary.model_validate(u) for u in users]
+
+
+@router.post(
+    "/groups/{group_id}/users/{user_id}",
+    status_code=status.HTTP_200_OK,
+    tags=["RBAC Administration"],
+)
+async def add_user_to_group(
+    group_id: uuid.UUID,
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Directly assign an existing user to an RBAC group."""
+    stmt_group = select(Group).where(Group.id == group_id, Group.company_id == current_user.company_id, Group.deleted_at.is_(None))
+    group = (await db.execute(stmt_group)).scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found.")
+
+    stmt_user = select(User).where(User.id == user_id, User.company_id == current_user.company_id, User.deleted_at.is_(None))
+    user = (await db.execute(stmt_user)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    existing = (await db.execute(
+        select(UserGroupLink).where(UserGroupLink.group_id == group_id, UserGroupLink.user_id == user_id)
+    )).scalar_one_or_none()
+    if not existing:
+        link = UserGroupLink(user_id=user_id, group_id=group_id, company_id=current_user.company_id)
+        db.add(link)
+        await db.commit()
+
+    return {"status": "success", "message": f"User '{user.username}' added to group '{group.name}'."}
+
+
+@router.delete(
+    "/groups/{group_id}/users/{user_id}",
+    status_code=status.HTTP_200_OK,
+    tags=["RBAC Administration"],
+)
+async def remove_user_from_group(
+    group_id: uuid.UUID,
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Directly remove a user from an RBAC group."""
+    stmt_group = select(Group).where(Group.id == group_id, Group.company_id == current_user.company_id, Group.deleted_at.is_(None))
+    group = (await db.execute(stmt_group)).scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found.")
+
+    existing = (await db.execute(
+        select(UserGroupLink).where(UserGroupLink.group_id == group_id, UserGroupLink.user_id == user_id)
+    )).scalar_one_or_none()
+    if existing:
+        await db.delete(existing)
+        await db.commit()
+
+    return {"status": "success", "message": f"User removed from group '{group.name}'."}
+

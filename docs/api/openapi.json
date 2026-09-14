@@ -982,7 +982,7 @@
           "RBAC Administration"
         ],
         "summary": "List Groups",
-        "description": "List RBAC groups for active tenant with count of assigned permissions.",
+        "description": "List RBAC groups for active tenant with count of assigned permissions and users.",
         "operationId": "list_groups_api_v1_identity_rbac_groups_get",
         "responses": {
           "200": {
@@ -1012,7 +1012,7 @@
           "RBAC Administration"
         ],
         "summary": "Create Group",
-        "description": "Create an RBAC Group/Role with linked permissions (Superuser or Tenant Admin).",
+        "description": "Create an RBAC Group/Role with linked permissions and users (Superuser or Tenant Admin).",
         "operationId": "create_group_api_v1_identity_rbac_groups_post",
         "requestBody": {
           "content": {
@@ -1060,7 +1060,7 @@
           "RBAC Administration"
         ],
         "summary": "Get Group",
-        "description": "Retrieve detailed RBAC group with full list of assigned permissions.",
+        "description": "Retrieve detailed RBAC group with full list of assigned permissions and member users.",
         "operationId": "get_group_api_v1_identity_rbac_groups__group_id__get",
         "security": [
           {
@@ -1108,7 +1108,7 @@
           "RBAC Administration"
         ],
         "summary": "Update Group",
-        "description": "Update group title, description, or reassign permission links.",
+        "description": "Update group title, description, or reassign permission links and user memberships.",
         "operationId": "update_group_api_v1_identity_rbac_groups__group_id__patch",
         "security": [
           {
@@ -1193,6 +1193,180 @@
                 "schema": {
                   "type": "object",
                   "title": "Response Delete Group Api V1 Identity Rbac Groups  Group Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/groups/{group_id}/users": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "List Group Users",
+        "description": "List all active member users assigned to an RBAC group.",
+        "operationId": "list_group_users_api_v1_identity_rbac_groups__group_id__users_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserSummary"
+                  },
+                  "title": "Response List Group Users Api V1 Identity Rbac Groups  Group Id  Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/groups/{group_id}/users/{user_id}": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Add User To Group",
+        "description": "Directly assign an existing user to an RBAC group.",
+        "operationId": "add_user_to_group_api_v1_identity_rbac_groups__group_id__users__user_id__post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Add User To Group Api V1 Identity Rbac Groups  Group Id  Users  User Id  Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Remove User From Group",
+        "description": "Directly remove a user from an RBAC group.",
+        "operationId": "remove_user_from_group_api_v1_identity_rbac_groups__group_id__users__user_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Remove User From Group Api V1 Identity Rbac Groups  Group Id  Users  User Id  Delete"
                 }
               }
             }
@@ -6551,6 +6725,15 @@
             "type": "array",
             "title": "Permission Ids",
             "description": "List of granular Permission UUIDs to link to this group"
+          },
+          "user_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "User Ids",
+            "description": "Optional list of User UUIDs to immediately assign to this group"
           }
         },
         "type": "object",
@@ -6558,11 +6741,12 @@
           "name"
         ],
         "title": "GroupCreate",
-        "description": "Schema for creating a new RBAC role/group with assigned permissions.",
+        "description": "Schema for creating a new RBAC role/group with assigned permissions and users.",
         "example": {
           "description": "Read and review access to general ledger and journal entries",
           "name": "Financial Auditors",
-          "permission_ids": []
+          "permission_ids": [],
+          "user_ids": []
         }
       },
       "GroupDetailRead": {
@@ -6596,6 +6780,14 @@
             "title": "Permissions",
             "description": "List of linked permission objects"
           },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/UserSummary"
+            },
+            "type": "array",
+            "title": "Users",
+            "description": "List of users currently assigned to this group"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -6609,7 +6801,7 @@
           "created_at"
         ],
         "title": "GroupDetailRead",
-        "description": "Detailed group representation including full linked permission objects."
+        "description": "Detailed group representation including full linked permissions and member users."
       },
       "GroupRead": {
         "properties": {
@@ -6637,6 +6829,11 @@
           "permissions_count": {
             "type": "integer",
             "title": "Permissions Count",
+            "default": 0
+          },
+          "users_count": {
+            "type": "integer",
+            "title": "Users Count",
             "default": 0
           },
           "created_at": {
@@ -6698,11 +6895,27 @@
             ],
             "title": "Permission Ids",
             "description": "Full replacement list of linked Permission UUIDs"
+          },
+          "user_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Ids",
+            "description": "Full replacement list of assigned User UUIDs"
           }
         },
         "type": "object",
         "title": "GroupUpdate",
-        "description": "Schema for updating group metadata or reassigning permissions."
+        "description": "Schema for updating group metadata or reassigning permissions and users."
       },
       "HTTPValidationError": {
         "properties": {
@@ -6960,7 +7173,9 @@
         "example": {
           "email": "auditor@sovereign.local",
           "full_name": "QA Auditor",
-          "group_ids": [],
+          "group_ids": [
+            "110b59d6-00bc-4273-8014-9876de10909c"
+          ],
           "is_superuser": false,
           "password": "StrongPassword2026!",
           "preferred_language": "en",
@@ -9769,6 +9984,41 @@
         "title": "UserRead",
         "description": "Public serialized representation of a user profile."
       },
+      "UserSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "user_type": {
+            "type": "string",
+            "title": "User Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "full_name",
+          "email",
+          "user_type"
+        ],
+        "title": "UserSummary",
+        "description": "Compact summary of an assigned user."
+      },
       "UserUpdate": {
         "properties": {
           "full_name": {
@@ -9880,6 +10130,9 @@
         "description": "Schema for updating user account details, roles, or resetting password.",
         "example": {
           "full_name": "Sarah Connor, Lead Auditor",
+          "group_ids": [
+            "110b59d6-00bc-4273-8014-9876de10909c"
+          ],
           "is_active": true,
           "preferred_language": "en"
         }

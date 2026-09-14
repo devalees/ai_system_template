@@ -32,6 +32,10 @@ class ModuleManifest(BaseModel):
         default=True,
         description="Whether to load and initialize this module automatically on kernel boot",
     )
+    custom_permissions: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Optional list of custom non-CRUD capability dicts, e.g. [{'action': 'approve', 'resource': 'invoice', 'name': 'Approve Invoice'}]",
+    )
     module_dir: Optional[Path] = Field(
         default=None,
         description="Filesystem directory where the module package resides",
