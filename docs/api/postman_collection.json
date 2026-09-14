@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "291995ee-8695-4b42-b21b-87ea558c0fde",
+    "_postman_id": "6eb44f3b-0884-4ac6-9a7b-057691bcbe3b",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -4797,6 +4797,283 @@
               }
             }
           ]
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lookups/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "lookups",
+                "categories"
+              ],
+              "variable": []
+            },
+            "description": "## List Categories\n\nList categories for current tenant with breadcrumb paths and children counts.\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/categories`  \n**Tags**: `Normalized Master Data & Lookups, Categories`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `query` | `string` | No | Filter by target model scope (e.g. document, mail_template) |\n| `parent_id` | `query` | `string` | No | Filter by parent category ID |\n| `root_only` | `query` | `boolean` | No | Return only top-level root categories without parents |\n| `search` | `query` | `string` | No | Search categories by name |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lookups/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "lookups",
+                "categories"
+              ],
+              "variable": []
+            },
+            "description": "## Create Category\n\nCreate a new root or sub-category (with optional parent_id for sub-classification).\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/categories`  \n**Tags**: `Normalized Master Data & Lookups, Categories`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Human-readable category name |\n| `code` | `string` | **Yes** | Any valid string | Machine code or slug unique within tenant and res_model |\n| `res_model` | `string` | No | Any valid string | Domain entity or module scope (e.g. document, mail_template, product) |\n| `parent_id` | `string` | No | Any valid string | Optional parent category UUID for sub-classification |\n| `description` | `string` | No | Any valid string | Optional category description |\n| `color` | `string` | No | Any valid string | Hex color badge for UI |\n| `icon` | `string` | No | Any valid string | Icon identifier for UI navigation |\n| `sequence` | `integer` | No | Any valid integer | Sorting sequence order in UI |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"DOC_LEGAL\",\n  \"color\": \"#3b82f6\",\n  \"description\": \"Corporate contracts, agreements, and NDAs\",\n  \"icon\": \"folder\",\n  \"name\": \"Legal Contracts\",\n  \"res_model\": \"{{active_model_name}}\",\n  \"sequence\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_category_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Category Tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lookups/categories/tree",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "lookups",
+                "categories",
+                "tree"
+              ],
+              "variable": []
+            },
+            "description": "## Get Category Tree\n\nRetrieve full nested hierarchical tree of categories for UI navigation and trees.\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/categories/tree`  \n**Tags**: `Normalized Master Data & Lookups, Categories`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `query` | `string` | No | Filter tree by model scope |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lookups/categories/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "lookups",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_id}}",
+                  "description": "Dynamic path parameter bound to {{active_id}}"
+                }
+              ]
+            },
+            "description": "## Get Category\n\nGet single category details with full breadcrumb path.\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/categories/{id}`  \n**Tags**: `Normalized Master Data & Lookups, Categories`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lookups/categories/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "lookups",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_id}}",
+                  "description": "Dynamic path parameter bound to {{active_id}}"
+                }
+              ]
+            },
+            "description": "## Update Category\n\nUpdate category attributes or re-parent in tree with circular reference protection.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/lookups/categories/{id}`  \n**Tags**: `Normalized Master Data & Lookups, Categories`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `code` | `string` | No | Any valid string | code attribute |\n| `res_model` | `string` | No | Any valid string | res_model attribute |\n| `parent_id` | `string` | No | Any valid string | Set parent UUID for sub-classification, or null for root |\n| `description` | `string` | No | Any valid string | description attribute |\n| `color` | `string` | No | Any valid string | color attribute |\n| `icon` | `string` | No | Any valid string | icon attribute |\n| `sequence` | `integer` | No | Any valid integer | sequence attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Employment Agreements\",\n  \"parent_id\": \"c0000000-0000-0000-0000-000000000001\",\n  \"sequence\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lookups/categories/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "lookups",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_id}}",
+                  "description": "Dynamic path parameter bound to {{active_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Category\n\nSoft delete category and cascade soft delete to descendants.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/lookups/categories/{id}`  \n**Tags**: `Normalized Master Data & Lookups, Categories`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
         }
       ]
     },

@@ -3,7 +3,7 @@
 import uuid
 from typing import Optional, Dict, Any
 from datetime import datetime, timezone
-from sqlalchemy import DateTime, Boolean, text, event
+from sqlalchemy import DateTime, Boolean, text, event, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -127,6 +127,16 @@ class SoftDeleteMixin:
         """Restore a soft-deleted record."""
         self.deleted_at = None
         self.deleted_by_id = None
+
+
+class CategorizableMixin:
+    """Universal mixin providing hierarchical category association and foreign key linkage."""
+    category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lookup_categories.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
 
 class BaseModel(

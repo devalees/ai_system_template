@@ -6,7 +6,7 @@ from typing import Dict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from modules.base.lookups.models import Country, Currency, UnitOfMeasure, TaxType, Tag
+from modules.base.lookups.models import Country, Currency, UnitOfMeasure, TaxType, Tag, Category
 
 logger = logging.getLogger("sovereign.lookups.fixtures")
 
@@ -56,6 +56,34 @@ DEFAULT_TAGS = [
     {"name": "Urgent", "color": "#ef4444", "model_target": None},
     {"name": "Internal", "color": "#6b7280", "model_target": None},
     {"name": "Approved", "color": "#10b981", "model_target": None},
+]
+
+DEFAULT_CATEGORIES = [
+    {
+        "name": "Documents & Attachments",
+        "code": "DOC_ROOT",
+        "res_model": "document",
+        "color": "#3b82f6",
+        "icon": "folder",
+        "sequence": 10,
+        "subcategories": [
+            {"name": "Contracts & Agreements", "code": "DOC_LEGAL", "color": "#10b981", "icon": "file-text", "sequence": 10},
+            {"name": "Financial Invoices & Receipts", "code": "DOC_FINANCE", "color": "#f59e0b", "icon": "receipt", "sequence": 20},
+            {"name": "HR & Employee Records", "code": "DOC_HR", "color": "#8b5cf6", "icon": "users", "sequence": 30},
+        ],
+    },
+    {
+        "name": "Email Communication",
+        "code": "MAIL_ROOT",
+        "res_model": "mail_template",
+        "color": "#6366f1",
+        "icon": "mail",
+        "sequence": 20,
+        "subcategories": [
+            {"name": "Transactional & System Notices", "code": "MAIL_TXN", "color": "#06b6d4", "icon": "send", "sequence": 10},
+            {"name": "Marketing & Campaigns", "code": "MAIL_MKT", "color": "#ec4899", "icon": "megaphone", "sequence": 20},
+        ],
+    },
 ]
 
 
@@ -112,6 +140,52 @@ async def seed_iso_data(db: AsyncSession, company_id: uuid.UUID) -> Dict[str, in
         if not exists:
             db.add(Tag(company_id=company_id, **item))
             seeded_counts["tags"] += 1
+
+    # 6. Categories (Hierarchical Trees)
+    seeded_counts["categories"] = 0
+    for cat_data in DEFAULT_CATEGORIES:
+        stmt = select(Category).where(
+            Category.company_id == company_id,
+            Category.res_model == cat_data["res_model"],
+            Category.code == cat_data["code"],
+            Category.deleted_at.is_(None),
+        )
+        root_cat = (await db.execute(stmt)).scalar_one_or_none()
+        if not root_cat:
+            root_cat = Category(
+                company_id=company_id,
+                name=cat_data["name"],
+                code=cat_data["code"],
+                res_model=cat_data["res_model"],
+                color=cat_data.get("color", "#3b82f6"),
+                icon=cat_data.get("icon"),
+                sequence=cat_data.get("sequence", 10),
+            )
+            db.add(root_cat)
+            await db.flush()
+            seeded_counts["categories"] += 1
+
+        for sub_data in cat_data.get("subcategories", []):
+            stmt_sub = select(Category).where(
+                Category.company_id == company_id,
+                Category.res_model == cat_data["res_model"],
+                Category.code == sub_data["code"],
+                Category.deleted_at.is_(None),
+            )
+            sub_cat = (await db.execute(stmt_sub)).scalar_one_or_none()
+            if not sub_cat:
+                sub_cat = Category(
+                    company_id=company_id,
+                    name=sub_data["name"],
+                    code=sub_data["code"],
+                    res_model=cat_data["res_model"],
+                    parent_id=root_cat.id,
+                    color=sub_data.get("color", "#3b82f6"),
+                    icon=sub_data.get("icon"),
+                    sequence=sub_data.get("sequence", 10),
+                )
+                db.add(sub_cat)
+                seeded_counts["categories"] += 1
 
     await db.commit()
     logger.info(f"Seeded ISO lookups for company {company_id}: {seeded_counts}")

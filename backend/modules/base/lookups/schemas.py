@@ -1,7 +1,7 @@
 """Pydantic request and response schemas for Master Data Lookups."""
 
 import uuid
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -167,3 +167,75 @@ class TagRead(TagCreate):
     id: uuid.UUID
     company_id: uuid.UUID
     is_active: bool
+
+
+# 7. Category
+class CategoryCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Legal Contracts",
+                "code": "DOC_LEGAL",
+                "res_model": "document",
+                "parent_id": None,
+                "description": "Corporate contracts, agreements, and NDAs",
+                "color": "#3b82f6",
+                "icon": "folder",
+                "sequence": 10,
+            }
+        }
+    )
+
+    name: str = Field(..., min_length=1, max_length=100, description="Human-readable category name")
+    code: str = Field(..., min_length=1, max_length=50, description="Machine code or slug unique within tenant and res_model")
+    res_model: str = Field("general", max_length=100, description="Domain entity or module scope (e.g. document, mail_template, product)")
+    parent_id: Optional[uuid.UUID] = Field(None, description="Optional parent category UUID for sub-classification")
+    description: Optional[str] = Field(None, max_length=255, description="Optional category description")
+    color: str = Field("#3b82f6", max_length=20, description="Hex color badge for UI")
+    icon: Optional[str] = Field(None, max_length=50, description="Icon identifier for UI navigation")
+    sequence: int = Field(10, ge=0, description="Sorting sequence order in UI")
+
+
+class CategoryUpdate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Employment Agreements",
+                "parent_id": "c0000000-0000-0000-0000-000000000001",
+                "sequence": 20,
+            }
+        }
+    )
+
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = Field(None, min_length=1, max_length=50)
+    res_model: Optional[str] = Field(None, max_length=100)
+    parent_id: Optional[uuid.UUID] = Field(None, description="Set parent UUID for sub-classification, or null for root")
+    description: Optional[str] = Field(None, max_length=255)
+    color: Optional[str] = Field(None, max_length=20)
+    icon: Optional[str] = Field(None, max_length=50)
+    sequence: Optional[int] = Field(None, ge=0)
+    is_active: Optional[bool] = None
+
+
+class CategoryRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    company_id: uuid.UUID
+    name: str
+    code: str
+    res_model: str
+    parent_id: Optional[uuid.UUID] = None
+    parent_name: Optional[str] = None
+    description: Optional[str] = None
+    color: str
+    icon: Optional[str] = None
+    sequence: int
+    is_active: bool
+    full_path: Optional[str] = None
+    children_count: int = 0
+
+
+class CategoryTreeRead(CategoryRead):
+    children: List["CategoryTreeRead"] = []

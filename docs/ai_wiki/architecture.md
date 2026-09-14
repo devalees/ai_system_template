@@ -445,6 +445,28 @@ SettingsService.register_module_settings("identity_rbac", IdentitySettings)
 - Enables frontend admin dashboards to dynamically render full settings panels with zero hardcoded form templates.
 - Enables autonomous Hermes AI agents and FastMCP tools to inspect configurable options, validate parameters, and adjust tenant configurations deterministically.
 
+---
+
+### 6.8 Universal Hierarchical Category & CategorizableMixin Standard
+
+#### 6.8.1 Architectural Purpose & Distinction: Category vs. Tag
+To maintain structured, scalable taxonomy across the Sovereign platform without repeating schema boilerplate across modules:
+- **`Tag` (`lookup_tags`)**: Flat, non-hierarchical, many-to-many labels (e.g. `VIP`, `Urgent`, `Review-Required`) used for fluid ad-hoc classification.
+- **`Category` (`lookup_categories`)**: Formal, multi-tenant, **hierarchical parent/child tree** taxonomy (e.g., *Legal $\rightarrow$ Contracts $\rightarrow$ NDAs* or *IT $\rightarrow$ Hardware $\rightarrow$ Laptops*).
+
+#### 6.8.2 Core Primitives: Model, Tree Traversal & Mixin
+1. **The `Category` Model ([`backend/modules/base/lookups/models.py`](file:///home/ehab/Desktop/economy_editor/backend/modules/base/lookups/models.py))**:
+   - Multi-tenant (`company_id`, UUID, audit timestamps, soft-delete).
+   - Polymorphic scope discriminator (`res_model: str`, e.g., `"document"`, `"mail_template"`, `"product"`, `"partner"`).
+   - Self-referential hierarchy: `parent_id: Optional[UUID]` with `parent` and `children` relationships.
+   - Rich metadata: `name`, `code` (unique per scope), `description`, `color`, `icon`, `sequence`.
+2. **The `CategorizableMixin` ([`backend/core/base_models.py`](file:///home/ehab/Desktop/economy_editor/backend/core/base_models.py))**:
+   - Any domain entity in any module (e.g. `DocumentAttachment`, `MailTemplate`, future ERP models) inherits `CategorizableMixin` to gain `category_id: Mapped[Optional[UUID]]` foreign key linkage to `lookup_categories.id`.
+3. **Cycle Prevention & Tree API**:
+   - `CategoryService` validates that no category can be assigned to itself or any of its descendants as parent, strictly rejecting circular tree loops (`CIRCULAR_CATEGORY_DEPENDENCY` HTTP 400).
+   - `GET /api/v1/lookups/categories/tree` provides full recursive nested tree visualization for UI tree navigators and menus.
+   - Breadcrumb full paths (e.g., `Corporate Documents / Legal Contracts / Non-Disclosure Agreements`) are dynamically resolved.
+
 
 
 

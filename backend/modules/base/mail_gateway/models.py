@@ -7,7 +7,7 @@ from sqlalchemy import String, Integer, Text, Boolean, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from core.base_models import BaseModel
+from core.base_models import BaseModel, CategorizableMixin
 
 
 class MailServer(BaseModel):
@@ -25,7 +25,7 @@ class MailServer(BaseModel):
     is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
-class MailTemplate(BaseModel):
+class MailTemplate(BaseModel, CategorizableMixin):
     """Dynamic Jinja2 email template supporting multi-lingual body and subject rendering."""
     __tablename__ = "mail_templates"
 

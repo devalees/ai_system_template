@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
 from modules.base.identity_rbac.dependencies import get_current_user
 from modules.base.identity_rbac.models import User
-from modules.base.lookups.models import Country, City, Currency, UnitOfMeasure, TaxType, Tag
+from modules.base.lookups.models import Country, City, Currency, UnitOfMeasure, TaxType, Tag, Category
 from modules.base.lookups.schemas import (
     CountryCreate, CountryRead,
     CityCreate, CityRead,
@@ -17,7 +17,9 @@ from modules.base.lookups.schemas import (
     UnitOfMeasureCreate, UnitOfMeasureRead,
     TaxTypeCreate, TaxTypeRead,
     TagCreate, TagRead,
+    CategoryCreate, CategoryUpdate, CategoryRead, CategoryTreeRead,
 )
+from modules.base.lookups.service import CategoryService
 from modules.base.lookups.fixtures import seed_iso_data
 
 router = APIRouter()
@@ -224,3 +226,168 @@ async def create_tag(
     await db.commit()
     await db.refresh(tag)
     return tag
+
+
+# ---------------- Categories (Hierarchical Taxonomy) ----------------
+@router.get("/categories", response_model=List[CategoryRead], tags=["Categories"])
+async def list_categories(
+    res_model: Optional[str] = Query(None, description="Filter by target model scope (e.g. document, mail_template)"),
+    parent_id: Optional[uuid.UUID] = Query(None, description="Filter by parent category ID"),
+    root_only: bool = Query(False, description="Return only top-level root categories without parents"),
+    search: Optional[str] = Query(None, description="Search categories by name"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[CategoryRead]:
+    """List categories for current tenant with breadcrumb paths and children counts."""
+    return await CategoryService.list_categories(
+        db=db,
+        company_id=current_user.company_id,
+        res_model=res_model,
+        parent_id=parent_id,
+        root_only=root_only,
+        search=search,
+    )
+
+
+@router.get("/categories/tree", response_model=List[CategoryTreeRead], tags=["Categories"])
+async def get_category_tree(
+    res_model: Optional[str] = Query(None, description="Filter tree by model scope"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[CategoryTreeRead]:
+    """Retrieve full nested hierarchical tree of categories for UI navigation and trees."""
+    return await CategoryService.get_category_tree(
+        db=db,
+        company_id=current_user.company_id,
+        res_model=res_model,
+    )
+
+
+@router.post("/categories", response_model=CategoryRead, status_code=status.HTTP_201_CREATED, tags=["Categories"])
+async def create_category(
+    payload: CategoryCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CategoryRead:
+    """Create a new root or sub-category (with optional parent_id for sub-classification)."""
+    cat = await CategoryService.create_category(
+        db=db,
+        payload=payload,
+        company_id=current_user.company_id,
+        user_id=current_user.id,
+    )
+    cats = await CategoryService.list_categories(
+        db=db,
+        company_id=current_user.company_id,
+        parent_id=cat.parent_id,
+        search=cat.name,
+    )
+    for c in cats:
+        if c.id == cat.id:
+            return c
+    return CategoryRead(
+        id=cat.id,
+        company_id=cat.company_id,
+        name=cat.name,
+        code=cat.code,
+        res_model=cat.res_model,
+        parent_id=cat.parent_id,
+        description=cat.description,
+        color=cat.color,
+        icon=cat.icon,
+        sequence=cat.sequence,
+        is_active=cat.is_active,
+        full_path=cat.name,
+        children_count=0,
+    )
+
+
+@router.get("/categories/{id}", response_model=CategoryRead, tags=["Categories"])
+async def get_category(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CategoryRead:
+    """Get single category details with full breadcrumb path."""
+    cat = await CategoryService.get_category(db, id, current_user.company_id)
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    cats = await CategoryService.list_categories(
+        db=db,
+        company_id=current_user.company_id,
+        search=cat.name,
+    )
+    for c in cats:
+        if c.id == cat.id:
+            return c
+    return CategoryRead(
+        id=cat.id,
+        company_id=cat.company_id,
+        name=cat.name,
+        code=cat.code,
+        res_model=cat.res_model,
+        parent_id=cat.parent_id,
+        description=cat.description,
+        color=cat.color,
+        icon=cat.icon,
+        sequence=cat.sequence,
+        is_active=cat.is_active,
+        full_path=cat.name,
+        children_count=0,
+    )
+
+
+@router.patch("/categories/{id}", response_model=CategoryRead, tags=["Categories"])
+async def update_category(
+    id: uuid.UUID,
+    payload: CategoryUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CategoryRead:
+    """Update category attributes or re-parent in tree with circular reference protection."""
+    cat = await CategoryService.update_category(
+        db=db,
+        category_id=id,
+        payload=payload,
+        company_id=current_user.company_id,
+        user_id=current_user.id,
+    )
+    cats = await CategoryService.list_categories(
+        db=db,
+        company_id=current_user.company_id,
+        search=cat.name,
+    )
+    for c in cats:
+        if c.id == cat.id:
+            return c
+    return CategoryRead(
+        id=cat.id,
+        company_id=cat.company_id,
+        name=cat.name,
+        code=cat.code,
+        res_model=cat.res_model,
+        parent_id=cat.parent_id,
+        description=cat.description,
+        color=cat.color,
+        icon=cat.icon,
+        sequence=cat.sequence,
+        is_active=cat.is_active,
+        full_path=cat.name,
+        children_count=0,
+    )
+
+
+@router.delete("/categories/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Categories"])
+async def delete_category(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft delete category and cascade soft delete to descendants."""
+    await CategoryService.delete_category(
+        db=db,
+        category_id=id,
+        company_id=current_user.company_id,
+        user_id=current_user.id,
+    )
+    return None

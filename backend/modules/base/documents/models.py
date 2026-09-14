@@ -6,10 +6,10 @@ from sqlalchemy import String, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from core.base_models import BaseModel
+from core.base_models import BaseModel, CategorizableMixin
 
 
-class DocumentAttachment(BaseModel):
+class DocumentAttachment(BaseModel, CategorizableMixin):
     """File attachment record referencing content-addressable storage blobs."""
     __tablename__ = "document_attachments"
 

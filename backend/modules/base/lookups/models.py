@@ -1,7 +1,7 @@
 """Database models for master data and lookups."""
 
 import uuid
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy import String, Integer, Float, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -90,3 +90,39 @@ class Tag(BaseModel):
     name: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     color: Mapped[str] = mapped_column(String(20), default="#3b82f6", nullable=False)
     model_target: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+
+class Category(BaseModel):
+    """Universal hierarchical category taxonomy supporting nested sub-classifications."""
+    __tablename__ = "lookup_categories"
+    __table_args__ = (
+        UniqueConstraint("company_id", "res_model", "code", name="uq_company_category_scope_code"),
+    )
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    code: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    res_model: Mapped[str] = mapped_column(String(100), default="general", nullable=False, index=True)
+    parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lookup_categories.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    color: Mapped[str] = mapped_column(String(20), default="#3b82f6", nullable=False)
+    icon: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    sequence: Mapped[int] = mapped_column(Integer, default=10, nullable=False, index=True)
+
+    parent: Mapped[Optional["Category"]] = relationship(
+        "Category",
+        remote_side="Category.id",
+        back_populates="children",
+        lazy="selectin",
+    )
+    children: Mapped[List["Category"]] = relationship(
+        "Category",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="Category.sequence",
+    )

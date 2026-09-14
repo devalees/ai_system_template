@@ -9,6 +9,7 @@ from main import app
 from modules.base.identity_rbac.models import Company
 from modules.base.lookups.fixtures import seed_iso_data
 from modules.base.settings.service import SettingsService
+from modules.base.documents.models import DocumentAttachment
 
 
 @pytest.mark.asyncio
@@ -23,6 +24,7 @@ async def test_lookups_seeding_and_idempotency(db_session: AsyncSession):
     assert first_run["uom"] >= 7
     assert first_run["tax_types"] >= 5
     assert first_run["tags"] >= 4
+    assert first_run["categories"] >= 5
 
     # 2. Re-run Seeding (Idempotency Check)
     second_run = await seed_iso_data(db_session, company_id)
@@ -31,6 +33,7 @@ async def test_lookups_seeding_and_idempotency(db_session: AsyncSession):
     assert second_run["uom"] == 0
     assert second_run["tax_types"] == 0
     assert second_run["tags"] == 0
+    assert second_run["categories"] == 0
 
 
 @pytest.mark.asyncio
@@ -133,3 +136,163 @@ async def test_lookups_endpoints_and_multitenancy(db_session: AsyncSession):
         weight_uoms = res_uom_weight.json()
         assert len(weight_uoms) >= 2
         assert all(u["category"] == "weight" for u in weight_uoms)
+
+
+@pytest.mark.asyncio
+async def test_hierarchical_category_engine_and_cycle_prevention(db_session: AsyncSession):
+    """Verify recursive parent-child category tree, cycle prevention, and CategorizableMixin."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Seed companies
+        comp_a = uuid.uuid4()
+        comp_b = uuid.uuid4()
+        db_session.add_all([
+            Company(id=comp_a, name="Cat Company A", code=f"CCA_{comp_a.hex[:4]}"),
+            Company(id=comp_b, name="Cat Company B", code=f"CCB_{comp_b.hex[:4]}"),
+        ])
+        await db_session.commit()
+        await SettingsService.update_settings(db_session, "identity_rbac", comp_a, {"allow_registration": True})
+        await SettingsService.update_settings(db_session, "identity_rbac", comp_b, {"allow_registration": True})
+
+        # Register users
+        user_a = f"cat_user_a_{uuid.uuid4().hex[:6]}"
+        await client.post(
+            "/api/v1/identity_rbac/auth/register",
+            json={"email": f"{user_a}@test.com", "username": user_a, "password": "Password123!", "full_name": "Cat User A", "company_id": str(comp_a)},
+        )
+        login_a = await client.post("/api/v1/identity_rbac/auth/login", json={"identifier": user_a, "password": "Password123!"})
+        headers_a = {"Authorization": f"Bearer {login_a.json()['access_token']}", "X-Company-ID": str(comp_a)}
+
+        user_b = f"cat_user_b_{uuid.uuid4().hex[:6]}"
+        await client.post(
+            "/api/v1/identity_rbac/auth/register",
+            json={"email": f"{user_b}@test.com", "username": user_b, "password": "Password123!", "full_name": "Cat User B", "company_id": str(comp_b)},
+        )
+        login_b = await client.post("/api/v1/identity_rbac/auth/login", json={"identifier": user_b, "password": "Password123!"})
+        headers_b = {"Authorization": f"Bearer {login_b.json()['access_token']}", "X-Company-ID": str(comp_b)}
+
+        # 2. Tenant A creates Root Category: "Corporate Documents"
+        res_root = await client.post(
+            "/api/v1/lookups/categories",
+            headers=headers_a,
+            json={
+                "name": "Corporate Documents",
+                "code": "CORP_DOCS",
+                "res_model": "document",
+                "parent_id": None,
+                "description": "Top-level corporate documents folder",
+                "color": "#3b82f6",
+                "icon": "folder",
+                "sequence": 10,
+            },
+        )
+        assert res_root.status_code == 201
+        root_data = res_root.json()
+        root_id = root_data["id"]
+        assert root_data["parent_id"] is None
+        assert root_data["full_path"] == "Corporate Documents"
+
+        # 3. Tenant A creates Sub-Category: "Legal Contracts" (parent = root_id)
+        res_sub = await client.post(
+            "/api/v1/lookups/categories",
+            headers=headers_a,
+            json={
+                "name": "Legal Contracts",
+                "code": "LEGAL_CONTRACTS",
+                "res_model": "document",
+                "parent_id": root_id,
+                "description": "Commercial and vendor agreements",
+                "color": "#10b981",
+                "icon": "file-text",
+                "sequence": 10,
+            },
+        )
+        assert res_sub.status_code == 201
+        sub_data = res_sub.json()
+        sub_id = sub_data["id"]
+        assert sub_data["parent_id"] == root_id
+        assert sub_data["parent_name"] == "Corporate Documents"
+        assert sub_data["full_path"] == "Corporate Documents / Legal Contracts"
+
+        # 4. Tenant A creates 3rd level sub-sub-category: "Non-Disclosure Agreements"
+        res_leaf = await client.post(
+            "/api/v1/lookups/categories",
+            headers=headers_a,
+            json={
+                "name": "Non-Disclosure Agreements",
+                "code": "NDAS",
+                "res_model": "document",
+                "parent_id": sub_id,
+                "description": "Standard bilateral and unilateral NDAs",
+                "color": "#8b5cf6",
+                "icon": "shield",
+                "sequence": 5,
+            },
+        )
+        assert res_leaf.status_code == 201
+        leaf_data = res_leaf.json()
+        leaf_id = leaf_data["id"]
+        assert leaf_data["full_path"] == "Corporate Documents / Legal Contracts / Non-Disclosure Agreements"
+
+        # 5. Verify Hierarchical Tree API
+        res_tree = await client.get("/api/v1/lookups/categories/tree?res_model=document", headers=headers_a)
+        assert res_tree.status_code == 200
+        tree_nodes = res_tree.json()
+        doc_root = next(n for n in tree_nodes if n["id"] == root_id)
+        assert len(doc_root["children"]) >= 1
+        legal_node = next(c for c in doc_root["children"] if c["id"] == sub_id)
+        assert len(legal_node["children"]) >= 1
+        nda_node = next(c for c in legal_node["children"] if c["id"] == leaf_id)
+        assert nda_node["name"] == "Non-Disclosure Agreements"
+
+        # 6. Verify Cycle Prevention
+        # Attempt 1: Root category sets itself as parent
+        res_cycle_self = await client.patch(
+            f"/api/v1/lookups/categories/{root_id}",
+            headers=headers_a,
+            json={"parent_id": root_id},
+        )
+        assert res_cycle_self.status_code == 400
+        assert "cannot be its own parent" in res_cycle_self.json()["error"]["message"]
+
+        # Attempt 2: Root category sets descendant (sub_id) as parent
+        res_cycle_descendant = await client.patch(
+            f"/api/v1/lookups/categories/{root_id}",
+            headers=headers_a,
+            json={"parent_id": sub_id},
+        )
+        assert res_cycle_descendant.status_code == 400
+        assert "circular tree reference" in res_cycle_descendant.json()["error"]["message"]
+
+        # Attempt 3: Root category sets leaf (grandchild) as parent
+        res_cycle_leaf = await client.patch(
+            f"/api/v1/lookups/categories/{root_id}",
+            headers=headers_a,
+            json={"parent_id": leaf_id},
+        )
+        assert res_cycle_leaf.status_code == 400
+        assert "circular tree reference" in res_cycle_leaf.json()["error"]["message"]
+
+        # 7. Verify Multi-Tenant Isolation
+        # Tenant B queries categories -> must NOT see Tenant A's categories
+        res_tree_b = await client.get("/api/v1/lookups/categories/tree?res_model=document", headers=headers_b)
+        assert res_tree_b.status_code == 200
+        assert not any(n["id"] == root_id for n in res_tree_b.json())
+
+        # Tenant B attempts to access Tenant A's category by ID -> 404
+        res_forbidden = await client.get(f"/api/v1/lookups/categories/{root_id}", headers=headers_b)
+        assert res_forbidden.status_code == 404
+
+        # 8. Verify CategorizableMixin on DocumentAttachment
+        doc = DocumentAttachment(
+            company_id=comp_a,
+            name="Confidential_NDA_2026.pdf",
+            file_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            file_size=1024,
+            mime_type="application/pdf",
+            storage_path="/tmp/nda.pdf",
+            category_id=uuid.UUID(leaf_id),
+        )
+        db_session.add(doc)
+        await db_session.commit()
+        await db_session.refresh(doc)
+        assert doc.category_id == uuid.UUID(leaf_id)
