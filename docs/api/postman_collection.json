@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "b57daea3-51d6-4e42-9232-b533aa05bb23",
+    "_postman_id": "021cd922-6aaf-47a7-98e5-d3872df9fd3c",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -722,6 +722,304 @@
                   "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
                   "        if (recId) {",
                   "            pm.environment.set(\"active_verify_email_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Initiate Two-Factor Authentication configuration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/auth/2fa/setup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "auth",
+                "2fa",
+                "setup"
+              ],
+              "variable": []
+            },
+            "description": "## Initiate Two-Factor Authentication configuration\n\nGenerate a TOTP secret and provisioning URI for the authenticated user.\n\nSecurity & Access:\n- Requires authenticated session.\n- Prevents re-running setup if 2FA is already active.\n- Staged secret is stored pending confirmation via /auth/2fa/enable.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/setup`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_setup_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify code and enable Two-Factor Authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/auth/2fa/enable",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "auth",
+                "2fa",
+                "enable"
+              ],
+              "variable": []
+            },
+            "description": "## Verify code and enable Two-Factor Authentication\n\nVerify an initial TOTP code, activate 2FA, and return emergency recovery backup codes.\n\nSecurity & Access:\n- Requires authenticated session.\n- Confirms user possesses authenticator configured with the staged secret.\n- Generates 8 single-use emergency recovery codes, stored as cryptographic SHA-256 hashes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/enable`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code generated by authenticator app |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_enable_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Disable Two-Factor Authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/auth/2fa/disable",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "auth",
+                "2fa",
+                "disable"
+              ],
+              "variable": []
+            },
+            "description": "## Disable Two-Factor Authentication\n\nDeactivate Two-Factor Authentication with password re-verification and code validation.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Requires current password verification to prevent session hijacking.\n- Requires valid TOTP code or active emergency recovery code.\n- Completely wipes 2FA secret and stored recovery codes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/disable`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `password` | `string` | **Yes** | Any valid string | Current password for identity re-verification |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code or emergency recovery code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\",\n  \"password\": \"CurrentPassword2026!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_disable_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete two-factor authentication challenge during login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/auth/2fa/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "auth",
+                "2fa",
+                "verify"
+              ],
+              "variable": []
+            },
+            "description": "## Complete two-factor authentication challenge during login\n\nValidate secondary MFA token with TOTP code or emergency recovery code to issue access token.\n\nSecurity & Access:\n- Public endpoint.\n- Consumes temporary MFA challenge token.\n- Accepts standard 6-digit TOTP code or single-use recovery code.\n- If recovery code is used, it is atomically burned from the user's stored recovery codes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/2fa/verify`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `mfa_token` | `string` | **Yes** | Any valid string | MFA pending challenge token returned during primary login |\n| `code` | `string` | **Yes** | Any valid string | 6-digit TOTP code or emergency recovery code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\",\n  \"mfa_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_verify_id\", recId);",
                   "            pm.environment.set(\"active_record_id\", recId);",
                   "        }",
                   "        if (json.queue_id) {",

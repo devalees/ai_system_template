@@ -368,6 +368,25 @@ The Orchestrator MCP server exposes two typed tools for the Chief of Staff:
   - **Superuser Provisioning Monopoly**: Only the Primary Admin can grant or revoke `is_superuser = True` or provision new superuser accounts. Secondary superusers attempting to create or promote superusers receive `403 Forbidden`.
   - **Superuser Peer Protection**: Secondary superusers cannot modify, demote, or soft-delete other secondary superusers; only the Primary Admin holds administrative lifecycle authority over secondary superusers.
 
+---
+
+### 6.6 Enterprise Authentication Security (Decoupled Credentials, Email Tokens & 2FA / TOTP)
+- **Credential Decoupling & Authenticated Password Change**:
+  - `password` field completely eliminated from `UserUpdate` schema and generic user profile patching (`PATCH /api/v1/identity_rbac/users/{user_id}`) per OWASP ASVS and NIST SP 800-63B standards.
+  - Dedicated endpoint `POST /api/v1/identity_rbac/auth/change-password` requiring active Bearer token, verifying `current_password` against native bcrypt hash, enforcing `new_password` complexity and confirmation match, and blocking redundant password churn.
+- **Single-Use Redis Token Engine & Email Verification**:
+  - Redis-backed time-limited tokens with atomic `GETDEL` single-use burning to defeat replay and race conditions.
+  - **Forgot/Reset Password Flow**: `POST /api/v1/identity_rbac/auth/forgot-password` dispatches 15-minute expiring tokens via `MailService.enqueue_mail` with constant response times defeating email enumeration; `POST /api/v1/identity_rbac/auth/reset-password` consumes the token and updates the hash.
+  - **Account Email Verification**: Added `email_verified: bool` on `User`; newly self-registered accounts trigger welcome verification dispatch; completed via `POST /api/v1/identity_rbac/auth/verify-email`.
+- **Two-Factor Authentication Subsystem (RFC 6238 TOTP & Recovery Codes)**:
+  - Backed by `pyotp` RFC 6238 time-based one-time password algorithm with clock skew window tolerance.
+  - `User` schema attributes: `two_factor_enabled: bool`, `two_factor_secret: str`, `two_factor_recovery_codes: List[str]` (JSONB).
+  - **Setup (`POST /api/v1/identity_rbac/auth/2fa/setup`)**: Authenticated users receive Base32 secret and `otpauth://` QR URI.
+  - **Enablement (`POST /api/v1/identity_rbac/auth/2fa/enable`)**: Confirms TOTP code, generates 8 alphanumeric emergency recovery codes stored as SHA-256 hashes, and enables 2FA.
+  - **Two-Step Login Handshake**: If `two_factor_enabled == True`, `POST /api/v1/identity_rbac/auth/login` returns an intermediate 5-minute signed JWT `mfa_token` with `mfa_required: true`.
+  - **Challenge Verification (`POST /api/v1/identity_rbac/auth/2fa/verify`)**: Validates `mfa_token` and accepts either a live 6-digit TOTP code or an emergency recovery code (atomically burned from user records upon use).
+  - **Disabling (`POST /api/v1/identity_rbac/auth/2fa/disable`)**: Requires re-authenticating current password plus TOTP or recovery code to prevent session hijacking.
+
 
 
 

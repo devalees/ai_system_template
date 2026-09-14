@@ -31,6 +31,11 @@ from modules.base.identity_rbac.schemas import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     VerifyEmailRequest,
+    TwoFactorSetupResponse,
+    TwoFactorEnableRequest,
+    TwoFactorEnableResponse,
+    TwoFactorDisableRequest,
+    TwoFactorVerifyRequest,
     PermissionCreate,
     PermissionUpdate,
     PermissionRead,
@@ -51,6 +56,13 @@ from modules.base.identity_rbac.security import (
     verify_and_consume_password_reset_token,
     create_email_verification_token,
     verify_and_consume_email_token,
+    create_mfa_token,
+    verify_mfa_token,
+    generate_totp_secret,
+    get_totp_uri,
+    verify_totp_code,
+    generate_recovery_codes,
+    hash_recovery_code,
 )
 from modules.base.identity_rbac.dependencies import get_current_user, require_permission
 from modules.base.mail_gateway.service import MailService
@@ -183,6 +195,18 @@ async def login(
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated.")
 
+    # Two-factor authentication challenge
+    if user.two_factor_enabled:
+        mfa_token = create_mfa_token(
+            user_id=user.id,
+            company_id=user.company_id,
+            user_type=user.user_type,
+        )
+        return TokenResponse(
+            mfa_required=True,
+            mfa_token=mfa_token,
+        )
+
     token = create_access_token(user_id=user.id, company_id=user.company_id, user_type=user.user_type)
 
     user_data = UserRead(
@@ -194,6 +218,7 @@ async def login(
         is_superuser=user.is_superuser,
         is_primary_admin=user.is_primary_admin,
         email_verified=user.email_verified,
+        two_factor_enabled=user.two_factor_enabled,
         preferred_language=user.preferred_language,
         is_active=user.is_active,
         company_id=user.company_id,
@@ -204,6 +229,7 @@ async def login(
         token_type="bearer",
         user=user_data,
         company_id=user.company_id,
+        mfa_required=False,
     )
 
 
@@ -234,6 +260,7 @@ async def get_me(
         is_superuser=current_user.is_superuser,
         is_primary_admin=current_user.is_primary_admin,
         email_verified=current_user.email_verified,
+        two_factor_enabled=current_user.two_factor_enabled,
         preferred_language=current_user.preferred_language,
         is_active=current_user.is_active,
         company_id=current_user.company_id,
@@ -425,6 +452,236 @@ async def verify_email(
     return AuthMessageResponse(
         success=True,
         message="Email address has been successfully verified.",
+    )
+
+
+@router.post(
+    "/auth/2fa/setup",
+    response_model=TwoFactorSetupResponse,
+    tags=["Authentication"],
+    summary="Initiate Two-Factor Authentication configuration",
+)
+async def setup_two_factor(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TwoFactorSetupResponse:
+    """Generate a TOTP secret and provisioning URI for the authenticated user.
+    
+    Security & Access:
+    - Requires authenticated session.
+    - Prevents re-running setup if 2FA is already active.
+    - Staged secret is stored pending confirmation via /auth/2fa/enable.
+    """
+    if current_user.two_factor_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Two-factor authentication is already active for this account. Disable it first to reconfigure.",
+        )
+
+    secret = generate_totp_secret()
+    current_user.two_factor_secret = secret
+    await db.commit()
+
+    otpauth_url = get_totp_uri(secret=secret, username=current_user.username, issuer="Sovereign")
+    return TwoFactorSetupResponse(secret=secret, otpauth_url=otpauth_url)
+
+
+@router.post(
+    "/auth/2fa/enable",
+    response_model=TwoFactorEnableResponse,
+    tags=["Authentication"],
+    summary="Verify code and enable Two-Factor Authentication",
+)
+async def enable_two_factor(
+    payload: TwoFactorEnableRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TwoFactorEnableResponse:
+    """Verify an initial TOTP code, activate 2FA, and return emergency recovery backup codes.
+    
+    Security & Access:
+    - Requires authenticated session.
+    - Confirms user possesses authenticator configured with the staged secret.
+    - Generates 8 single-use emergency recovery codes, stored as cryptographic SHA-256 hashes.
+    """
+    if current_user.two_factor_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Two-factor authentication is already enabled.",
+        )
+
+    if not current_user.two_factor_secret:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Two-factor authentication setup has not been initiated. Call /auth/2fa/setup first.",
+        )
+
+    if not verify_totp_code(current_user.two_factor_secret, payload.code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid two-factor authentication code. Verification failed.",
+        )
+
+    recovery_codes = generate_recovery_codes(count=8)
+    hashed_codes = [hash_recovery_code(code) for code in recovery_codes]
+
+    current_user.two_factor_recovery_codes = hashed_codes
+    current_user.two_factor_enabled = True
+    await db.commit()
+
+    return TwoFactorEnableResponse(
+        enabled=True,
+        recovery_codes=recovery_codes,
+    )
+
+
+@router.post(
+    "/auth/2fa/disable",
+    response_model=AuthMessageResponse,
+    tags=["Authentication"],
+    summary="Disable Two-Factor Authentication",
+)
+async def disable_two_factor(
+    payload: TwoFactorDisableRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AuthMessageResponse:
+    """Deactivate Two-Factor Authentication with password re-verification and code validation.
+    
+    Security & Access:
+    - Requires active authenticated Bearer session.
+    - Requires current password verification to prevent session hijacking.
+    - Requires valid TOTP code or active emergency recovery code.
+    - Completely wipes 2FA secret and stored recovery codes.
+    """
+    if not current_user.two_factor_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Two-factor authentication is not enabled on this account.",
+        )
+
+    if not verify_password(payload.password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password verification failed.",
+        )
+
+    code_valid = False
+    if current_user.two_factor_secret and verify_totp_code(current_user.two_factor_secret, payload.code):
+        code_valid = True
+    else:
+        req_hash = hash_recovery_code(payload.code)
+        if current_user.two_factor_recovery_codes and req_hash in current_user.two_factor_recovery_codes:
+            code_valid = True
+
+    if not code_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid authentication code or emergency recovery code.",
+        )
+
+    current_user.two_factor_enabled = False
+    current_user.two_factor_secret = None
+    current_user.two_factor_recovery_codes = None
+    await db.commit()
+
+    return AuthMessageResponse(
+        success=True,
+        message="Two-factor authentication has been successfully disabled.",
+    )
+
+
+@router.post(
+    "/auth/2fa/verify",
+    response_model=TokenResponse,
+    tags=["Authentication"],
+    summary="Complete two-factor authentication challenge during login",
+)
+async def verify_two_factor_login(
+    payload: TwoFactorVerifyRequest,
+    db: AsyncSession = Depends(get_db),
+) -> TokenResponse:
+    """Validate secondary MFA token with TOTP code or emergency recovery code to issue access token.
+    
+    Security & Access:
+    - Public endpoint.
+    - Consumes temporary MFA challenge token.
+    - Accepts standard 6-digit TOTP code or single-use recovery code.
+    - If recovery code is used, it is atomically burned from the user's stored recovery codes.
+    """
+    mfa_payload = verify_mfa_token(payload.mfa_token)
+    if not mfa_payload or "sub" not in mfa_payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired MFA session token. Please initiate login again.",
+        )
+
+    user_id = uuid.UUID(mfa_payload["sub"])
+    stmt = (
+        select(User)
+        .where(User.id == user_id, User.deleted_at.is_(None))
+        .execution_options(ignore_tenant=True)
+    )
+    user = (await db.execute(stmt)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated.")
+
+    if not user.two_factor_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Two-factor authentication is not active on this account.",
+        )
+
+    code_valid = False
+    used_recovery_code_hash = None
+
+    if user.two_factor_secret and verify_totp_code(user.two_factor_secret, payload.code):
+        code_valid = True
+    else:
+        req_hash = hash_recovery_code(payload.code)
+        if user.two_factor_recovery_codes and req_hash in user.two_factor_recovery_codes:
+            code_valid = True
+            used_recovery_code_hash = req_hash
+
+    if not code_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid two-factor authentication code or recovery code.",
+        )
+
+    # Burn single-use recovery code if used
+    if used_recovery_code_hash:
+        user.two_factor_recovery_codes = [
+            h for h in (user.two_factor_recovery_codes or []) if h != used_recovery_code_hash
+        ]
+        await db.commit()
+
+    token = create_access_token(user_id=user.id, company_id=user.company_id, user_type=user.user_type)
+
+    user_data = UserRead(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        full_name=user.full_name,
+        user_type=user.user_type,
+        is_superuser=user.is_superuser,
+        is_primary_admin=user.is_primary_admin,
+        email_verified=user.email_verified,
+        two_factor_enabled=user.two_factor_enabled,
+        preferred_language=user.preferred_language,
+        is_active=user.is_active,
+        company_id=user.company_id,
+    )
+
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=user_data,
+        company_id=user.company_id,
+        mfa_required=False,
     )
 
 

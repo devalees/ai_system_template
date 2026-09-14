@@ -3,7 +3,7 @@
 import uuid
 from typing import Optional, List
 from sqlalchemy import String, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.base_models import (
@@ -49,6 +49,9 @@ class User(BaseModel):
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_primary_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    two_factor_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    two_factor_secret: Mapped[Optional[str]] = mapped_column(String(255), default=None, nullable=True)
+    two_factor_recovery_codes: Mapped[Optional[List[str]]] = mapped_column(JSONB, default=None, nullable=True)
     preferred_language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     team_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), default=None, nullable=True)
 

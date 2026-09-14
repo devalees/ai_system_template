@@ -3,7 +3,7 @@
 import uuid
 import bcrypt
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from jose import jwt
 
 from core.config import settings
@@ -116,4 +116,81 @@ async def verify_and_consume_email_token(token: str) -> Optional[uuid.UUID]:
         return uuid.UUID(val)
     finally:
         await r.aclose()
+
+
+# =========================================================================
+# Two-Factor Authentication (RFC 6238 TOTP & Recovery Codes)
+# =========================================================================
+
+import hashlib
+import pyotp
+
+
+def create_mfa_token(
+    user_id: uuid.UUID,
+    company_id: uuid.UUID,
+    user_type: str = "human",
+    expires_delta: Optional[timedelta] = None,
+) -> str:
+    """Issue a short-lived signed JWT challenge token for completing 2FA verification."""
+    now = datetime.now(timezone.utc)
+    expire = now + (expires_delta or timedelta(minutes=5))
+
+    to_encode: Dict[str, Any] = {
+        "sub": str(user_id),
+        "company_id": str(company_id),
+        "user_type": user_type,
+        "token_purpose": "mfa_pending",
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
+    }
+
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def verify_mfa_token(mfa_token: str) -> Optional[Dict[str, Any]]:
+    """Validate a 2FA challenge token and return its payload if valid."""
+    try:
+        payload = jwt.decode(mfa_token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("token_purpose") != "mfa_pending":
+            return None
+        return payload
+    except Exception:
+        return None
+
+
+def generate_totp_secret() -> str:
+    """Generate a random Base32 encoded TOTP secret."""
+    return pyotp.random_base32()
+
+
+def get_totp_uri(secret: str, username: str, issuer: str = "Sovereign") -> str:
+    """Generate an otpauth:// URI suitable for authenticator QR code generation."""
+    totp = pyotp.TOTP(secret)
+    return totp.provisioning_uri(name=username, issuer_name=issuer)
+
+
+def verify_totp_code(secret: str, code: str, valid_window: int = 1) -> bool:
+    """Verify a 6-digit TOTP code against the given secret allowing clock skew tolerance."""
+    if not secret or not code:
+        return False
+    totp = pyotp.TOTP(secret)
+    cleaned_code = code.strip().replace(" ", "")
+    return totp.verify(cleaned_code, valid_window=valid_window)
+
+
+def generate_recovery_codes(count: int = 8) -> List[str]:
+    """Generate a list of alphanumeric emergency recovery codes."""
+    codes: List[str] = []
+    for _ in range(count):
+        raw = secrets.token_hex(4).upper()
+        formatted = f"{raw[:4]}-{raw[4:]}"
+        codes.append(formatted)
+    return codes
+
+
+def hash_recovery_code(code: str) -> str:
+    """Compute a deterministic cryptographic SHA-256 hash for secure storage and comparison."""
+    normalized = code.strip().upper().replace(" ", "").replace("-", "")
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 

@@ -297,6 +297,173 @@
         }
       }
     },
+    "/api/v1/identity_rbac/auth/2fa/setup": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Initiate Two-Factor Authentication configuration",
+        "description": "Generate a TOTP secret and provisioning URI for the authenticated user.\n\nSecurity & Access:\n- Requires authenticated session.\n- Prevents re-running setup if 2FA is already active.\n- Staged secret is stored pending confirmation via /auth/2fa/enable.",
+        "operationId": "setup_two_factor_api_v1_identity_rbac_auth_2fa_setup_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorSetupResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/identity_rbac/auth/2fa/enable": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Verify code and enable Two-Factor Authentication",
+        "description": "Verify an initial TOTP code, activate 2FA, and return emergency recovery backup codes.\n\nSecurity & Access:\n- Requires authenticated session.\n- Confirms user possesses authenticator configured with the staged secret.\n- Generates 8 single-use emergency recovery codes, stored as cryptographic SHA-256 hashes.",
+        "operationId": "enable_two_factor_api_v1_identity_rbac_auth_2fa_enable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorEnableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorEnableResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/identity_rbac/auth/2fa/disable": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Disable Two-Factor Authentication",
+        "description": "Deactivate Two-Factor Authentication with password re-verification and code validation.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Requires current password verification to prevent session hijacking.\n- Requires valid TOTP code or active emergency recovery code.\n- Completely wipes 2FA secret and stored recovery codes.",
+        "operationId": "disable_two_factor_api_v1_identity_rbac_auth_2fa_disable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorDisableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/identity_rbac/auth/2fa/verify": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Complete two-factor authentication challenge during login",
+        "description": "Validate secondary MFA token with TOTP code or emergency recovery code to issue access token.\n\nSecurity & Access:\n- Public endpoint.\n- Consumes temporary MFA challenge token.\n- Accepts standard 6-digit TOTP code or single-use recovery code.\n- If recovery code is used, it is atomically burned from the user's stored recovery codes.",
+        "operationId": "verify_two_factor_login_api_v1_identity_rbac_auth_2fa_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/identity_rbac/users": {
       "post": {
         "tags": [
@@ -9661,47 +9828,91 @@
       "TokenResponse": {
         "properties": {
           "access_token": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Access Token",
-            "description": "Cryptographically signed JWT bearer token"
+            "description": "Cryptographically signed JWT bearer token (present when authentication is complete)"
           },
           "token_type": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Token Type",
             "description": "OAuth2 authorization scheme header prefix",
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/UserRead",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "description": "Active user metadata snapshot"
           },
           "company_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Company Id",
             "description": "Primary tenant company UUID for context propagation"
+          },
+          "mfa_required": {
+            "type": "boolean",
+            "title": "Mfa Required",
+            "description": "Flag indicating if secondary MFA/TOTP verification is required to complete authentication",
+            "default": false
+          },
+          "mfa_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mfa Token",
+            "description": "Temporary challenge token required for calling POST /auth/2fa/verify"
           }
         },
         "type": "object",
-        "required": [
-          "access_token",
-          "user",
-          "company_id"
-        ],
         "title": "TokenResponse",
-        "description": "JWT bearer token response containing active profile metadata.",
+        "description": "JWT bearer token response or multi-factor authentication challenge envelope.",
         "example": {
           "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
           "company_id": "6f4539e5-a36c-488a-8c3b-2004a5884e33",
+          "mfa_required": false,
           "token_type": "bearer",
           "user": {
             "company_id": "6f4539e5-a36c-488a-8c3b-2004a5884e33",
             "email": "admin@admin.com",
+            "email_verified": true,
             "full_name": "Super Administrator",
             "id": "1c63490d-575f-4a0f-8424-43768a70c99d",
             "is_active": true,
             "is_superuser": true,
             "preferred_language": "en",
+            "two_factor_enabled": false,
             "user_type": "human",
             "username": "admin"
           }
@@ -9970,6 +10181,132 @@
           }
         }
       },
+      "TwoFactorDisableRequest": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "Current password for identity re-verification"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "6-digit TOTP code or emergency recovery code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password",
+          "code"
+        ],
+        "title": "TwoFactorDisableRequest",
+        "description": "Request payload to deactivate 2FA.",
+        "example": {
+          "code": "123456",
+          "password": "CurrentPassword2026!"
+        }
+      },
+      "TwoFactorEnableRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 12,
+            "minLength": 6,
+            "title": "Code",
+            "description": "6-digit TOTP code generated by authenticator app"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "TwoFactorEnableRequest",
+        "description": "Request payload to verify and activate 2FA.",
+        "example": {
+          "code": "123456"
+        }
+      },
+      "TwoFactorEnableResponse": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Indicates whether 2FA is successfully enabled",
+            "default": true
+          },
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recovery Codes",
+            "description": "Single-use emergency recovery backup codes (keep them safe)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recovery_codes"
+        ],
+        "title": "TwoFactorEnableResponse",
+        "description": "Response confirming 2FA activation with single-use emergency recovery backup codes.",
+        "example": {
+          "enabled": true,
+          "recovery_codes": [
+            "A1B2-C3D4",
+            "E5F6-G7H8"
+          ]
+        }
+      },
+      "TwoFactorSetupResponse": {
+        "properties": {
+          "secret": {
+            "type": "string",
+            "title": "Secret",
+            "description": "Base32 TOTP secret key"
+          },
+          "otpauth_url": {
+            "type": "string",
+            "title": "Otpauth Url",
+            "description": "otpauth:// URI for QR code generation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "secret",
+          "otpauth_url"
+        ],
+        "title": "TwoFactorSetupResponse",
+        "description": "Response containing the TOTP secret and provisioning URI for authenticator apps.",
+        "example": {
+          "otpauth_url": "otpauth://totp/Sovereign:admin?secret=JBSWY3DPEHPK3PXP&issuer=Sovereign",
+          "secret": "JBSWY3DPEHPK3PXP"
+        }
+      },
+      "TwoFactorVerifyRequest": {
+        "properties": {
+          "mfa_token": {
+            "type": "string",
+            "title": "Mfa Token",
+            "description": "MFA pending challenge token returned during primary login"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "6-digit TOTP code or emergency recovery code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mfa_token",
+          "code"
+        ],
+        "title": "TwoFactorVerifyRequest",
+        "description": "Request payload to complete MFA challenge during login.",
+        "example": {
+          "code": "123456",
+          "mfa_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      },
       "UnitOfMeasureCreate": {
         "properties": {
           "name": {
@@ -10173,6 +10510,11 @@
             "title": "Email Verified",
             "default": false
           },
+          "two_factor_enabled": {
+            "type": "boolean",
+            "title": "Two Factor Enabled",
+            "default": false
+          },
           "preferred_language": {
             "type": "string",
             "title": "Preferred Language"
@@ -10263,6 +10605,11 @@
           "email_verified": {
             "type": "boolean",
             "title": "Email Verified",
+            "default": false
+          },
+          "two_factor_enabled": {
+            "type": "boolean",
+            "title": "Two Factor Enabled",
             "default": false
           },
           "preferred_language": {

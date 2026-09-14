@@ -2,6 +2,7 @@
 
 import uuid
 import pytest
+import pyotp
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1335,6 +1336,173 @@ async def test_email_verification_lifecycle(db_session: AsyncSession):
         )
         assert res_replay.status_code == 400
         assert "invalid or expired" in res_replay.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_two_factor_authentication_lifecycle(db_session: AsyncSession):
+    """Verify complete 2FA lifecycle: setup, enablement, login challenge, verify, recovery codes, and disable."""
+    # 1. Seed company & user
+    comp_id = uuid.uuid4()
+    comp_code = f"2FA_{uuid.uuid4().hex[:6]}"
+    company = Company(id=comp_id, name="2FA Secure Org", code=comp_code, allow_registration=True)
+    user_name = f"totp_user_{uuid.uuid4().hex[:6]}"
+    raw_password = "StrongPassword2026!"
+    user = User(
+        email=f"{user_name}@2fa.org",
+        username=user_name,
+        hashed_password=hash_password(raw_password),
+        full_name="TOTP Test User",
+        email_verified=True,
+        two_factor_enabled=False,
+        company_id=comp_id,
+    )
+    db_session.add_all([company, user])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Initial login before 2FA enabled
+        res_initial_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": raw_password},
+        )
+        assert res_initial_login.status_code == 200
+        data_login = res_initial_login.json()
+        assert data_login["mfa_required"] is False
+        assert data_login["access_token"] is not None
+        auth_token = data_login["access_token"]
+        auth_headers = {"Authorization": f"Bearer {auth_token}"}
+
+        # 2. Setup 2FA
+        res_setup = await client.post("/api/v1/identity_rbac/auth/2fa/setup", headers=auth_headers)
+        assert res_setup.status_code == 200
+        setup_data = res_setup.json()
+        assert "secret" in setup_data
+        assert "otpauth_url" in setup_data
+        secret = setup_data["secret"]
+        assert "otpauth://totp/Sovereign:" in setup_data["otpauth_url"]
+
+        # 3. Enable 2FA with bad code (400)
+        res_bad_enable = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/enable",
+            json={"code": "000000"},
+            headers=auth_headers,
+        )
+        assert res_bad_enable.status_code == 400
+        assert "verification failed" in res_bad_enable.json()["detail"].lower()
+
+        # 4. Enable 2FA with valid TOTP code
+        valid_code = pyotp.TOTP(secret).now()
+        res_enable = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/enable",
+            json={"code": valid_code},
+            headers=auth_headers,
+        )
+        assert res_enable.status_code == 200
+        enable_data = res_enable.json()
+        assert enable_data["enabled"] is True
+        recovery_codes = enable_data["recovery_codes"]
+        assert len(recovery_codes) == 8
+
+        # Verify enabling again fails (400)
+        res_re_enable = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/enable",
+            json={"code": valid_code},
+            headers=auth_headers,
+        )
+        assert res_re_enable.status_code == 400
+
+        # 5. Login with 2FA active -> expect MFA challenge
+        res_login_2fa = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": raw_password},
+        )
+        assert res_login_2fa.status_code == 200
+        challenge_data = res_login_2fa.json()
+        assert challenge_data["mfa_required"] is True
+        assert challenge_data["mfa_token"] is not None
+        assert challenge_data["access_token"] is None
+        mfa_token = challenge_data["mfa_token"]
+
+        # 6. Verify 2FA with invalid code (401)
+        res_verify_bad = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/verify",
+            json={"mfa_token": mfa_token, "code": "999999"},
+        )
+        assert res_verify_bad.status_code == 401
+
+        # 7. Verify 2FA with valid TOTP code
+        totp_code = pyotp.TOTP(secret).now()
+        res_verify_good = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/verify",
+            json={"mfa_token": mfa_token, "code": totp_code},
+        )
+        assert res_verify_good.status_code == 200
+        verified_token_data = res_verify_good.json()
+        assert verified_token_data["mfa_required"] is False
+        assert verified_token_data["access_token"] is not None
+        assert verified_token_data["user"]["two_factor_enabled"] is True
+
+        # 8. Test emergency recovery code during login
+        res_login_rc = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": raw_password},
+        )
+        rc_mfa_token = res_login_rc.json()["mfa_token"]
+        target_rc = recovery_codes[0]
+
+        res_verify_rc = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/verify",
+            json={"mfa_token": rc_mfa_token, "code": target_rc},
+        )
+        assert res_verify_rc.status_code == 200
+        assert res_verify_rc.json()["access_token"] is not None
+
+        # Try to use the same recovery code again -> fails (single-use burned!)
+        res_login_rc_reuse = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": raw_password},
+        )
+        rc_reuse_mfa_token = res_login_rc_reuse.json()["mfa_token"]
+        res_verify_rc_reuse = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/verify",
+            json={"mfa_token": rc_reuse_mfa_token, "code": target_rc},
+        )
+        assert res_verify_rc_reuse.status_code == 401
+
+        # 9. Disable 2FA: test wrong password (401)
+        res_bad_pw_dis = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/disable",
+            json={"password": "WrongPassword123!", "code": pyotp.TOTP(secret).now()},
+            headers=auth_headers,
+        )
+        assert res_bad_pw_dis.status_code == 401
+
+        # Disable 2FA: test wrong code (400)
+        res_bad_code_dis = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/disable",
+            json={"password": raw_password, "code": "000000"},
+            headers=auth_headers,
+        )
+        assert res_bad_code_dis.status_code == 400
+
+        # Disable 2FA: correct password & valid TOTP code (200)
+        res_disable = await client.post(
+            "/api/v1/identity_rbac/auth/2fa/disable",
+            json={"password": raw_password, "code": pyotp.TOTP(secret).now()},
+            headers=auth_headers,
+        )
+        assert res_disable.status_code == 200
+        assert res_disable.json()["success"] is True
+
+        # 10. Login after 2FA disabled -> standard direct login (no challenge)
+        res_login_after = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": raw_password},
+        )
+        assert res_login_after.status_code == 200
+        assert res_login_after.json()["mfa_required"] is False
+        assert res_login_after.json()["access_token"] is not None
+        assert res_login_after.json()["user"]["two_factor_enabled"] is False
 
 
 
