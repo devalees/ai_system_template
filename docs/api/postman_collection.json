@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "11b88771-ceb5-474f-925e-eacd5115e5b4",
+    "_postman_id": "c4dce576-4448-430f-b2ff-39f54ac50fc8",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -50,7 +50,36 @@
             },
             "description": "## Upload binary file attachment to content-addressable storage\n\nUpload and hash binary file, saving to content-addressable filestore.\n\n**Endpoint**: `POST {{base_url}}/api/v1/documents/upload`  \n**Tags**: `Document & Blob Storage Engine, Document Attachments`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_attachment_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get document attachment metadata",
@@ -82,7 +111,8 @@
               "variable": [
                 {
                   "key": "attachment_id",
-                  "value": ""
+                  "value": "{{active_attachment_id}}",
+                  "description": "Dynamic path parameter bound to {{active_attachment_id}}"
                 }
               ]
             },
@@ -120,7 +150,8 @@
               "variable": [
                 {
                   "key": "attachment_id",
-                  "value": ""
+                  "value": "{{active_attachment_id}}",
+                  "description": "Dynamic path parameter bound to {{active_attachment_id}}"
                 }
               ]
             },
@@ -159,7 +190,8 @@
               "variable": [
                 {
                   "key": "attachment_id",
-                  "value": ""
+                  "value": "{{active_attachment_id}}",
+                  "description": "Dynamic path parameter bound to {{active_attachment_id}}"
                 }
               ]
             },
@@ -199,11 +231,13 @@
               "variable": [
                 {
                   "key": "res_model",
-                  "value": ""
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
                 },
                 {
                   "key": "res_id",
-                  "value": ""
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
                 }
               ]
             },
@@ -254,7 +288,7 @@
             "description": "## Register User\n\nRegister a new user account (human employee or first-class AI agent).\n\nSecurity & Access:\n- Public endpoint.\n- Strictly gated by target tenant's `allow_registration` policy.\n\nValidation Rules:\n- Rejects if `email` or `username` already exists (400 Bad Request).\n- If `company_id` is provided, verifies that company exists (404) and has `allow_registration == True` (403).\n- If `company_id` is omitted, attempts to bind to an active open-registration company; otherwise rejects (403).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/register`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Unique corporate email address used for notifications and login identification |\n| `username` | `string` | **Yes** | Any valid string | Alphanumeric unique login username (strictly no spaces) |\n| `password` | `string` | **Yes** | Any valid string | Cleartext password (hashed with bcrypt upon ingestion) |\n| `full_name` | `string` | **Yes** | Any valid string | Full display name for the employee or autonomous AI agent |\n| `user_type` | `string` | No | `human, ai_agent` | Actor classification: 'human' employee or first-class 'ai_agent' |\n| `preferred_language` | `string` | No | Any valid string | ISO 639-1 language code for localized emails and UI rendering (e.g. 'en', 'ar') |\n| `company_id` | `string` | No | Any valid string | Target company UUID. Required if multiple tenants exist or if registration is gated |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"company_id\": \"6f4539e5-a36c-488a-8c3b-2004a5884e33\",\n  \"email\": \"sarah.connor@sovereign.local\",\n  \"full_name\": \"Sarah Connor\",\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"sconnor\"\n}",
+              "raw": "{\n  \"company_id\": \"{{active_company_id}}\",\n  \"email\": \"sarah.connor@sovereign.local\",\n  \"full_name\": \"Sarah Connor\",\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"sconnor\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -265,7 +299,36 @@
               "type": "noauth"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_user_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Login",
@@ -327,6 +390,7 @@
                   "    }",
                   "    if (json.user && json.user.id) {",
                   "        pm.environment.set(\"current_user_id\", json.user.id);",
+                  "        pm.environment.set(\"active_user_id\", json.user.id);",
                   "    }",
                   "}"
                 ],
@@ -439,7 +503,7 @@
             "description": "## Create User\n\nProvision an internal user account within an organization (Admin or Superuser).\n\nSecurity & Access:\n- Requires authenticated Administrator or Superuser.\n- Bypasses public `allow_registration` restrictions.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/users`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Unique corporate email address |\n| `username` | `string` | **Yes** | Any valid string | Alphanumeric login username without whitespace |\n| `password` | `string` | **Yes** | Any valid string | Cleartext initial password |\n| `full_name` | `string` | **Yes** | Any valid string | Full display name |\n| `user_type` | `string` | No | `human, ai_agent` | User actor classification |\n| `preferred_language` | `string` | No | Any valid string | Preferred locale code ('en', 'ar') |\n| `is_superuser` | `boolean` | No | Any valid boolean | Global superuser flag (bypasses all RBAC capability checks) |\n| `group_ids` | `array` | No | Any valid array | List of RBAC Group UUIDs to immediately assign |\n| `company_id` | `string` | No | Any valid string | Target company UUID (defaults to caller's company) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"auditor@sovereign.local\",\n  \"full_name\": \"QA Auditor\",\n  \"group_ids\": [\n    \"110b59d6-00bc-4273-8014-9876de10909c\"\n  ],\n  \"is_superuser\": false,\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"qa_auditor\"\n}",
+              "raw": "{\n  \"email\": \"auditor@sovereign.local\",\n  \"full_name\": \"QA Auditor\",\n  \"group_ids\": [\n    \"{{active_group_id}}\"\n  ],\n  \"is_superuser\": false,\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"qa_auditor\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -447,7 +511,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_user_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get User",
@@ -480,7 +573,8 @@
               "variable": [
                 {
                   "key": "user_id",
-                  "value": ""
+                  "value": "{{active_user_id}}",
+                  "description": "Dynamic path parameter bound to {{active_user_id}}"
                 }
               ]
             },
@@ -524,14 +618,15 @@
               "variable": [
                 {
                   "key": "user_id",
-                  "value": ""
+                  "value": "{{active_user_id}}",
+                  "description": "Dynamic path parameter bound to {{active_user_id}}"
                 }
               ]
             },
             "description": "## Update User\n\nUpdate user account attributes, active toggle, group assignments, or reset password.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `full_name` | `string` | No | Any valid string | Updated display name |\n| `email` | `string` | No | Any valid string | Updated email address |\n| `preferred_language` | `string` | No | Any valid string | Updated ISO 639-1 language code |\n| `team_id` | `string` | No | Any valid string | Assigned organizational department / team UUID |\n| `is_active` | `boolean` | No | Any valid boolean | Active status toggle (deactivated users cannot authenticate) |\n| `is_superuser` | `boolean` | No | Any valid boolean | Superuser privilege toggle (Superuser only) |\n| `group_ids` | `array` | No | Any valid array | Full replacement list of RBAC Group UUIDs assigned to this user |\n| `password` | `string` | No | Any valid string | New password if resetting user credentials |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Sarah Connor, Lead Auditor\",\n  \"group_ids\": [\n    \"110b59d6-00bc-4273-8014-9876de10909c\"\n  ],\n  \"is_active\": true,\n  \"preferred_language\": \"en\"\n}",
+              "raw": "{\n  \"full_name\": \"Sarah Connor, Lead Auditor\",\n  \"group_ids\": [\n    \"{{active_group_id}}\"\n  ],\n  \"is_active\": true,\n  \"preferred_language\": \"en\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -572,7 +667,8 @@
               "variable": [
                 {
                   "key": "user_id",
-                  "value": ""
+                  "value": "{{active_user_id}}",
+                  "description": "Dynamic path parameter bound to {{active_user_id}}"
                 }
               ]
             },
@@ -658,7 +754,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_company_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get Company",
@@ -691,7 +816,8 @@
               "variable": [
                 {
                   "key": "company_id",
-                  "value": ""
+                  "value": "{{active_company_id}}",
+                  "description": "Dynamic path parameter bound to {{active_company_id}}"
                 }
               ]
             },
@@ -730,7 +856,8 @@
               "variable": [
                 {
                   "key": "company_id",
-                  "value": ""
+                  "value": "{{active_company_id}}",
+                  "description": "Dynamic path parameter bound to {{active_company_id}}"
                 }
               ]
             },
@@ -769,7 +896,8 @@
               "variable": [
                 {
                   "key": "company_id",
-                  "value": ""
+                  "value": "{{active_company_id}}",
+                  "description": "Dynamic path parameter bound to {{active_company_id}}"
                 }
               ]
             },
@@ -855,7 +983,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_permission_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get Permission",
@@ -888,7 +1045,8 @@
               "variable": [
                 {
                   "key": "permission_id",
-                  "value": ""
+                  "value": "{{active_permission_id}}",
+                  "description": "Dynamic path parameter bound to {{active_permission_id}}"
                 }
               ]
             },
@@ -927,7 +1085,8 @@
               "variable": [
                 {
                   "key": "permission_id",
-                  "value": ""
+                  "value": "{{active_permission_id}}",
+                  "description": "Dynamic path parameter bound to {{active_permission_id}}"
                 }
               ]
             },
@@ -966,7 +1125,8 @@
               "variable": [
                 {
                   "key": "permission_id",
-                  "value": ""
+                  "value": "{{active_permission_id}}",
+                  "description": "Dynamic path parameter bound to {{active_permission_id}}"
                 }
               ]
             },
@@ -1052,7 +1212,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_group_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get Group",
@@ -1085,7 +1274,8 @@
               "variable": [
                 {
                   "key": "group_id",
-                  "value": ""
+                  "value": "{{active_group_id}}",
+                  "description": "Dynamic path parameter bound to {{active_group_id}}"
                 }
               ]
             },
@@ -1124,7 +1314,8 @@
               "variable": [
                 {
                   "key": "group_id",
-                  "value": ""
+                  "value": "{{active_group_id}}",
+                  "description": "Dynamic path parameter bound to {{active_group_id}}"
                 }
               ]
             },
@@ -1163,7 +1354,8 @@
               "variable": [
                 {
                   "key": "group_id",
-                  "value": ""
+                  "value": "{{active_group_id}}",
+                  "description": "Dynamic path parameter bound to {{active_group_id}}"
                 }
               ]
             },
@@ -1203,7 +1395,8 @@
               "variable": [
                 {
                   "key": "group_id",
-                  "value": ""
+                  "value": "{{active_group_id}}",
+                  "description": "Dynamic path parameter bound to {{active_group_id}}"
                 }
               ]
             },
@@ -1244,17 +1437,48 @@
               "variable": [
                 {
                   "key": "group_id",
-                  "value": ""
+                  "value": "{{active_group_id}}",
+                  "description": "Dynamic path parameter bound to {{active_group_id}}"
                 },
                 {
                   "key": "user_id",
-                  "value": ""
+                  "value": "{{active_user_id}}",
+                  "description": "Dynamic path parameter bound to {{active_user_id}}"
                 }
               ]
             },
             "description": "## Add User To Group\n\nDirectly assign an existing user to an RBAC group.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/groups/{group_id}/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_user_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Remove User From Group",
@@ -1289,11 +1513,13 @@
               "variable": [
                 {
                   "key": "group_id",
-                  "value": ""
+                  "value": "{{active_group_id}}",
+                  "description": "Dynamic path parameter bound to {{active_group_id}}"
                 },
                 {
                   "key": "user_id",
-                  "value": ""
+                  "value": "{{active_user_id}}",
+                  "description": "Dynamic path parameter bound to {{active_user_id}}"
                 }
               ]
             },
@@ -1370,11 +1596,13 @@
               "variable": [
                 {
                   "key": "model_name",
-                  "value": ""
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
                 },
                 {
                   "key": "record_id",
-                  "value": ""
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
                 }
               ]
             },
@@ -1503,7 +1731,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_server_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get SMTP server details",
@@ -1536,7 +1793,8 @@
               "variable": [
                 {
                   "key": "server_id",
-                  "value": ""
+                  "value": "{{active_server_id}}",
+                  "description": "Dynamic path parameter bound to {{active_server_id}}"
                 }
               ]
             },
@@ -1580,7 +1838,8 @@
               "variable": [
                 {
                   "key": "server_id",
-                  "value": ""
+                  "value": "{{active_server_id}}",
+                  "description": "Dynamic path parameter bound to {{active_server_id}}"
                 }
               ]
             },
@@ -1628,7 +1887,8 @@
               "variable": [
                 {
                   "key": "server_id",
-                  "value": ""
+                  "value": "{{active_server_id}}",
+                  "description": "Dynamic path parameter bound to {{active_server_id}}"
                 }
               ]
             },
@@ -1668,13 +1928,43 @@
               "variable": [
                 {
                   "key": "server_id",
-                  "value": ""
+                  "value": "{{active_server_id}}",
+                  "description": "Dynamic path parameter bound to {{active_server_id}}"
                 }
               ]
             },
             "description": "## Test SMTP connection and authentication\n\nTest network handshake, TLS negotiation, and credentials for an SMTP configuration.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/servers/{server_id}/test`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Servers`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `server_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_test_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List email templates",
@@ -1746,7 +2036,7 @@
             "description": "## Create email template\n\nRegister a new parameterized Jinja2 email template.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/templates`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Templates`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Template human-readable label |\n| `code` | `string` | **Yes** | Any valid string | Unique alphanumeric identifier code |\n| `subject` | `string` | **Yes** | Any valid string | Jinja2 parameterized subject line |\n| `body_html` | `string` | **Yes** | Any valid string | Jinja2 parameterized HTML email template |\n| `body_text` | `string` | No | Any valid string | Plaintext fallback template |\n| `language` | `string` | No | Any valid string | ISO language code |\n| `model_name` | `string` | No | Any valid string | Target entity model |\n| `is_active` | `boolean` | No | Any valid boolean | Operational status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"body_html\": \"<p>Dear {{ recipient_name }},</p><p>Invoice <strong>#{{ invoice_number }}</strong> of amount {{ amount_due }} is due on {{ due_date }}.</p>\",\n  \"body_text\": \"Dear {{ recipient_name }},\\n\\nInvoice #{{ invoice_number }} of amount {{ amount_due }} is due on {{ due_date }}.\",\n  \"code\": \"invoice_due_reminder\",\n  \"is_active\": true,\n  \"language\": \"en\",\n  \"model_name\": \"account.invoice\",\n  \"name\": \"Invoice Due Reminder\",\n  \"subject\": \"Payment Reminder: Invoice #{{ invoice_number }} for {{ company_name }}\"\n}",
+              "raw": "{\n  \"body_html\": \"<p>Dear {{ recipient_name }},</p><p>Invoice <strong>#{{ invoice_number }}</strong> of amount {{ amount_due }} is due on {{ due_date }}.</p>\",\n  \"body_text\": \"Dear {{ recipient_name }},\\n\\nInvoice #{{ invoice_number }} of amount {{ amount_due }} is due on {{ due_date }}.\",\n  \"code\": \"invoice_due_reminder\",\n  \"is_active\": true,\n  \"language\": \"en\",\n  \"model_name\": \"{{active_model_name}}\",\n  \"name\": \"Invoice Due Reminder\",\n  \"subject\": \"Payment Reminder: Invoice #{{ invoice_number }} for {{ company_name }}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1754,7 +2044,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_template_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get email template details",
@@ -1787,7 +2106,8 @@
               "variable": [
                 {
                   "key": "template_id",
-                  "value": ""
+                  "value": "{{active_template_id}}",
+                  "description": "Dynamic path parameter bound to {{active_template_id}}"
                 }
               ]
             },
@@ -1831,7 +2151,8 @@
               "variable": [
                 {
                   "key": "template_id",
-                  "value": ""
+                  "value": "{{active_template_id}}",
+                  "description": "Dynamic path parameter bound to {{active_template_id}}"
                 }
               ]
             },
@@ -1879,7 +2200,8 @@
               "variable": [
                 {
                   "key": "template_id",
-                  "value": ""
+                  "value": "{{active_template_id}}",
+                  "description": "Dynamic path parameter bound to {{active_template_id}}"
                 }
               ]
             },
@@ -1925,7 +2247,7 @@
             "description": "## Render Jinja2 template preview with test variables\n\nDynamically compile and preview rendered email subject and HTML using provided sample data.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/templates/render`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Templates`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `template_id` | `string` | No | Any valid string | template_id attribute |\n| `template_code` | `string` | No | Any valid string | template_code attribute |\n| `context_data` | `object` | No | Any valid object | Variables to inject into Jinja2 templates |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"context_data\": {\n    \"amount_due\": \"$12,450.00\",\n    \"company_name\": \"Cyberdyne Systems\",\n    \"due_date\": \"2026-09-30\",\n    \"invoice_number\": \"INV-2026-089\",\n    \"recipient_name\": \"Sarah Connor\"\n  },\n  \"template_id\": \"t0000000-0000-0000-0000-000000000001\"\n}",
+              "raw": "{\n  \"context_data\": {\n    \"amount_due\": \"$12,450.00\",\n    \"company_name\": \"Cyberdyne Systems\",\n    \"due_date\": \"2026-09-30\",\n    \"invoice_number\": \"INV-2026-089\",\n    \"recipient_name\": \"Sarah Connor\"\n  },\n  \"template_id\": \"{{active_template_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1933,7 +2255,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_render_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Enqueue and dispatch outbound email",
@@ -1972,7 +2323,7 @@
             "description": "## Enqueue and dispatch outbound email\n\nEnqueue an outbound email with Jinja2 rendering and asynchronous Celery background transmission.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/send`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Pipeline`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `to_email` | `string` | **Yes** | Any valid string | Recipient destination email address |\n| `recipient_name` | `string` | No | Any valid string | recipient_name attribute |\n| `cc` | `string` | No | Any valid string | cc attribute |\n| `bcc` | `string` | No | Any valid string | bcc attribute |\n| `subject` | `string` | No | Any valid string | Subject (or rendered from template) |\n| `body_html` | `string` | No | Any valid string | HTML body (or rendered from template) |\n| `body_text` | `string` | No | Any valid string | Plain text body (or rendered from template) |\n| `template_code` | `string` | No | Any valid string | Code of registered MailTemplate to render |\n| `template_id` | `string` | No | Any valid string | UUID of registered MailTemplate to render |\n| `context_data` | `object` | No | Any valid object | Variables for template rendering |\n| `server_id` | `string` | No | Any valid string | Specific MailServer ID or fallback to default |\n| `res_model` | `string` | No | Any valid string | Polymorphic source entity model |\n| `res_id` | `string` | No | Any valid string | Polymorphic source entity record UUID |\n| `async_send` | `boolean` | No | Any valid boolean | Whether to enqueue in Celery or send synchronously |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `202` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"async_send\": true,\n  \"body_html\": \"<p>Please find your monthly statement attached.</p>\",\n  \"context_data\": {\n    \"amount_due\": \"$12,450.00\",\n    \"company_name\": \"Client Corp\",\n    \"due_date\": \"2026-09-30\",\n    \"invoice_number\": \"INV-2026-089\",\n    \"recipient_name\": \"Client Accounting Team\"\n  },\n  \"recipient_name\": \"Client Accounting Team\",\n  \"res_id\": \"c0000000-0000-0000-0000-000000000001\",\n  \"res_model\": \"account.invoice\",\n  \"subject\": \"Monthly Statement - August 2026\",\n  \"template_code\": \"invoice_due_reminder\",\n  \"to_email\": \"billing@clientcorp.com\"\n}",
+              "raw": "{\n  \"async_send\": true,\n  \"body_html\": \"<p>Please find your monthly statement attached.</p>\",\n  \"context_data\": {\n    \"amount_due\": \"$12,450.00\",\n    \"company_name\": \"Client Corp\",\n    \"due_date\": \"2026-09-30\",\n    \"invoice_number\": \"INV-2026-089\",\n    \"recipient_name\": \"Client Accounting Team\"\n  },\n  \"recipient_name\": \"Client Accounting Team\",\n  \"res_id\": \"{{active_record_id}}\",\n  \"res_model\": \"{{active_model_name}}\",\n  \"subject\": \"Monthly Statement - August 2026\",\n  \"template_code\": \"invoice_due_reminder\",\n  \"to_email\": \"billing@clientcorp.com\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1980,7 +2331,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_queue_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List outbound mail queue entries",
@@ -2046,7 +2426,8 @@
               "variable": [
                 {
                   "key": "queue_id",
-                  "value": ""
+                  "value": "{{active_queue_id}}",
+                  "description": "Dynamic path parameter bound to {{active_queue_id}}"
                 }
               ]
             },
@@ -2086,13 +2467,43 @@
               "variable": [
                 {
                   "key": "queue_id",
-                  "value": ""
+                  "value": "{{active_queue_id}}",
+                  "description": "Dynamic path parameter bound to {{active_queue_id}}"
                 }
               ]
             },
             "description": "## Manually trigger retry for a failed email\n\nReset attempt counter and re-dispatch delivery for a failed email.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/queue/{queue_id}/retry`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Pipeline`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `queue_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_retry_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
@@ -2161,7 +2572,8 @@
               "variable": [
                 {
                   "key": "module_name",
-                  "value": ""
+                  "value": "{{active_module_name}}",
+                  "description": "Dynamic path parameter bound to {{active_module_name}}"
                 }
               ]
             },
@@ -2204,7 +2616,8 @@
               "variable": [
                 {
                   "key": "module_name",
-                  "value": ""
+                  "value": "{{active_module_name}}",
+                  "description": "Dynamic path parameter bound to {{active_module_name}}"
                 }
               ]
             },
@@ -2324,7 +2737,8 @@
               "variable": [
                 {
                   "key": "notification_id",
-                  "value": ""
+                  "value": "{{active_notification_id}}",
+                  "description": "Dynamic path parameter bound to {{active_notification_id}}"
                 }
               ]
             },
@@ -2364,7 +2778,36 @@
             },
             "description": "## Mark all user notifications as read\n\nClear all unread notification badges for the active user.\n\n**Endpoint**: `POST {{base_url}}/api/v1/notification_engine/notifications/mark-all-read`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - In-App`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_mark_all_read_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Dispatch multi-channel notification",
@@ -2403,7 +2846,7 @@
             "description": "## Dispatch multi-channel notification\n\nDispatch notification across allowed channels (In-App, WebPush, Mobile Push).\n\n**Endpoint**: `POST {{base_url}}/api/v1/notification_engine/send`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - Dispatch`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `recipient_id` | `string` | **Yes** | Any valid string | Target User UUID |\n| `title` | `string` | **Yes** | Any valid string | Notification header title |\n| `body` | `string` | **Yes** | Any valid string | Full text or markdown description |\n| `notification_type` | `string` | No | Any valid string | Classification: info, warning, success, danger, task, mention, ai_alert |\n| `priority` | `string` | No | Any valid string | Priority level: low, normal, high, urgent |\n| `action_url` | `string` | No | Any valid string | Deep link target URL |\n| `res_model` | `string` | No | Any valid string | Polymorphic target record model |\n| `res_id` | `string` | No | Any valid string | Polymorphic target record ID |\n| `metadata_info` | `object` | No | Any valid object | Arbitrary custom payload attributes |\n| `channels` | `array` | No | Any valid array | Requested delivery channels |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"action_url\": \"/settings/security\",\n  \"body\": \"Unusual login attempt detected from new IP address.\",\n  \"channels\": [\n    \"in_app\",\n    \"web_push\"\n  ],\n  \"metadata_info\": {\n    \"ip\": \"192.168.1.100\"\n  },\n  \"notification_type\": \"ai_alert\",\n  \"priority\": \"urgent\",\n  \"recipient_id\": \"u0000000-0000-0000-0000-000000000001\",\n  \"res_id\": \"u0000000-0000-0000-0000-000000000001\",\n  \"res_model\": \"res.users\",\n  \"title\": \"System Security Alert\"\n}",
+              "raw": "{\n  \"action_url\": \"/settings/security\",\n  \"body\": \"Unusual login attempt detected from new IP address.\",\n  \"channels\": [\n    \"in_app\",\n    \"web_push\"\n  ],\n  \"metadata_info\": {\n    \"ip\": \"192.168.1.100\"\n  },\n  \"notification_type\": \"ai_alert\",\n  \"priority\": \"urgent\",\n  \"recipient_id\": \"u0000000-0000-0000-0000-000000000001\",\n  \"res_id\": \"{{active_record_id}}\",\n  \"res_model\": \"{{active_model_name}}\",\n  \"title\": \"System Security Alert\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2411,7 +2854,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_notification_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get user notification preferences",
@@ -2538,7 +3010,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_subscription_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Unregister WebPush device subscription",
@@ -2571,7 +3072,8 @@
               "variable": [
                 {
                   "key": "subscription_id",
-                  "value": ""
+                  "value": "{{active_subscription_id}}",
+                  "description": "Dynamic path parameter bound to {{active_subscription_id}}"
                 }
               ]
             },
@@ -2695,7 +3197,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_translate_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List custom tenant translation terms",
@@ -2775,7 +3306,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_term_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get translation term details",
@@ -2808,7 +3368,8 @@
               "variable": [
                 {
                   "key": "term_id",
-                  "value": ""
+                  "value": "{{active_term_id}}",
+                  "description": "Dynamic path parameter bound to {{active_term_id}}"
                 }
               ]
             },
@@ -2852,7 +3413,8 @@
               "variable": [
                 {
                   "key": "term_id",
-                  "value": ""
+                  "value": "{{active_term_id}}",
+                  "description": "Dynamic path parameter bound to {{active_term_id}}"
                 }
               ]
             },
@@ -2900,7 +3462,8 @@
               "variable": [
                 {
                   "key": "term_id",
-                  "value": ""
+                  "value": "{{active_term_id}}",
+                  "description": "Dynamic path parameter bound to {{active_term_id}}"
                 }
               ]
             },
@@ -2944,7 +3507,36 @@
             },
             "description": "## Bootstrap Company Iso Lookups\n\nSeed standard ISO countries, currencies, UOMs, tax types, and tags for tenant company.\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/seed`  \n**Tags**: `Normalized Master Data & Lookups, Lookups Master Data`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_seed_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List Countries",
@@ -3024,7 +3616,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_country_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List Cities",
@@ -3104,7 +3725,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_city_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List Currencies",
@@ -3184,7 +3834,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_currency_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List Units Of Measure",
@@ -3264,7 +3943,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_uom_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List Tax Types",
@@ -3344,7 +4052,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_tax_type_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List Tags",
@@ -3424,7 +4161,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_tag_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
@@ -3463,11 +4229,13 @@
               "variable": [
                 {
                   "key": "res_model",
-                  "value": ""
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
                 },
                 {
                   "key": "res_id",
-                  "value": ""
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
                 }
               ]
             },
@@ -3512,11 +4280,13 @@
               "variable": [
                 {
                   "key": "res_model",
-                  "value": ""
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
                 },
                 {
                   "key": "res_id",
-                  "value": ""
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
                 }
               ]
             },
@@ -3531,7 +4301,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_message_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List planned activities for a record",
@@ -3565,11 +4364,13 @@
               "variable": [
                 {
                   "key": "res_model",
-                  "value": ""
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
                 },
                 {
                   "key": "res_id",
-                  "value": ""
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
                 }
               ]
             },
@@ -3614,11 +4415,13 @@
               "variable": [
                 {
                   "key": "res_model",
-                  "value": ""
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
                 },
                 {
                   "key": "res_id",
-                  "value": ""
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
                 }
               ]
             },
@@ -3633,7 +4436,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_activity_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Complete a scheduled activity",
@@ -3667,7 +4499,8 @@
               "variable": [
                 {
                   "key": "activity_id",
-                  "value": ""
+                  "value": "{{active_activity_id}}",
+                  "description": "Dynamic path parameter bound to {{active_activity_id}}"
                 }
               ]
             },
@@ -3786,7 +4619,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_backup_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List tenant backup archives",
@@ -3851,7 +4713,8 @@
               "variable": [
                 {
                   "key": "backup_id",
-                  "value": ""
+                  "value": "{{active_backup_id}}",
+                  "description": "Dynamic path parameter bound to {{active_backup_id}}"
                 }
               ]
             },
@@ -3889,7 +4752,8 @@
               "variable": [
                 {
                   "key": "backup_id",
-                  "value": ""
+                  "value": "{{active_backup_id}}",
+                  "description": "Dynamic path parameter bound to {{active_backup_id}}"
                 }
               ]
             },
@@ -3928,7 +4792,8 @@
               "variable": [
                 {
                   "key": "backup_id",
-                  "value": ""
+                  "value": "{{active_backup_id}}",
+                  "description": "Dynamic path parameter bound to {{active_backup_id}}"
                 }
               ]
             },
@@ -3967,13 +4832,43 @@
               "variable": [
                 {
                   "key": "backup_id",
-                  "value": ""
+                  "value": "{{active_backup_id}}",
+                  "description": "Dynamic path parameter bound to {{active_backup_id}}"
                 }
               ]
             },
             "description": "## Verify cryptographic integrity of backup archive\n\nVerify SHA-256 checksum and internal structure (manifest.json and dump.sql).\n\n**Endpoint**: `POST {{base_url}}/api/v1/backup/{backup_id}/verify`  \n**Tags**: `Unified Atomic Backup & Archive Engine, Backup & Archive Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `backup_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_verify_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
@@ -4011,7 +4906,36 @@
             },
             "description": "## Upload dataset file and trigger bulk import\n\nUpload dataset and initiate schema-mapped entity import.\n\n**Endpoint**: `POST {{base_url}}/api/v1/import_export/import`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `202` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_job_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Trigger bulk model export",
@@ -4050,7 +4974,7 @@
             "description": "## Trigger bulk model export\n\nTrigger background or direct export of entity records to CSV, Excel, or JSON.\n\n**Endpoint**: `POST {{base_url}}/api/v1/import_export/export`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `model_name` | `string` | **Yes** | Any valid string | Target entity model name (e.g. lookups.country) |\n| `file_format` | `string` | No | Any valid string | Export format: csv, xlsx, json |\n| `fields` | `array` | No | Any valid array | Subset of fields to include in export |\n| `filter_criteria` | `object` | No | Any valid object | Filter criteria AST |\n| `async_job` | `boolean` | No | Any valid boolean | Whether to run in Celery background or return immediate stream |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `202` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"async_job\": true,\n  \"fields\": [\n    \"code\",\n    \"name\",\n    \"phone_code\"\n  ],\n  \"file_format\": \"csv\",\n  \"filter_criteria\": {},\n  \"model_name\": \"lookups.country\"\n}",
+              "raw": "{\n  \"async_job\": true,\n  \"fields\": [\n    \"code\",\n    \"name\",\n    \"phone_code\"\n  ],\n  \"file_format\": \"csv\",\n  \"filter_criteria\": {},\n  \"model_name\": \"{{active_model_name}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4058,7 +4982,36 @@
               }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_job_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List tenant import/export jobs",
@@ -4124,7 +5077,8 @@
               "variable": [
                 {
                   "key": "job_id",
-                  "value": ""
+                  "value": "{{active_job_id}}",
+                  "description": "Dynamic path parameter bound to {{active_job_id}}"
                 }
               ]
             },
@@ -4164,7 +5118,8 @@
               "variable": [
                 {
                   "key": "job_id",
-                  "value": ""
+                  "value": "{{active_job_id}}",
+                  "description": "Dynamic path parameter bound to {{active_job_id}}"
                 }
               ]
             },

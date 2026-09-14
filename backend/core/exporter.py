@@ -24,13 +24,44 @@ POSTMAN_LOGIN_EVENT_SCRIPT = """if (pm.response.code === 200) {
     }
     if (json.user && json.user.id) {
         pm.environment.set("current_user_id", json.user.id);
+        pm.environment.set("active_user_id", json.user.id);
     }
 }
 """
 
 
+def _infer_resource_id_name(path: str) -> str:
+    """Infer path parameter key for a collection path. e.g. /users -> user_id, /companies -> company_id"""
+    if "/identity_rbac/auth/register" in path:
+        return "user_id"
+    if "/documents/upload" in path:
+        return "attachment_id"
+    if "/backup/create" in path:
+        return "backup_id"
+    if "/import_export/" in path:
+        return "job_id"
+    if "/mail_gateway/send" in path:
+        return "queue_id"
+    if "/notification_engine/send" in path:
+        return "notification_id"
+
+    segments = [s for s in path.split("/") if s and not s.startswith("{")]
+    if not segments:
+        return "record_id"
+    last = segments[-1].lower().replace("-", "_")
+    if last.endswith("ies"):
+        singular = last[:-3] + "y"
+    elif last.endswith("ses"):
+        singular = last[:-2]
+    elif last.endswith("s") and not last.endswith("ss"):
+        singular = last[:-1]
+    else:
+        singular = last
+    return f"{singular}_id"
+
+
 def _build_postman_url(path: str) -> Dict[str, Any]:
-    """Convert OpenAPI path to Postman URL object with path variables."""
+    """Convert OpenAPI path to Postman URL object with path variables mapped to environment variables."""
     # Convert {param} to :param for Postman path variables
     segments = [s for s in path.split("/") if s]
     raw_path = "/".join(f":{s[1:-1]}" if s.startswith("{") and s.endswith("}") else s for s in segments)
@@ -42,7 +73,27 @@ def _build_postman_url(path: str) -> Dict[str, Any]:
         if s.startswith("{") and s.endswith("}"):
             var_name = s[1:-1]
             path_segments.append(f":{var_name}")
-            variable_list.append({"key": var_name, "value": ""})
+
+            # Smart default mapping for path variables to environment variables
+            if var_name == "company_id":
+                default_val = "{{active_company_id}}"
+            elif var_name == "user_id":
+                default_val = "{{active_user_id}}"
+            elif var_name in ("module_name", "module"):
+                default_val = "{{active_module_name}}"
+            elif var_name in ("model_name", "res_model"):
+                default_val = "{{active_model_name}}"
+            elif var_name in ("record_id", "res_id"):
+                default_val = "{{active_record_id}}"
+            else:
+                clean_name = var_name.replace("-", "_")
+                default_val = f"{{{{active_{clean_name}}}}}"
+
+            variable_list.append({
+                "key": var_name,
+                "value": default_val,
+                "description": f"Dynamic path parameter bound to {default_val}",
+            })
         else:
             path_segments.append(s)
 
@@ -54,39 +105,74 @@ def _build_postman_url(path: str) -> Dict[str, Any]:
     }
 
 
+def _substitute_env_vars_in_example(data: Any) -> Any:
+    """Recursively map hardcoded dummy IDs to dynamic Postman environment variables."""
+    if isinstance(data, dict):
+        new_data = {}
+        for k, v in data.items():
+            if k == "company_id" and isinstance(v, str):
+                new_data[k] = "{{active_company_id}}"
+            elif k == "user_id" and isinstance(v, str):
+                new_data[k] = "{{active_user_id}}"
+            elif k == "server_id" and isinstance(v, str):
+                new_data[k] = "{{active_server_id}}"
+            elif k == "template_id" and isinstance(v, str):
+                new_data[k] = "{{active_template_id}}"
+            elif k == "queue_id" and isinstance(v, str):
+                new_data[k] = "{{active_queue_id}}"
+            elif k == "group_id" and isinstance(v, str):
+                new_data[k] = "{{active_group_id}}"
+            elif k == "group_ids" and isinstance(v, list) and v:
+                new_data[k] = ["{{active_group_id}}"]
+            elif k in ("res_id", "record_id") and isinstance(v, str):
+                new_data[k] = "{{active_record_id}}"
+            elif k in ("res_model", "model_name") and isinstance(v, str):
+                new_data[k] = "{{active_model_name}}"
+            else:
+                new_data[k] = _substitute_env_vars_in_example(v)
+        return new_data
+    elif isinstance(data, list):
+        return [_substitute_env_vars_in_example(item) for item in data]
+    return data
+
+
 def _extract_body_example(method_data: Dict[str, Any], openapi_schema: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Extract realistic JSON request body example from OpenAPI schema."""
+    """Extract realistic JSON request body example from OpenAPI schema with Postman variable bindings."""
     req_body = method_data.get("requestBody", {})
     content = req_body.get("content", {}).get("application/json", {})
     if not content:
         return None
 
+    example_val = None
     # Check for direct example
     if "example" in content:
-        return content["example"]
+        example_val = content["example"]
+    else:
+        # Check schema reference
+        schema = content.get("schema", {})
+        ref = schema.get("$ref")
+        if ref:
+            schema_name = ref.split("/")[-1]
+            component_schema = openapi_schema.get("components", {}).get("schemas", {}).get(schema_name, {})
+            if "example" in component_schema:
+                example_val = component_schema["example"]
+            else:
+                # Fallback build from properties
+                props = component_schema.get("properties", {})
+                fallback = {}
+                for p_name, p_val in props.items():
+                    if "example" in p_val:
+                        fallback[p_name] = p_val["example"]
+                    elif p_val.get("type") == "string":
+                        fallback[p_name] = "string"
+                    elif p_val.get("type") == "integer":
+                        fallback[p_name] = 0
+                    elif p_val.get("type") == "boolean":
+                        fallback[p_name] = True
+                example_val = fallback or None
 
-    # Check schema reference
-    schema = content.get("schema", {})
-    ref = schema.get("$ref")
-    if ref:
-        schema_name = ref.split("/")[-1]
-        component_schema = openapi_schema.get("components", {}).get("schemas", {}).get(schema_name, {})
-        if "example" in component_schema:
-            return component_schema["example"]
-        # Fallback build from properties
-        props = component_schema.get("properties", {})
-        fallback = {}
-        for p_name, p_val in props.items():
-            if "example" in p_val:
-                fallback[p_name] = p_val["example"]
-            elif p_val.get("type") == "string":
-                fallback[p_name] = "string"
-            elif p_val.get("type") == "integer":
-                fallback[p_name] = 0
-            elif p_val.get("type") == "boolean":
-                fallback[p_name] = True
-        return fallback or None
-
+    if example_val is not None:
+        return _substitute_env_vars_in_example(example_val)
     return None
 
 
@@ -253,6 +339,36 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
                         },
                     }
                 ]
+            elif method.lower() == "post":
+                resource_var = _infer_resource_id_name(path)
+                post_capture_script = f"""if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {{
+    var json = pm.response.json();
+    if (json) {{
+        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);
+        if (recId) {{
+            pm.environment.set("active_{resource_var}", recId);
+            pm.environment.set("active_record_id", recId);
+        }}
+        if (json.queue_id) {{
+            pm.environment.set("active_queue_id", json.queue_id);
+        }}
+        if (json.notification_id) {{
+            pm.environment.set("active_notification_id", json.notification_id);
+        }}
+        if (json.job_id) {{
+            pm.environment.set("active_job_id", json.job_id);
+        }}
+    }}
+}}"""
+                req_item["event"] = [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": post_capture_script.splitlines(),
+                            "type": "text/javascript",
+                        },
+                    }
+                ]
 
             if tag not in folders:
                 folders[tag] = []
@@ -274,7 +390,7 @@ def build_postman_environment(
     company_id: str = "",
     token: str = "",
 ) -> Dict[str, Any]:
-    """Generate default Postman environment template with pre-configured credentials."""
+    """Generate default Postman environment template with pre-configured credentials and resource IDs."""
     return {
         "id": "sovereign-environment-v1",
         "name": "Sovereign Platform Local Environment",
@@ -285,6 +401,28 @@ def build_postman_environment(
             {"key": "auth_token", "value": token, "type": "secret", "enabled": True},
             {"key": "active_company_id", "value": company_id, "type": "default", "enabled": True},
             {"key": "current_user_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_user_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_group_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_permission_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_server_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_template_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_queue_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_notification_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_subscription_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_term_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_attachment_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_job_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_backup_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_activity_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_country_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_city_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_currency_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_uom_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_tax_type_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_tag_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_record_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_module_name", "value": "identity_rbac", "type": "default", "enabled": True},
+            {"key": "active_model_name", "value": "User", "type": "default", "enabled": True},
         ],
         "_postman_variable_scope": "environment",
     }
