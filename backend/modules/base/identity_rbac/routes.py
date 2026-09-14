@@ -1,9 +1,10 @@
 """API Routes for Identity, Authentication, Company Tenancy, and RBAC Management."""
 
 import uuid
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
@@ -18,15 +19,22 @@ from modules.base.identity_rbac.models import (
 )
 from modules.base.identity_rbac.schemas import (
     UserCreate,
+    InternalUserCreate,
+    UserUpdate,
     UserRead,
+    UserDetailRead,
     LoginRequest,
     TokenResponse,
-    GroupCreate,
     PermissionCreate,
+    PermissionUpdate,
+    PermissionRead,
+    GroupCreate,
+    GroupUpdate,
+    GroupRead,
+    GroupDetailRead,
     CompanyCreate,
     CompanyUpdate,
     CompanyRead,
-    InternalUserCreate,
 )
 from modules.base.identity_rbac.security import hash_password, verify_password, create_access_token
 from modules.base.identity_rbac.dependencies import get_current_user, require_permission
@@ -35,15 +43,30 @@ router = APIRouter()
 
 
 # =========================================================================
-# Authentication & Public Registration
+# Authentication & Self-Registration
 # =========================================================================
 
-@router.post("/auth/register", response_model=UserRead, status_code=status.HTTP_201_CREATED, tags=["Authentication"])
+@router.post(
+    "/auth/register",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Authentication"],
+)
 async def register_user(
     payload: UserCreate,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """Register a new user account (human employee or AI agent) with strict tenant registration gating."""
+    """Register a new user account (human employee or first-class AI agent).
+    
+    Security & Access:
+    - Public endpoint.
+    - Strictly gated by target tenant's `allow_registration` policy.
+    
+    Validation Rules:
+    - Rejects if `email` or `username` already exists (400 Bad Request).
+    - If `company_id` is provided, verifies that company exists (404) and has `allow_registration == True` (403).
+    - If `company_id` is omitted, attempts to bind to an active open-registration company; otherwise rejects (403).
+    """
     # 1. Verify email uniqueness
     existing_email = (await db.execute(select(User).where(User.email == payload.email))).scalar_one_or_none()
     if existing_email:
@@ -57,7 +80,6 @@ async def register_user(
     # 3. Resolve and validate target company registration permission
     target_company_id = payload.company_id or get_active_company_id()
     if not target_company_id:
-        # Check if there is an active tenant that explicitly permits public registration
         stmt_comp = select(Company).where(
             Company.allow_registration == True,
             Company.is_active == True,
@@ -98,12 +120,21 @@ async def register_user(
     return new_user
 
 
-@router.post("/auth/login", response_model=TokenResponse, tags=["Authentication"])
+@router.post(
+    "/auth/login",
+    response_model=TokenResponse,
+    tags=["Authentication"],
+)
 async def login(
     payload: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
-    """Authenticate with username/email and password, returning JWT bearer token."""
+    """Authenticate with username/email and password, returning a signed JWT bearer token.
+    
+    Security & Access:
+    - Public endpoint.
+    - Returns JWT token containing user identity and active tenant `company_id`.
+    """
     stmt = select(User).where(
         (User.email == payload.identifier) | (User.username == payload.identifier)
     )
@@ -137,30 +168,62 @@ async def login(
     )
 
 
-@router.get("/auth/me", response_model=UserRead, tags=["Authentication"])
-async def get_me(current_user: User = Depends(get_current_user)) -> User:
-    """Return currently authenticated profile metadata."""
-    return current_user
+@router.get(
+    "/auth/me",
+    response_model=UserDetailRead,
+    tags=["Authentication"],
+)
+async def get_me(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserDetailRead:
+    """Return currently authenticated profile metadata including assigned RBAC groups."""
+    stmt_groups = (
+        select(Group.id, Group.name)
+        .join(UserGroupLink, UserGroupLink.group_id == Group.id)
+        .where(UserGroupLink.user_id == current_user.id, Group.deleted_at.is_(None))
+    )
+    group_rows = (await db.execute(stmt_groups)).all()
+    group_list = [{"id": r[0], "name": r[1]} for r in group_rows]
+
+    return UserDetailRead(
+        id=current_user.id,
+        email=current_user.email,
+        username=current_user.username,
+        full_name=current_user.full_name,
+        user_type=current_user.user_type,
+        is_superuser=current_user.is_superuser,
+        preferred_language=current_user.preferred_language,
+        is_active=current_user.is_active,
+        company_id=current_user.company_id,
+        team_id=current_user.team_id,
+        created_at=current_user.created_at,
+        groups=group_list,
+    )
 
 
 # =========================================================================
-# Internal User Management (Admin / Superuser)
+# User Management (CRUD & Administration)
 # =========================================================================
 
-@router.post("/users", response_model=UserRead, status_code=status.HTTP_201_CREATED, tags=["Identity Administration"])
-async def create_internal_user(
+@router.post(
+    "/users",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Identity Administration"],
+)
+async def create_user(
     payload: InternalUserCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Provision an internal user account within an organization (Admin or Superuser).
     
-    Bypasses allow_registration restriction because this is an authenticated internal action.
+    Security & Access:
+    - Requires authenticated Administrator or Superuser.
+    - Bypasses public `allow_registration` restrictions.
     """
-    if not current_user.is_superuser:
-        target_company_id = current_user.company_id
-    else:
-        target_company_id = payload.company_id or current_user.company_id
+    target_company_id = payload.company_id if (current_user.is_superuser and payload.company_id) else current_user.company_id
 
     # Check email uniqueness
     existing_email = (await db.execute(select(User).where(User.email == payload.email))).scalar_one_or_none()
@@ -200,11 +263,202 @@ async def create_internal_user(
     return new_user
 
 
+@router.get(
+    "/users",
+    response_model=List[UserRead],
+    tags=["Identity Administration"],
+)
+async def list_users(
+    user_type: Optional[str] = Query(None, description="Filter by actor type ('human' or 'ai_agent')"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    search: Optional[str] = Query(None, description="Search by username, full name, or email"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[User]:
+    """List users within the caller's active company with optional search and filters."""
+    query = select(User).where(User.company_id == current_user.company_id, User.deleted_at.is_(None))
+
+    if user_type:
+        query = query.where(User.user_type == user_type)
+    if is_active is not None:
+        query = query.where(User.is_active == is_active)
+    if search:
+        term = f"%{search}%"
+        query = query.where(or_(User.username.ilike(term), User.full_name.ilike(term), User.email.ilike(term)))
+
+    query = query.order_by(User.created_at.desc())
+    result = await db.execute(query)
+    return list(result.scalars().all())
+
+
+@router.get(
+    "/users/{user_id}",
+    response_model=UserDetailRead,
+    tags=["Identity Administration"],
+)
+async def get_user(
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserDetailRead:
+    """Retrieve detailed user profile including assigned RBAC groups."""
+    stmt = select(User).where(User.id == user_id, User.deleted_at.is_(None))
+    if not current_user.is_superuser:
+        stmt = stmt.where(User.company_id == current_user.company_id)
+
+    user = (await db.execute(stmt)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    stmt_groups = (
+        select(Group.id, Group.name)
+        .join(UserGroupLink, UserGroupLink.group_id == Group.id)
+        .where(UserGroupLink.user_id == user.id, Group.deleted_at.is_(None))
+    )
+    group_rows = (await db.execute(stmt_groups)).all()
+    group_list = [{"id": r[0], "name": r[1]} for r in group_rows]
+
+    return UserDetailRead(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        full_name=user.full_name,
+        user_type=user.user_type,
+        is_superuser=user.is_superuser,
+        preferred_language=user.preferred_language,
+        is_active=user.is_active,
+        company_id=user.company_id,
+        team_id=user.team_id,
+        created_at=user.created_at,
+        groups=group_list,
+    )
+
+
+@router.patch(
+    "/users/{user_id}",
+    response_model=UserDetailRead,
+    tags=["Identity Administration"],
+)
+async def update_user(
+    user_id: uuid.UUID,
+    payload: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserDetailRead:
+    """Update user account attributes, active toggle, group assignments, or reset password."""
+    stmt = select(User).where(User.id == user_id, User.deleted_at.is_(None))
+    if not current_user.is_superuser:
+        stmt = stmt.where(User.company_id == current_user.company_id)
+
+    user = (await db.execute(stmt)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    # Update basic fields
+    if payload.full_name is not None:
+        user.full_name = payload.full_name
+    if payload.preferred_language is not None:
+        user.preferred_language = payload.preferred_language
+    if payload.team_id is not None:
+        user.team_id = payload.team_id
+    if payload.is_active is not None:
+        user.is_active = payload.is_active
+    if payload.email is not None:
+        # Verify email uniqueness
+        existing = (await db.execute(select(User).where(User.email == payload.email, User.id != user_id))).scalar_one_or_none()
+        if existing:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already in use.")
+        user.email = payload.email
+
+    if payload.is_superuser is not None:
+        if not current_user.is_superuser:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only superusers can grant superuser access.")
+        user.is_superuser = payload.is_superuser
+
+    if payload.password is not None:
+        user.hashed_password = hash_password(payload.password)
+
+    # Re-sync group memberships if specified
+    if payload.group_ids is not None:
+        # Delete existing links
+        existing_links = (await db.execute(select(UserGroupLink).where(UserGroupLink.user_id == user.id))).scalars().all()
+        for link in existing_links:
+            await db.delete(link)
+        await db.flush()
+        # Add new links
+        for gid in payload.group_ids:
+            new_link = UserGroupLink(user_id=user.id, group_id=gid, company_id=user.company_id)
+            db.add(new_link)
+
+    await db.commit()
+    await db.refresh(user)
+
+    # Return updated detail
+    stmt_groups = (
+        select(Group.id, Group.name)
+        .join(UserGroupLink, UserGroupLink.group_id == Group.id)
+        .where(UserGroupLink.user_id == user.id, Group.deleted_at.is_(None))
+    )
+    group_rows = (await db.execute(stmt_groups)).all()
+    group_list = [{"id": r[0], "name": r[1]} for r in group_rows]
+
+    return UserDetailRead(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        full_name=user.full_name,
+        user_type=user.user_type,
+        is_superuser=user.is_superuser,
+        preferred_language=user.preferred_language,
+        is_active=user.is_active,
+        company_id=user.company_id,
+        team_id=user.team_id,
+        created_at=user.created_at,
+        groups=group_list,
+    )
+
+
+@router.delete(
+    "/users/{user_id}",
+    status_code=status.HTTP_200_OK,
+    tags=["Identity Administration"],
+)
+async def delete_user(
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Soft-delete a user account.
+    
+    Security Guard:
+    - Users cannot delete their own active authenticated account.
+    """
+    if user_id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own active session account.")
+
+    stmt = select(User).where(User.id == user_id, User.deleted_at.is_(None))
+    if not current_user.is_superuser:
+        stmt = stmt.where(User.company_id == current_user.company_id)
+
+    user = (await db.execute(stmt)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    user.soft_delete(user_id=current_user.id)
+    await db.commit()
+    return {"status": "deleted", "id": str(user_id), "message": "User soft-deleted successfully."}
+
+
 # =========================================================================
 # Company / Tenant Administration
 # =========================================================================
 
-@router.post("/companies", response_model=CompanyRead, status_code=status.HTTP_201_CREATED, tags=["Tenant Administration"])
+@router.post(
+    "/companies",
+    response_model=CompanyRead,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Tenant Administration"],
+)
 async def create_company(
     payload: CompanyCreate,
     current_user: User = Depends(get_current_user),
@@ -231,7 +485,11 @@ async def create_company(
     return company
 
 
-@router.get("/companies", response_model=List[CompanyRead], tags=["Tenant Administration"])
+@router.get(
+    "/companies",
+    response_model=List[CompanyRead],
+    tags=["Tenant Administration"],
+)
 async def list_companies(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -245,7 +503,11 @@ async def list_companies(
     return list(result.scalars().all())
 
 
-@router.get("/companies/{company_id}", response_model=CompanyRead, tags=["Tenant Administration"])
+@router.get(
+    "/companies/{company_id}",
+    response_model=CompanyRead,
+    tags=["Tenant Administration"],
+)
 async def get_company(
     company_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
@@ -262,7 +524,11 @@ async def get_company(
     return company
 
 
-@router.patch("/companies/{company_id}", response_model=CompanyRead, tags=["Tenant Administration"])
+@router.patch(
+    "/companies/{company_id}",
+    response_model=CompanyRead,
+    tags=["Tenant Administration"],
+)
 async def update_company(
     company_id: uuid.UUID,
     payload: CompanyUpdate,
@@ -287,43 +553,193 @@ async def update_company(
     return company
 
 
+@router.delete(
+    "/companies/{company_id}",
+    status_code=status.HTTP_200_OK,
+    tags=["Tenant Administration"],
+)
+async def delete_company(
+    company_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Soft-delete an organization tenant (Superuser only)."""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superuser required.")
+
+    stmt = select(Company).where(Company.id == company_id, Company.deleted_at.is_(None))
+    company = (await db.execute(stmt)).scalar_one_or_none()
+    if not company:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found.")
+
+    company.soft_delete(user_id=current_user.id)
+    await db.commit()
+    return {"status": "deleted", "id": str(company_id), "message": f"Company '{company.name}' soft-deleted successfully."}
+
+
 # =========================================================================
-# RBAC Capabilities & Role Management
+# RBAC Permissions (Capabilities)
 # =========================================================================
 
-@router.post("/permissions", status_code=status.HTTP_201_CREATED, tags=["RBAC Administration"])
+@router.post(
+    "/permissions",
+    response_model=PermissionRead,
+    status_code=status.HTTP_201_CREATED,
+    tags=["RBAC Administration"],
+)
 async def create_permission(
     payload: PermissionCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
-    """Create a granular model capability (Superuser or Admin)."""
+) -> Permission:
+    """Create a granular model capability (Superuser only).
+    
+    Canonical Code Generation:
+    - If `code` is omitted, auto-generates: `{module_name}.{resource}.{action}`.
+    """
     if not current_user.is_superuser:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superuser required.")
 
+    # Canonical code generation
+    canonical_code = payload.code or f"{payload.module_name}.{payload.resource}.{payload.action}".lower()
+
+    existing = (await db.execute(select(Permission).where(Permission.code == canonical_code))).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Permission with code '{canonical_code}' already exists.")
+
     perm = Permission(
-        code=payload.code,
+        code=canonical_code,
         name=payload.name,
-        module_name=payload.module_name,
+        module_name=payload.module_name.lower(),
+        resource=payload.resource.lower(),
+        action=payload.action.lower(),
         ownership_scope=payload.ownership_scope,
         company_id=current_user.company_id,
     )
     db.add(perm)
     await db.commit()
     await db.refresh(perm)
-    return {"id": str(perm.id), "code": perm.code, "name": perm.name}
+    return perm
 
 
-@router.post("/groups", status_code=status.HTTP_201_CREATED, tags=["RBAC Administration"])
+@router.get(
+    "/permissions",
+    response_model=List[PermissionRead],
+    tags=["RBAC Administration"],
+)
+async def list_permissions(
+    module_name: Optional[str] = Query(None, description="Filter by system module namespace"),
+    resource: Optional[str] = Query(None, description="Filter by business model/entity name"),
+    action: Optional[str] = Query(None, description="Filter by operation action type"),
+    ownership_scope: Optional[str] = Query(None, description="Filter by ownership boundary ('GLOBAL', 'TEAM', 'OWN')"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[Permission]:
+    """List registered capabilities with optional category and scope filters."""
+    query = select(Permission).where(Permission.deleted_at.is_(None))
+
+    if module_name:
+        query = query.where(Permission.module_name == module_name.lower())
+    if resource:
+        query = query.where(Permission.resource == resource.lower())
+    if action:
+        query = query.where(Permission.action == action.lower())
+    if ownership_scope:
+        query = query.where(Permission.ownership_scope == ownership_scope)
+
+    query = query.order_by(Permission.module_name.asc(), Permission.resource.asc(), Permission.action.asc())
+    result = await db.execute(query)
+    return list(result.scalars().all())
+
+
+@router.get(
+    "/permissions/{permission_id}",
+    response_model=PermissionRead,
+    tags=["RBAC Administration"],
+)
+async def get_permission(
+    permission_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Permission:
+    """Retrieve details of a specific permission capability."""
+    stmt = select(Permission).where(Permission.id == permission_id, Permission.deleted_at.is_(None))
+    perm = (await db.execute(stmt)).scalar_one_or_none()
+    if not perm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found.")
+    return perm
+
+
+@router.patch(
+    "/permissions/{permission_id}",
+    response_model=PermissionRead,
+    tags=["RBAC Administration"],
+)
+async def update_permission(
+    permission_id: uuid.UUID,
+    payload: PermissionUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Permission:
+    """Update permission title or ownership scope (Superuser only)."""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superuser required.")
+
+    stmt = select(Permission).where(Permission.id == permission_id, Permission.deleted_at.is_(None))
+    perm = (await db.execute(stmt)).scalar_one_or_none()
+    if not perm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found.")
+
+    if payload.name is not None:
+        perm.name = payload.name
+    if payload.ownership_scope is not None:
+        perm.ownership_scope = payload.ownership_scope
+
+    await db.commit()
+    await db.refresh(perm)
+    return perm
+
+
+@router.delete(
+    "/permissions/{permission_id}",
+    status_code=status.HTTP_200_OK,
+    tags=["RBAC Administration"],
+)
+async def delete_permission(
+    permission_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Soft-delete an RBAC permission capability (Superuser only)."""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superuser required.")
+
+    stmt = select(Permission).where(Permission.id == permission_id, Permission.deleted_at.is_(None))
+    perm = (await db.execute(stmt)).scalar_one_or_none()
+    if not perm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found.")
+
+    perm.soft_delete(user_id=current_user.id)
+    await db.commit()
+    return {"status": "deleted", "id": str(permission_id), "message": f"Permission '{perm.code}' soft-deleted successfully."}
+
+
+# =========================================================================
+# RBAC Groups & Roles
+# =========================================================================
+
+@router.post(
+    "/groups",
+    response_model=GroupRead,
+    status_code=status.HTTP_201_CREATED,
+    tags=["RBAC Administration"],
+)
 async def create_group(
     payload: GroupCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
-    """Create an RBAC Group with linked permissions."""
-    if not current_user.is_superuser:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superuser required.")
-
+) -> GroupRead:
+    """Create an RBAC Group/Role with linked permissions (Superuser or Tenant Admin)."""
     group = Group(name=payload.name, description=payload.description, company_id=current_user.company_id)
     db.add(group)
     await db.flush()
@@ -333,4 +749,158 @@ async def create_group(
         db.add(link)
 
     await db.commit()
-    return {"id": str(group.id), "name": group.name, "permissions_count": len(payload.permission_ids)}
+    await db.refresh(group)
+    return GroupRead(
+        id=group.id,
+        name=group.name,
+        description=group.description,
+        permissions_count=len(payload.permission_ids),
+        created_at=group.created_at,
+    )
+
+
+@router.get(
+    "/groups",
+    response_model=List[GroupRead],
+    tags=["RBAC Administration"],
+)
+async def list_groups(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[GroupRead]:
+    """List RBAC groups for active tenant with count of assigned permissions."""
+    stmt = select(Group).where(Group.company_id == current_user.company_id, Group.deleted_at.is_(None)).order_by(Group.name.asc())
+    groups = (await db.execute(stmt)).scalars().all()
+
+    result = []
+    for g in groups:
+        p_count = (await db.execute(
+            select(GroupPermissionLink.id).where(GroupPermissionLink.group_id == g.id)
+        )).scalars().all()
+        result.append(
+            GroupRead(
+                id=g.id,
+                name=g.name,
+                description=g.description,
+                permissions_count=len(p_count),
+                created_at=g.created_at,
+            )
+        )
+    return result
+
+
+@router.get(
+    "/groups/{group_id}",
+    response_model=GroupDetailRead,
+    tags=["RBAC Administration"],
+)
+async def get_group(
+    group_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> GroupDetailRead:
+    """Retrieve detailed RBAC group with full list of assigned permissions."""
+    stmt = select(Group).where(
+        Group.id == group_id,
+        Group.company_id == current_user.company_id,
+        Group.deleted_at.is_(None),
+    )
+    group = (await db.execute(stmt)).scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found.")
+
+    stmt_perms = (
+        select(Permission)
+        .join(GroupPermissionLink, GroupPermissionLink.permission_id == Permission.id)
+        .where(GroupPermissionLink.group_id == group.id, Permission.deleted_at.is_(None))
+    )
+    perms = (await db.execute(stmt_perms)).scalars().all()
+
+    return GroupDetailRead(
+        id=group.id,
+        name=group.name,
+        description=group.description,
+        permissions=[PermissionRead.model_validate(p) for p in perms],
+        created_at=group.created_at,
+    )
+
+
+@router.patch(
+    "/groups/{group_id}",
+    response_model=GroupDetailRead,
+    tags=["RBAC Administration"],
+)
+async def update_group(
+    group_id: uuid.UUID,
+    payload: GroupUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> GroupDetailRead:
+    """Update group title, description, or reassign permission links."""
+    stmt = select(Group).where(
+        Group.id == group_id,
+        Group.company_id == current_user.company_id,
+        Group.deleted_at.is_(None),
+    )
+    group = (await db.execute(stmt)).scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found.")
+
+    if payload.name is not None:
+        group.name = payload.name
+    if payload.description is not None:
+        group.description = payload.description
+
+    # Re-sync permission links if specified
+    if payload.permission_ids is not None:
+        existing_links = (await db.execute(select(GroupPermissionLink).where(GroupPermissionLink.group_id == group.id))).scalars().all()
+        for link in existing_links:
+            await db.delete(link)
+        await db.flush()
+
+        for pid in payload.permission_ids:
+            new_link = GroupPermissionLink(group_id=group.id, permission_id=pid, company_id=group.company_id)
+            db.add(new_link)
+
+    await db.commit()
+    await db.refresh(group)
+
+    stmt_perms = (
+        select(Permission)
+        .join(GroupPermissionLink, GroupPermissionLink.permission_id == Permission.id)
+        .where(GroupPermissionLink.group_id == group.id, Permission.deleted_at.is_(None))
+    )
+    perms = (await db.execute(stmt_perms)).scalars().all()
+
+    return GroupDetailRead(
+        id=group.id,
+        name=group.name,
+        description=group.description,
+        permissions=[PermissionRead.model_validate(p) for p in perms],
+        created_at=group.created_at,
+    )
+
+
+@router.delete(
+    "/groups/{group_id}",
+    status_code=status.HTTP_200_OK,
+    tags=["RBAC Administration"],
+)
+async def delete_group(
+    group_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Soft-delete an RBAC group."""
+    stmt = select(Group).where(
+        Group.id == group_id,
+        Group.company_id == current_user.company_id,
+        Group.deleted_at.is_(None),
+    )
+    group = (await db.execute(stmt)).scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found.")
+
+    group.soft_delete(user_id=current_user.id)
+    await db.commit()
+    return {"status": "deleted", "id": str(group_id), "message": f"Group '{group.name}' soft-deleted successfully."}

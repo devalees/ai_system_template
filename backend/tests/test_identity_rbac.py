@@ -311,3 +311,385 @@ async def test_rbac_permission_gating_and_superusers(db_session: AsyncSession):
         )
         assert res_allowed.status_code == 200
         assert res_allowed.json()["status"] == "approved"
+
+
+@pytest.mark.asyncio
+async def test_permission_canonical_code_and_patch(db_session: AsyncSession):
+    """Verify permission canonical code derivation and PATCH update capabilities."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Perm Corp",
+        code=f"PERM_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    super_admin = User(
+        email=f"perm_admin_{uuid.uuid4().hex[:6]}@test.com",
+        username=f"perm_admin_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("Pass123!"),
+        full_name="Permission Admin",
+        is_superuser=True,
+        company_id=comp_id,
+    )
+    db_session.add_all([company, super_admin])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        res_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": super_admin.username, "password": "Pass123!"},
+        )
+        token = res_login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 1. Create permission without explicit code (canonical generation)
+        res_suffix = uuid.uuid4().hex[:4]
+        perm_payload = {
+            "name": "Read Accounting Invoices",
+            "module_name": "accounting",
+            "resource": f"invoice_{res_suffix}",
+            "action": "read",
+            "ownership_scope": "GLOBAL",
+        }
+        res_create = await client.post(
+            "/api/v1/identity_rbac/permissions",
+            json=perm_payload,
+            headers=headers,
+        )
+        assert res_create.status_code == 201
+        perm_data = res_create.json()
+        assert perm_data["code"] == f"accounting.invoice_{res_suffix}.read"
+        assert perm_data["resource"] == f"invoice_{res_suffix}"
+        assert perm_data["action"] == "read"
+        assert perm_data["ownership_scope"] == "GLOBAL"
+        perm_id = perm_data["id"]
+
+        # 2. Patch permission ownership scope
+        res_patch = await client.patch(
+            f"/api/v1/identity_rbac/permissions/{perm_id}",
+            json={"ownership_scope": "OWN", "name": "Own Invoices Read"},
+            headers=headers,
+        )
+        assert res_patch.status_code == 200
+        patched_data = res_patch.json()
+        assert patched_data["ownership_scope"] == "OWN"
+        assert patched_data["name"] == "Own Invoices Read"
+
+        # 3. Retrieve permission detail
+        res_get = await client.get(
+            f"/api/v1/identity_rbac/permissions/{perm_id}",
+            headers=headers,
+        )
+        assert res_get.status_code == 200
+        assert res_get.json()["ownership_scope"] == "OWN"
+        assert res_get.json()["name"] == "Own Invoices Read"
+
+
+@pytest.mark.asyncio
+async def test_group_crud_and_permission_linking(db_session: AsyncSession):
+    """Verify group creation with permission assignment, patch resync, and detail inspection."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Group Corp",
+        code=f"GRP_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    super_admin = User(
+        email=f"group_admin_{uuid.uuid4().hex[:6]}@test.com",
+        username=f"group_admin_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("Pass123!"),
+        full_name="Group Admin",
+        is_superuser=True,
+        company_id=comp_id,
+    )
+    db_session.add_all([company, super_admin])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        res_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": super_admin.username, "password": "Pass123!"},
+        )
+        token = res_login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Seed two permissions with unique resource
+        res_suffix = uuid.uuid4().hex[:4]
+        p1 = await client.post(
+            "/api/v1/identity_rbac/permissions",
+            json={
+                "name": "Audit Read",
+                "module_name": "audit",
+                "resource": f"log_{res_suffix}",
+                "action": "read",
+            },
+            headers=headers,
+        )
+        p2 = await client.post(
+            "/api/v1/identity_rbac/permissions",
+            json={
+                "name": "Audit Export",
+                "module_name": "audit",
+                "resource": f"log_{res_suffix}",
+                "action": "export",
+            },
+            headers=headers,
+        )
+        p1_id = p1.json()["id"]
+        p2_id = p2.json()["id"]
+
+        # 1. Create group with both permissions
+        group_payload = {
+            "name": f"Auditors_{uuid.uuid4().hex[:4]}",
+            "description": "Internal audit group",
+            "permission_ids": [p1_id, p2_id],
+        }
+        res_grp = await client.post(
+            "/api/v1/identity_rbac/groups",
+            json=group_payload,
+            headers=headers,
+        )
+        assert res_grp.status_code == 201
+        grp_data = res_grp.json()
+        assert grp_data["permissions_count"] == 2
+        grp_id = grp_data["id"]
+
+        # 2. Patch group: remove p2, keep only p1
+        res_patch_grp = await client.patch(
+            f"/api/v1/identity_rbac/groups/{grp_id}",
+            json={"description": "Restricted audit group", "permission_ids": [p1_id]},
+            headers=headers,
+        )
+        assert res_patch_grp.status_code == 200
+        patched_grp = res_patch_grp.json()
+        assert patched_grp["description"] == "Restricted audit group"
+        assert len(patched_grp["permissions"]) == 1
+        assert patched_grp["permissions"][0]["id"] == p1_id
+
+        # 3. Get group detail
+        res_get_grp = await client.get(
+            f"/api/v1/identity_rbac/groups/{grp_id}",
+            headers=headers,
+        )
+        assert res_get_grp.status_code == 200
+        assert len(res_get_grp.json()["permissions"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_user_patch_and_group_linking(db_session: AsyncSession):
+    """Verify user update patch updates user profile and manages group memberships."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Update Tenant",
+        code=f"UPD_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    super_admin = User(
+        email=f"user_admin_{uuid.uuid4().hex[:6]}@test.com",
+        username=f"user_admin_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("Pass123!"),
+        full_name="User Admin",
+        is_superuser=True,
+        company_id=comp_id,
+    )
+    db_session.add_all([company, super_admin])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        res_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": super_admin.username, "password": "Pass123!"},
+        )
+        token = res_login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Create target group
+        res_g = await client.post(
+            "/api/v1/identity_rbac/groups",
+            json={"name": f"Support_{uuid.uuid4().hex[:4]}", "description": "Support Team"},
+            headers=headers,
+        )
+        group_id = res_g.json()["id"]
+
+        # Create target user
+        target_username = f"agent_bob_{uuid.uuid4().hex[:4]}"
+        res_u = await client.post(
+            "/api/v1/identity_rbac/users",
+            json={
+                "email": f"{target_username}@test.com",
+                "username": target_username,
+                "password": "InitialPass123!",
+                "full_name": "Bob Original",
+                "company_id": str(company.id),
+            },
+            headers=headers,
+        )
+        assert res_u.status_code == 201
+        user_id = res_u.json()["id"]
+
+        # Patch user: full_name, preferred_language, group_ids
+        res_patch_u = await client.patch(
+            f"/api/v1/identity_rbac/users/{user_id}",
+            json={
+                "full_name": "Bob Senior Specialist",
+                "preferred_language": "ar",
+                "group_ids": [group_id],
+            },
+            headers=headers,
+        )
+        assert res_patch_u.status_code == 200
+        patched_user = res_patch_u.json()
+        assert patched_user["full_name"] == "Bob Senior Specialist"
+        assert patched_user["preferred_language"] == "ar"
+        assert len(patched_user["groups"]) == 1
+        assert patched_user["groups"][0]["id"] == group_id
+
+        # Verify via GET /users/{id}
+        res_detail = await client.get(
+            f"/api/v1/identity_rbac/users/{user_id}",
+            headers=headers,
+        )
+        assert res_detail.status_code == 200
+        detail_data = res_detail.json()
+        assert detail_data["full_name"] == "Bob Senior Specialist"
+        assert len(detail_data["groups"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_soft_delete_and_guards(db_session: AsyncSession):
+    """Verify soft-delete for Company, User, Group, Permission, and self-delete safety guard."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Deletable Corp",
+        code=f"DEL_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    admin_user = User(
+        email=f"del_admin_{uuid.uuid4().hex[:6]}@del.com",
+        username=f"del_admin_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("Pass123!"),
+        full_name="Delete Admin",
+        is_superuser=True,
+        company_id=comp_id,
+    )
+    db_session.add_all([company, admin_user])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        res_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": admin_user.username, "password": "Pass123!"},
+        )
+        token = res_login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 1. Guard check: Admin cannot delete their own active user
+        res_self_del = await client.delete(
+            f"/api/v1/identity_rbac/users/{admin_user.id}",
+            headers=headers,
+        )
+        assert res_self_del.status_code == 400
+        assert "own active session" in res_self_del.json()["detail"].lower()
+
+        # 2. Create another user and soft-delete them
+        target_name = f"victim_{uuid.uuid4().hex[:4]}"
+        res_target = await client.post(
+            "/api/v1/identity_rbac/users",
+            json={
+                "email": f"{target_name}@del.com",
+                "username": target_name,
+                "password": "VictimPass123!",
+                "full_name": "Victim User",
+                "company_id": str(company.id),
+            },
+            headers=headers,
+        )
+        assert res_target.status_code == 201
+        target_user_id = res_target.json()["id"]
+
+        del_u_res = await client.delete(
+            f"/api/v1/identity_rbac/users/{target_user_id}",
+            headers=headers,
+        )
+        assert del_u_res.status_code == 200
+        assert del_u_res.json()["status"] == "deleted"
+
+        # Verify soft-deleted user is not found in detail endpoint
+        get_u_res = await client.get(
+            f"/api/v1/identity_rbac/users/{target_user_id}",
+            headers=headers,
+        )
+        assert get_u_res.status_code == 404
+
+        # 3. Soft-delete Group
+        res_grp = await client.post(
+            "/api/v1/identity_rbac/groups",
+            json={"name": f"DelGroup_{uuid.uuid4().hex[:4]}"},
+            headers=headers,
+        )
+        grp_id = res_grp.json()["id"]
+
+        del_g_res = await client.delete(
+            f"/api/v1/identity_rbac/groups/{grp_id}",
+            headers=headers,
+        )
+        assert del_g_res.status_code == 200
+        assert del_g_res.json()["status"] == "deleted"
+
+        get_g_res = await client.get(
+            f"/api/v1/identity_rbac/groups/{grp_id}",
+            headers=headers,
+        )
+        assert get_g_res.status_code == 404
+
+        # 4. Soft-delete Permission
+        perm_res_suffix = uuid.uuid4().hex[:4]
+        res_p = await client.post(
+            "/api/v1/identity_rbac/permissions",
+            json={
+                "name": "Del Perm",
+                "module_name": "temp",
+                "resource": f"item_{perm_res_suffix}",
+                "action": "delete",
+            },
+            headers=headers,
+        )
+        p_id = res_p.json()["id"]
+
+        del_p_res = await client.delete(
+            f"/api/v1/identity_rbac/permissions/{p_id}",
+            headers=headers,
+        )
+        assert del_p_res.status_code == 200
+        assert del_p_res.json()["status"] == "deleted"
+
+        get_p_res = await client.get(
+            f"/api/v1/identity_rbac/permissions/{p_id}",
+            headers=headers,
+        )
+        assert get_p_res.status_code == 404
+
+        # 5. Soft-delete Company
+        res_c = await client.post(
+            "/api/v1/identity_rbac/companies",
+            json={"name": "Temp Corp", "code": f"TC_{uuid.uuid4().hex[:4]}"},
+            headers=headers,
+        )
+        c_id = res_c.json()["id"]
+
+        del_c_res = await client.delete(
+            f"/api/v1/identity_rbac/companies/{c_id}",
+            headers=headers,
+        )
+        assert del_c_res.status_code == 200
+        assert del_c_res.json()["status"] == "deleted"
+
+        get_c_res = await client.get(
+            f"/api/v1/identity_rbac/companies/{c_id}",
+            headers=headers,
+        )
+        assert get_c_res.status_code == 404
+

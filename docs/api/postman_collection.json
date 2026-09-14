@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "4e9f7ef7-d03c-4664-bf9e-c7fed3b852a4",
+    "_postman_id": "9d112f26-db79-4a11-967f-13a34175e524",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -48,7 +48,7 @@
               ],
               "variable": []
             },
-            "description": "Upload and hash binary file, saving to content-addressable filestore."
+            "description": "## Upload binary file attachment to content-addressable storage\n\nUpload and hash binary file, saving to content-addressable filestore.\n\n**Endpoint**: `POST {{base_url}}/api/v1/documents/upload`  \n**Tags**: `Document & Blob Storage Engine, Document Attachments`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -86,7 +86,7 @@
                 }
               ]
             },
-            "description": "Retrieve metadata information for a single document attachment."
+            "description": "## Get document attachment metadata\n\nRetrieve metadata information for a single document attachment.\n\n**Endpoint**: `GET {{base_url}}/api/v1/documents/{attachment_id}`  \n**Tags**: `Document & Blob Storage Engine, Document Attachments`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `attachment_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -124,7 +124,7 @@
                 }
               ]
             },
-            "description": "Soft-delete attachment record while preserving CAS physical file for historical audit trails."
+            "description": "## Soft-delete a document attachment\n\nSoft-delete attachment record while preserving CAS physical file for historical audit trails.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/documents/{attachment_id}`  \n**Tags**: `Document & Blob Storage Engine, Document Attachments`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `attachment_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -163,7 +163,7 @@
                 }
               ]
             },
-            "description": "Stream binary file content with appropriate Content-Disposition headers."
+            "description": "## Download raw binary file from content-addressable storage\n\nStream binary file content with appropriate Content-Disposition headers.\n\n**Endpoint**: `GET {{base_url}}/api/v1/documents/{attachment_id}/download`  \n**Tags**: `Document & Blob Storage Engine, Document Attachments`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `attachment_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -207,7 +207,7 @@
                 }
               ]
             },
-            "description": "List all attachments associated with a specific entity record."
+            "description": "## List all attachments attached to a business entity\n\nList all attachments associated with a specific entity record.\n\n**Endpoint**: `GET {{base_url}}/api/v1/documents/entity/{res_model}/{res_id}`  \n**Tags**: `Document & Blob Storage Engine, Document Attachments`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }
@@ -251,10 +251,10 @@
               ],
               "variable": []
             },
-            "description": "Register a new user account (human employee or AI agent) with strict tenant registration gating.",
+            "description": "## Register User\n\nRegister a new user account (human employee or first-class AI agent).\n\nSecurity & Access:\n- Public endpoint.\n- Strictly gated by target tenant's `allow_registration` policy.\n\nValidation Rules:\n- Rejects if `email` or `username` already exists (400 Bad Request).\n- If `company_id` is provided, verifies that company exists (404) and has `allow_registration == True` (403).\n- If `company_id` is omitted, attempts to bind to an active open-registration company; otherwise rejects (403).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/register`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Unique corporate email address used for notifications and login identification |\n| `username` | `string` | **Yes** | Any valid string | Alphanumeric unique login username (strictly no spaces) |\n| `password` | `string` | **Yes** | Any valid string | Cleartext password (hashed with bcrypt upon ingestion) |\n| `full_name` | `string` | **Yes** | Any valid string | Full display name for the employee or autonomous AI agent |\n| `user_type` | `string` | No | `human, ai_agent` | Actor classification: 'human' employee or first-class 'ai_agent' |\n| `preferred_language` | `string` | No | Any valid string | ISO 639-1 language code for localized emails and UI rendering (e.g. 'en', 'ar') |\n| `company_id` | `string` | No | Any valid string | Target company UUID. Required if multiple tenants exist or if registration is gated |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"company_id\": \"a0000000-0000-0000-0000-000000000001\",\n  \"email\": \"sarah.connor@sovereign.local\",\n  \"full_name\": \"Sarah Connor\",\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"sconnor\"\n}",
+              "raw": "{\n  \"company_id\": \"6f4539e5-a36c-488a-8c3b-2004a5884e33\",\n  \"email\": \"sarah.connor@sovereign.local\",\n  \"full_name\": \"Sarah Connor\",\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"sconnor\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -302,7 +302,7 @@
               ],
               "variable": []
             },
-            "description": "Authenticate with username/email and password, returning JWT bearer token.",
+            "description": "## Login\n\nAuthenticate with username/email and password, returning a signed JWT bearer token.\n\nSecurity & Access:\n- Public endpoint.\n- Returns JWT token containing user identity and active tenant `company_id`.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/login`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `identifier` | `string` | **Yes** | Any valid string | Login username or registered corporate email address |\n| `password` | `string` | **Yes** | Any valid string | Cleartext password to verify against hashed bcrypt record |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"identifier\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}",
@@ -370,12 +370,45 @@
               ],
               "variable": []
             },
-            "description": "Return currently authenticated profile metadata."
+            "description": "## Get Me\n\nReturn currently authenticated profile metadata including assigned RBAC groups.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/auth/me`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
         {
-          "name": "Create Internal User",
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "users"
+              ],
+              "variable": []
+            },
+            "description": "## List Users\n\nList users within the caller's active company with optional search and filters.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/users`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_type` | `query` | `string` | No | Filter by actor type ('human' or 'ai_agent') |\n| `is_active` | `query` | `string` | No | Filter by active status |\n| `search` | `query` | `string` | No | Search by username, full name, or email |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
           "request": {
             "method": "POST",
             "header": [
@@ -408,16 +441,147 @@
               ],
               "variable": []
             },
-            "description": "Provision an internal user account within an organization (Admin or Superuser).\n\nBypasses allow_registration restriction because this is an authenticated internal action.",
+            "description": "## Create User\n\nProvision an internal user account within an organization (Admin or Superuser).\n\nSecurity & Access:\n- Requires authenticated Administrator or Superuser.\n- Bypasses public `allow_registration` restrictions.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/users`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Unique corporate email address |\n| `username` | `string` | **Yes** | Any valid string | Alphanumeric login username without whitespace |\n| `password` | `string` | **Yes** | Any valid string | Cleartext initial password |\n| `full_name` | `string` | **Yes** | Any valid string | Full display name |\n| `user_type` | `string` | No | `human, ai_agent` | User actor classification |\n| `preferred_language` | `string` | No | Any valid string | Preferred locale code ('en', 'ar') |\n| `is_superuser` | `boolean` | No | Any valid boolean | Global superuser flag (bypasses all RBAC capability checks) |\n| `group_ids` | `array` | No | Any valid array | List of RBAC Group UUIDs to immediately assign |\n| `company_id` | `string` | No | Any valid string | Target company UUID (defaults to caller's company) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"employee@sovereign.local\",\n  \"full_name\": \"Internal Employee\",\n  \"group_ids\": [],\n  \"is_superuser\": false,\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"employee1\"\n}",
+              "raw": "{\n  \"email\": \"auditor@sovereign.local\",\n  \"full_name\": \"QA Auditor\",\n  \"group_ids\": [],\n  \"is_superuser\": false,\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"qa_auditor\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/users/:user_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "users",
+                ":user_id"
+              ],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Get User\n\nRetrieve detailed user profile including assigned RBAC groups.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/users/:user_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "users",
+                ":user_id"
+              ],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Update User\n\nUpdate user account attributes, active toggle, group assignments, or reset password.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `full_name` | `string` | No | Any valid string | Updated display name |\n| `email` | `string` | No | Any valid string | Updated email address |\n| `preferred_language` | `string` | No | Any valid string | Updated ISO 639-1 language code |\n| `team_id` | `string` | No | Any valid string | Assigned organizational department / team UUID |\n| `is_active` | `boolean` | No | Any valid boolean | Active status toggle (deactivated users cannot authenticate) |\n| `is_superuser` | `boolean` | No | Any valid boolean | Superuser privilege toggle (Superuser only) |\n| `group_ids` | `array` | No | Any valid array | Full replacement list of RBAC Group UUIDs assigned to this user |\n| `password` | `string` | No | Any valid string | New password if resetting user credentials |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Sarah Connor, Lead Auditor\",\n  \"is_active\": true,\n  \"preferred_language\": \"en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/users/:user_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "users",
+                ":user_id"
+              ],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Delete User\n\nSoft-delete a user account.\n\nSecurity Guard:\n- Users cannot delete their own active authenticated account.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -450,7 +614,7 @@
               ],
               "variable": []
             },
-            "description": "List tenant companies. Superusers view all tenants; regular users view their own tenant."
+            "description": "## List Companies\n\nList tenant companies. Superusers view all tenants; regular users view their own tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/companies`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -488,7 +652,7 @@
               ],
               "variable": []
             },
-            "description": "Create a new tenant organization (Superuser only).",
+            "description": "## Create Company\n\nCreate a new tenant organization (Superuser only).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/companies`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Organization legal or trading name |\n| `code` | `string` | **Yes** | Any valid string | Unique tenant identification code (alphanumeric) |\n| `allow_registration` | `boolean` | No | Any valid boolean | Whether public self-registration via /auth/register is permitted for this tenant. If False, users must be invited/created by an admin |\n| `email_domain` | `string` | No | Any valid string | Optional corporate email domain restriction |\n| `currency_id` | `string` | No | Any valid string | Base accounting currency ISO 4217 code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"allow_registration\": false,\n  \"code\": \"SOV-MAIN\",\n  \"currency_id\": \"USD\",\n  \"email_domain\": \"sovereign.local\",\n  \"name\": \"Sovereign Enterprise System\"\n}",
@@ -536,7 +700,7 @@
                 }
               ]
             },
-            "description": "Retrieve details for a specific tenant organization."
+            "description": "## Get Company\n\nRetrieve details for a specific tenant organization.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/companies/{company_id}`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `company_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -575,7 +739,79 @@
                 }
               ]
             },
-            "description": "Update tenant configuration, including toggling allow_registration (Superuser or Tenant Admin)."
+            "description": "## Update Company\n\nUpdate tenant configuration, including toggling allow_registration (Superuser or Tenant Admin).\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/companies/{company_id}`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `company_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated company name |\n| `code` | `string` | No | Any valid string | Updated company code |\n| `allow_registration` | `boolean` | No | Any valid boolean | Toggle public registration policy (True = open, False = internal only) |\n| `email_domain` | `string` | No | Any valid string | Updated corporate domain |\n| `currency_id` | `string` | No | Any valid string | Updated base currency code |\n| `is_active` | `boolean` | No | Any valid boolean | Active status toggle (deactivating locks all users out) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Company",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/companies/:company_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "companies",
+                ":company_id"
+              ],
+              "variable": [
+                {
+                  "key": "company_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Delete Company\n\nSoft-delete an organization tenant (Superuser only).\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/companies/{company_id}`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `company_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "permissions"
+              ],
+              "variable": []
+            },
+            "description": "## List Permissions\n\nList registered capabilities with optional category and scope filters.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/permissions`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `query` | `string` | No | Filter by system module namespace |\n| `resource` | `query` | `string` | No | Filter by business model/entity name |\n| `action` | `query` | `string` | No | Filter by operation action type |\n| `ownership_scope` | `query` | `string` | No | Filter by ownership boundary ('GLOBAL', 'TEAM', 'OWN') |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -613,16 +849,166 @@
               ],
               "variable": []
             },
-            "description": "Create a granular model capability (Superuser or Admin).",
+            "description": "## Create Permission\n\nCreate a granular model capability (Superuser only).\n\nCanonical Code Generation:\n- If `code` is omitted, auto-generates: `{module_name}.{resource}.{action}`.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/permissions`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `string` | **Yes** | Any valid string | Parent system module namespace (e.g. 'accounting', 'crm', 'sales', 'identity_rbac') |\n| `resource` | `string` | **Yes** | Any valid string | Target business entity or model name (e.g. 'invoice', 'lead', 'order', 'user') |\n| `action` | `string` | **Yes** | `read, create, update, delete, manage, approve, export` | Operational action type: 'read' (view), 'create' (insert), 'update' (edit), 'delete' (soft-delete), 'manage' (full admin), 'approve' (sign-off), or 'export' (bulk download) |\n| `ownership_scope` | `string` | No | `GLOBAL, TEAM, OWN` | 3-tier record ownership boundary: 'GLOBAL' (access any company record), 'TEAM' (restricted to user's team_id), 'OWN' (restricted to records created by user) |\n| `name` | `string` | **Yes** | Any valid string | Human-readable title describing the capability |\n| `code` | `string` | No | Any valid string | Unique canonical identifier. If omitted, auto-generated as '{module_name}.{resource}.{action}' |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"accounting.invoice.post\",\n  \"module_name\": \"accounting\",\n  \"name\": \"Post Invoices\",\n  \"ownership_scope\": \"GLOBAL\"\n}",
+              "raw": "{\n  \"action\": \"read\",\n  \"code\": \"accounting.invoice.read\",\n  \"module_name\": \"accounting\",\n  \"name\": \"Read Accounting Invoices\",\n  \"ownership_scope\": \"GLOBAL\",\n  \"resource\": \"invoice\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Permission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/permissions/:permission_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "permissions",
+                ":permission_id"
+              ],
+              "variable": [
+                {
+                  "key": "permission_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Get Permission\n\nRetrieve details of a specific permission capability.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/permissions/{permission_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `permission_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/permissions/:permission_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "permissions",
+                ":permission_id"
+              ],
+              "variable": [
+                {
+                  "key": "permission_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Update Permission\n\nUpdate permission title or ownership scope (Superuser only).\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/permissions/{permission_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `permission_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated display title |\n| `ownership_scope` | `string` | No | `GLOBAL, TEAM, OWN` | Updated ownership scope constraint |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/permissions/:permission_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "permissions",
+                ":permission_id"
+              ],
+              "variable": [
+                {
+                  "key": "permission_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Delete Permission\n\nSoft-delete an RBAC permission capability (Superuser only).\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/permissions/{permission_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `permission_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/groups",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "groups"
+              ],
+              "variable": []
+            },
+            "description": "## List Groups\n\nList RBAC groups for active tenant with count of assigned permissions.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -660,16 +1046,133 @@
               ],
               "variable": []
             },
-            "description": "Create an RBAC Group with linked permissions.",
+            "description": "## Create Group\n\nCreate an RBAC Group/Role with linked permissions (Superuser or Tenant Admin).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/groups`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Unique role/group title within the organization |\n| `description` | `string` | No | Any valid string | Operational scope and responsibility summary |\n| `permission_ids` | `array` | No | Any valid array | List of granular Permission UUIDs to link to this group |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Read and review access to general ledger and journal entries\",\n  \"name\": \"Financial Auditors\",\n  \"permission_ids\": [\n    \"p0000000-0000-0000-0000-000000000001\"\n  ]\n}",
+              "raw": "{\n  \"description\": \"Read and review access to general ledger and journal entries\",\n  \"name\": \"Financial Auditors\",\n  \"permission_ids\": []\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Group",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/groups/:group_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "groups",
+                ":group_id"
+              ],
+              "variable": [
+                {
+                  "key": "group_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Get Group\n\nRetrieve detailed RBAC group with full list of assigned permissions.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Group",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/groups/:group_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "groups",
+                ":group_id"
+              ],
+              "variable": [
+                {
+                  "key": "group_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Update Group\n\nUpdate group title, description, or reassign permission links.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Updated group title |\n| `description` | `string` | No | Any valid string | Updated group description |\n| `permission_ids` | `array` | No | Any valid array | Full replacement list of linked Permission UUIDs |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Group",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/groups/:group_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "groups",
+                ":group_id"
+              ],
+              "variable": [
+                {
+                  "key": "group_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "## Delete Group\n\nSoft-delete an RBAC group.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/groups/{group_id}`  \n**Tags**: `Identity & Contextual RBAC, RBAC Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `group_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }
@@ -706,7 +1209,7 @@
               ],
               "variable": []
             },
-            "description": "Query chronological audit log entries scoped to current tenant."
+            "description": "## Query audit logs for the active tenant company\n\nQuery chronological audit log entries scoped to current tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/audit/`  \n**Tags**: `Immutable Audit Trail & Diffs, Audit Trail`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `model_name` | `query` | `string` | No | Filter by target model name |\n| `record_id` | `query` | `string` | No | Filter by record ID |\n| `actor_id` | `query` | `string` | No | Filter by actor user/agent ID |\n| `action` | `query` | `string` | No | Filter by action (CREATE, UPDATE, DELETE, RESTORE) |\n| `limit` | `query` | `integer` | No | - |\n| `offset` | `query` | `integer` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -750,7 +1253,7 @@
                 }
               ]
             },
-            "description": "Retrieve full history of modifications for a single business entity."
+            "description": "## Get complete chronological lifecycle audit trail for an entity\n\nRetrieve full history of modifications for a single business entity.\n\n**Endpoint**: `GET {{base_url}}/api/v1/audit/entity/{model_name}/{record_id}`  \n**Tags**: `Immutable Audit Trail & Diffs, Audit Trail`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `model_name` | `path` | `string` | **Yes** | - |\n| `record_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }
@@ -788,7 +1291,7 @@
               ],
               "variable": []
             },
-            "description": "Return registered modules, execution load order, and AI-enabled capabilities."
+            "description": "## Get Kernel Modules\n\nReturn registered modules, execution load order, and AI-enabled capabilities.\n\n**Endpoint**: `GET {{base_url}}/api/v1/kernel/modules`  \n**Tags**: `Kernel Diagnostics`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         }
@@ -826,7 +1329,7 @@
               ],
               "variable": []
             },
-            "description": "Retrieve all configured outbound SMTP servers for the authenticated tenant."
+            "description": "## List tenant SMTP outbound mail servers\n\nRetrieve all configured outbound SMTP servers for the authenticated tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/mail_gateway/servers`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Servers`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `is_active` | `query` | `string` | No | Filter by active status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -864,7 +1367,7 @@
               ],
               "variable": []
             },
-            "description": "Register a new outbound SMTP server for the active company.",
+            "description": "## Create SMTP server configuration\n\nRegister a new outbound SMTP server for the active company.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/servers`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Servers`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Friendly SMTP server configuration name |\n| `smtp_host` | `string` | **Yes** | Any valid string | Host address or hostname of the SMTP server |\n| `smtp_port` | `integer` | No | Any valid integer | Port number (e.g., 587, 465, 25) |\n| `smtp_user` | `string` | No | Any valid string | Authentication username |\n| `encryption` | `string` | No | Any valid string | Encryption standard: tls, ssl, or none |\n| `from_email` | `string` | **Yes** | Any valid string | Default Sender email address |\n| `from_name` | `string` | No | Any valid string | Default Sender display name |\n| `is_default` | `boolean` | No | Any valid boolean | Whether this is the primary server for this tenant |\n| `is_active` | `boolean` | No | Any valid boolean | Operational status |\n| `smtp_password` | `string` | No | Any valid string | Authentication password / API key |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"encryption\": \"tls\",\n  \"from_email\": \"notifications@sovereign-erp.com\",\n  \"from_name\": \"Sovereign Notifications\",\n  \"is_active\": true,\n  \"is_default\": true,\n  \"name\": \"Production SendGrid Gateway\",\n  \"smtp_host\": \"smtp.sendgrid.net\",\n  \"smtp_password\": \"SG.secret_api_key_value\",\n  \"smtp_port\": 587,\n  \"smtp_user\": \"apikey\"\n}",
@@ -912,7 +1415,7 @@
                 }
               ]
             },
-            "description": "Retrieve details for a specific outbound SMTP server configuration."
+            "description": "## Get SMTP server details\n\nRetrieve details for a specific outbound SMTP server configuration.\n\n**Endpoint**: `GET {{base_url}}/api/v1/mail_gateway/servers/{server_id}`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Servers`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `server_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -956,7 +1459,7 @@
                 }
               ]
             },
-            "description": "Update fields on an existing outbound SMTP server configuration.",
+            "description": "## Update SMTP server configuration\n\nUpdate fields on an existing outbound SMTP server configuration.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/mail_gateway/servers/{server_id}`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Servers`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `server_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `smtp_host` | `string` | No | Any valid string | smtp_host attribute |\n| `smtp_port` | `integer` | No | Any valid integer | smtp_port attribute |\n| `smtp_user` | `string` | No | Any valid string | smtp_user attribute |\n| `smtp_password` | `string` | No | Any valid string | smtp_password attribute |\n| `encryption` | `string` | No | Any valid string | encryption attribute |\n| `from_email` | `string` | No | Any valid string | from_email attribute |\n| `from_name` | `string` | No | Any valid string | from_name attribute |\n| `is_default` | `boolean` | No | Any valid boolean | is_default attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"encryption\": \"tls\",\n  \"is_default\": true,\n  \"name\": \"Primary Outbound Mail Server\",\n  \"smtp_port\": 587\n}",
@@ -1004,7 +1507,7 @@
                 }
               ]
             },
-            "description": "Soft delete an outbound SMTP configuration."
+            "description": "## Soft-delete SMTP server configuration\n\nSoft delete an outbound SMTP configuration.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/mail_gateway/servers/{server_id}`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Servers`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `server_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1044,7 +1547,7 @@
                 }
               ]
             },
-            "description": "Test network handshake, TLS negotiation, and credentials for an SMTP configuration."
+            "description": "## Test SMTP connection and authentication\n\nTest network handshake, TLS negotiation, and credentials for an SMTP configuration.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/servers/{server_id}/test`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Servers`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `server_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1077,7 +1580,7 @@
               ],
               "variable": []
             },
-            "description": "List Jinja2 email templates for the authenticated tenant."
+            "description": "## List email templates\n\nList Jinja2 email templates for the authenticated tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/mail_gateway/templates`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Templates`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `model_name` | `query` | `string` | No | Filter by target model name |\n| `language` | `query` | `string` | No | Filter by language code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1115,7 +1618,7 @@
               ],
               "variable": []
             },
-            "description": "Register a new parameterized Jinja2 email template.",
+            "description": "## Create email template\n\nRegister a new parameterized Jinja2 email template.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/templates`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Templates`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Template human-readable label |\n| `code` | `string` | **Yes** | Any valid string | Unique alphanumeric identifier code |\n| `subject` | `string` | **Yes** | Any valid string | Jinja2 parameterized subject line |\n| `body_html` | `string` | **Yes** | Any valid string | Jinja2 parameterized HTML email template |\n| `body_text` | `string` | No | Any valid string | Plaintext fallback template |\n| `language` | `string` | No | Any valid string | ISO language code |\n| `model_name` | `string` | No | Any valid string | Target entity model |\n| `is_active` | `boolean` | No | Any valid boolean | Operational status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"body_html\": \"<p>Dear {{ recipient_name }},</p><p>Invoice <strong>#{{ invoice_number }}</strong> of amount {{ amount_due }} is due on {{ due_date }}.</p>\",\n  \"body_text\": \"Dear {{ recipient_name }},\\n\\nInvoice #{{ invoice_number }} of amount {{ amount_due }} is due on {{ due_date }}.\",\n  \"code\": \"invoice_due_reminder\",\n  \"is_active\": true,\n  \"language\": \"en\",\n  \"model_name\": \"account.invoice\",\n  \"name\": \"Invoice Due Reminder\",\n  \"subject\": \"Payment Reminder: Invoice #{{ invoice_number }} for {{ company_name }}\"\n}",
@@ -1163,7 +1666,7 @@
                 }
               ]
             },
-            "description": "Retrieve an email template record by UUID."
+            "description": "## Get email template details\n\nRetrieve an email template record by UUID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/mail_gateway/templates/{template_id}`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Templates`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `template_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1207,7 +1710,7 @@
                 }
               ]
             },
-            "description": "Update fields of an existing email template.",
+            "description": "## Update email template\n\nUpdate fields of an existing email template.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/mail_gateway/templates/{template_id}`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Templates`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `template_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `code` | `string` | No | Any valid string | code attribute |\n| `subject` | `string` | No | Any valid string | subject attribute |\n| `body_html` | `string` | No | Any valid string | body_html attribute |\n| `body_text` | `string` | No | Any valid string | body_text attribute |\n| `language` | `string` | No | Any valid string | language attribute |\n| `model_name` | `string` | No | Any valid string | model_name attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"is_active\": true,\n  \"name\": \"Updated Invoice Due Reminder\",\n  \"subject\": \"Urgent: Invoice #{{ invoice_number }} Due Soon\"\n}",
@@ -1255,7 +1758,7 @@
                 }
               ]
             },
-            "description": "Soft delete an email template."
+            "description": "## Soft-delete email template\n\nSoft delete an email template.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/mail_gateway/templates/{template_id}`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Templates`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `template_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1294,7 +1797,7 @@
               ],
               "variable": []
             },
-            "description": "Dynamically compile and preview rendered email subject and HTML using provided sample data.",
+            "description": "## Render Jinja2 template preview with test variables\n\nDynamically compile and preview rendered email subject and HTML using provided sample data.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/templates/render`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Templates`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `template_id` | `string` | No | Any valid string | template_id attribute |\n| `template_code` | `string` | No | Any valid string | template_code attribute |\n| `context_data` | `object` | No | Any valid object | Variables to inject into Jinja2 templates |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"context_data\": {\n    \"amount_due\": \"$12,450.00\",\n    \"company_name\": \"Cyberdyne Systems\",\n    \"due_date\": \"2026-09-30\",\n    \"invoice_number\": \"INV-2026-089\",\n    \"recipient_name\": \"Sarah Connor\"\n  },\n  \"template_id\": \"t0000000-0000-0000-0000-000000000001\"\n}",
@@ -1341,7 +1844,7 @@
               ],
               "variable": []
             },
-            "description": "Enqueue an outbound email with Jinja2 rendering and asynchronous Celery background transmission.",
+            "description": "## Enqueue and dispatch outbound email\n\nEnqueue an outbound email with Jinja2 rendering and asynchronous Celery background transmission.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/send`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Pipeline`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `to_email` | `string` | **Yes** | Any valid string | Recipient destination email address |\n| `recipient_name` | `string` | No | Any valid string | recipient_name attribute |\n| `cc` | `string` | No | Any valid string | cc attribute |\n| `bcc` | `string` | No | Any valid string | bcc attribute |\n| `subject` | `string` | No | Any valid string | Subject (or rendered from template) |\n| `body_html` | `string` | No | Any valid string | HTML body (or rendered from template) |\n| `body_text` | `string` | No | Any valid string | Plain text body (or rendered from template) |\n| `template_code` | `string` | No | Any valid string | Code of registered MailTemplate to render |\n| `template_id` | `string` | No | Any valid string | UUID of registered MailTemplate to render |\n| `context_data` | `object` | No | Any valid object | Variables for template rendering |\n| `server_id` | `string` | No | Any valid string | Specific MailServer ID or fallback to default |\n| `res_model` | `string` | No | Any valid string | Polymorphic source entity model |\n| `res_id` | `string` | No | Any valid string | Polymorphic source entity record UUID |\n| `async_send` | `boolean` | No | Any valid boolean | Whether to enqueue in Celery or send synchronously |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `202` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"async_send\": true,\n  \"body_html\": \"<p>Please find your monthly statement attached.</p>\",\n  \"context_data\": {\n    \"amount_due\": \"$12,450.00\",\n    \"company_name\": \"Client Corp\",\n    \"due_date\": \"2026-09-30\",\n    \"invoice_number\": \"INV-2026-089\",\n    \"recipient_name\": \"Client Accounting Team\"\n  },\n  \"recipient_name\": \"Client Accounting Team\",\n  \"res_id\": \"c0000000-0000-0000-0000-000000000001\",\n  \"res_model\": \"account.invoice\",\n  \"subject\": \"Monthly Statement - August 2026\",\n  \"template_code\": \"invoice_due_reminder\",\n  \"to_email\": \"billing@clientcorp.com\"\n}",
@@ -1383,7 +1886,7 @@
               ],
               "variable": []
             },
-            "description": "List queued, sent, and failed outbound email transmissions."
+            "description": "## List outbound mail queue entries\n\nList queued, sent, and failed outbound email transmissions.\n\n**Endpoint**: `GET {{base_url}}/api/v1/mail_gateway/queue`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Pipeline`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `state` | `query` | `string` | No | Filter by delivery state: pending, sending, sent, failed |\n| `recipient` | `query` | `string` | No | Filter by recipient email substring |\n| `limit` | `query` | `integer` | No | Pagination size |\n| `offset` | `query` | `integer` | No | Pagination offset |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1422,7 +1925,7 @@
                 }
               ]
             },
-            "description": "Retrieve detailed telemetry and delivery status for an enqueued email."
+            "description": "## Get mail queue delivery status\n\nRetrieve detailed telemetry and delivery status for an enqueued email.\n\n**Endpoint**: `GET {{base_url}}/api/v1/mail_gateway/queue/{queue_id}`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Pipeline`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `queue_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1462,7 +1965,7 @@
                 }
               ]
             },
-            "description": "Reset attempt counter and re-dispatch delivery for a failed email."
+            "description": "## Manually trigger retry for a failed email\n\nReset attempt counter and re-dispatch delivery for a failed email.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mail_gateway/queue/{queue_id}/retry`  \n**Tags**: `Mail Gateway & Async Email Pipeline, Mail Gateway - Pipeline`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `queue_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }
@@ -1499,7 +2002,7 @@
               ],
               "variable": []
             },
-            "description": "Retrieve all configured module settings records for current company."
+            "description": "## List all module settings for the active tenant company\n\nRetrieve all configured module settings records for current company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/settings/`  \n**Tags**: `Module Settings Engine, Settings`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -1537,7 +2040,7 @@
                 }
               ]
             },
-            "description": "Fetch cached module settings for the current user's company."
+            "description": "## Get settings configuration for a specific module\n\nFetch cached module settings for the current user's company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/settings/{module_name}`  \n**Tags**: `Module Settings Engine, Settings`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1580,7 +2083,7 @@
                 }
               ]
             },
-            "description": "Merge and update key-value JSONB settings for the specified module and invalidate cache.",
+            "description": "## Update or merge configuration settings for a specific module\n\nMerge and update key-value JSONB settings for the specified module and invalidate cache.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/settings/{module_name}`  \n**Tags**: `Module Settings Engine, Settings`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `settings_data` | `object` | **Yes** | Any valid object | Configuration dictionary to patch/merge |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"settings_data\": {\n    \"auto_post_entries\": true,\n    \"base_currency\": \"USD\",\n    \"fiscal_year_start\": \"01-01\",\n    \"tax_rounding\": \"round_globally\"\n  }\n}",
@@ -1627,7 +2130,7 @@
               ],
               "variable": []
             },
-            "description": "Retrieve notifications targeted to the authenticated user."
+            "description": "## List authenticated user's notifications\n\nRetrieve notifications targeted to the authenticated user.\n\n**Endpoint**: `GET {{base_url}}/api/v1/notification_engine/notifications`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - In-App`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `is_read` | `query` | `string` | No | Filter by read status |\n| `notification_type` | `query` | `string` | No | Filter by type (task, info, alert) |\n| `limit` | `query` | `integer` | No | Pagination size |\n| `offset` | `query` | `integer` | No | Pagination offset |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1660,7 +2163,7 @@
               ],
               "variable": []
             },
-            "description": "Return count of unread notifications for top navigation badges."
+            "description": "## Get user unread notifications count\n\nReturn count of unread notifications for top navigation badges.\n\n**Endpoint**: `GET {{base_url}}/api/v1/notification_engine/unread-count`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - In-App`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -1700,7 +2203,7 @@
                 }
               ]
             },
-            "description": "Acknowledge and mark an individual notification as read."
+            "description": "## Mark single notification as read\n\nAcknowledge and mark an individual notification as read.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/notification_engine/notifications/{notification_id}/read`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - In-App`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `notification_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -1734,7 +2237,7 @@
               ],
               "variable": []
             },
-            "description": "Clear all unread notification badges for the active user."
+            "description": "## Mark all user notifications as read\n\nClear all unread notification badges for the active user.\n\n**Endpoint**: `POST {{base_url}}/api/v1/notification_engine/notifications/mark-all-read`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - In-App`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -1772,7 +2275,7 @@
               ],
               "variable": []
             },
-            "description": "Dispatch notification across allowed channels (In-App, WebPush, Mobile Push).",
+            "description": "## Dispatch multi-channel notification\n\nDispatch notification across allowed channels (In-App, WebPush, Mobile Push).\n\n**Endpoint**: `POST {{base_url}}/api/v1/notification_engine/send`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - Dispatch`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `recipient_id` | `string` | **Yes** | Any valid string | Target User UUID |\n| `title` | `string` | **Yes** | Any valid string | Notification header title |\n| `body` | `string` | **Yes** | Any valid string | Full text or markdown description |\n| `notification_type` | `string` | No | Any valid string | Classification: info, warning, success, danger, task, mention, ai_alert |\n| `priority` | `string` | No | Any valid string | Priority level: low, normal, high, urgent |\n| `action_url` | `string` | No | Any valid string | Deep link target URL |\n| `res_model` | `string` | No | Any valid string | Polymorphic target record model |\n| `res_id` | `string` | No | Any valid string | Polymorphic target record ID |\n| `metadata_info` | `object` | No | Any valid object | Arbitrary custom payload attributes |\n| `channels` | `array` | No | Any valid array | Requested delivery channels |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"action_url\": \"/settings/security\",\n  \"body\": \"Unusual login attempt detected from new IP address.\",\n  \"channels\": [\n    \"in_app\",\n    \"web_push\"\n  ],\n  \"metadata_info\": {\n    \"ip\": \"192.168.1.100\"\n  },\n  \"notification_type\": \"ai_alert\",\n  \"priority\": \"urgent\",\n  \"recipient_id\": \"u0000000-0000-0000-0000-000000000001\",\n  \"res_id\": \"u0000000-0000-0000-0000-000000000001\",\n  \"res_model\": \"res.users\",\n  \"title\": \"System Security Alert\"\n}",
@@ -1814,7 +2317,7 @@
               ],
               "variable": []
             },
-            "description": "Retrieve active user delivery preferences across channels and event types."
+            "description": "## Get user notification preferences\n\nRetrieve active user delivery preferences across channels and event types.\n\n**Endpoint**: `GET {{base_url}}/api/v1/notification_engine/preferences`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - Preferences`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -1852,7 +2355,7 @@
               ],
               "variable": []
             },
-            "description": "Configure opt-in / opt-out preferences for a specific channel and notification category.",
+            "description": "## Set or update channel preference\n\nConfigure opt-in / opt-out preferences for a specific channel and notification category.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/notification_engine/preferences`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - Preferences`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `channel` | `string` | **Yes** | Any valid string | Channel name: in_app, email, web_push, sms |\n| `notification_type` | `string` | No | Any valid string | Type: all, task, mention, invoice, alert |\n| `is_enabled` | `boolean` | **Yes** | Any valid boolean | Whether delivery on this channel is enabled |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"channel\": \"email\",\n  \"is_enabled\": false,\n  \"notification_type\": \"task\"\n}",
@@ -1899,7 +2402,7 @@
               ],
               "variable": []
             },
-            "description": "Register browser WebPush (VAPID) endpoint and encryption keys for this user.",
+            "description": "## Register WebPush device subscription\n\nRegister browser WebPush (VAPID) endpoint and encryption keys for this user.\n\n**Endpoint**: `POST {{base_url}}/api/v1/notification_engine/subscriptions`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - Subscriptions`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `endpoint` | `string` | **Yes** | Any valid string | Browser Push Service subscription URL |\n| `p256dh` | `string` | **Yes** | Any valid string | Client ECDH public key (P-256 curve) |\n| `auth` | `string` | **Yes** | Any valid string | Client authentication secret |\n| `user_agent` | `string` | No | Any valid string | Client browser / device user agent |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"auth\": \"tBHItJI5svbpez7KI4CCXg==\",\n  \"endpoint\": \"https://fcm.googleapis.com/fcm/send/sample_endpoint_token\",\n  \"p256dh\": \"BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QT9Q0A4APqOM89...\",\n  \"user_agent\": \"Mozilla/5.0 Chrome/120.0\"\n}",
@@ -1947,7 +2450,7 @@
                 }
               ]
             },
-            "description": "Remove a registered WebPush subscription endpoint."
+            "description": "## Unregister WebPush device subscription\n\nRemove a registered WebPush subscription endpoint.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/notification_engine/subscriptions/{subscription_id}`  \n**Tags**: `Multi-Channel Notification Engine, Notification Engine - Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `subscription_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }
@@ -1985,7 +2488,7 @@
               ],
               "variable": []
             },
-            "description": "Retrieve supported system languages and layout directions (LTR/RTL)."
+            "description": "## List supported system locales and script directions\n\nRetrieve supported system languages and layout directions (LTR/RTL).\n\n**Endpoint**: `GET {{base_url}}/api/v1/i18n/locales`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -2018,7 +2521,7 @@
               ],
               "variable": []
             },
-            "description": "Compile dictionary of UI strings for the active or requested language."
+            "description": "## Retrieve translation catalog for active or requested locale\n\nCompile dictionary of UI strings for the active or requested language.\n\n**Endpoint**: `GET {{base_url}}/api/v1/i18n/catalog`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `locale` | `query` | `string` | No | ISO locale code (defaults to Accept-Language or en) |\n| `module_name` | `query` | `string` | No | Optional module namespace filter |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2056,7 +2559,7 @@
               ],
               "variable": []
             },
-            "description": "Dynamically look up translation for a single term.",
+            "description": "## Translate string into target locale\n\nDynamically look up translation for a single term.\n\n**Endpoint**: `POST {{base_url}}/api/v1/i18n/translate`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `text` | `string` | **Yes** | Any valid string | Source string to translate |\n| `target_locale` | `string` | No | Any valid string | Target ISO language code |\n| `module_name` | `string` | No | Any valid string | Optional module context |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"module_name\": \"accounting\",\n  \"target_locale\": \"ar\",\n  \"text\": \"Submit Payment\"\n}",
@@ -2098,7 +2601,7 @@
               ],
               "variable": []
             },
-            "description": "Retrieve registered custom translation terms for the active company."
+            "description": "## List custom tenant translation terms\n\nRetrieve registered custom translation terms for the active company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/i18n/terms`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `module_name` | `query` | `string` | No | Filter by module |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2136,7 +2639,7 @@
               ],
               "variable": []
             },
-            "description": "Add or customize a localized term for the active tenant.",
+            "description": "## Create or override a translation term\n\nAdd or customize a localized term for the active tenant.\n\n**Endpoint**: `POST {{base_url}}/api/v1/i18n/terms`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `source_text` | `string` | **Yes** | Any valid string | English / base source term string |\n| `module_name` | `string` | No | Any valid string | Application module namespace |\n| `translations` | `object` | No | Any valid object | Locale to translated string map |\n| `context_hint` | `string` | No | Any valid string | Disambiguation hint for translators |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"context_hint\": \"Navigation menu item\",\n  \"module_name\": \"accounting\",\n  \"source_text\": \"Invoices\",\n  \"translations\": {\n    \"ar\": \"\\u0627\\u0644\\u0641\\u0648\\u0627\\u062a\\u064a\\u0631\",\n    \"en\": \"Invoices\"\n  }\n}",
@@ -2184,7 +2687,7 @@
                 }
               ]
             },
-            "description": "Retrieve details for a specific translation term."
+            "description": "## Get translation term details\n\nRetrieve details for a specific translation term.\n\n**Endpoint**: `GET {{base_url}}/api/v1/i18n/terms/{term_id}`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `term_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2228,7 +2731,7 @@
                 }
               ]
             },
-            "description": "Update translations or metadata for a custom term.",
+            "description": "## Update translation term\n\nUpdate translations or metadata for a custom term.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/i18n/terms/{term_id}`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `term_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `source_text` | `string` | No | Any valid string | source_text attribute |\n| `module_name` | `string` | No | Any valid string | module_name attribute |\n| `translations` | `object` | No | Any valid object | translations attribute |\n| `context_hint` | `string` | No | Any valid string | context_hint attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"translations\": {\n    \"ar\": \"\\u0627\\u0644\\u0641\\u0648\\u0627\\u062a\\u064a\\u0631 \\u0627\\u0644\\u0636\\u0631\\u064a\\u0628\\u064a\\u0629\",\n    \"en\": \"Tax Invoices\"\n  }\n}",
@@ -2276,7 +2779,7 @@
                 }
               ]
             },
-            "description": "Soft delete a translation term."
+            "description": "## Delete translation term\n\nSoft delete a translation term.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/i18n/terms/{term_id}`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `term_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }
@@ -2314,7 +2817,7 @@
               ],
               "variable": []
             },
-            "description": "Seed standard ISO countries, currencies, UOMs, tax types, and tags for tenant company."
+            "description": "## Bootstrap Company Iso Lookups\n\nSeed standard ISO countries, currencies, UOMs, tax types, and tags for tenant company.\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/seed`  \n**Tags**: `Normalized Master Data & Lookups, Lookups Master Data`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -2347,7 +2850,7 @@
               ],
               "variable": []
             },
-            "description": ""
+            "description": "## List Countries\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/countries`  \n**Tags**: `Normalized Master Data & Lookups, Countries`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `search` | `query` | `string` | No | Search by name or code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2385,7 +2888,7 @@
               ],
               "variable": []
             },
-            "description": "",
+            "description": "## Create Country\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/countries`  \n**Tags**: `Normalized Master Data & Lookups, Countries`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `code` | `string` | **Yes** | Any valid string | ISO-3166-1 alpha-3 code (e.g. USA, SAU) |\n| `code_alpha2` | `string` | No | Any valid string | ISO alpha-2 code (e.g. US, SA) |\n| `dialing_code` | `string` | No | Any valid string | dialing_code attribute |\n| `currency_code` | `string` | No | Any valid string | currency_code attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"USA\",\n  \"code_alpha2\": \"US\",\n  \"currency_code\": \"USD\",\n  \"dialing_code\": \"+1\",\n  \"name\": \"United States of America\"\n}",
@@ -2427,7 +2930,7 @@
               ],
               "variable": []
             },
-            "description": ""
+            "description": "## List Cities\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/cities`  \n**Tags**: `Normalized Master Data & Lookups, Cities`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `country_id` | `query` | `string` | No | Filter cities by country ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2465,7 +2968,7 @@
               ],
               "variable": []
             },
-            "description": "",
+            "description": "## Create City\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/cities`  \n**Tags**: `Normalized Master Data & Lookups, Cities`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `country_id` | `string` | **Yes** | Any valid string | country_id attribute |\n| `state_or_province` | `string` | No | Any valid string | state_or_province attribute |\n| `postal_code` | `string` | No | Any valid string | postal_code attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country_id\": \"c0000000-0000-0000-0000-000000000001\",\n  \"name\": \"New York\",\n  \"postal_code\": \"10001\",\n  \"state_or_province\": \"NY\"\n}",
@@ -2507,7 +3010,7 @@
               ],
               "variable": []
             },
-            "description": ""
+            "description": "## List Currencies\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/currencies`  \n**Tags**: `Normalized Master Data & Lookups, Currencies`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -2545,7 +3048,7 @@
               ],
               "variable": []
             },
-            "description": "",
+            "description": "## Create Currency\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/currencies`  \n**Tags**: `Normalized Master Data & Lookups, Currencies`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `string` | **Yes** | Any valid string | ISO-4217 Currency Code (e.g. USD, EUR) |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `symbol` | `string` | **Yes** | Any valid string | symbol attribute |\n| `decimal_places` | `integer` | No | Any valid integer | decimal_places attribute |\n| `is_base` | `boolean` | No | Any valid boolean | is_base attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"USD\",\n  \"decimal_places\": 2,\n  \"is_base\": true,\n  \"name\": \"US Dollar\",\n  \"symbol\": \"$\"\n}",
@@ -2587,7 +3090,7 @@
               ],
               "variable": []
             },
-            "description": ""
+            "description": "## List Units Of Measure\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/uom`  \n**Tags**: `Normalized Master Data & Lookups, Units of Measure`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `category` | `query` | `string` | No | Filter by category (weight, volume, unit, length, time) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2625,7 +3128,7 @@
               ],
               "variable": []
             },
-            "description": "",
+            "description": "## Create Unit Of Measure\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/uom`  \n**Tags**: `Normalized Master Data & Lookups, Units of Measure`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `code` | `string` | **Yes** | Any valid string | code attribute |\n| `category` | `string` | No | Any valid string | category attribute |\n| `rounding_precision` | `number` | No | Any valid number | rounding_precision attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"category\": \"weight\",\n  \"code\": \"KG\",\n  \"name\": \"Kilograms\",\n  \"rounding_precision\": 0.001\n}",
@@ -2667,7 +3170,7 @@
               ],
               "variable": []
             },
-            "description": ""
+            "description": "## List Tax Types\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/tax-types`  \n**Tags**: `Normalized Master Data & Lookups, Tax Types`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         },
@@ -2705,7 +3208,7 @@
               ],
               "variable": []
             },
-            "description": "",
+            "description": "## Create Tax Type\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/tax-types`  \n**Tags**: `Normalized Master Data & Lookups, Tax Types`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `code` | `string` | **Yes** | Any valid string | code attribute |\n| `rate` | `number` | **Yes** | Any valid number | rate attribute |\n| `is_inclusive` | `boolean` | No | Any valid boolean | is_inclusive attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"VAT_15\",\n  \"is_inclusive\": false,\n  \"name\": \"Standard VAT 15%\",\n  \"rate\": 15.0\n}",
@@ -2747,7 +3250,7 @@
               ],
               "variable": []
             },
-            "description": ""
+            "description": "## List Tags\n\n**Endpoint**: `GET {{base_url}}/api/v1/lookups/tags`  \n**Tags**: `Normalized Master Data & Lookups, Tags`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `model_target` | `query` | `string` | No | Filter tags by targeted model |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2785,7 +3288,7 @@
               ],
               "variable": []
             },
-            "description": "",
+            "description": "## Create Tag\n\n**Endpoint**: `POST {{base_url}}/api/v1/lookups/tags`  \n**Tags**: `Normalized Master Data & Lookups, Tags`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `color` | `string` | No | Any valid string | color attribute |\n| `model_target` | `string` | No | Any valid string | model_target attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"color\": \"#ef4444\",\n  \"model_target\": \"lead\",\n  \"name\": \"High Priority\"\n}",
@@ -2843,7 +3346,7 @@
                 }
               ]
             },
-            "description": "Retrieve all comments, notifications, and AI agent findings for target record."
+            "description": "## Get chronological chatter message thread for a record\n\nRetrieve all comments, notifications, and AI agent findings for target record.\n\n**Endpoint**: `GET {{base_url}}/api/v1/chatter/{res_model}/{res_id}/messages`  \n**Tags**: `Polymorphic Discussion & Real-time Collaboration, Chatter Messages`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2892,7 +3395,7 @@
                 }
               ]
             },
-            "description": "Post a new message to the entity thread and broadcast via WebSocket / Redis Pub/Sub.",
+            "description": "## Post a comment or AI finding to an entity chatter thread\n\nPost a new message to the entity thread and broadcast via WebSocket / Redis Pub/Sub.\n\n**Endpoint**: `POST {{base_url}}/api/v1/chatter/{res_model}/{res_id}/messages`  \n**Tags**: `Polymorphic Discussion & Real-time Collaboration, Chatter Messages`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `body` | `string` | **Yes** | Any valid string | Message text content formatted in Markdown |\n| `message_type` | `string` | No | `comment, notification, ai_finding, activity` | Category: user comment, system notification, AI finding, or task log |\n| `metadata_info` | `object` | No | Any valid object | Arbitrary metadata attributes |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"body\": \"Financial audit passed successfully without discrepancy.\",\n  \"message_type\": \"comment\",\n  \"metadata_info\": {\n    \"agent_model\": \"hermes-3\",\n    \"confidence\": 0.99\n  }\n}",
@@ -2945,7 +3448,7 @@
                 }
               ]
             },
-            "description": "List operational todo, calls, and meetings scheduled for an entity."
+            "description": "## List planned activities for a record\n\nList operational todo, calls, and meetings scheduled for an entity.\n\n**Endpoint**: `GET {{base_url}}/api/v1/chatter/{res_model}/{res_id}/activities`  \n**Tags**: `Polymorphic Discussion & Real-time Collaboration, Chatter Activities`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n| `include_completed` | `query` | `boolean` | No | Include finished activities |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -2994,7 +3497,7 @@
                 }
               ]
             },
-            "description": "Schedule a new task or deadline anchored to an entity.",
+            "description": "## Schedule an activity for a record\n\nSchedule a new task or deadline anchored to an entity.\n\n**Endpoint**: `POST {{base_url}}/api/v1/chatter/{res_model}/{res_id}/activities`  \n**Tags**: `Polymorphic Discussion & Real-time Collaboration, Chatter Activities`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `summary` | `string` | **Yes** | Any valid string | Brief title of scheduled action |\n| `activity_type` | `string` | No | `todo, call, meeting, review` | Operational nature of activity |\n| `assigned_to_id` | `string` | No | Any valid string | Target assignee user or agent UUID |\n| `due_date` | `string` | No | Any valid string | Deadline timestamp |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"activity_type\": \"review\",\n  \"assigned_to_id\": \"u0000000-0000-0000-0000-000000000001\",\n  \"due_date\": \"2026-09-20T17:00:00Z\",\n  \"summary\": \"Conduct final contract and tax audit review\"\n}",
@@ -3043,7 +3546,7 @@
                 }
               ]
             },
-            "description": "Mark scheduled activity as completed and log resolution to the thread."
+            "description": "## Complete a scheduled activity\n\nMark scheduled activity as completed and log resolution to the thread.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/chatter/activities/{activity_id}/complete`  \n**Tags**: `Polymorphic Discussion & Real-time Collaboration, Chatter Activities`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `activity_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }
@@ -3078,7 +3581,7 @@
               ],
               "variable": []
             },
-            "description": "Asynchronous system health check verifying database, redis, and celery connectivity.",
+            "description": "## Health Check\n\nAsynchronous system health check verifying database, redis, and celery connectivity.\n\n**Endpoint**: `GET {{base_url}}/health`  \n**Tags**: `System Diagnostics`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n",
             "auth": {
               "type": "noauth"
             }
@@ -3109,7 +3612,7 @@
               "path": [],
               "variable": []
             },
-            "description": "Root API platform status and documentation links."
+            "description": "## Root Endpoint\n\nRoot API platform status and documentation links.\n\n**Endpoint**: `GET {{base_url}}/`  \n**Tags**: `System Diagnostics`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         }
@@ -3152,7 +3655,7 @@
               ],
               "variable": []
             },
-            "description": "Trigger packaging of database dump, filestore blobs, and manifest into a .tar.gz bundle.",
+            "description": "## Trigger atomic backup archive generation\n\nTrigger packaging of database dump, filestore blobs, and manifest into a .tar.gz bundle.\n\n**Endpoint**: `POST {{base_url}}/api/v1/backup/create`  \n**Tags**: `Unified Atomic Backup & Archive Engine, Backup & Archive Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `backup_type` | `string` | No | Any valid string | Type of backup: full, database_only, filestore_only |\n| `includes_filestore` | `boolean` | No | Any valid boolean | Whether to include content-addressable storage attachments |\n| `async_run` | `boolean` | No | Any valid boolean | Whether to generate archive in Celery background or synchronously |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `202` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"async_run\": true,\n  \"backup_type\": \"full\",\n  \"includes_filestore\": true\n}",
@@ -3194,7 +3697,7 @@
               ],
               "variable": []
             },
-            "description": "Retrieve historical backup archives for the authenticated company."
+            "description": "## List tenant backup archives\n\nRetrieve historical backup archives for the authenticated company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/backup/list`  \n**Tags**: `Unified Atomic Backup & Archive Engine, Backup & Archive Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `status_filter` | `query` | `string` | No | Filter by status: completed, generating, failed |\n| `limit` | `query` | `integer` | No | - |\n| `offset` | `query` | `integer` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3232,7 +3735,7 @@
                 }
               ]
             },
-            "description": "Retrieve detailed telemetry and checksums for a backup archive."
+            "description": "## Get backup archive metadata and status\n\nRetrieve detailed telemetry and checksums for a backup archive.\n\n**Endpoint**: `GET {{base_url}}/api/v1/backup/{backup_id}`  \n**Tags**: `Unified Atomic Backup & Archive Engine, Backup & Archive Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `backup_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3270,7 +3773,7 @@
                 }
               ]
             },
-            "description": "Delete backup database record and remove physical file from disk."
+            "description": "## Delete backup archive\n\nDelete backup database record and remove physical file from disk.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/backup/{backup_id}`  \n**Tags**: `Unified Atomic Backup & Archive Engine, Backup & Archive Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `backup_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3309,7 +3812,7 @@
                 }
               ]
             },
-            "description": "Stream binary .tar.gz backup archive to client."
+            "description": "## Download compressed backup bundle (.tar.gz)\n\nStream binary .tar.gz backup archive to client.\n\n**Endpoint**: `GET {{base_url}}/api/v1/backup/{backup_id}/download`  \n**Tags**: `Unified Atomic Backup & Archive Engine, Backup & Archive Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `backup_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3348,7 +3851,7 @@
                 }
               ]
             },
-            "description": "Verify SHA-256 checksum and internal structure (manifest.json and dump.sql)."
+            "description": "## Verify cryptographic integrity of backup archive\n\nVerify SHA-256 checksum and internal structure (manifest.json and dump.sql).\n\n**Endpoint**: `POST {{base_url}}/api/v1/backup/{backup_id}/verify`  \n**Tags**: `Unified Atomic Backup & Archive Engine, Backup & Archive Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `backup_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }
@@ -3386,7 +3889,7 @@
               ],
               "variable": []
             },
-            "description": "Upload dataset and initiate schema-mapped entity import."
+            "description": "## Upload dataset file and trigger bulk import\n\nUpload dataset and initiate schema-mapped entity import.\n\n**Endpoint**: `POST {{base_url}}/api/v1/import_export/import`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `202` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3424,7 +3927,7 @@
               ],
               "variable": []
             },
-            "description": "Trigger background or direct export of entity records to CSV, Excel, or JSON.",
+            "description": "## Trigger bulk model export\n\nTrigger background or direct export of entity records to CSV, Excel, or JSON.\n\n**Endpoint**: `POST {{base_url}}/api/v1/import_export/export`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `model_name` | `string` | **Yes** | Any valid string | Target entity model name (e.g. lookups.country) |\n| `file_format` | `string` | No | Any valid string | Export format: csv, xlsx, json |\n| `fields` | `array` | No | Any valid array | Subset of fields to include in export |\n| `filter_criteria` | `object` | No | Any valid object | Filter criteria AST |\n| `async_job` | `boolean` | No | Any valid boolean | Whether to run in Celery background or return immediate stream |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `202` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"async_job\": true,\n  \"fields\": [\n    \"code\",\n    \"name\",\n    \"phone_code\"\n  ],\n  \"file_format\": \"csv\",\n  \"filter_criteria\": {},\n  \"model_name\": \"lookups.country\"\n}",
@@ -3466,7 +3969,7 @@
               ],
               "variable": []
             },
-            "description": "List recent bulk import and export jobs for the current tenant."
+            "description": "## List tenant import/export jobs\n\nList recent bulk import and export jobs for the current tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/import_export/jobs`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `job_type` | `query` | `string` | No | Filter by job_type: import or export |\n| `limit` | `query` | `integer` | No | - |\n| `offset` | `query` | `integer` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3505,7 +4008,7 @@
                 }
               ]
             },
-            "description": "Retrieve detailed progress, row counts, and error telemetry for a job."
+            "description": "## Get job execution telemetry and progress\n\nRetrieve detailed progress, row counts, and error telemetry for a job.\n\n**Endpoint**: `GET {{base_url}}/api/v1/import_export/jobs/{job_id}`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `job_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -3545,7 +4048,7 @@
                 }
               ]
             },
-            "description": "Stream exported CSV, Excel, or JSON file to client."
+            "description": "## Download generated export file\n\nStream exported CSV, Excel, or JSON file to client.\n\n**Endpoint**: `GET {{base_url}}/api/v1/import_export/jobs/{job_id}/download`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `job_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }

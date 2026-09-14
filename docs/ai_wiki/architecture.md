@@ -314,3 +314,27 @@ The Orchestrator MCP server exposes two typed tools for the Chief of Staff:
   - Creates the primary tenant `Company` and provisions the Super Administrator (`is_superuser=True`) with global universal access across all current and future modules.
   - Automatically exports freshly synchronized `openapi.json`, `postman_collection.json`, and `postman_environment.json`.
 
+---
+
+### 6.3 Modular Deactivation & Polymorphic Linkage Standard (معيار إلغاء التفعيل والربط متعدد الأشكال)
+
+#### 6.3.1 Non-Destructive Lifecycle Policy (عدم حذف الجداول أو السجلات)
+- **Zero Schema Purging**: The platform strictly forbids executing destructive DDL statements (`DROP TABLE`, `DROP COLUMN`) or purging operational databases when a functional business module is uninstalled or deactivated.
+- **Dynamic Route Detachment**: Deactivating a module toggles its manifest activation flag within the Module Registry and gracefully revokes its registered endpoints from the FastAPI routing table in-memory without breaking foreign tables.
+- **Regulatory Audit Compliance**: Financial, tax, accounting, and compliance records belonging to a deactivated module are permanently preserved with complete historical audit actor timestamps (`created_at`, `created_by_id`, `updated_at`, `updated_by_id`).
+
+#### 6.3.2 Polymorphic Cross-Module Linkages (`res_model` + `res_id`)
+- **Prohibition of Direct Cross-Module Foreign Keys**:
+  - Direct PostgreSQL foreign key constraints (e.g. `ForeignKey("accounting_invoices.id")`) across separate modular domains are strictly prohibited.
+  - Hard schema foreign keys bind separate module tables physically in the database engine, rendering independent module uninstallation, hot-reloading, or deactivation impossible without database constraint violations or hazardous cascading deletes.
+- **Polymorphic Reference Standard**:
+  - All cross-module entity relationships MUST use the decoupled polymorphic linkage pattern:
+    - `res_model: Mapped[str]`: Target entity model namespace identifier (e.g. `"accounting.invoice"`, `"crm.lead"`, `"inventory.item"`).
+    - `res_id: Mapped[uuid.UUID]`: Target entity primary key UUID.
+  - Entity lookups and validations are resolved dynamically through Kernel service APIs, event subscribers, or background jobs.
+
+#### 6.3.3 Kernel Topological Dependency Enforcement (التحقق الطوبولوجي من التبعيات)
+- **Dependency Inversion Guard**: A module cannot be deactivated if any currently active downstream modules declare it as a dependency in their `manifest.py`.
+- **Topological Order**: The Kernel dependency resolver verifies that deactivation follows reverse topological DAG order, preventing orphaned references and dead execution loops.
+
+

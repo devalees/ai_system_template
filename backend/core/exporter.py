@@ -90,6 +90,85 @@ def _extract_body_example(method_data: Dict[str, Any], openapi_schema: Dict[str,
     return None
 
 
+def _format_markdown_docs(op: Dict[str, Any], openapi_schema: Dict[str, Any], path: str, method: str) -> str:
+    """Synthesize comprehensive GitHub Markdown documentation for Postman request description."""
+    summary = op.get("summary") or f"{method.upper()} {path}"
+    description = op.get("description", "").strip()
+
+    lines = [f"## {summary}\n"]
+    if description:
+        lines.append(f"{description}\n")
+
+    lines.append(f"**Endpoint**: `{method.upper()} {{{{base_url}}}}{path}`  \n**Tags**: `{', '.join(op.get('tags', []))}`\n")
+
+    # 1. URL Path & Query Parameters Table
+    params = op.get("parameters", [])
+    if params:
+        lines.append("### URL & Query Parameters\n")
+        lines.append("| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |")
+        for p in params:
+            p_name = p.get("name", "")
+            p_in = p.get("in", "")
+            p_req = "**Yes**" if p.get("required") else "No"
+            p_desc = p.get("description", "").replace("\n", " ").strip() or "-"
+            p_schema = p.get("schema", {})
+            p_type = p_schema.get("type", "string")
+            lines.append(f"| `{p_name}` | `{p_in}` | `{p_type}` | {p_req} | {p_desc} |")
+        lines.append("\n")
+
+    # 2. Request Body Schema Table
+    req_body = op.get("requestBody", {})
+    content = req_body.get("content", {}).get("application/json", {})
+    if content:
+        schema = content.get("schema", {})
+        ref = schema.get("$ref")
+        component_schema = {}
+        if ref:
+            schema_name = ref.split("/")[-1]
+            component_schema = openapi_schema.get("components", {}).get("schemas", {}).get(schema_name, {})
+        else:
+            component_schema = schema
+
+        props = component_schema.get("properties", {})
+        required_fields = set(component_schema.get("required", []))
+
+        if props:
+            lines.append("### Request Body Fields (JSON Payload)\n")
+            lines.append("| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |")
+            for prop_name, prop_val in props.items():
+                p_type = prop_val.get("type", "string")
+                p_req = "**Yes**" if prop_name in required_fields else "No"
+
+                enums = prop_val.get("enum")
+                if not enums and "anyOf" in prop_val:
+                    for opt in prop_val["anyOf"]:
+                        if "enum" in opt:
+                            enums = opt["enum"]
+                            break
+                        elif "type" in opt and opt["type"] != "null":
+                            p_type = opt["type"]
+
+                allowed_str = f"`{', '.join(str(e) for e in enums)}`" if enums else "Any valid " + p_type
+                p_desc = prop_val.get("description", "").replace("\n", " ").strip()
+                if not p_desc:
+                    p_desc = f"{prop_name} attribute"
+
+                lines.append(f"| `{prop_name}` | `{p_type}` | {p_req} | {allowed_str} | {p_desc} |")
+            lines.append("\n")
+
+    # 3. Response Status Codes Table
+    responses = op.get("responses", {})
+    if responses:
+        lines.append("### Expected HTTP Responses\n")
+        lines.append("| Status Code | Description |\n| :--- | :--- |")
+        for code, resp_val in sorted(responses.items()):
+            r_desc = resp_val.get("description", "").replace("\n", " ").strip() or "Standard response"
+            lines.append(f"| `{code}` | {r_desc} |")
+        lines.append("\n")
+
+    return "\n".join(lines)
+
+
 def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
     """Convert OpenAPI 3.1 document to Postman Collection v2.1.0."""
     collection = {
@@ -118,7 +197,7 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
             op = path_item[method]
             tag = op.get("tags", ["General"])[0]
             summary = op.get("summary") or f"{method.upper()} {path}"
-            description = op.get("description", "")
+            markdown_description = _format_markdown_docs(op, openapi_data, path, method)
 
             # Headers
             headers = [
@@ -132,7 +211,7 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
                     "method": method.upper(),
                     "header": headers,
                     "url": _build_postman_url(path),
-                    "description": description,
+                    "description": markdown_description,
                 },
                 "response": [],
             }

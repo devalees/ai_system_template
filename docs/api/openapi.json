@@ -13,7 +13,7 @@
           "Authentication"
         ],
         "summary": "Register User",
-        "description": "Register a new user account (human employee or AI agent) with strict tenant registration gating.",
+        "description": "Register a new user account (human employee or first-class AI agent).\n\nSecurity & Access:\n- Public endpoint.\n- Strictly gated by target tenant's `allow_registration` policy.\n\nValidation Rules:\n- Rejects if `email` or `username` already exists (400 Bad Request).\n- If `company_id` is provided, verifies that company exists (404) and has `allow_registration == True` (403).\n- If `company_id` is omitted, attempts to bind to an active open-registration company; otherwise rejects (403).",
         "operationId": "register_user_api_v1_identity_rbac_auth_register_post",
         "requestBody": {
           "content": {
@@ -56,7 +56,7 @@
           "Authentication"
         ],
         "summary": "Login",
-        "description": "Authenticate with username/email and password, returning JWT bearer token.",
+        "description": "Authenticate with username/email and password, returning a signed JWT bearer token.\n\nSecurity & Access:\n- Public endpoint.\n- Returns JWT token containing user identity and active tenant `company_id`.",
         "operationId": "login_api_v1_identity_rbac_auth_login_post",
         "requestBody": {
           "content": {
@@ -99,7 +99,7 @@
           "Authentication"
         ],
         "summary": "Get Me",
-        "description": "Return currently authenticated profile metadata.",
+        "description": "Return currently authenticated profile metadata including assigned RBAC groups.",
         "operationId": "get_me_api_v1_identity_rbac_auth_me_get",
         "responses": {
           "200": {
@@ -107,7 +107,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserRead"
+                  "$ref": "#/components/schemas/UserDetailRead"
                 }
               }
             }
@@ -126,18 +126,23 @@
           "Identity & Contextual RBAC",
           "Identity Administration"
         ],
-        "summary": "Create Internal User",
-        "description": "Provision an internal user account within an organization (Admin or Superuser).\n\nBypasses allow_registration restriction because this is an authenticated internal action.",
-        "operationId": "create_internal_user_api_v1_identity_rbac_users_post",
+        "summary": "Create User",
+        "description": "Provision an internal user account within an organization (Admin or Superuser).\n\nSecurity & Access:\n- Requires authenticated Administrator or Superuser.\n- Bypasses public `allow_registration` restrictions.",
+        "operationId": "create_user_api_v1_identity_rbac_users_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/InternalUserCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -160,12 +165,260 @@
               }
             }
           }
-        },
+        }
+      },
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "List Users",
+        "description": "List users within the caller's active company with optional search and filters.",
+        "operationId": "list_users_api_v1_identity_rbac_users_get",
         "security": [
           {
             "OAuth2PasswordBearer": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "user_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by actor type ('human' or 'ai_agent')",
+              "title": "User Type"
+            },
+            "description": "Filter by actor type ('human' or 'ai_agent')"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search by username, full name, or email",
+              "title": "Search"
+            },
+            "description": "Search by username, full name, or email"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserRead"
+                  },
+                  "title": "Response List Users Api V1 Identity Rbac Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/users/{user_id}": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Get User",
+        "description": "Retrieve detailed user profile including assigned RBAC groups.",
+        "operationId": "get_user_api_v1_identity_rbac_users__user_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Update User",
+        "description": "Update user account attributes, active toggle, group assignments, or reset password.",
+        "operationId": "update_user_api_v1_identity_rbac_users__user_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Delete User",
+        "description": "Soft-delete a user account.\n\nSecurity Guard:\n- Users cannot delete their own active authenticated account.",
+        "operationId": "delete_user_api_v1_identity_rbac_users__user_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Delete User Api V1 Identity Rbac Users  User Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/identity_rbac/companies": {
@@ -352,35 +605,40 @@
             }
           }
         }
-      }
-    },
-    "/api/v1/identity_rbac/permissions": {
-      "post": {
+      },
+      "delete": {
         "tags": [
           "Identity & Contextual RBAC",
-          "RBAC Administration"
+          "Tenant Administration"
         ],
-        "summary": "Create Permission",
-        "description": "Create a granular model capability (Superuser or Admin).",
-        "operationId": "create_permission_api_v1_identity_rbac_permissions_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PermissionCreate"
-              }
+        "summary": "Delete Company",
+        "description": "Soft-delete an organization tenant (Superuser only).",
+        "operationId": "delete_company_api_v1_identity_rbac_companies__company_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Create Permission Api V1 Identity Rbac Permissions Post"
+                  "title": "Response Delete Company Api V1 Identity Rbac Companies  Company Id  Delete"
                 }
               }
             }
@@ -395,22 +653,366 @@
               }
             }
           }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/permissions": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Create Permission",
+        "description": "Create a granular model capability (Superuser only).\n\nCanonical Code Generation:\n- If `code` is omitted, auto-generates: `{module_name}.{resource}.{action}`.",
+        "operationId": "create_permission_api_v1_identity_rbac_permissions_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "List Permissions",
+        "description": "List registered capabilities with optional category and scope filters.",
+        "operationId": "list_permissions_api_v1_identity_rbac_permissions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "module_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by system module namespace",
+              "title": "Module Name"
+            },
+            "description": "Filter by system module namespace"
+          },
+          {
+            "name": "resource",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by business model/entity name",
+              "title": "Resource"
+            },
+            "description": "Filter by business model/entity name"
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by operation action type",
+              "title": "Action"
+            },
+            "description": "Filter by operation action type"
+          },
+          {
+            "name": "ownership_scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by ownership boundary ('GLOBAL', 'TEAM', 'OWN')",
+              "title": "Ownership Scope"
+            },
+            "description": "Filter by ownership boundary ('GLOBAL', 'TEAM', 'OWN')"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermissionRead"
+                  },
+                  "title": "Response List Permissions Api V1 Identity Rbac Permissions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/permissions/{permission_id}": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Get Permission",
+        "description": "Retrieve details of a specific permission capability.",
+        "operationId": "get_permission_api_v1_identity_rbac_permissions__permission_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Update Permission",
+        "description": "Update permission title or ownership scope (Superuser only).",
+        "operationId": "update_permission_api_v1_identity_rbac_permissions__permission_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Delete Permission",
+        "description": "Soft-delete an RBAC permission capability (Superuser only).",
+        "operationId": "delete_permission_api_v1_identity_rbac_permissions__permission_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Delete Permission Api V1 Identity Rbac Permissions  Permission Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/groups": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "List Groups",
+        "description": "List RBAC groups for active tenant with count of assigned permissions.",
+        "operationId": "list_groups_api_v1_identity_rbac_groups_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GroupRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Groups Api V1 Identity Rbac Groups Get"
+                }
+              }
+            }
+          }
         },
         "security": [
           {
             "OAuth2PasswordBearer": []
           }
         ]
-      }
-    },
-    "/api/v1/identity_rbac/groups": {
+      },
       "post": {
         "tags": [
           "Identity & Contextual RBAC",
           "RBAC Administration"
         ],
         "summary": "Create Group",
-        "description": "Create an RBAC Group with linked permissions.",
+        "description": "Create an RBAC Group/Role with linked permissions (Superuser or Tenant Admin).",
         "operationId": "create_group_api_v1_identity_rbac_groups_post",
         "requestBody": {
           "content": {
@@ -428,8 +1030,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "title": "Response Create Group Api V1 Identity Rbac Groups Post"
+                  "$ref": "#/components/schemas/GroupRead"
                 }
               }
             }
@@ -450,6 +1051,163 @@
             "OAuth2PasswordBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/identity_rbac/groups/{group_id}": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Get Group",
+        "description": "Retrieve detailed RBAC group with full list of assigned permissions.",
+        "operationId": "get_group_api_v1_identity_rbac_groups__group_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Update Group",
+        "description": "Update group title, description, or reassign permission links.",
+        "operationId": "update_group_api_v1_identity_rbac_groups__group_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "RBAC Administration"
+        ],
+        "summary": "Delete Group",
+        "description": "Soft-delete an RBAC group.",
+        "operationId": "delete_group_api_v1_identity_rbac_groups__group_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Delete Group Api V1 Identity Rbac Groups  Group Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/audit/": {
@@ -5017,12 +5775,12 @@
             "maxLength": 50,
             "minLength": 2,
             "title": "Code",
-            "description": "Unique tenant identification code"
+            "description": "Unique tenant identification code (alphanumeric)"
           },
           "allow_registration": {
             "type": "boolean",
             "title": "Allow Registration",
-            "description": "Whether public self-registration via /auth/register is permitted for this tenant",
+            "description": "Whether public self-registration via /auth/register is permitted for this tenant. If False, users must be invited/created by an admin",
             "default": false
           },
           "email_domain": {
@@ -5036,7 +5794,7 @@
               }
             ],
             "title": "Email Domain",
-            "description": "Optional corporate email domain constraint"
+            "description": "Optional corporate email domain restriction"
           },
           "currency_id": {
             "anyOf": [
@@ -5049,7 +5807,7 @@
               }
             ],
             "title": "Currency Id",
-            "description": "Base accounting currency ISO code",
+            "description": "Base accounting currency ISO 4217 code",
             "default": "USD"
           }
         },
@@ -5059,6 +5817,7 @@
           "code"
         ],
         "title": "CompanyCreate",
+        "description": "Schema for creating a new tenant organization.",
         "example": {
           "allow_registration": false,
           "code": "SOV-MAIN",
@@ -5128,7 +5887,8 @@
           "is_active",
           "created_at"
         ],
-        "title": "CompanyRead"
+        "title": "CompanyRead",
+        "description": "Serialized representation of a tenant company."
       },
       "CompanyUpdate": {
         "properties": {
@@ -5143,7 +5903,8 @@
                 "type": "null"
               }
             ],
-            "title": "Name"
+            "title": "Name",
+            "description": "Updated company name"
           },
           "code": {
             "anyOf": [
@@ -5156,7 +5917,8 @@
                 "type": "null"
               }
             ],
-            "title": "Code"
+            "title": "Code",
+            "description": "Updated company code"
           },
           "allow_registration": {
             "anyOf": [
@@ -5168,7 +5930,7 @@
               }
             ],
             "title": "Allow Registration",
-            "description": "Toggle public registration permission"
+            "description": "Toggle public registration policy (True = open, False = internal only)"
           },
           "email_domain": {
             "anyOf": [
@@ -5180,7 +5942,8 @@
                 "type": "null"
               }
             ],
-            "title": "Email Domain"
+            "title": "Email Domain",
+            "description": "Updated corporate domain"
           },
           "currency_id": {
             "anyOf": [
@@ -5192,7 +5955,8 @@
                 "type": "null"
               }
             ],
-            "title": "Currency Id"
+            "title": "Currency Id",
+            "description": "Updated base currency code"
           },
           "is_active": {
             "anyOf": [
@@ -5203,11 +5967,13 @@
                 "type": "null"
               }
             ],
-            "title": "Is Active"
+            "title": "Is Active",
+            "description": "Active status toggle (deactivating locks all users out)"
           }
         },
         "type": "object",
-        "title": "CompanyUpdate"
+        "title": "CompanyUpdate",
+        "description": "Schema for updating tenant configuration."
       },
       "ConnectionTestResponse": {
         "properties": {
@@ -5760,6 +6526,54 @@
             "type": "string",
             "maxLength": 50,
             "minLength": 2,
+            "title": "Name",
+            "description": "Unique role/group title within the organization"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational scope and responsibility summary",
+            "default": ""
+          },
+          "permission_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Permission Ids",
+            "description": "List of granular Permission UUIDs to link to this group"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "GroupCreate",
+        "description": "Schema for creating a new RBAC role/group with assigned permissions.",
+        "example": {
+          "description": "Read and review access to general ledger and journal entries",
+          "name": "Financial Auditors",
+          "permission_ids": []
+        }
+      },
+      "GroupDetailRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
             "title": "Name"
           },
           "description": {
@@ -5774,27 +6588,121 @@
             "title": "Description",
             "default": ""
           },
-          "permission_ids": {
+          "permissions": {
             "items": {
-              "type": "string",
-              "format": "uuid"
+              "$ref": "#/components/schemas/PermissionRead"
             },
             "type": "array",
-            "title": "Permission Ids"
+            "title": "Permissions",
+            "description": "List of linked permission objects"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
-          "name"
+          "id",
+          "name",
+          "created_at"
         ],
-        "title": "GroupCreate",
-        "example": {
-          "description": "Read and review access to general ledger and journal entries",
-          "name": "Financial Auditors",
-          "permission_ids": [
-            "p0000000-0000-0000-0000-000000000001"
-          ]
-        }
+        "title": "GroupDetailRead",
+        "description": "Detailed group representation including full linked permission objects."
+      },
+      "GroupRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "default": ""
+          },
+          "permissions_count": {
+            "type": "integer",
+            "title": "Permissions Count",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at"
+        ],
+        "title": "GroupRead",
+        "description": "Basic serialized representation of an RBAC group."
+      },
+      "GroupUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Updated group title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Updated group description"
+          },
+          "permission_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permission Ids",
+            "description": "Full replacement list of linked Permission UUIDs"
+          }
+        },
+        "type": "object",
+        "title": "GroupUpdate",
+        "description": "Schema for updating group metadata or reassigning permissions."
       },
       "HTTPValidationError": {
         "properties": {
@@ -5982,13 +6890,13 @@
             "maxLength": 50,
             "minLength": 3,
             "title": "Username",
-            "description": "Alphanumeric unique login username"
+            "description": "Alphanumeric login username without whitespace"
           },
           "password": {
             "type": "string",
             "minLength": 6,
             "title": "Password",
-            "description": "Cleartext password (hashed using bcrypt)"
+            "description": "Cleartext initial password"
           },
           "full_name": {
             "type": "string",
@@ -6008,13 +6916,13 @@
           "preferred_language": {
             "type": "string",
             "title": "Preferred Language",
-            "description": "ISO 639-1 language code",
+            "description": "Preferred locale code ('en', 'ar')",
             "default": "en"
           },
           "is_superuser": {
             "type": "boolean",
             "title": "Is Superuser",
-            "description": "Superuser access flag",
+            "description": "Global superuser flag (bypasses all RBAC capability checks)",
             "default": false
           },
           "group_ids": {
@@ -6024,7 +6932,7 @@
             },
             "type": "array",
             "title": "Group Ids",
-            "description": "Optional RBAC group IDs to link"
+            "description": "List of RBAC Group UUIDs to immediately assign"
           },
           "company_id": {
             "anyOf": [
@@ -6037,7 +6945,7 @@
               }
             ],
             "title": "Company Id",
-            "description": "Target company ID (defaults to active company)"
+            "description": "Target company UUID (defaults to caller's company)"
           }
         },
         "type": "object",
@@ -6048,15 +6956,16 @@
           "full_name"
         ],
         "title": "InternalUserCreate",
+        "description": "Schema for administrative user provisioning (bypasses allow_registration restrictions).",
         "example": {
-          "email": "employee@sovereign.local",
-          "full_name": "Internal Employee",
+          "email": "auditor@sovereign.local",
+          "full_name": "QA Auditor",
           "group_ids": [],
           "is_superuser": false,
           "password": "StrongPassword2026!",
           "preferred_language": "en",
           "user_type": "human",
-          "username": "employee1"
+          "username": "qa_auditor"
         }
       },
       "LocaleInfo": {
@@ -6109,12 +7018,12 @@
           "identifier": {
             "type": "string",
             "title": "Identifier",
-            "description": "Username or email address"
+            "description": "Login username or registered corporate email address"
           },
           "password": {
             "type": "string",
             "title": "Password",
-            "description": "User password"
+            "description": "Cleartext password to verify against hashed bcrypt record"
           }
         },
         "type": "object",
@@ -6123,9 +7032,10 @@
           "password"
         ],
         "title": "LoginRequest",
+        "description": "Request payload for JWT authentication.",
         "example": {
-          "identifier": "sconnor",
-          "password": "StrongPassword2026!"
+          "identifier": "admin",
+          "password": "AdminPassword2026!"
         }
       },
       "MailMessageCreate": {
@@ -7425,6 +8335,90 @@
       },
       "PermissionCreate": {
         "properties": {
+          "module_name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Module Name",
+            "description": "Parent system module namespace (e.g. 'accounting', 'crm', 'sales', 'identity_rbac')"
+          },
+          "resource": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Resource",
+            "description": "Target business entity or model name (e.g. 'invoice', 'lead', 'order', 'user')"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "read",
+              "create",
+              "update",
+              "delete",
+              "manage",
+              "approve",
+              "export"
+            ],
+            "title": "Action",
+            "description": "Operational action type: 'read' (view), 'create' (insert), 'update' (edit), 'delete' (soft-delete), 'manage' (full admin), 'approve' (sign-off), or 'export' (bulk download)"
+          },
+          "ownership_scope": {
+            "type": "string",
+            "enum": [
+              "GLOBAL",
+              "TEAM",
+              "OWN"
+            ],
+            "title": "Ownership Scope",
+            "description": "3-tier record ownership boundary: 'GLOBAL' (access any company record), 'TEAM' (restricted to user's team_id), 'OWN' (restricted to records created by user)",
+            "default": "GLOBAL"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Name",
+            "description": "Human-readable title describing the capability"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "Unique canonical identifier. If omitted, auto-generated as '{module_name}.{resource}.{action}'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "module_name",
+          "resource",
+          "action",
+          "name"
+        ],
+        "title": "PermissionCreate",
+        "description": "Schema for registering a granular model capability.",
+        "example": {
+          "action": "read",
+          "code": "accounting.invoice.read",
+          "module_name": "accounting",
+          "name": "Read Accounting Invoices",
+          "ownership_scope": "GLOBAL",
+          "resource": "invoice"
+        }
+      },
+      "PermissionRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
           "code": {
             "type": "string",
             "title": "Code"
@@ -7437,30 +8431,75 @@
             "type": "string",
             "title": "Module Name"
           },
+          "resource": {
+            "type": "string",
+            "title": "Resource"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
           "ownership_scope": {
             "type": "string",
-            "enum": [
-              "GLOBAL",
-              "TEAM",
-              "OWN"
-            ],
-            "title": "Ownership Scope",
-            "default": "GLOBAL"
+            "title": "Ownership Scope"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
+          "id",
           "code",
           "name",
-          "module_name"
+          "module_name",
+          "resource",
+          "action",
+          "ownership_scope",
+          "created_at"
         ],
-        "title": "PermissionCreate",
-        "example": {
-          "code": "accounting.invoice.post",
-          "module_name": "accounting",
-          "name": "Post Invoices",
-          "ownership_scope": "GLOBAL"
-        }
+        "title": "PermissionRead",
+        "description": "Full serialized capability representation."
+      },
+      "PermissionUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Updated display title"
+          },
+          "ownership_scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "GLOBAL",
+                  "TEAM",
+                  "OWN"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ownership Scope",
+            "description": "Updated ownership scope constraint"
+          }
+        },
+        "type": "object",
+        "title": "PermissionUpdate",
+        "description": "Schema for modifying an existing permission's title or ownership scope."
       },
       "PushSubscriptionCreate": {
         "properties": {
@@ -8118,20 +9157,24 @@
         "properties": {
           "access_token": {
             "type": "string",
-            "title": "Access Token"
+            "title": "Access Token",
+            "description": "Cryptographically signed JWT bearer token"
           },
           "token_type": {
             "type": "string",
             "title": "Token Type",
+            "description": "OAuth2 authorization scheme header prefix",
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/UserRead"
+            "$ref": "#/components/schemas/UserRead",
+            "description": "Active user metadata snapshot"
           },
           "company_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Company Id"
+            "title": "Company Id",
+            "description": "Primary tenant company UUID for context propagation"
           }
         },
         "type": "object",
@@ -8141,20 +9184,21 @@
           "company_id"
         ],
         "title": "TokenResponse",
+        "description": "JWT bearer token response containing active profile metadata.",
         "example": {
           "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "company_id": "6f4539e5-a36c-488a-8c3b-2004a5884e33",
           "token_type": "bearer",
           "user": {
-            "company_id": "a0000000-0000-0000-0000-000000000001",
-            "email": "sarah.connor@sovereign.local",
-            "full_name": "Sarah Connor",
-            "id": "u0000000-0000-0000-0000-000000000001",
+            "company_id": "6f4539e5-a36c-488a-8c3b-2004a5884e33",
+            "email": "admin@admin.com",
+            "full_name": "Super Administrator",
+            "id": "1c63490d-575f-4a0f-8424-43768a70c99d",
             "is_active": true,
-            "is_superuser": false,
+            "is_superuser": true,
             "preferred_language": "en",
             "user_type": "human",
-            "username": "sconnor"
+            "username": "admin"
           }
         }
       },
@@ -8518,25 +9562,25 @@
             "type": "string",
             "format": "email",
             "title": "Email",
-            "description": "Unique corporate email address"
+            "description": "Unique corporate email address used for notifications and login identification"
           },
           "username": {
             "type": "string",
             "maxLength": 50,
             "minLength": 3,
             "title": "Username",
-            "description": "Alphanumeric unique login username"
+            "description": "Alphanumeric unique login username (strictly no spaces)"
           },
           "password": {
             "type": "string",
             "minLength": 6,
             "title": "Password",
-            "description": "Cleartext password (hashed using bcrypt upon ingestion)"
+            "description": "Cleartext password (hashed with bcrypt upon ingestion)"
           },
           "full_name": {
             "type": "string",
             "title": "Full Name",
-            "description": "Display name for human employee or AI agent"
+            "description": "Full display name for the employee or autonomous AI agent"
           },
           "user_type": {
             "type": "string",
@@ -8545,13 +9589,13 @@
               "ai_agent"
             ],
             "title": "User Type",
-            "description": "Actor classification: human or ai_agent",
+            "description": "Actor classification: 'human' employee or first-class 'ai_agent'",
             "default": "human"
           },
           "preferred_language": {
             "type": "string",
             "title": "Preferred Language",
-            "description": "ISO 639-1 language code",
+            "description": "ISO 639-1 language code for localized emails and UI rendering (e.g. 'en', 'ar')",
             "default": "en"
           },
           "company_id": {
@@ -8565,7 +9609,7 @@
               }
             ],
             "title": "Company Id",
-            "description": "Tenant company association (auto-injected if omitted)"
+            "description": "Target company UUID. Required if multiple tenants exist or if registration is gated"
           }
         },
         "type": "object",
@@ -8576,8 +9620,9 @@
           "full_name"
         ],
         "title": "UserCreate",
+        "description": "Schema for public self-registration (contingent on tenant allow_registration).",
         "example": {
-          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "company_id": "6f4539e5-a36c-488a-8c3b-2004a5884e33",
           "email": "sarah.connor@sovereign.local",
           "full_name": "Sarah Connor",
           "password": "StrongPassword2026!",
@@ -8585,6 +9630,88 @@
           "user_type": "human",
           "username": "sconnor"
         }
+      },
+      "UserDetailRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "user_type": {
+            "type": "string",
+            "title": "User Type"
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser"
+          },
+          "preferred_language": {
+            "type": "string",
+            "title": "Preferred Language"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "groups": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Groups",
+            "description": "Assigned RBAC groups with IDs and names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "username",
+          "full_name",
+          "user_type",
+          "is_superuser",
+          "preferred_language",
+          "is_active",
+          "company_id",
+          "created_at"
+        ],
+        "title": "UserDetailRead",
+        "description": "Detailed user representation including assigned groups and timestamps."
       },
       "UserRead": {
         "properties": {
@@ -8639,7 +9766,123 @@
           "is_active",
           "company_id"
         ],
-        "title": "UserRead"
+        "title": "UserRead",
+        "description": "Public serialized representation of a user profile."
+      },
+      "UserUpdate": {
+        "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "Updated display name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "Updated email address"
+          },
+          "preferred_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Language",
+            "description": "Updated ISO 639-1 language code"
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Id",
+            "description": "Assigned organizational department / team UUID"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Active status toggle (deactivated users cannot authenticate)"
+          },
+          "is_superuser": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Superuser",
+            "description": "Superuser privilege toggle (Superuser only)"
+          },
+          "group_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Ids",
+            "description": "Full replacement list of RBAC Group UUIDs assigned to this user"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "New password if resetting user credentials"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdate",
+        "description": "Schema for updating user account details, roles, or resetting password.",
+        "example": {
+          "full_name": "Sarah Connor, Lead Auditor",
+          "is_active": true,
+          "preferred_language": "en"
+        }
       },
       "ValidationError": {
         "properties": {

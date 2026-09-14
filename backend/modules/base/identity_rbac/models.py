@@ -65,7 +65,9 @@ class Permission(BaseModel):
 
     code: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)  # e.g. "sales.order.read"
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    module_name: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
+    module_name: Mapped[str] = mapped_column(String(50), index=True, nullable=False)  # e.g. "sales"
+    resource: Mapped[str] = mapped_column(String(50), index=True, nullable=False)  # e.g. "order"
+    action: Mapped[str] = mapped_column(String(20), index=True, nullable=False)  # "read" | "create" | "update" | "delete" | "manage" | "approve"
     ownership_scope: Mapped[str] = mapped_column(String(20), default="GLOBAL", nullable=False)  # "GLOBAL", "TEAM", "OWN"
 
 
