@@ -422,6 +422,414 @@
         }
       }
     },
+    "/api/v1/i18n/locales": {
+      "get": {
+        "tags": [
+          "Multi-Language & Localization Engine",
+          "Internationalization (i18n)"
+        ],
+        "summary": "List supported system locales and script directions",
+        "description": "Retrieve supported system languages and layout directions (LTR/RTL).",
+        "operationId": "list_supported_locales_api_v1_i18n_locales_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LocaleInfo"
+                  },
+                  "type": "array",
+                  "title": "Response List Supported Locales Api V1 I18N Locales Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/i18n/catalog": {
+      "get": {
+        "tags": [
+          "Multi-Language & Localization Engine",
+          "Internationalization (i18n)"
+        ],
+        "summary": "Retrieve translation catalog for active or requested locale",
+        "description": "Compile dictionary of UI strings for the active or requested language.",
+        "operationId": "get_translation_catalog_api_v1_i18n_catalog_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO locale code (defaults to Accept-Language or en)",
+              "title": "Locale"
+            },
+            "description": "ISO locale code (defaults to Accept-Language or en)"
+          },
+          {
+            "name": "module_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional module namespace filter",
+              "title": "Module Name"
+            },
+            "description": "Optional module namespace filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/i18n/translate": {
+      "post": {
+        "tags": [
+          "Multi-Language & Localization Engine",
+          "Internationalization (i18n)"
+        ],
+        "summary": "Translate string into target locale",
+        "description": "Dynamically look up translation for a single term.",
+        "operationId": "translate_text_api_v1_i18n_translate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/i18n/terms": {
+      "get": {
+        "tags": [
+          "Multi-Language & Localization Engine",
+          "Internationalization (i18n)"
+        ],
+        "summary": "List custom tenant translation terms",
+        "description": "Retrieve registered custom translation terms for the active company.",
+        "operationId": "list_translation_terms_api_v1_i18n_terms_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "module_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by module",
+              "title": "Module Name"
+            },
+            "description": "Filter by module"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TranslationTermRead"
+                  },
+                  "title": "Response List Translation Terms Api V1 I18N Terms Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Multi-Language & Localization Engine",
+          "Internationalization (i18n)"
+        ],
+        "summary": "Create or override a translation term",
+        "description": "Add or customize a localized term for the active tenant.",
+        "operationId": "create_translation_term_api_v1_i18n_terms_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationTermCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationTermRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/i18n/terms/{term_id}": {
+      "get": {
+        "tags": [
+          "Multi-Language & Localization Engine",
+          "Internationalization (i18n)"
+        ],
+        "summary": "Get translation term details",
+        "description": "Retrieve details for a specific translation term.",
+        "operationId": "get_translation_term_api_v1_i18n_terms__term_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "term_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Term Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationTermRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Multi-Language & Localization Engine",
+          "Internationalization (i18n)"
+        ],
+        "summary": "Update translation term",
+        "description": "Update translations or metadata for a custom term.",
+        "operationId": "update_translation_term_api_v1_i18n_terms__term_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "term_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Term Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationTermUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationTermRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Multi-Language & Localization Engine",
+          "Internationalization (i18n)"
+        ],
+        "summary": "Delete translation term",
+        "description": "Soft delete a translation term.",
+        "operationId": "delete_translation_term_api_v1_i18n_terms__term_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "term_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Term Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/mail_gateway/servers": {
       "get": {
         "tags": [
@@ -4201,6 +4609,49 @@
         ],
         "title": "Body_upload_attachment_api_v1_documents_upload_post"
       },
+      "CatalogResponse": {
+        "properties": {
+          "locale": {
+            "type": "string",
+            "title": "Locale"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          },
+          "total_terms": {
+            "type": "integer",
+            "title": "Total Terms"
+          },
+          "terms": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Terms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "locale",
+          "direction",
+          "total_terms",
+          "terms"
+        ],
+        "title": "CatalogResponse",
+        "example": {
+          "direction": "rtl",
+          "locale": "ar",
+          "terms": {
+            "Cancel": "إلغاء",
+            "Delete": "حذف",
+            "Edit": "تعديل",
+            "Invoices": "الفواتير",
+            "Save": "حفظ"
+          },
+          "total_terms": 24
+        }
+      },
       "CityCreate": {
         "properties": {
           "name": {
@@ -5076,6 +5527,51 @@
           "job_id": "j0000000-0000-0000-0000-000000000001",
           "message": "Import job queued successfully",
           "status": "processing"
+        }
+      },
+      "LocaleInfo": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "ISO 639-1 language code (e.g., en, ar)"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Language English display name"
+          },
+          "native_name": {
+            "type": "string",
+            "title": "Native Name",
+            "description": "Native script language name"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction",
+            "description": "Text layout direction: ltr or rtl",
+            "default": "ltr"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "Default fallback system locale",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "native_name"
+        ],
+        "title": "LocaleInfo",
+        "example": {
+          "code": "ar",
+          "direction": "rtl",
+          "is_default": false,
+          "name": "Arabic",
+          "native_name": "العربية"
         }
       },
       "LoginRequest": {
@@ -7129,6 +7625,269 @@
             "preferred_language": "en",
             "user_type": "human",
             "username": "sconnor"
+          }
+        }
+      },
+      "TranslateRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Source string to translate"
+          },
+          "target_locale": {
+            "type": "string",
+            "title": "Target Locale",
+            "description": "Target ISO language code",
+            "default": "ar"
+          },
+          "module_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Module Name",
+            "description": "Optional module context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TranslateRequest",
+        "example": {
+          "module_name": "accounting",
+          "target_locale": "ar",
+          "text": "Submit Payment"
+        }
+      },
+      "TranslateResponse": {
+        "properties": {
+          "source_text": {
+            "type": "string",
+            "title": "Source Text"
+          },
+          "translated_text": {
+            "type": "string",
+            "title": "Translated Text"
+          },
+          "locale": {
+            "type": "string",
+            "title": "Locale"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_text",
+          "translated_text",
+          "locale"
+        ],
+        "title": "TranslateResponse",
+        "example": {
+          "locale": "ar",
+          "source_text": "Submit Payment",
+          "translated_text": "إرسال الدفعة"
+        }
+      },
+      "TranslationTermCreate": {
+        "properties": {
+          "source_text": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Source Text",
+            "description": "English / base source term string"
+          },
+          "module_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Module Name",
+            "description": "Application module namespace",
+            "default": "all"
+          },
+          "translations": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Translations",
+            "description": "Locale to translated string map"
+          },
+          "context_hint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Hint",
+            "description": "Disambiguation hint for translators"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_text"
+        ],
+        "title": "TranslationTermCreate",
+        "example": {
+          "context_hint": "Navigation menu item",
+          "module_name": "accounting",
+          "source_text": "Invoices",
+          "translations": {
+            "ar": "الفواتير",
+            "en": "Invoices"
+          }
+        }
+      },
+      "TranslationTermRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "source_text": {
+            "type": "string",
+            "title": "Source Text"
+          },
+          "module_name": {
+            "type": "string",
+            "title": "Module Name"
+          },
+          "translations": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Translations"
+          },
+          "context_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Hint"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "source_text",
+          "module_name",
+          "translations",
+          "context_hint",
+          "is_active",
+          "created_at"
+        ],
+        "title": "TranslationTermRead",
+        "example": {
+          "company_id": "a0000000-0000-0000-0000-000000000001",
+          "context_hint": "Form submit button",
+          "created_at": "2026-09-14T02:50:00Z",
+          "id": "t0000000-0000-0000-0000-000000000001",
+          "is_active": true,
+          "module_name": "core",
+          "source_text": "Save",
+          "translations": {
+            "ar": "حفظ",
+            "en": "Save"
+          }
+        }
+      },
+      "TranslationTermUpdate": {
+        "properties": {
+          "source_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Text"
+          },
+          "module_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Module Name"
+          },
+          "translations": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Translations"
+          },
+          "context_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Hint"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "TranslationTermUpdate",
+        "example": {
+          "translations": {
+            "ar": "الفواتير الضريبية",
+            "en": "Tax Invoices"
           }
         }
       },

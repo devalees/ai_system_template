@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "c53824d4-2a11-4702-ab5e-06f4d04bc482",
+    "_postman_id": "23183819-8588-4faa-bf58-2404dd8adcd2",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -1743,6 +1743,335 @@
               ]
             },
             "description": "Remove a registered WebPush subscription endpoint."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Multi-Language & Localization Engine",
+      "item": [
+        {
+          "name": "List supported system locales and script directions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/i18n/locales",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "i18n",
+                "locales"
+              ],
+              "variable": []
+            },
+            "description": "Retrieve supported system languages and layout directions (LTR/RTL)."
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve translation catalog for active or requested locale",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/i18n/catalog",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "i18n",
+                "catalog"
+              ],
+              "variable": []
+            },
+            "description": "Compile dictionary of UI strings for the active or requested language."
+          },
+          "response": []
+        },
+        {
+          "name": "Translate string into target locale",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/i18n/translate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "i18n",
+                "translate"
+              ],
+              "variable": []
+            },
+            "description": "Dynamically look up translation for a single term.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module_name\": \"accounting\",\n  \"target_locale\": \"ar\",\n  \"text\": \"Submit Payment\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List custom tenant translation terms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/i18n/terms",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "i18n",
+                "terms"
+              ],
+              "variable": []
+            },
+            "description": "Retrieve registered custom translation terms for the active company."
+          },
+          "response": []
+        },
+        {
+          "name": "Create or override a translation term",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/i18n/terms",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "i18n",
+                "terms"
+              ],
+              "variable": []
+            },
+            "description": "Add or customize a localized term for the active tenant.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"context_hint\": \"Navigation menu item\",\n  \"module_name\": \"accounting\",\n  \"source_text\": \"Invoices\",\n  \"translations\": {\n    \"ar\": \"\\u0627\\u0644\\u0641\\u0648\\u0627\\u062a\\u064a\\u0631\",\n    \"en\": \"Invoices\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get translation term details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/i18n/terms/:term_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "i18n",
+                "terms",
+                ":term_id"
+              ],
+              "variable": [
+                {
+                  "key": "term_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Retrieve details for a specific translation term."
+          },
+          "response": []
+        },
+        {
+          "name": "Update translation term",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/i18n/terms/:term_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "i18n",
+                "terms",
+                ":term_id"
+              ],
+              "variable": [
+                {
+                  "key": "term_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Update translations or metadata for a custom term.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"translations\": {\n    \"ar\": \"\\u0627\\u0644\\u0641\\u0648\\u0627\\u062a\\u064a\\u0631 \\u0627\\u0644\\u0636\\u0631\\u064a\\u0628\\u064a\\u0629\",\n    \"en\": \"Tax Invoices\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete translation term",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/i18n/terms/:term_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "i18n",
+                "terms",
+                ":term_id"
+              ],
+              "variable": [
+                {
+                  "key": "term_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Soft delete a translation term."
           },
           "response": []
         }

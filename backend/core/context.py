@@ -12,6 +12,7 @@ from core.config import settings
 _active_company_id: ContextVar[Optional[uuid.UUID]] = ContextVar("active_company_id", default=None)
 _current_user_id: ContextVar[Optional[uuid.UUID]] = ContextVar("current_user_id", default=None)
 _actor_type: ContextVar[str] = ContextVar("actor_type", default="anonymous")
+_active_locale: ContextVar[str] = ContextVar("active_locale", default="en")
 
 
 def get_active_company_id() -> Optional[uuid.UUID]:
@@ -42,6 +43,16 @@ def get_actor_type() -> str:
 def set_actor_type(actor_type: str) -> None:
     """Set the actor type in context."""
     _actor_type.set(actor_type)
+
+
+def get_active_locale() -> str:
+    """Retrieve the request active locale code (e.g. 'en', 'ar')."""
+    return _active_locale.get()
+
+
+def set_active_locale(locale: str) -> None:
+    """Set the active locale in context."""
+    _active_locale.set(locale)
 
 
 class MultiTenancyContextMiddleware(BaseHTTPMiddleware):
@@ -86,10 +97,23 @@ class MultiTenancyContextMiddleware(BaseHTTPMiddleware):
         if actor_header:
             token_actor = actor_header
 
-        # 4. Set ContextVar tokens and ensure cleanup after request
+        # 4. Extract Accept-Language / X-Locale header if provided
+        req_locale = "en"
+        locale_header = request.headers.get("X-Locale") or request.headers.get("Accept-Language")
+        if locale_header:
+            primary = locale_header.split(",")[0].split(";")[0].strip().lower()
+            if primary.startswith("ar"):
+                req_locale = "ar"
+            elif primary.startswith("en"):
+                req_locale = "en"
+            elif len(primary) >= 2:
+                req_locale = primary[:2]
+
+        # 5. Set ContextVar tokens and ensure cleanup after request
         company_token = _active_company_id.set(token_company)
         user_token = _current_user_id.set(token_user)
         actor_token = _actor_type.set(token_actor or "anonymous")
+        locale_token = _active_locale.set(req_locale)
 
         try:
             response = await call_next(request)
@@ -98,6 +122,7 @@ class MultiTenancyContextMiddleware(BaseHTTPMiddleware):
             _active_company_id.reset(company_token)
             _current_user_id.reset(user_token)
             _actor_type.reset(actor_token)
+            _active_locale.reset(locale_token)
 
 
 def _safe_parse_uuid(val: Any) -> Optional[uuid.UUID]:
