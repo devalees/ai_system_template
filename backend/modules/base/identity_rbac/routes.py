@@ -1,6 +1,7 @@
 """API Routes for Identity, Authentication, Company Tenancy, and RBAC Management."""
 
 import uuid
+import logging
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -27,6 +28,9 @@ from modules.base.identity_rbac.schemas import (
     TokenResponse,
     ChangePasswordRequest,
     AuthMessageResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    VerifyEmailRequest,
     PermissionCreate,
     PermissionUpdate,
     PermissionRead,
@@ -39,9 +43,20 @@ from modules.base.identity_rbac.schemas import (
     CompanyUpdate,
     CompanyRead,
 )
-from modules.base.identity_rbac.security import hash_password, verify_password, create_access_token
+from modules.base.identity_rbac.security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    create_password_reset_token,
+    verify_and_consume_password_reset_token,
+    create_email_verification_token,
+    verify_and_consume_email_token,
+)
 from modules.base.identity_rbac.dependencies import get_current_user, require_permission
+from modules.base.mail_gateway.service import MailService
+from modules.base.mail_gateway.schemas import SendMailRequest
 
+logger = logging.getLogger("sovereign.identity_rbac")
 router = APIRouter()
 
 
@@ -115,11 +130,28 @@ async def register_user(
         full_name=payload.full_name,
         user_type=payload.user_type,
         preferred_language=payload.preferred_language,
+        email_verified=False,
         company_id=target_company_id,
     )
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
+
+    # Issue single-use email verification token and enqueue notification email
+    try:
+        verify_token = await create_email_verification_token(new_user.id)
+        mail_req = SendMailRequest(
+            to_email=new_user.email,
+            recipient_name=new_user.full_name,
+            subject="Welcome to Sovereign Platform - Verify Your Email",
+            body_html=f"<p>Hello {new_user.full_name},</p><p>Welcome to Sovereign Platform! Please verify your email using the verification token below:</p><p><code>{verify_token}</code></p>",
+            body_text=f"Hello {new_user.full_name},\n\nYour email verification token is: {verify_token}",
+            async_send=True,
+        )
+        await MailService.enqueue_mail(db=db, req=mail_req, company_id=target_company_id, user_id=new_user.id)
+    except Exception as exc:
+        logger.warning(f"Could not dispatch registration verification email: {exc}")
+
     return new_user
 
 
@@ -161,6 +193,7 @@ async def login(
         user_type=user.user_type,
         is_superuser=user.is_superuser,
         is_primary_admin=user.is_primary_admin,
+        email_verified=user.email_verified,
         preferred_language=user.preferred_language,
         is_active=user.is_active,
         company_id=user.company_id,
@@ -200,6 +233,7 @@ async def get_me(
         user_type=current_user.user_type,
         is_superuser=current_user.is_superuser,
         is_primary_admin=current_user.is_primary_admin,
+        email_verified=current_user.email_verified,
         preferred_language=current_user.preferred_language,
         is_active=current_user.is_active,
         company_id=current_user.company_id,
@@ -249,6 +283,149 @@ async def change_password(
     current_user.hashed_password = hash_password(payload.new_password)
     await db.commit()
     return AuthMessageResponse(success=True, message="Password successfully changed.")
+
+
+@router.post(
+    "/auth/forgot-password",
+    response_model=AuthMessageResponse,
+    tags=["Authentication"],
+    summary="Request password reset token via email",
+)
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> AuthMessageResponse:
+    """Initiate a single-use password reset token dispatch via Mail Gateway.
+    
+    Security & Access:
+    - Public endpoint.
+    - Constant response structure to defend against email enumeration attacks.
+    - Issues a 15-minute expiring token in Redis.
+    """
+    stmt = (
+        select(User)
+        .where(User.email == payload.email, User.deleted_at.is_(None))
+        .execution_options(ignore_tenant=True)
+    )
+    user = (await db.execute(stmt)).scalar_one_or_none()
+
+    if user and user.is_active:
+        token = await create_password_reset_token(user.id, user.company_id, ttl_seconds=900)
+        try:
+            mail_req = SendMailRequest(
+                to_email=user.email,
+                recipient_name=user.full_name,
+                subject="Sovereign Platform - Password Reset Request",
+                body_html=(
+                    f"<p>Hello {user.full_name},</p>"
+                    f"<p>A password reset was requested for your Sovereign account. "
+                    f"Use the single-use token below within 15 minutes to reset your password:</p>"
+                    f"<p style='font-family: monospace; font-size: 16px; font-weight: bold;'>{token}</p>"
+                    f"<p>If you did not make this request, please disregard this email.</p>"
+                ),
+                body_text=f"Hello {user.full_name},\n\nYour password reset token is:\n{token}\n\nThis token will expire in 15 minutes.",
+                async_send=True,
+            )
+            await MailService.enqueue_mail(db=db, req=mail_req, company_id=user.company_id, user_id=user.id)
+        except Exception as exc:
+            logger.warning(f"Could not enqueue password reset email: {exc}")
+
+    return AuthMessageResponse(
+        success=True,
+        message="If the email address is registered, a password reset link has been dispatched.",
+    )
+
+
+@router.post(
+    "/auth/reset-password",
+    response_model=AuthMessageResponse,
+    tags=["Authentication"],
+    summary="Reset password using single-use verification token",
+)
+async def reset_password(
+    payload: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> AuthMessageResponse:
+    """Complete credential reset using an unconsumed, non-expired Redis token.
+    
+    Security & Access:
+    - Public endpoint.
+    - Atomic token consumption (GETDEL) prevents token replay attacks.
+    - Enforces new password matching and complexity standards.
+    """
+    if payload.new_password != payload.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password and confirmation password do not match.",
+        )
+
+    token_data = await verify_and_consume_password_reset_token(payload.token)
+    if not token_data or "user_id" not in token_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token.",
+        )
+
+    target_user_id = uuid.UUID(token_data["user_id"])
+    stmt = (
+        select(User)
+        .where(User.id == target_user_id, User.deleted_at.is_(None))
+        .execution_options(ignore_tenant=True)
+    )
+    user = (await db.execute(stmt)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated.")
+
+    if verify_password(payload.new_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password cannot be identical to the current password.",
+        )
+
+    user.hashed_password = hash_password(payload.new_password)
+    await db.commit()
+    return AuthMessageResponse(
+        success=True,
+        message="Password has been successfully reset. You may now log in with your new credentials.",
+    )
+
+
+@router.post(
+    "/auth/verify-email",
+    response_model=AuthMessageResponse,
+    tags=["Authentication"],
+    summary="Verify user email address with single-use token",
+)
+async def verify_email(
+    payload: VerifyEmailRequest,
+    db: AsyncSession = Depends(get_db),
+) -> AuthMessageResponse:
+    """Verify an account email address using an unconsumed verification token."""
+    user_id = await verify_and_consume_email_token(payload.token)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired email verification token.",
+        )
+
+    stmt = (
+        select(User)
+        .where(User.id == user_id, User.deleted_at.is_(None))
+        .execution_options(ignore_tenant=True)
+    )
+    user = (await db.execute(stmt)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    user.email_verified = True
+    await db.commit()
+    return AuthMessageResponse(
+        success=True,
+        message="Email address has been successfully verified.",
+    )
 
 
 # =========================================================================
@@ -307,6 +484,7 @@ async def create_user(
         preferred_language=payload.preferred_language,
         is_superuser=payload.is_superuser if current_user.is_primary_admin else False,
         is_primary_admin=False,
+        email_verified=True,
         company_id=target_company_id,
     )
     db.add(new_user)
@@ -384,6 +562,7 @@ async def get_user(
         user_type=user.user_type,
         is_superuser=user.is_superuser,
         is_primary_admin=user.is_primary_admin,
+        email_verified=user.email_verified,
         preferred_language=user.preferred_language,
         is_active=user.is_active,
         company_id=user.company_id,
@@ -495,6 +674,7 @@ async def update_user(
         user_type=user.user_type,
         is_superuser=user.is_superuser,
         is_primary_admin=user.is_primary_admin,
+        email_verified=user.email_verified,
         preferred_language=user.preferred_language,
         is_active=user.is_active,
         company_id=user.company_id,

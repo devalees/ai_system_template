@@ -168,6 +168,135 @@
         ]
       }
     },
+    "/api/v1/identity_rbac/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Request password reset token via email",
+        "description": "Initiate a single-use password reset token dispatch via Mail Gateway.\n\nSecurity & Access:\n- Public endpoint.\n- Constant response structure to defend against email enumeration attacks.\n- Issues a 15-minute expiring token in Redis.",
+        "operationId": "forgot_password_api_v1_identity_rbac_auth_forgot_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Reset password using single-use verification token",
+        "description": "Complete credential reset using an unconsumed, non-expired Redis token.\n\nSecurity & Access:\n- Public endpoint.\n- Atomic token consumption (GETDEL) prevents token replay attacks.\n- Enforces new password matching and complexity standards.",
+        "operationId": "reset_password_api_v1_identity_rbac_auth_reset_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/auth/verify-email": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Verify user email address with single-use token",
+        "description": "Verify an account email address using an unconsumed verification token.",
+        "operationId": "verify_email_api_v1_identity_rbac_auth_verify_email_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/identity_rbac/users": {
       "post": {
         "tags": [
@@ -6802,6 +6931,25 @@
           "model_name": "lookups.country"
         }
       },
+      "ForgotPasswordRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Registered user account email address"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "ForgotPasswordRequest",
+        "description": "Request payload to initiate an asynchronous password reset email.",
+        "example": {
+          "email": "sarah.connor@sovereign.local"
+        }
+      },
       "GroupCreate": {
         "properties": {
           "name": {
@@ -8939,6 +9087,40 @@
           "user_id": "u0000000-0000-0000-0000-000000000001"
         }
       },
+      "ResetPasswordRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "Cryptographically signed, single-use password reset token"
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "New Password",
+            "description": "New secret password meeting complexity standards (minimum 8 characters)"
+          },
+          "confirm_password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Confirm Password",
+            "description": "Confirmation matching the new password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "new_password",
+          "confirm_password"
+        ],
+        "title": "ResetPasswordRequest",
+        "description": "Request payload to complete a password reset using a single-use token.",
+        "example": {
+          "confirm_password": "NewSecurePassword2026!",
+          "new_password": "NewSecurePassword2026!",
+          "token": "pr_9f8d7c6b5a4321_sample_token"
+        }
+      },
       "SendMailRequest": {
         "properties": {
           "to_email": {
@@ -9986,6 +10168,11 @@
             "title": "Is Primary Admin",
             "default": false
           },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified",
+            "default": false
+          },
           "preferred_language": {
             "type": "string",
             "title": "Preferred Language"
@@ -10071,6 +10258,11 @@
           "is_primary_admin": {
             "type": "boolean",
             "title": "Is Primary Admin",
+            "default": false
+          },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified",
             "default": false
           },
           "preferred_language": {
@@ -10274,6 +10466,24 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerifyEmailRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "Single-use email verification token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "VerifyEmailRequest",
+        "description": "Request payload to verify account email address using a single-use token.",
+        "example": {
+          "token": "em_1a2b3c4d5e6f_sample_token"
+        }
       }
     },
     "securitySchemes": {

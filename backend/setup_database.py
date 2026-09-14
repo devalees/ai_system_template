@@ -205,6 +205,7 @@ async def setup_database(
             user_type="human",
             is_superuser=True,
             is_primary_admin=True,
+            email_verified=True,
             preferred_language="en",
             company_id=company.id,
         )

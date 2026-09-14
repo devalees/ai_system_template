@@ -17,7 +17,12 @@ from modules.base.identity_rbac.models import (
     UserGroupLink,
     GroupPermissionLink,
 )
-from modules.base.identity_rbac.security import hash_password
+from modules.base.mail_gateway.models import MailQueue
+from modules.base.identity_rbac.security import (
+    hash_password,
+    create_password_reset_token,
+    create_email_verification_token,
+)
 from modules.base.identity_rbac.dependencies import require_permission
 from modules.base.identity_rbac.harvester import harvest_model_permissions
 
@@ -1148,6 +1153,189 @@ async def test_authenticated_change_password_and_decoupling(db_session: AsyncSes
         )
         assert res_login_new.status_code == 200
         assert "access_token" in res_login_new.json()
+
+
+@pytest.mark.asyncio
+async def test_forgot_and_reset_password_flow(db_session: AsyncSession):
+    """Verify forgot-password token generation, Mail Gateway enqueue, single-use reset, and replay protection."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Reset Test Corp",
+        code=f"RST_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    user = User(
+        email=f"alice_{uuid.uuid4().hex[:6]}@test.com",
+        username=f"alice_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("OldPassword123!"),
+        full_name="Alice Specialist",
+        is_superuser=False,
+        email_verified=True,
+        company_id=comp_id,
+    )
+    db_session.add_all([company, user])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Non-existent email returns constant 200 OK (timing-attack safe)
+        res_fake = await client.post(
+            "/api/v1/identity_rbac/auth/forgot-password",
+            json={"email": "nonexistent@fakecorp.com"},
+        )
+        assert res_fake.status_code == 200
+        assert res_fake.json()["success"] is True
+
+        # 2. Registered email requests password reset
+        res_forgot = await client.post(
+            "/api/v1/identity_rbac/auth/forgot-password",
+            json={"email": user.email},
+        )
+        assert res_forgot.status_code == 200
+        assert res_forgot.json()["success"] is True
+
+        # Verify email was enqueued in MailQueue
+        stmt_mail = select(MailQueue).where(MailQueue.recipient_email == user.email).order_by(MailQueue.created_at.desc())
+        mail_item = (await db_session.execute(stmt_mail)).scalar_one_or_none()
+        assert mail_item is not None
+        assert "Password Reset Request" in mail_item.subject
+
+        # 3. Create a deterministic token for reset verification
+        token = await create_password_reset_token(user.id, user.company_id, ttl_seconds=900)
+
+        # 4. Password mismatch rejection (400)
+        res_mismatch = await client.post(
+            "/api/v1/identity_rbac/auth/reset-password",
+            json={
+                "token": token,
+                "new_password": "NewResetPass2026!",
+                "confirm_password": "WrongConfirmPass2026!",
+            },
+        )
+        assert res_mismatch.status_code == 400
+        assert "do not match" in res_mismatch.json()["detail"].lower()
+
+        # 5. Invalid token rejection (400)
+        res_bad_tok = await client.post(
+            "/api/v1/identity_rbac/auth/reset-password",
+            json={
+                "token": "pr_invalid_token_12345",
+                "new_password": "NewResetPass2026!",
+                "confirm_password": "NewResetPass2026!",
+            },
+        )
+        assert res_bad_tok.status_code == 400
+        assert "invalid or expired" in res_bad_tok.json()["detail"].lower()
+
+        # 6. Valid reset password execution (200)
+        res_reset = await client.post(
+            "/api/v1/identity_rbac/auth/reset-password",
+            json={
+                "token": token,
+                "new_password": "NewResetPass2026!",
+                "confirm_password": "NewResetPass2026!",
+            },
+        )
+        assert res_reset.status_code == 200
+        assert res_reset.json()["success"] is True
+
+        # 7. Token replay rejection (single-use burned token) (400)
+        res_replay = await client.post(
+            "/api/v1/identity_rbac/auth/reset-password",
+            json={
+                "token": token,
+                "new_password": "AnotherPass2026!",
+                "confirm_password": "AnotherPass2026!",
+            },
+        )
+        assert res_replay.status_code == 400
+        assert "invalid or expired" in res_replay.json()["detail"].lower()
+
+        # 8. Verify login: old password fails, new reset password succeeds
+        res_log_old = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": "OldPassword123!"},
+        )
+        assert res_log_old.status_code == 401
+
+        res_log_new = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": "NewResetPass2026!"},
+        )
+        assert res_log_new.status_code == 200
+        assert "access_token" in res_log_new.json()
+
+
+@pytest.mark.asyncio
+async def test_email_verification_lifecycle(db_session: AsyncSession):
+    """Verify registration defaults email_verified=False, enqueues verification email, and verifies via token."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Verification Tenant",
+        code=f"VER_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    db_session.add(company)
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Register a new user
+        reg_username = f"new_signup_{uuid.uuid4().hex[:6]}"
+        reg_email = f"{reg_username}@verifycorp.com"
+        res_reg = await client.post(
+            "/api/v1/identity_rbac/auth/register",
+            json={
+                "company_id": str(company.id),
+                "email": reg_email,
+                "username": reg_username,
+                "password": "SecurePassword2026!",
+                "full_name": "New Signup User",
+            },
+        )
+        assert res_reg.status_code == 201
+        user_data = res_reg.json()
+        assert user_data["email_verified"] is False
+        user_id = uuid.UUID(user_data["id"])
+
+        # Verify welcome verification email was enqueued in MailQueue
+        stmt_mail = select(MailQueue).where(MailQueue.recipient_email == reg_email).order_by(MailQueue.created_at.desc())
+        mail_item = (await db_session.execute(stmt_mail)).scalar_one_or_none()
+        assert mail_item is not None
+        assert "Verify Your Email" in mail_item.subject
+
+        # 2. Invalid token rejection (400)
+        res_bad_tok = await client.post(
+            "/api/v1/identity_rbac/auth/verify-email",
+            json={"token": "em_invalid_nonexistent_token"},
+        )
+        assert res_bad_tok.status_code == 400
+        assert "invalid or expired" in res_bad_tok.json()["detail"].lower()
+
+        # 3. Create valid verification token
+        token = await create_email_verification_token(user_id)
+
+        # 4. Valid email verification (200)
+        res_verify = await client.post(
+            "/api/v1/identity_rbac/auth/verify-email",
+            json={"token": token},
+        )
+        assert res_verify.status_code == 200
+        assert res_verify.json()["success"] is True
+
+        # 5. Verify user model in DB has email_verified=True
+        stmt_u = select(User).where(User.id == user_id)
+        verified_user = (await db_session.execute(stmt_u)).scalar_one()
+        assert verified_user.email_verified is True
+
+        # 6. Replay protection: consuming same token again fails (400)
+        res_replay = await client.post(
+            "/api/v1/identity_rbac/auth/verify-email",
+            json={"token": token},
+        )
+        assert res_replay.status_code == 400
+        assert "invalid or expired" in res_replay.json()["detail"].lower()
+
 
 
 

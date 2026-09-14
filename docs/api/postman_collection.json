@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "29578cb9-5a62-4b54-9a43-69e1e355df6b",
+    "_postman_id": "b57daea3-51d6-4e42-9232-b533aa05bb23",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -491,6 +491,237 @@
                   "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
                   "        if (recId) {",
                   "            pm.environment.set(\"active_change_password_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Request password reset token via email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "auth",
+                "forgot-password"
+              ],
+              "variable": []
+            },
+            "description": "## Request password reset token via email\n\nInitiate a single-use password reset token dispatch via Mail Gateway.\n\nSecurity & Access:\n- Public endpoint.\n- Constant response structure to defend against email enumeration attacks.\n- Issues a 15-minute expiring token in Redis.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/forgot-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `email` | `string` | **Yes** | Any valid string | Registered user account email address |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sarah.connor@sovereign.local\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_forgot_password_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reset password using single-use verification token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "auth",
+                "reset-password"
+              ],
+              "variable": []
+            },
+            "description": "## Reset password using single-use verification token\n\nComplete credential reset using an unconsumed, non-expired Redis token.\n\nSecurity & Access:\n- Public endpoint.\n- Atomic token consumption (GETDEL) prevents token replay attacks.\n- Enforces new password matching and complexity standards.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/reset-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `token` | `string` | **Yes** | Any valid string | Cryptographically signed, single-use password reset token |\n| `new_password` | `string` | **Yes** | Any valid string | New secret password meeting complexity standards (minimum 8 characters) |\n| `confirm_password` | `string` | **Yes** | Any valid string | Confirmation matching the new password |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirm_password\": \"NewSecurePassword2026!\",\n  \"new_password\": \"NewSecurePassword2026!\",\n  \"token\": \"pr_9f8d7c6b5a4321_sample_token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_reset_password_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify user email address with single-use token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/auth/verify-email",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "auth",
+                "verify-email"
+              ],
+              "variable": []
+            },
+            "description": "## Verify user email address with single-use token\n\nVerify an account email address using an unconsumed verification token.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/verify-email`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `token` | `string` | **Yes** | Any valid string | Single-use email verification token |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"em_1a2b3c4d5e6f_sample_token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_verify_email_id\", recId);",
                   "            pm.environment.set(\"active_record_id\", recId);",
                   "        }",
                   "        if (json.queue_id) {",

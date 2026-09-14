@@ -100,6 +100,7 @@ class UserRead(BaseModel):
     user_type: str
     is_superuser: bool
     is_primary_admin: bool = False
+    email_verified: bool = False
     preferred_language: str
     is_active: bool
     company_id: uuid.UUID
@@ -116,6 +117,7 @@ class UserDetailRead(BaseModel):
     user_type: str
     is_superuser: bool
     is_primary_admin: bool = False
+    email_verified: bool = False
     preferred_language: str
     is_active: bool
     company_id: uuid.UUID
@@ -202,6 +204,49 @@ class AuthMessageResponse(BaseModel):
 
     success: bool = Field(True, description="Indicates whether the operation succeeded")
     message: str = Field(..., description="Human-readable operation status summary")
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Request payload to initiate an asynchronous password reset email."""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "email": "sarah.connor@sovereign.local",
+            }
+        }
+    )
+
+    email: EmailStr = Field(..., description="Registered user account email address")
+
+
+class ResetPasswordRequest(BaseModel):
+    """Request payload to complete a password reset using a single-use token."""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "token": "pr_9f8d7c6b5a4321_sample_token",
+                "new_password": "NewSecurePassword2026!",
+                "confirm_password": "NewSecurePassword2026!",
+            }
+        }
+    )
+
+    token: str = Field(..., description="Cryptographically signed, single-use password reset token")
+    new_password: str = Field(..., min_length=8, description="New secret password meeting complexity standards (minimum 8 characters)")
+    confirm_password: str = Field(..., min_length=8, description="Confirmation matching the new password")
+
+
+class VerifyEmailRequest(BaseModel):
+    """Request payload to verify account email address using a single-use token."""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "token": "em_1a2b3c4d5e6f_sample_token",
+            }
+        }
+    )
+
+    token: str = Field(..., description="Single-use email verification token")
 
 
 # =========================================================================

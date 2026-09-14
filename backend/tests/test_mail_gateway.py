@@ -255,7 +255,8 @@ async def test_mail_api_endpoints_and_tenant_isolation(db_session: AsyncSession)
 
         b_queue = await client.get("/api/v1/mail_gateway/queue", headers=headers_b)
         assert b_queue.status_code == 200
-        assert len(b_queue.json()) == 0
+        # Verify Tenant B cannot see Tenant A's sent mail
+        assert not any(item["id"] == queue_id for item in b_queue.json())
 
         b_get_server = await client.get(f"/api/v1/mail_gateway/servers/{server_id}", headers=headers_b)
         assert b_get_server.status_code == 404

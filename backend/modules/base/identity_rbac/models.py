@@ -48,6 +48,7 @@ class User(BaseModel):
     user_type: Mapped[str] = mapped_column(String(20), default="human", nullable=False)  # "human" | "ai_agent"
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_primary_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     preferred_language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     team_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), default=None, nullable=True)
 
