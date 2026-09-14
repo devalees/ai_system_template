@@ -249,6 +249,11 @@ async def setup_database(
         await db.commit()
         print(f"  [OK] Linked Super Admin to '{admin_group.name}' group ({len(all_perms)} permissions).")
 
+        # 6. Seed Default Automated Actions
+        from modules.base.automated_actions.fixtures import seed_default_automated_actions
+        action_count = await seed_default_automated_actions(db, company.id)
+        print(f"  [OK] Seeded {action_count} default automated action rules.")
+
     await engine.dispose()
 
     # Step 6: Synchronize Postman Specifications

@@ -312,6 +312,12 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
             "Chatter Activities",
             "Chatter Messages",
         ],
+        "Event-Driven Automated Actions & TCA Engine": [
+            "Automated Actions - Rules",
+            "Automated Actions - Registry",
+            "Automated Actions - Testing",
+            "Automated Actions - Logs",
+        ],
     }
 
     folders: Dict[str, Dict[str, Any]] = {}
@@ -510,6 +516,8 @@ def build_postman_environment(
             {"key": "active_tax_type_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_tag_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_category_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_rule_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_action_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_record_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_module_name", "value": "identity_rbac", "type": "default", "enabled": True},

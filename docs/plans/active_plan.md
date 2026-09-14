@@ -1701,16 +1701,20 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
   - Automated tests verifying full CRUD, patch validation, and cross-tenant security (4/4 tests passing in `test_lookups.py`, full suite 69/69 passing).
 
 #### **Stage 6: Event-Driven Automated Actions Subsystem (TCA Engine)**
-- [ ] **Sub-stage 6.1: Trigger Registry & Lifecycle Interceptors**
-  - Model event hooks: `on_create`, `on_update`, `on_delete`, `on_state_change`.
-  - Scheduled time triggers managed by Celery Beat.
-- [ ] **Sub-stage 6.2: Condition Expression Evaluator**
-  - Evaluates boolean expressions and JSON AST rules against record fields and related entities before triggering actions.
-- [ ] **Sub-stage 6.3: Built-in Action Handlers**
-  - Core action executors: `update_record`, `create_record`, `send_email`, `post_chatter_message`, `invoke_webhook`.
-- [ ] **Sub-stage 6.4: Execution History & Resilience**
-  - `ActionExecutionLog` recording trigger timestamp, execution latency, success/failure status, and exception tracebacks.
-  - Celery retry with exponential backoff for external network calls.
+- [x] **Sub-stage 6.1: Trigger Registry & Lifecycle Interceptors** - COMPLETED
+  - Model event hooks: `on_create`, `on_update`, `on_delete`, `on_state_change` intercepted via SQLAlchemy session lifecycle (`backend/modules/base/automated_actions/engine/interceptors.py`).
+  - Watched fields detection, diff tracking, and integration into `Kernel.bootstrap()`.
+- [x] **Sub-stage 6.2: Condition Expression Evaluator** - COMPLETED
+  - Safe in-memory AST evaluator (`ASTConditionEvaluator`) supporting all 14 operators (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `contains`, `icontains`, `starts_with`, `ends_with`, `in`, `not_in`, `between`, `is_null`).
+  - Compound boolean logic (`AND`, `OR`, `NOT`) and `old:<field>` historical state diff checks with zero `eval()`.
+- [x] **Sub-stage 6.3: Built-in Action Handlers & Dynamic Registry** - COMPLETED
+  - Extensible `ActionRegistry` singleton exporting typed handler schemas.
+  - Pluggable action handlers: `send_email` (`SendEmailActionHandler`), `send_notification` (`SendNotificationActionHandler`), `post_chatter_message` (`PostChatterActionHandler`), `update_record` (`UpdateRecordActionHandler`), `create_record` (`CreateRecordActionHandler`), `invoke_webhook` (`InvokeWebhookActionHandler`).
+- [x] **Sub-stage 6.4: Execution History & Resilience** - COMPLETED
+  - `ActionExecutionLog` telemetry tracking duration, payload snapshots, and tracebacks.
+  - Celery async worker task (`execute_automated_action_task`) with exponential backoff retry.
+  - `TCADispatcher` with `ContextVar` recursion depth limit (`max_action_depth`, default 5) guarding against infinite mutation cascades.
+  - Seeded default automated actions (`fixtures.py`), REST API (`routes.py`), and continuous OpenAPI/Postman sync.
 
 #### **Stage 7: Sovereign AI Agent Bridge & Dynamic MCP Tool Exposer**
 - [ ] **Sub-stage 7.1: `invoke_ai_agent` TCA Action Executor**
@@ -1771,9 +1775,10 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Sub-stage 5.16 Completed - Commit: `499c869`)*: Universal Modular Settings Engine Architecture & Module Refactor. Decoupled operational policies (`allow_registration`) from core `Company` physical SQL table into typed `ModuleSettings`. Enriched settings schema with `title`, `description`, `type`, `default`, and `options` choices. Implemented auto-discovery of `settings.py` across modules in `Kernel.load()`. Equipped `identity_rbac`, `mail_gateway`, `i18n`, `audit`, `backup`, and `notification_engine` with typed settings schemas. Codified rule in `architecture.md` (Section 6.7) and `AGENTS.md`. Regenerated Postman and OpenAPI specs. Full test suite passing 67/67 tests in Docker container.
 - *2026-09-14 (Sub-stage 5.17 Completed - Commit: `4f44184`)*: Universal Hierarchical Category Engine & CategorizableMixin. Added `Category` model (`lookup_categories`) with `parent_id` self-referential foreign key for nested sub-classifications, `CategorizableMixin` in `core/base_models.py`, `CategoryService` with recursive tree generation, breadcrumb path computation, and circular dependency prevention. Adopted `CategorizableMixin` in `DocumentAttachment` and `MailTemplate`. Seeded default category trees for documents and email templates. Synchronized Postman and OpenAPI specs. Full test suite passing 68/68 tests in Docker container.
 - *2026-09-14 (Sub-stage 5.18 Completed - Commit: `c23b28d`)*: Lookups Master Data Full CRUD, PATCH Support & Hierarchical Postman Sub-Folders. Completed enterprise CRUD surface across all master data lookup entities (`Country`, `City`, `Currency`, `UnitOfMeasure`, `TaxType`, `Tag`) with typed Pydantic update schemas and soft-delete endpoints. Upgraded `backend/core/exporter.py` to support nested subfolders in Postman collections based on OpenAPI route tags, cleanly dividing `Normalized Master Data & Lookups` into 7 distinct entity subfolders and 1 direct seed request. Added smart path variable resolution binding `{id}` to `active_<resource>_id` with automated POST capture scripts. Full test suite passing 69/69 tests in Docker container. Continuous OpenAPI and Postman collections synchronized.
+- *2026-09-14 (Stage 6 Completed)*: Implemented Stage 6: Event-Driven Automated Actions Subsystem (TCA Engine) and Pluggable Action Handlers. Created `automated_actions` base module with `AutomatedAction` (rules) and `ActionExecutionLog` (audit telemetry), `AutomatedActionsSettings` schema. Created safe, sandboxed `ASTConditionEvaluator` reusing Universal Query Engine AST grammar (14 operators + compound logic). Built extensible `ActionRegistry` and pluggable handlers: `SendEmailActionHandler`, `SendNotificationActionHandler`, `PostChatterActionHandler`, `UpdateRecordActionHandler`, `CreateRecordActionHandler`, `InvokeWebhookActionHandler`. Implemented `TCADispatcher` with `ContextVar` recursion depth guard (`max_action_depth`), async Celery worker task (`execute_automated_action_task`), and SQLAlchemy session interceptors wired in `Kernel.bootstrap()`. Seeded default automated actions (`fixtures.py`), updated `setup_database.py` (harvested 108 permissions across 27 models, 2 default rules). Added Rule 6 in `AGENTS.md` and Section 6.10 in `architecture.md`. Added Postman subfolder ordering and environment keys (`active_rule_id`, `active_action_id`). Unit tests passing 74/74 (100% pass rate in container).
 
 ### 4. Current Focus
-Execution of **Stage 6: Event-Driven Automated Actions Subsystem (TCA Engine)**.
+Stage 6 completed. Moving to **Stage 7: Sovereign AI Agent Bridge & Dynamic MCP Tool Exposer**.
 
 
 

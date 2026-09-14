@@ -496,3 +496,32 @@ To prevent bloated flat lists in API client collections:
     - 📁 `Tags`
     - ⚡ `Bootstrap Company ISO Lookups`
 - All path parameters (`{id}`) dynamically resolve to the specific active entity environment variable (`{{active_country_id}}`, `{{active_city_id}}`, `{{active_currency_id}}`, etc.), capturing newly created IDs via automated Postman test scripts.
+
+---
+
+### 6.10 Event-Driven Automated Actions (TCA) Subsystem & Action Registry Standard
+
+#### 6.10.1 Architectural Philosophy: Zero Hardcoded Side-Effects
+In the Sovereign platform, business side-effects (e.g. sending emails on registration, alerting managers on status change, updating related balances) MUST NOT be hardcoded into route handlers. Instead, the platform decouples business workflows into three distinct primitives:
+1. **Trigger**: When an event occurs (`on_create`, `on_update`, `on_delete`, `on_state_change`, `on_time_interval`, `manual`).
+2. **Condition**: An in-memory evaluation of a declarative universal AST filter tree (`ASTConditionEvaluator`) against the trigger record and previous field values (`old:field`).
+3. **Action**: Invocation of a registered, typed action handler (`BaseActionHandler`).
+
+#### 6.10.2 Pluggable Action Handler Registry
+All business capabilities register with the central `ActionRegistry` ([`backend/modules/base/automated_actions/engine/registry.py`](file:///home/ehab/Desktop/economy_editor/backend/modules/base/automated_actions/engine/registry.py)):
+- `send_email`: Dispatches transactional email via `mail_gateway` with Jinja2 context interpolation.
+- `send_notification`: Delivers in-app, WebPush, or push notifications via `notification_engine`.
+- `post_chatter`: Appends comments, audit notes, or AI findings into entity chatter threads via `chatter`.
+- `update_record`: Directly mutates fields on the trigger record or related relational entities.
+- `create_record`: Instantiates new records in any loaded platform module.
+- `invoke_webhook`: Dispatches signed HTTP POST/PUT requests to external third-party endpoints with retry.
+
+#### 6.10.3 Dynamic Introspection & FastMCP Reflection
+- `GET /api/v1/automated_actions/action-types` exposes all registered action handlers and their generated Pydantic JSON schemas.
+- Allows frontend admin interfaces to render action configuration forms dynamically with zero frontend code changes.
+- Allows autonomous Hermes AI agents to introspect available business tools and execute automated actions dynamically.
+
+#### 6.10.4 Execution Resilience, Celery Offloading & Recursion Guard
+- **Execution Modes**: Synchronous (`SYNC`) for immediate atomic mutations, or Asynchronous (`ASYNC_CELERY`) for I/O operations (emails, webhooks).
+- **Infinite Loop Protection**: `TCADispatcher` enforces a configurable cascading recursion depth limit (`max_action_depth`, default 5) via `ContextVar` to halt runaway recursive trigger cascades.
+- **Audit Telemetry**: Every execution generates an immutable `ActionExecutionLog` tracking latency, status (`SUCCESS`, `FAILED`, `SKIPPED`), and context diffs.

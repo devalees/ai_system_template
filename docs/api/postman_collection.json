@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "fee56809-911d-4617-b866-f627d390e4a6",
+    "_postman_id": "1a164144-ff15-4754-837d-e38236543d01",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -245,6 +245,419 @@
             "description": "## List all attachments attached to a business entity\n\nList all attachments associated with a specific entity record.\n\n**Endpoint**: `GET {{base_url}}/api/v1/documents/entity/{res_model}/{res_id}`  \n**Tags**: `Document & Blob Storage Engine, Document Attachments`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Event-Driven Automated Actions & TCA Engine",
+      "item": [
+        {
+          "name": "Automated Actions - Rules",
+          "item": [
+            {
+              "name": "List Automated Actions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/rules",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "rules"
+                  ],
+                  "variable": []
+                },
+                "description": "## List Automated Actions\n\nList all automated action rules configured for the active tenant company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/automated_actions/rules`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Rules`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `target_model` | `query` | `string` | No | Filter rules by target model name |\n| `trigger_type` | `query` | `string` | No | Filter rules by trigger type |\n| `is_active` | `query` | `string` | No | Filter active/inactive rules |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Automated Action",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/rules",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "rules"
+                  ],
+                  "variable": []
+                },
+                "description": "## Create Automated Action\n\nCreate and activate a new automated action rule for the tenant.\n\n**Endpoint**: `POST {{base_url}}/api/v1/automated_actions/rules`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Rules`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Descriptive rule name |\n| `description` | `string` | No | Any valid string | Optional administrative notes or explanation |\n| `target_model` | `string` | **Yes** | Any valid string | Canonical model name (e.g. 'User', 'DocumentAttachment') |\n| `trigger_type` | `string` | No | Any valid string | Trigger event lifecycle hook |\n| `watched_fields` | `array` | No | Any valid array | List of field names to watch for on_update triggers |\n| `condition_tree` | `object` | No | Any valid object | Universal AST filter group evaluating condition |\n| `action_type` | `string` | **Yes** | Any valid string | Identifier of registered action handler |\n| `action_config` | `object` | No | Any valid object | Parameters passed to action handler |\n| `execution_mode` | `string` | No | Any valid string | SYNC or ASYNC_CELERY |\n| `sequence` | `integer` | No | Any valid integer | Execution priority order |\n| `is_active` | `boolean` | No | Any valid boolean | Whether this automation rule is active |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action_config\": {\n    \"recipient_field\": \"email\",\n    \"template_code\": \"WELCOME_VERIFICATION\"\n  },\n  \"action_type\": \"send_email\",\n  \"condition_tree\": {\n    \"filters\": [\n      {\n        \"field\": \"user_type\",\n        \"operator\": \"eq\",\n        \"value\": \"human\"\n      },\n      {\n        \"field\": \"is_active\",\n        \"operator\": \"eq\",\n        \"value\": true\n      }\n    ],\n    \"logic\": \"AND\"\n  },\n  \"description\": \"Automatically enqueue welcome verification email when a new human user registers.\",\n  \"execution_mode\": \"async_celery\",\n  \"is_active\": true,\n  \"name\": \"Send Welcome Email on User Signup\",\n  \"sequence\": 10,\n  \"target_model\": \"User\",\n  \"trigger_type\": \"on_create\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_rule_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get Automated Action",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/rules/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "rules",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_rule_id}}",
+                      "description": "Dynamic path parameter bound to {{active_rule_id}}"
+                    }
+                  ]
+                },
+                "description": "## Get Automated Action\n\nGet single automated action rule by ID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/automated_actions/rules/{id}`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Rules`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Automated Action",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/rules/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "rules",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_rule_id}}",
+                      "description": "Dynamic path parameter bound to {{active_rule_id}}"
+                    }
+                  ]
+                },
+                "description": "## Update Automated Action\n\nUpdate an automated action rule.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/automated_actions/rules/{id}`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Rules`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `target_model` | `string` | No | Any valid string | target_model attribute |\n| `trigger_type` | `string` | No | Any valid string | trigger_type attribute |\n| `watched_fields` | `array` | No | Any valid array | watched_fields attribute |\n| `condition_tree` | `object` | No | Any valid object | condition_tree attribute |\n| `action_type` | `string` | No | Any valid string | action_type attribute |\n| `action_config` | `object` | No | Any valid object | action_config attribute |\n| `execution_mode` | `string` | No | Any valid string | execution_mode attribute |\n| `sequence` | `integer` | No | Any valid integer | sequence attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"is_active\": true,\n  \"name\": \"Send Welcome Email on User Signup (Updated)\",\n  \"sequence\": 5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Automated Action",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/rules/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "rules",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{active_rule_id}}",
+                      "description": "Dynamic path parameter bound to {{active_rule_id}}"
+                    }
+                  ]
+                },
+                "description": "## Delete Automated Action\n\nSoft-delete an automated action rule.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/automated_actions/rules/{id}`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Rules`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Automated Actions - Registry",
+          "item": [
+            {
+              "name": "List Action Types",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/action-types",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "action-types"
+                  ],
+                  "variable": []
+                },
+                "description": "## List Action Types\n\nRetrieve self-describing metadata and JSON Schemas for all registered action handlers.\n\n**Endpoint**: `GET {{base_url}}/api/v1/automated_actions/action-types`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Registry`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Automated Actions - Testing",
+          "item": [
+            {
+              "name": "Test Action Condition",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/rules/test-condition",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "rules",
+                    "test-condition"
+                  ],
+                  "variable": []
+                },
+                "description": "## Test Action Condition\n\nDry-run test an AST condition tree against a live record in the database.\n\n**Endpoint**: `POST {{base_url}}/api/v1/automated_actions/rules/test-condition`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Testing`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `target_model` | `string` | **Yes** | Any valid string | Target model name |\n| `target_id` | `string` | **Yes** | Any valid string | Target record UUID to evaluate against |\n| `condition_tree` | `object` | **Yes** | Any valid object | Universal AST condition tree to test |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"condition_tree\": {\n    \"filters\": [\n      {\n        \"field\": \"username\",\n        \"operator\": \"eq\",\n        \"value\": \"admin\"\n      }\n    ],\n    \"logic\": \"AND\"\n  },\n  \"target_id\": \"6b4550dd-f558-418e-b506-95e26eeda277\",\n  \"target_model\": \"User\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_test_condition_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Automated Actions - Logs",
+          "item": [
+            {
+              "name": "List Action Execution Logs",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/automated_actions/logs",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "automated_actions",
+                    "logs"
+                  ],
+                  "variable": []
+                },
+                "description": "## List Action Execution Logs\n\nRetrieve historical action execution telemetry logs for the active tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/automated_actions/logs`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Logs`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `action_id` | `query` | `string` | No | Filter logs by automated action ID |\n| `target_model` | `query` | `string` | No | Filter logs by target model name |\n| `status` | `query` | `string` | No | Filter logs by status ('success', 'failed', 'skipped') |\n| `limit` | `query` | `integer` | No | Max log rows to return |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     },

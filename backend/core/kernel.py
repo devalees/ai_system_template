@@ -184,6 +184,13 @@ class Kernel:
         except Exception as exc:
             logger.warning(f"Permission harvesting deferred or skipped during bootstrap: {exc}")
 
+        # Register TCA Lifecycle Interceptors
+        try:
+            from modules.base.automated_actions.engine.interceptors import register_lifecycle_interceptors
+            register_lifecycle_interceptors()
+        except Exception as exc:
+            logger.warning(f"Lifecycle interceptors registration skipped: {exc}")
+
         self._booted = True
 
     async def boot(self, app: Optional[FastAPI] = None) -> None:

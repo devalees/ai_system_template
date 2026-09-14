@@ -6819,6 +6819,492 @@
         }
       }
     },
+    "/api/v1/automated_actions/action-types": {
+      "get": {
+        "tags": [
+          "Event-Driven Automated Actions & TCA Engine",
+          "Automated Actions - Registry"
+        ],
+        "summary": "List Action Types",
+        "description": "Retrieve self-describing metadata and JSON Schemas for all registered action handlers.",
+        "operationId": "list_action_types_api_v1_automated_actions_action_types_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ActionHandlerMeta"
+                  },
+                  "type": "array",
+                  "title": "Response List Action Types Api V1 Automated Actions Action Types Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/automated_actions/rules": {
+      "get": {
+        "tags": [
+          "Event-Driven Automated Actions & TCA Engine",
+          "Automated Actions - Rules"
+        ],
+        "summary": "List Automated Actions",
+        "description": "List all automated action rules configured for the active tenant company.",
+        "operationId": "list_automated_actions_api_v1_automated_actions_rules_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter rules by target model name",
+              "title": "Target Model"
+            },
+            "description": "Filter rules by target model name"
+          },
+          {
+            "name": "trigger_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter rules by trigger type",
+              "title": "Trigger Type"
+            },
+            "description": "Filter rules by trigger type"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter active/inactive rules",
+              "title": "Is Active"
+            },
+            "description": "Filter active/inactive rules"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AutomatedActionRead"
+                  },
+                  "title": "Response List Automated Actions Api V1 Automated Actions Rules Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Event-Driven Automated Actions & TCA Engine",
+          "Automated Actions - Rules"
+        ],
+        "summary": "Create Automated Action",
+        "description": "Create and activate a new automated action rule for the tenant.",
+        "operationId": "create_automated_action_api_v1_automated_actions_rules_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomatedActionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomatedActionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated_actions/rules/{id}": {
+      "get": {
+        "tags": [
+          "Event-Driven Automated Actions & TCA Engine",
+          "Automated Actions - Rules"
+        ],
+        "summary": "Get Automated Action",
+        "description": "Get single automated action rule by ID.",
+        "operationId": "get_automated_action_api_v1_automated_actions_rules__id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomatedActionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Event-Driven Automated Actions & TCA Engine",
+          "Automated Actions - Rules"
+        ],
+        "summary": "Update Automated Action",
+        "description": "Update an automated action rule.",
+        "operationId": "update_automated_action_api_v1_automated_actions_rules__id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomatedActionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomatedActionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Event-Driven Automated Actions & TCA Engine",
+          "Automated Actions - Rules"
+        ],
+        "summary": "Delete Automated Action",
+        "description": "Soft-delete an automated action rule.",
+        "operationId": "delete_automated_action_api_v1_automated_actions_rules__id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated_actions/rules/test-condition": {
+      "post": {
+        "tags": [
+          "Event-Driven Automated Actions & TCA Engine",
+          "Automated Actions - Testing"
+        ],
+        "summary": "Test Action Condition",
+        "description": "Dry-run test an AST condition tree against a live record in the database.",
+        "operationId": "test_action_condition_api_v1_automated_actions_rules_test_condition_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConditionTestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConditionTestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/automated_actions/logs": {
+      "get": {
+        "tags": [
+          "Event-Driven Automated Actions & TCA Engine",
+          "Automated Actions - Logs"
+        ],
+        "summary": "List Action Execution Logs",
+        "description": "Retrieve historical action execution telemetry logs for the active tenant.",
+        "operationId": "list_action_execution_logs_api_v1_automated_actions_logs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter logs by automated action ID",
+              "title": "Action Id"
+            },
+            "description": "Filter logs by automated action ID"
+          },
+          {
+            "name": "target_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter logs by target model name",
+              "title": "Target Model"
+            },
+            "description": "Filter logs by target model name"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter logs by status ('success', 'failed', 'skipped')",
+              "title": "Status"
+            },
+            "description": "Filter logs by status ('success', 'failed', 'skipped')"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Max log rows to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Max log rows to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActionExecutionLogRead"
+                  },
+                  "title": "Response List Action Execution Logs Api V1 Automated Actions Logs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/kernel/modules": {
       "get": {
         "tags": [
@@ -6888,6 +7374,147 @@
   },
   "components": {
     "schemas": {
+      "ActionExecutionLogRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "action_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Id"
+          },
+          "action_name": {
+            "type": "string",
+            "title": "Action Name"
+          },
+          "target_model": {
+            "type": "string",
+            "title": "Target Model"
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Id"
+          },
+          "trigger_type": {
+            "type": "string",
+            "title": "Trigger Type"
+          },
+          "condition_matched": {
+            "type": "boolean",
+            "title": "Condition Matched"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "execution_duration_ms": {
+            "type": "number",
+            "title": "Execution Duration Ms"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "execution_context": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Context"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "action_name",
+          "target_model",
+          "target_id",
+          "trigger_type",
+          "condition_matched",
+          "status",
+          "execution_duration_ms",
+          "created_at"
+        ],
+        "title": "ActionExecutionLogRead",
+        "description": "Response representation of an action execution audit log entry."
+      },
+      "ActionHandlerMeta": {
+        "properties": {
+          "action_type": {
+            "type": "string",
+            "title": "Action Type",
+            "description": "Unique action handler identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Human-readable title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the action handler capability"
+          },
+          "config_schema": {
+            "type": "object",
+            "title": "Config Schema",
+            "description": "JSON Schema of required/optional parameters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action_type",
+          "title",
+          "description"
+        ],
+        "title": "ActionHandlerMeta",
+        "description": "Self-describing metadata for an action handler including its JSON Schema.",
+        "example": {
+          "action_type": "send_email",
+          "config_schema": {
+            "properties": {
+              "template_code": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Dispatch dynamic transactional email using the Mail Gateway.",
+          "title": "Send Email"
+        }
+      },
       "ActivityCreate": {
         "properties": {
           "summary": {
@@ -7160,6 +7787,397 @@
         "example": {
           "message": "Password updated successfully.",
           "success": true
+        }
+      },
+      "AutomatedActionCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Name",
+            "description": "Descriptive rule name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional administrative notes or explanation"
+          },
+          "target_model": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Target Model",
+            "description": "Canonical model name (e.g. 'User', 'DocumentAttachment')"
+          },
+          "trigger_type": {
+            "$ref": "#/components/schemas/TriggerType",
+            "description": "Trigger event lifecycle hook",
+            "default": "on_create"
+          },
+          "watched_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Watched Fields",
+            "description": "List of field names to watch for on_update triggers"
+          },
+          "condition_tree": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition Tree",
+            "description": "Universal AST filter group evaluating condition"
+          },
+          "action_type": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Action Type",
+            "description": "Identifier of registered action handler"
+          },
+          "action_config": {
+            "type": "object",
+            "title": "Action Config",
+            "description": "Parameters passed to action handler"
+          },
+          "execution_mode": {
+            "$ref": "#/components/schemas/ExecutionMode",
+            "description": "SYNC or ASYNC_CELERY",
+            "default": "async_celery"
+          },
+          "sequence": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Sequence",
+            "description": "Execution priority order",
+            "default": 10
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether this automation rule is active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "target_model",
+          "action_type"
+        ],
+        "title": "AutomatedActionCreate",
+        "description": "Payload for creating a new automated action rule.",
+        "example": {
+          "action_config": {
+            "recipient_field": "email",
+            "template_code": "WELCOME_VERIFICATION"
+          },
+          "action_type": "send_email",
+          "condition_tree": {
+            "filters": [
+              {
+                "field": "user_type",
+                "operator": "eq",
+                "value": "human"
+              },
+              {
+                "field": "is_active",
+                "operator": "eq",
+                "value": true
+              }
+            ],
+            "logic": "AND"
+          },
+          "description": "Automatically enqueue welcome verification email when a new human user registers.",
+          "execution_mode": "async_celery",
+          "is_active": true,
+          "name": "Send Welcome Email on User Signup",
+          "sequence": 10,
+          "target_model": "User",
+          "trigger_type": "on_create"
+        }
+      },
+      "AutomatedActionRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Name",
+            "description": "Descriptive rule name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional administrative notes or explanation"
+          },
+          "target_model": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Target Model",
+            "description": "Canonical model name (e.g. 'User', 'DocumentAttachment')"
+          },
+          "trigger_type": {
+            "$ref": "#/components/schemas/TriggerType",
+            "description": "Trigger event lifecycle hook",
+            "default": "on_create"
+          },
+          "watched_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Watched Fields",
+            "description": "List of field names to watch for on_update triggers"
+          },
+          "condition_tree": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition Tree",
+            "description": "Universal AST filter group evaluating condition"
+          },
+          "action_type": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Action Type",
+            "description": "Identifier of registered action handler"
+          },
+          "action_config": {
+            "type": "object",
+            "title": "Action Config",
+            "description": "Parameters passed to action handler"
+          },
+          "execution_mode": {
+            "$ref": "#/components/schemas/ExecutionMode",
+            "description": "SYNC or ASYNC_CELERY",
+            "default": "async_celery"
+          },
+          "sequence": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Sequence",
+            "description": "Execution priority order",
+            "default": 10
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether this automation rule is active",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "target_model",
+          "action_type",
+          "id",
+          "company_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AutomatedActionRead",
+        "description": "Response representation of an automated action rule."
+      },
+      "AutomatedActionUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "target_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Model"
+          },
+          "trigger_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TriggerType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "watched_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Watched Fields"
+          },
+          "condition_tree": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition Tree"
+          },
+          "action_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Type"
+          },
+          "action_config": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Config"
+          },
+          "execution_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecutionMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "AutomatedActionUpdate",
+        "description": "Payload for updating an existing automated action rule.",
+        "example": {
+          "is_active": true,
+          "name": "Send Welcome Email on User Signup (Updated)",
+          "sequence": 5
         }
       },
       "BackupRecordRead": {
@@ -8286,6 +9304,87 @@
         "title": "CompanyUpdate",
         "description": "Schema for updating tenant configuration."
       },
+      "ConditionTestRequest": {
+        "properties": {
+          "target_model": {
+            "type": "string",
+            "title": "Target Model",
+            "description": "Target model name"
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Id",
+            "description": "Target record UUID to evaluate against"
+          },
+          "condition_tree": {
+            "type": "object",
+            "title": "Condition Tree",
+            "description": "Universal AST condition tree to test"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_model",
+          "target_id",
+          "condition_tree"
+        ],
+        "title": "ConditionTestRequest",
+        "description": "Request payload to test a condition tree against a live record.",
+        "example": {
+          "condition_tree": {
+            "filters": [
+              {
+                "field": "username",
+                "operator": "eq",
+                "value": "admin"
+              }
+            ],
+            "logic": "AND"
+          },
+          "target_id": "6b4550dd-f558-418e-b506-95e26eeda277",
+          "target_model": "User"
+        }
+      },
+      "ConditionTestResponse": {
+        "properties": {
+          "matched": {
+            "type": "boolean",
+            "title": "Matched"
+          },
+          "target_model": {
+            "type": "string",
+            "title": "Target Model"
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Id"
+          },
+          "evaluated_record": {
+            "type": "object",
+            "title": "Evaluated Record"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matched",
+          "target_model",
+          "target_id",
+          "evaluated_record"
+        ],
+        "title": "ConditionTestResponse",
+        "description": "Result of testing a condition tree against a live record.",
+        "example": {
+          "evaluated_record": {
+            "is_active": true,
+            "username": "admin"
+          },
+          "matched": true,
+          "target_id": "6b4550dd-f558-418e-b506-95e26eeda277",
+          "target_model": "User"
+        }
+      },
       "ConnectionTestResponse": {
         "properties": {
           "success": {
@@ -8905,6 +10004,15 @@
           "res_model": "contract",
           "storage_path": "a0000000-0000-0000-0000-000000000001/e3/e3b0c442..."
         }
+      },
+      "ExecutionMode": {
+        "type": "string",
+        "enum": [
+          "sync",
+          "async_celery"
+        ],
+        "title": "ExecutionMode",
+        "description": "Execution dispatch strategies for automated actions."
       },
       "ExportJobResponse": {
         "properties": {
@@ -12313,6 +13421,19 @@
             "en": "Tax Invoices"
           }
         }
+      },
+      "TriggerType": {
+        "type": "string",
+        "enum": [
+          "on_create",
+          "on_update",
+          "on_delete",
+          "on_state_change",
+          "on_time_interval",
+          "manual"
+        ],
+        "title": "TriggerType",
+        "description": "Supported event trigger modes for automated actions."
       },
       "TwoFactorDisableRequest": {
         "properties": {
