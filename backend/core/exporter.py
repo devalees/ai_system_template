@@ -153,6 +153,17 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
 
             # Attach Postman test script for automatic token & company_id capture on login
             if "login" in path:
+                req_item["request"]["body"] = {
+                    "mode": "raw",
+                    "raw": json.dumps(
+                        {
+                            "identifier": "{{admin_username}}",
+                            "password": "{{admin_password}}",
+                        },
+                        indent=2,
+                    ),
+                    "options": {"raw": {"language": "json"}},
+                }
                 req_item["event"] = [
                     {
                         "listen": "test",
@@ -177,22 +188,35 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
     return collection
 
 
-def build_postman_environment() -> Dict[str, Any]:
-    """Generate default Postman environment template."""
+def build_postman_environment(
+    admin_username: str = "admin",
+    admin_password: str = "AdminPassword2026!",
+    company_id: str = "",
+    token: str = "",
+) -> Dict[str, Any]:
+    """Generate default Postman environment template with pre-configured credentials."""
     return {
         "id": "sovereign-environment-v1",
         "name": "Sovereign Platform Local Environment",
         "values": [
             {"key": "base_url", "value": "http://localhost:8000", "type": "default", "enabled": True},
-            {"key": "auth_token", "value": "", "type": "secret", "enabled": True},
-            {"key": "active_company_id", "value": "", "type": "default", "enabled": True},
+            {"key": "admin_username", "value": admin_username, "type": "default", "enabled": True},
+            {"key": "admin_password", "value": admin_password, "type": "secret", "enabled": True},
+            {"key": "auth_token", "value": token, "type": "secret", "enabled": True},
+            {"key": "active_company_id", "value": company_id, "type": "default", "enabled": True},
             {"key": "current_user_id", "value": "", "type": "default", "enabled": True},
         ],
         "_postman_variable_scope": "environment",
     }
 
 
-def export_api_specifications(output_dir: Optional[Path] = None) -> Dict[str, str]:
+def export_api_specifications(
+    output_dir: Optional[Path] = None,
+    admin_username: str = "admin",
+    admin_password: str = "AdminPassword2026!",
+    company_id: str = "",
+    token: str = "",
+) -> Dict[str, str]:
     """Export OpenAPI and Postman files to target directory."""
     if output_dir is None:
         if Path("/docs").exists():
@@ -220,7 +244,12 @@ def export_api_specifications(output_dir: Optional[Path] = None) -> Dict[str, st
         json.dump(postman_coll, f, indent=2, ensure_ascii=False)
 
     # 3. Export Postman Environment
-    postman_env = build_postman_environment()
+    postman_env = build_postman_environment(
+        admin_username=admin_username,
+        admin_password=admin_password,
+        company_id=company_id,
+        token=token,
+    )
     with open(environment_path, "w", encoding="utf-8") as f:
         json.dump(postman_env, f, indent=2, ensure_ascii=False)
 

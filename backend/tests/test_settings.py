@@ -6,6 +6,7 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from main import app
+from modules.base.identity_rbac.models import Company
 from modules.base.settings.service import SettingsService
 
 
@@ -49,9 +50,17 @@ async def test_settings_service_direct_crud_and_cache(db_session: AsyncSession):
 async def test_settings_api_endpoints_and_multitenancy(db_session: AsyncSession):
     """Verify HTTP endpoints for settings and strict multi-tenant isolation."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Seed test companies
+        company_a = uuid.uuid4()
+        company_b = uuid.uuid4()
+        db_session.add_all([
+            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}", allow_registration=True),
+            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}", allow_registration=True),
+        ])
+        await db_session.commit()
+
         # 1. Register Tenant A user
         user_a = f"tenant_a_{uuid.uuid4().hex[:6]}"
-        company_a = uuid.uuid4()
         reg_a = await client.post(
             "/api/v1/identity_rbac/auth/register",
             json={
@@ -72,7 +81,6 @@ async def test_settings_api_endpoints_and_multitenancy(db_session: AsyncSession)
 
         # 2. Register Tenant B user
         user_b = f"tenant_b_{uuid.uuid4().hex[:6]}"
-        company_b = uuid.uuid4()
         reg_b = await client.post(
             "/api/v1/identity_rbac/auth/register",
             json={

@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "23183819-8588-4faa-bf58-2404dd8adcd2",
+    "_postman_id": "4e9f7ef7-d03c-4664-bf9e-c7fed3b852a4",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -251,7 +251,7 @@
               ],
               "variable": []
             },
-            "description": "Register a new user account (human employee or AI agent).",
+            "description": "Register a new user account (human employee or AI agent) with strict tenant registration gating.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"company_id\": \"a0000000-0000-0000-0000-000000000001\",\n  \"email\": \"sarah.connor@sovereign.local\",\n  \"full_name\": \"Sarah Connor\",\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"sconnor\"\n}",
@@ -305,7 +305,7 @@
             "description": "Authenticate with username/email and password, returning JWT bearer token.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"identifier\": \"sconnor\",\n  \"password\": \"StrongPassword2026!\"\n}",
+              "raw": "{\n  \"identifier\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -371,6 +371,211 @@
               "variable": []
             },
             "description": "Return currently authenticated profile metadata."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Internal User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "users"
+              ],
+              "variable": []
+            },
+            "description": "Provision an internal user account within an organization (Admin or Superuser).\n\nBypasses allow_registration restriction because this is an authenticated internal action.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"employee@sovereign.local\",\n  \"full_name\": \"Internal Employee\",\n  \"group_ids\": [],\n  \"is_superuser\": false,\n  \"password\": \"StrongPassword2026!\",\n  \"preferred_language\": \"en\",\n  \"user_type\": \"human\",\n  \"username\": \"employee1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Companies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/companies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "companies"
+              ],
+              "variable": []
+            },
+            "description": "List tenant companies. Superusers view all tenants; regular users view their own tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/companies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "companies"
+              ],
+              "variable": []
+            },
+            "description": "Create a new tenant organization (Superuser only).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allow_registration\": false,\n  \"code\": \"SOV-MAIN\",\n  \"currency_id\": \"USD\",\n  \"email_domain\": \"sovereign.local\",\n  \"name\": \"Sovereign Enterprise System\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Company",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/companies/:company_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "companies",
+                ":company_id"
+              ],
+              "variable": [
+                {
+                  "key": "company_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Retrieve details for a specific tenant organization."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Company",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/companies/:company_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "companies",
+                ":company_id"
+              ],
+              "variable": [
+                {
+                  "key": "company_id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Update tenant configuration, including toggling allow_registration (Superuser or Tenant Admin)."
           },
           "response": []
         },

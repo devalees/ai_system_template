@@ -285,3 +285,32 @@ The Orchestrator MCP server exposes two typed tools for the Chief of Staff:
 | **Langfuse Dashboard** | Standalone Docker container | ~200–350 MB | Low (~1–3% during logging) | **$0** |
 | **Golden Evals Suite** | Transient `pytest` process | Transient | Only during test execution | **$0** |
 | **TOTAL** | **0 External Servers** | **~320–580 MB RAM** | **Standard Host is more than sufficient** | **$0 Added Cost** |
+
+---
+
+## 6. Enterprise Tenancy, Registration Gating & Provisioning Architecture
+
+### 6.1 Multi-Tenant Hierarchy & `Company` Entity
+- **Root Tenant Entity (`Company`)**:
+  - The `Company` model (`modules/base/identity_rbac/models.py`) represents the isolated enterprise organization.
+  - Inherits from `Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditActorMixin, ExtensibleModelMixin, SoftDeleteMixin, ArchivableMixin`.
+  - Intentionally does NOT inherit `TenantMixin` because `Company` is the root tenant boundary itself.
+- **Registration Gating Policy (`allow_registration: bool = False`)**:
+  - **Self-Registration (`POST /api/v1/identity_rbac/auth/register`)**: Requires target `company_id` to exist and hold `allow_registration == True`. Attempts to register against organizations where `allow_registration == False` are rejected with `403 Forbidden`.
+  - **Internal Provisioning (`POST /api/v1/identity_rbac/users`)**: Authenticated administrators and superusers can provision employee and AI agent accounts internally at any time, completely bypassing `allow_registration`.
+- **Company Administration API (`/api/v1/identity_rbac/companies`)**:
+  - CRUD endpoints for managing tenant organizations, updating configuration, and toggling `allow_registration` dynamically.
+
+### 6.2 Interactive Database Installer & Setup CLI (`backend/setup_database.py`)
+- **Asynchronous CLI Installer**:
+  - Drops and recreates clean PostgreSQL schemas (`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`).
+  - Discovers and loads all module declarative models in topological DAG order.
+  - Seeds ISO foundational master data (Currencies, Countries, UoMs, Tax Types).
+  - Prompts interactively with input validation:
+    - Username: 3–50 chars, alphanumeric + underscores/hyphens, strictly no whitespace.
+    - Password: Masked input with confirmation, minimum 8 characters.
+    - Email: Standard RFC email format.
+    - Organization: Primary company name and registration toggle.
+  - Creates the primary tenant `Company` and provisions the Super Administrator (`is_superuser=True`) with global universal access across all current and future modules.
+  - Automatically exports freshly synchronized `openapi.json`, `postman_collection.json`, and `postman_environment.json`.
+

@@ -24,6 +24,11 @@ class UUIDPrimaryKeyMixin:
         index=True,
     )
 
+    def __init__(self, **kwargs):
+        if "id" not in kwargs:
+            kwargs["id"] = uuid.uuid4()
+        super().__init__(**kwargs)
+
 
 class TimestampMixin:
     """Standardized creation and modification audit timestamps."""

@@ -10,6 +10,7 @@ import redis.asyncio as aioredis
 
 from core.config import settings
 from main import app
+from modules.base.identity_rbac.models import Company
 from modules.base.chatter.service import ChatterService
 
 
@@ -132,9 +133,17 @@ async def test_chatter_redis_pubsub_broadcast(db_session: AsyncSession):
 async def test_chatter_api_endpoints_and_isolation(db_session: AsyncSession):
     """Verify HTTP endpoints and strict tenant isolation on chatter threads."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Seed test companies
+        company_a = uuid.uuid4()
+        company_b = uuid.uuid4()
+        db_session.add_all([
+            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}", allow_registration=True),
+            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}", allow_registration=True),
+        ])
+        await db_session.commit()
+
         # 1. Register Tenant A
         user_a = f"chatter_a_{uuid.uuid4().hex[:6]}"
-        company_a = uuid.uuid4()
         await client.post(
             "/api/v1/identity_rbac/auth/register",
             json={
@@ -153,7 +162,6 @@ async def test_chatter_api_endpoints_and_isolation(db_session: AsyncSession):
 
         # 2. Register Tenant B
         user_b = f"chatter_b_{uuid.uuid4().hex[:6]}"
-        company_b = uuid.uuid4()
         await client.post(
             "/api/v1/identity_rbac/auth/register",
             json={

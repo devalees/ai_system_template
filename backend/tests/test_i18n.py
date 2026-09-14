@@ -6,6 +6,7 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from main import app
+from modules.base.identity_rbac.models import Company
 from modules.base.i18n.service import I18nService
 from modules.base.i18n.models import TranslationTerm
 
@@ -69,8 +70,16 @@ async def test_i18n_translation_catalog_and_tenant_custom_terms(db_session: Asyn
 async def test_i18n_api_endpoints_and_tenant_isolation(db_session: AsyncSession):
     """Verify REST API routes for locales, catalog, terms, and multi-tenant isolation."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        # 1. Register Tenant A
+        # Seed test companies
         company_a = uuid.uuid4()
+        company_b = uuid.uuid4()
+        db_session.add_all([
+            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}", allow_registration=True),
+            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}", allow_registration=True),
+        ])
+        await db_session.commit()
+
+        # 1. Register Tenant A
         user_a = f"i18n_a_{uuid.uuid4().hex[:6]}"
         await client.post(
             "/api/v1/identity_rbac/auth/register",
@@ -93,7 +102,6 @@ async def test_i18n_api_endpoints_and_tenant_isolation(db_session: AsyncSession)
         }
 
         # 2. Register Tenant B
-        company_b = uuid.uuid4()
         user_b = f"i18n_b_{uuid.uuid4().hex[:6]}"
         await client.post(
             "/api/v1/identity_rbac/auth/register",

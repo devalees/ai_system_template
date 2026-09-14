@@ -13,7 +13,7 @@
           "Authentication"
         ],
         "summary": "Register User",
-        "description": "Register a new user account (human employee or AI agent).",
+        "description": "Register a new user account (human employee or AI agent) with strict tenant registration gating.",
         "operationId": "register_user_api_v1_identity_rbac_auth_register_post",
         "requestBody": {
           "content": {
@@ -118,6 +118,240 @@
             "OAuth2PasswordBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/identity_rbac/users": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Create Internal User",
+        "description": "Provision an internal user account within an organization (Admin or Superuser).\n\nBypasses allow_registration restriction because this is an authenticated internal action.",
+        "operationId": "create_internal_user_api_v1_identity_rbac_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/identity_rbac/companies": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Tenant Administration"
+        ],
+        "summary": "List Companies",
+        "description": "List tenant companies. Superusers view all tenants; regular users view their own tenant.",
+        "operationId": "list_companies_api_v1_identity_rbac_companies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CompanyRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Companies Api V1 Identity Rbac Companies Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Tenant Administration"
+        ],
+        "summary": "Create Company",
+        "description": "Create a new tenant organization (Superuser only).",
+        "operationId": "create_company_api_v1_identity_rbac_companies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/identity_rbac/companies/{company_id}": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Tenant Administration"
+        ],
+        "summary": "Get Company",
+        "description": "Retrieve details for a specific tenant organization.",
+        "operationId": "get_company_api_v1_identity_rbac_companies__company_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Tenant Administration"
+        ],
+        "summary": "Update Company",
+        "description": "Update tenant configuration, including toggling allow_registration (Superuser or Tenant Admin).",
+        "operationId": "update_company_api_v1_identity_rbac_companies__company_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanyUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/identity_rbac/permissions": {
@@ -4769,6 +5003,212 @@
           "state_or_province": "NY"
         }
       },
+      "CompanyCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Name",
+            "description": "Organization legal or trading name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Code",
+            "description": "Unique tenant identification code"
+          },
+          "allow_registration": {
+            "type": "boolean",
+            "title": "Allow Registration",
+            "description": "Whether public self-registration via /auth/register is permitted for this tenant",
+            "default": false
+          },
+          "email_domain": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Domain",
+            "description": "Optional corporate email domain constraint"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "description": "Base accounting currency ISO code",
+            "default": "USD"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "CompanyCreate",
+        "example": {
+          "allow_registration": false,
+          "code": "SOV-MAIN",
+          "currency_id": "USD",
+          "email_domain": "sovereign.local",
+          "name": "Sovereign Enterprise System"
+        }
+      },
+      "CompanyRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "allow_registration": {
+            "type": "boolean",
+            "title": "Allow Registration"
+          },
+          "email_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Domain"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "default": "USD"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "code",
+          "allow_registration",
+          "is_active",
+          "created_at"
+        ],
+        "title": "CompanyRead"
+      },
+      "CompanyUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "allow_registration": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allow Registration",
+            "description": "Toggle public registration permission"
+          },
+          "email_domain": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Domain"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "CompanyUpdate"
+      },
       "ConnectionTestResponse": {
         "properties": {
           "success": {
@@ -5527,6 +5967,96 @@
           "job_id": "j0000000-0000-0000-0000-000000000001",
           "message": "Import job queued successfully",
           "status": "processing"
+        }
+      },
+      "InternalUserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Unique corporate email address"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "description": "Alphanumeric unique login username"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "title": "Password",
+            "description": "Cleartext password (hashed using bcrypt)"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Full display name"
+          },
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "human",
+              "ai_agent"
+            ],
+            "title": "User Type",
+            "description": "User actor classification",
+            "default": "human"
+          },
+          "preferred_language": {
+            "type": "string",
+            "title": "Preferred Language",
+            "description": "ISO 639-1 language code",
+            "default": "en"
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser",
+            "description": "Superuser access flag",
+            "default": false
+          },
+          "group_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Group Ids",
+            "description": "Optional RBAC group IDs to link"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id",
+            "description": "Target company ID (defaults to active company)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "username",
+          "password",
+          "full_name"
+        ],
+        "title": "InternalUserCreate",
+        "example": {
+          "email": "employee@sovereign.local",
+          "full_name": "Internal Employee",
+          "group_ids": [],
+          "is_superuser": false,
+          "password": "StrongPassword2026!",
+          "preferred_language": "en",
+          "user_type": "human",
+          "username": "employee1"
         }
       },
       "LocaleInfo": {

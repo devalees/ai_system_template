@@ -6,6 +6,7 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from main import app
+from modules.base.identity_rbac.models import Company
 from modules.base.mail_gateway.models import MailServer, MailTemplate, MailQueue
 from modules.base.mail_gateway.schemas import SendMailRequest
 from modules.base.mail_gateway.service import MailService
@@ -118,8 +119,16 @@ async def test_mail_queue_and_sending_pipeline(db_session: AsyncSession):
 async def test_mail_api_endpoints_and_tenant_isolation(db_session: AsyncSession):
     """Verify REST API routes for servers, templates, send, queue, and multi-tenant isolation."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        # 1. Setup Tenant A
+        # Seed test companies
         company_a = uuid.uuid4()
+        company_b = uuid.uuid4()
+        db_session.add_all([
+            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}", allow_registration=True),
+            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}", allow_registration=True),
+        ])
+        await db_session.commit()
+
+        # 1. Setup Tenant A
         user_a = f"user_a_{uuid.uuid4().hex[:6]}"
         await client.post(
             "/api/v1/identity_rbac/auth/register",
@@ -142,7 +151,6 @@ async def test_mail_api_endpoints_and_tenant_isolation(db_session: AsyncSession)
         }
 
         # 2. Setup Tenant B
-        company_b = uuid.uuid4()
         user_b = f"user_b_{uuid.uuid4().hex[:6]}"
         await client.post(
             "/api/v1/identity_rbac/auth/register",

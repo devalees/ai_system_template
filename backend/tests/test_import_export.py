@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from main import app
+from modules.base.identity_rbac.models import Company
 from modules.base.lookups.models import Tag
 from modules.base.import_export.processor import DataProcessor
 from modules.base.import_export.service import ImportExportService
@@ -97,8 +98,16 @@ async def test_import_and_export_service_synchronous(db_session: AsyncSession):
 async def test_import_export_api_endpoints_and_tenant_isolation(db_session: AsyncSession):
     """Verify REST API import, export job polling, file download, and tenant boundary enforcement."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        # 1. Setup Tenant A
+        # Seed test companies
         company_a = uuid.uuid4()
+        company_b = uuid.uuid4()
+        db_session.add_all([
+            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}", allow_registration=True),
+            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}", allow_registration=True),
+        ])
+        await db_session.commit()
+
+        # 1. Setup Tenant A
         user_a = f"impexp_a_{uuid.uuid4().hex[:6]}"
         await client.post(
             "/api/v1/identity_rbac/auth/register",
@@ -121,7 +130,6 @@ async def test_import_export_api_endpoints_and_tenant_isolation(db_session: Asyn
         }
 
         # 2. Setup Tenant B
-        company_b = uuid.uuid4()
         user_b = f"impexp_b_{uuid.uuid4().hex[:6]}"
         await client.post(
             "/api/v1/identity_rbac/auth/register",

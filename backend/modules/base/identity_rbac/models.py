@@ -6,7 +6,35 @@ from sqlalchemy import String, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.base_models import BaseModel
+from core.base_models import (
+    Base,
+    UUIDPrimaryKeyMixin,
+    TimestampMixin,
+    AuditActorMixin,
+    ExtensibleModelMixin,
+    SoftDeleteMixin,
+    ArchivableMixin,
+    BaseModel,
+)
+
+
+class Company(
+    Base,
+    UUIDPrimaryKeyMixin,
+    TimestampMixin,
+    AuditActorMixin,
+    ExtensibleModelMixin,
+    SoftDeleteMixin,
+    ArchivableMixin,
+):
+    """Tenant company/organization entity governing workspace boundaries and registration policy."""
+    __tablename__ = "companies"
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    allow_registration: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_domain: Mapped[Optional[str]] = mapped_column(String(100), default=None, nullable=True)
+    currency_id: Mapped[Optional[str]] = mapped_column(String(3), default="USD", nullable=True)
 
 
 class User(BaseModel):

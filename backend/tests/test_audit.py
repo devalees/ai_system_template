@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from main import app
 from modules.base.audit.models import AuditLog
 from modules.base.audit.service import AuditService, compute_instance_diff
-from modules.base.identity_rbac.models import User
+from modules.base.identity_rbac.models import User, Company
 
 
 @pytest.mark.asyncio
@@ -86,9 +86,17 @@ async def test_compute_instance_diff(db_session: AsyncSession):
 async def test_audit_api_endpoints_and_tenant_isolation(db_session: AsyncSession):
     """Verify HTTP audit endpoints and cross-tenant audit isolation."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Seed test companies
+        company_a = uuid.uuid4()
+        company_b = uuid.uuid4()
+        db_session.add_all([
+            Company(id=company_a, name="Company A", code=f"CA_{company_a.hex[:4]}", allow_registration=True),
+            Company(id=company_b, name="Company B", code=f"CB_{company_b.hex[:4]}", allow_registration=True),
+        ])
+        await db_session.commit()
+
         # 1. Register Tenant A
         user_a = f"audit_a_{uuid.uuid4().hex[:6]}"
-        company_a = uuid.uuid4()
         await client.post(
             "/api/v1/identity_rbac/auth/register",
             json={
@@ -107,7 +115,6 @@ async def test_audit_api_endpoints_and_tenant_isolation(db_session: AsyncSession
 
         # 2. Register Tenant B
         user_b = f"audit_b_{uuid.uuid4().hex[:6]}"
-        company_b = uuid.uuid4()
         await client.post(
             "/api/v1/identity_rbac/auth/register",
             json={

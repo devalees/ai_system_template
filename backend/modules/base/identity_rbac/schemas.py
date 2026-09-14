@@ -2,6 +2,7 @@
 
 import uuid
 from typing import Optional, List, Literal
+from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
@@ -117,3 +118,76 @@ class PermissionCreate(BaseModel):
     name: str
     module_name: str
     ownership_scope: Literal["GLOBAL", "TEAM", "OWN"] = "GLOBAL"
+
+
+class CompanyCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Sovereign Enterprise System",
+                "code": "SOV-MAIN",
+                "allow_registration": False,
+                "email_domain": "sovereign.local",
+                "currency_id": "USD",
+            }
+        }
+    )
+
+    name: str = Field(..., min_length=2, max_length=100, description="Organization legal or trading name")
+    code: str = Field(..., min_length=2, max_length=50, description="Unique tenant identification code")
+    allow_registration: bool = Field(
+        False,
+        description="Whether public self-registration via /auth/register is permitted for this tenant",
+    )
+    email_domain: Optional[str] = Field(None, max_length=100, description="Optional corporate email domain constraint")
+    currency_id: Optional[str] = Field("USD", max_length=3, description="Base accounting currency ISO code")
+
+
+class CompanyUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    code: Optional[str] = Field(None, min_length=2, max_length=50)
+    allow_registration: Optional[bool] = Field(None, description="Toggle public registration permission")
+    email_domain: Optional[str] = Field(None, max_length=100)
+    currency_id: Optional[str] = Field(None, max_length=3)
+    is_active: Optional[bool] = None
+
+
+class CompanyRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    code: str
+    allow_registration: bool
+    email_domain: Optional[str] = None
+    currency_id: Optional[str] = "USD"
+    is_active: bool
+    created_at: datetime
+
+
+class InternalUserCreate(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "email": "employee@sovereign.local",
+                "username": "employee1",
+                "password": "StrongPassword2026!",
+                "full_name": "Internal Employee",
+                "user_type": "human",
+                "preferred_language": "en",
+                "is_superuser": False,
+                "group_ids": [],
+            }
+        }
+    )
+
+    email: EmailStr = Field(..., description="Unique corporate email address")
+    username: str = Field(..., min_length=3, max_length=50, description="Alphanumeric unique login username")
+    password: str = Field(..., min_length=6, description="Cleartext password (hashed using bcrypt)")
+    full_name: str = Field(..., description="Full display name")
+    user_type: Literal["human", "ai_agent"] = Field("human", description="User actor classification")
+    preferred_language: str = Field("en", description="ISO 639-1 language code")
+    is_superuser: bool = Field(False, description="Superuser access flag")
+    group_ids: List[uuid.UUID] = Field(default_factory=list, description="Optional RBAC group IDs to link")
+    company_id: Optional[uuid.UUID] = Field(None, description="Target company ID (defaults to active company)")
+
