@@ -25,6 +25,8 @@ from modules.base.identity_rbac.schemas import (
     UserDetailRead,
     LoginRequest,
     TokenResponse,
+    ChangePasswordRequest,
+    AuthMessageResponse,
     PermissionCreate,
     PermissionUpdate,
     PermissionRead,
@@ -207,6 +209,48 @@ async def get_me(
     )
 
 
+@router.post(
+    "/auth/change-password",
+    response_model=AuthMessageResponse,
+    tags=["Authentication"],
+    summary="Change password for authenticated user",
+)
+async def change_password(
+    payload: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AuthMessageResponse:
+    """Change credentials for the currently authenticated session with cryptographic verification.
+    
+    Security & Access:
+    - Requires active authenticated Bearer session.
+    - Validates `current_password` against bcrypt hash.
+    - Enforces matching `new_password` and `confirm_password`.
+    - Prevents redundant password churn (`new_password != current_password`).
+    """
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password verification failed.",
+        )
+
+    if payload.new_password != payload.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password and confirmation password do not match.",
+        )
+
+    if payload.new_password == payload.current_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password cannot be identical to the current password.",
+        )
+
+    current_user.hashed_password = hash_password(payload.new_password)
+    await db.commit()
+    return AuthMessageResponse(success=True, message="Password successfully changed.")
+
+
 # =========================================================================
 # User Management (CRUD & Administration)
 # =========================================================================
@@ -360,7 +404,7 @@ async def update_user(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserDetailRead:
-    """Update user account attributes, active toggle, group assignments, or reset password."""
+    """Update user account attributes, active toggle, and RBAC group assignments."""
     stmt = select(User).where(User.id == user_id, User.deleted_at.is_(None))
     if not current_user.is_superuser:
         stmt = stmt.where(User.company_id == current_user.company_id)
@@ -418,9 +462,6 @@ async def update_user(
                 detail="Only the primary system administrator can grant or revoke superuser privileges.",
             )
         user.is_superuser = payload.is_superuser
-
-    if payload.password is not None:
-        user.hashed_password = hash_password(payload.password)
 
     # Re-sync group memberships if specified
     if payload.group_ids is not None:

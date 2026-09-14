@@ -1030,4 +1030,125 @@ async def test_primary_root_admin_immunity_and_hierarchy(db_session: AsyncSessio
         assert res_root_del_su.json()["status"] == "deleted"
 
 
+@pytest.mark.asyncio
+async def test_authenticated_change_password_and_decoupling(db_session: AsyncSession):
+    """Verify password cannot be updated via PATCH /users/{id} and can only be updated via POST /auth/change-password."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Security Audit Corp",
+        code=f"SEC_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    user = User(
+        email=f"employee_{uuid.uuid4().hex[:6]}@test.com",
+        username=f"emp_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("OriginalSecret2026!"),
+        full_name="Employee One",
+        is_superuser=False,
+        company_id=comp_id,
+    )
+    db_session.add_all([company, user])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Login with original password
+        res_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": "OriginalSecret2026!"},
+        )
+        assert res_login.status_code == 200
+        token = res_login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 2. Attempting to change password via PATCH /users/{id} does NOT change password
+        res_patch = await client.patch(
+            f"/api/v1/identity_rbac/users/{user.id}",
+            json={"full_name": "Employee One Renamed", "password": "IgnoredPassword2026!"},
+            headers=headers,
+        )
+        assert res_patch.status_code == 200
+        assert res_patch.json()["full_name"] == "Employee One Renamed"
+
+        # Verify old password still works and patched password does NOT work
+        res_check_old = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": "OriginalSecret2026!"},
+        )
+        assert res_check_old.status_code == 200
+
+        res_check_fake = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": "IgnoredPassword2026!"},
+        )
+        assert res_check_fake.status_code == 401
+
+        # 3. Validation: change password with wrong current_password (400)
+        res_bad_curr = await client.post(
+            "/api/v1/identity_rbac/auth/change-password",
+            json={
+                "current_password": "WrongPassword123!",
+                "new_password": "NewSecretPass2026!",
+                "confirm_password": "NewSecretPass2026!",
+            },
+            headers=headers,
+        )
+        assert res_bad_curr.status_code == 400
+        assert "current password verification failed" in res_bad_curr.json()["detail"].lower()
+
+        # 4. Validation: new_password != confirm_password (400)
+        res_mismatch = await client.post(
+            "/api/v1/identity_rbac/auth/change-password",
+            json={
+                "current_password": "OriginalSecret2026!",
+                "new_password": "NewSecretPass2026!",
+                "confirm_password": "DifferentPass2026!",
+            },
+            headers=headers,
+        )
+        assert res_mismatch.status_code == 400
+        assert "do not match" in res_mismatch.json()["detail"].lower()
+
+        # 5. Validation: new_password == current_password (400)
+        res_identical = await client.post(
+            "/api/v1/identity_rbac/auth/change-password",
+            json={
+                "current_password": "OriginalSecret2026!",
+                "new_password": "OriginalSecret2026!",
+                "confirm_password": "OriginalSecret2026!",
+            },
+            headers=headers,
+        )
+        assert res_identical.status_code == 400
+        assert "cannot be identical" in res_identical.json()["detail"].lower()
+
+        # 6. Valid password change (200)
+        res_success = await client.post(
+            "/api/v1/identity_rbac/auth/change-password",
+            json={
+                "current_password": "OriginalSecret2026!",
+                "new_password": "BrandNewSecret2026!",
+                "confirm_password": "BrandNewSecret2026!",
+            },
+            headers=headers,
+        )
+        assert res_success.status_code == 200
+        assert res_success.json()["success"] is True
+
+        # 7. Verify login: old password now fails, new password succeeds
+        res_login_old = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": "OriginalSecret2026!"},
+        )
+        assert res_login_old.status_code == 401
+
+        res_login_new = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": user.username, "password": "BrandNewSecret2026!"},
+        )
+        assert res_login_new.status_code == 200
+        assert "access_token" in res_login_new.json()
+
+
+
 

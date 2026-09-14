@@ -1662,6 +1662,22 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
     - Secondary superusers blocked from modifying, demoting, or soft-deleting other superusers (`403 Forbidden`).
   - Automated tests in `backend/tests/test_identity_rbac.py` verifying full security hierarchy matrix (`test_primary_root_admin_immunity_and_hierarchy`).
   - Continuous OpenAPI, Postman collection & environment synchronization.
+- [x] **Sub-stage 5.13: Enterprise Credential Lifecycle & Authenticated Password Change (`identity_rbac`)** - COMPLETED
+  - Decouple password from profile patching: Removed `password` field from `UserUpdate` schema and `update_user` endpoint.
+  - Implemented `POST /api/v1/identity_rbac/auth/change-password` requiring `current_password`, `new_password`, `confirm_password` with complexity validation, match verification, and old-password check.
+  - Unit tests verifying authenticated password change, current password mismatch rejection, and redundant hash churn prevention (15/15 tests passing).
+- [ ] **Sub-stage 5.14: Email-Verified Forgot/Reset Password Flow & Sign-up Verification (Mail Gateway Bridge)**
+  - Redis-backed time-limited (15-min TTL), single-use token service in `identity_rbac/security.py`.
+  - `POST /api/v1/identity_rbac/auth/forgot-password` (timing attack safe, dispatches signed token via `MailService.enqueue_mail`).
+  - `POST /api/v1/identity_rbac/auth/reset-password` (validates token, atomically burns token, updates hash, revokes stale sessions).
+  - Add `email_verified` to `User` and `POST /api/v1/identity_rbac/auth/verify-email` endpoint.
+  - Unit tests verifying forgot/reset password lifecycle, token expiry, and email verification.
+- [ ] **Sub-stage 5.15: Two-Factor Authentication (2FA / RFC 6238 TOTP Subsystem)**
+  - Add `pyotp>=2.9.0` dependency.
+  - Model attributes on `User`: `two_factor_enabled`, `two_factor_secret`, `two_factor_recovery_codes`.
+  - Endpoints: `POST /auth/2fa/setup` (generates secret + QR URI), `POST /auth/2fa/enable` (validates code + generates 8 recovery codes), `POST /auth/2fa/disable` (password + code challenge).
+  - Multi-stage login handshake: if 2FA enabled, `/auth/login` returns intermediate `mfa_token`, verified via `POST /auth/2fa/verify`.
+  - Unit tests verifying complete 2FA lifecycle and 2-step login challenge.
 
 #### **Stage 6: Event-Driven Automated Actions Subsystem (TCA Engine)**
 - [ ] **Sub-stage 6.1: Trigger Registry & Lifecycle Interceptors**
@@ -1727,8 +1743,9 @@ Build and verify the full Sovereign Headless Backend Platform according to the r
 - *2026-09-14 (Automated Model Permission Harvester & Bidirectional Group-User Management - Completed - Commit: `2d5a61a`)*: Implemented automated model-level permission harvester (`backend/modules/base/identity_rbac/harvester.py`) that introspects all declarative models across all modules, derives canonical codes `{module}.{resource}.{action}`, harvests the 4 standard CRUD capabilities (`create`, `read`, `update`, `delete`) plus manifest `custom_permissions`, and idempotently links them to the "Super Administrators" group. Wired harvester into `setup_database.py` (generating 96 permissions across 24 models) and `Kernel.bootstrap()`. Added bidirectional Group-User management endpoints (`POST/DELETE /groups/{id}/users/{user_id}`, `GET /groups/{id}/users`) and schemas (`user_ids` in `GroupCreate`/`GroupUpdate`, `users` list in `GroupDetailRead`). Decoupled login from client `X-Company-ID` with `.execution_options(ignore_tenant=True)`. Updated Postman collection and environment. 62/62 tests passing across all modules in Docker.
 - *2026-09-14 (Sub-stage 5.12 Completed - Commit: `63ce332`)*: Implemented Primary Root Admin Immunity and Hierarchical Superuser Governance in `identity_rbac`: added `is_primary_admin` boolean flag on User model, seeded `setup_database.py` Super Admin as sole root anchor, enforced that secondary superusers cannot delete or modify the root admin or each other, blocked secondary superusers from provisioning other superusers, prevented root admin self-demotion or self-deactivation, and added `test_primary_root_admin_immunity_and_hierarchy` with 10 validation vectors. Synchronized OpenAPI and Postman specs. All 63/63 tests passing in container.
 - *2026-09-14 (Postman 100% Automated Testing & Dynamic ID Lifecycle Synchronization)*: Upgraded `backend/core/exporter.py` to make the Postman testing workflow 100% automated. All URL path variables (`:company_id`, `:user_id`, `:<entity>_id`) automatically bind to dynamic environment variables (`{{active_company_id}}`, `{{active_user_id}}`, etc.) with zero empty string values. All `POST` endpoints automatically attach Postman test scripts that capture created resource IDs (`id`, `queue_id`, `notification_id`, `job_id`, `backup_id`) into `active_<resource>_id` and `active_record_id`. Request body schemas dynamically substitute dummy IDs with environment variables (`company_id: "{{active_company_id}}"`, `group_ids: ["{{active_group_id}}"]`). Pre-declared all active keys in `postman_environment.json`. All 63/63 tests passing.
+- *2026-09-14 (Sub-stage 5.13 Completed)*: Decoupled credentials from general profile patching: completely removed `password` field from `UserUpdate` schema and `PATCH /api/v1/identity_rbac/users/{user_id}` route. Implemented dedicated authenticated password change endpoint `POST /api/v1/identity_rbac/auth/change-password` with `current_password` verification against bcrypt hash, `new_password` vs `confirm_password` match validation, and prevention of identical current-to-new password churn. Added `test_authenticated_change_password_and_decoupling` with 7 validation vectors. Regenerated OpenAPI and Postman collections. All 64/64 tests passing in container.
 
 ### 4. Current Focus
-Execution of **Stage 6: Event-Driven Automated Actions Subsystem (TCA Engine)** starting with Sub-stage 6.1 (`Trigger Registry & Lifecycle Interceptors`).
+Execution of **Sub-stage 5.14: Email-Verified Forgot/Reset Password Flow & Sign-up Verification (Mail Gateway Bridge)**.
 
 

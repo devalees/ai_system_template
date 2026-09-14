@@ -120,6 +120,54 @@
         ]
       }
     },
+    "/api/v1/identity_rbac/auth/change-password": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Change password for authenticated user",
+        "description": "Change credentials for the currently authenticated session with cryptographic verification.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Validates `current_password` against bcrypt hash.\n- Enforces matching `new_password` and `confirm_password`.\n- Prevents redundant password churn (`new_password != current_password`).",
+        "operationId": "change_password_api_v1_identity_rbac_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/identity_rbac/users": {
       "post": {
         "tags": [
@@ -319,7 +367,7 @@
           "Identity Administration"
         ],
         "summary": "Update User",
-        "description": "Update user account attributes, active toggle, group assignments, or reset password.",
+        "description": "Update user account attributes, active toggle, and RBAC group assignments.",
         "operationId": "update_user_api_v1_identity_rbac_users__user_id__patch",
         "security": [
           {
@@ -5550,6 +5598,31 @@
           "record_id": "inv00000-0000-0000-0000-000000000001"
         }
       },
+      "AuthMessageResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Indicates whether the operation succeeded",
+            "default": true
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable operation status summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "AuthMessageResponse",
+        "description": "Standard response envelope for authentication operations.",
+        "example": {
+          "message": "Password updated successfully.",
+          "success": true
+        }
+      },
       "BackupRecordRead": {
         "properties": {
           "id": {
@@ -5816,6 +5889,41 @@
             "Save": "حفظ"
           },
           "total_terms": 24
+        }
+      },
+      "ChangePasswordRequest": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "minLength": 6,
+            "title": "Current Password",
+            "description": "Existing user password for authentication verification"
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "New Password",
+            "description": "New secret password meeting complexity standards (minimum 8 characters)"
+          },
+          "confirm_password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Confirm Password",
+            "description": "Confirmation matching the new password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password",
+          "confirm_password"
+        ],
+        "title": "ChangePasswordRequest",
+        "description": "Payload for an authenticated user to update their account password.",
+        "example": {
+          "confirm_password": "NewSecurePassword2026!",
+          "current_password": "OldPassword2026!",
+          "new_password": "NewSecurePassword2026!"
         }
       },
       "CityCreate": {
@@ -10120,24 +10228,11 @@
             ],
             "title": "Group Ids",
             "description": "Full replacement list of RBAC Group UUIDs assigned to this user"
-          },
-          "password": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 6
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Password",
-            "description": "New password if resetting user credentials"
           }
         },
         "type": "object",
         "title": "UserUpdate",
-        "description": "Schema for updating user account details, roles, or resetting password.",
+        "description": "Schema for updating user account details, organizational department, or RBAC groups.",
         "example": {
           "full_name": "Sarah Connor, Lead Auditor",
           "group_ids": [

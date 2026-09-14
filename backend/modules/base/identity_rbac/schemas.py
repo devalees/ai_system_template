@@ -66,7 +66,7 @@ class InternalUserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    """Schema for updating user account details, roles, or resetting password."""
+    """Schema for updating user account details, organizational department, or RBAC groups."""
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -87,7 +87,6 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = Field(None, description="Active status toggle (deactivated users cannot authenticate)")
     is_superuser: Optional[bool] = Field(None, description="Superuser privilege toggle (Superuser only)")
     group_ids: Optional[List[uuid.UUID]] = Field(None, description="Full replacement list of RBAC Group UUIDs assigned to this user")
-    password: Optional[str] = Field(None, min_length=6, description="New password if resetting user credentials")
 
 
 class UserRead(BaseModel):
@@ -171,6 +170,38 @@ class TokenResponse(BaseModel):
     token_type: str = Field("bearer", description="OAuth2 authorization scheme header prefix")
     user: UserRead = Field(..., description="Active user metadata snapshot")
     company_id: uuid.UUID = Field(..., description="Primary tenant company UUID for context propagation")
+
+
+class ChangePasswordRequest(BaseModel):
+    """Payload for an authenticated user to update their account password."""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "current_password": "OldPassword2026!",
+                "new_password": "NewSecurePassword2026!",
+                "confirm_password": "NewSecurePassword2026!",
+            }
+        }
+    )
+
+    current_password: str = Field(..., min_length=6, description="Existing user password for authentication verification")
+    new_password: str = Field(..., min_length=8, description="New secret password meeting complexity standards (minimum 8 characters)")
+    confirm_password: str = Field(..., min_length=8, description="Confirmation matching the new password")
+
+
+class AuthMessageResponse(BaseModel):
+    """Standard response envelope for authentication operations."""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": True,
+                "message": "Password updated successfully.",
+            }
+        }
+    )
+
+    success: bool = Field(True, description="Indicates whether the operation succeeded")
+    message: str = Field(..., description="Human-readable operation status summary")
 
 
 # =========================================================================

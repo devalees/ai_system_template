@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "c4dce576-4448-430f-b2ff-39f54ac50fc8",
+    "_postman_id": "29578cb9-5a62-4b54-9a43-69e1e355df6b",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -434,6 +434,83 @@
           "response": []
         },
         {
+          "name": "Change password for authenticated user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/identity_rbac/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity_rbac",
+                "auth",
+                "change-password"
+              ],
+              "variable": []
+            },
+            "description": "## Change password for authenticated user\n\nChange credentials for the currently authenticated session with cryptographic verification.\n\nSecurity & Access:\n- Requires active authenticated Bearer session.\n- Validates `current_password` against bcrypt hash.\n- Enforces matching `new_password` and `confirm_password`.\n- Prevents redundant password churn (`new_password != current_password`).\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/change-password`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `current_password` | `string` | **Yes** | Any valid string | Existing user password for authentication verification |\n| `new_password` | `string` | **Yes** | Any valid string | New secret password meeting complexity standards (minimum 8 characters) |\n| `confirm_password` | `string` | **Yes** | Any valid string | Confirmation matching the new password |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirm_password\": \"NewSecurePassword2026!\",\n  \"current_password\": \"OldPassword2026!\",\n  \"new_password\": \"NewSecurePassword2026!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_change_password_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "List Users",
           "request": {
             "method": "GET",
@@ -623,7 +700,7 @@
                 }
               ]
             },
-            "description": "## Update User\n\nUpdate user account attributes, active toggle, group assignments, or reset password.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `full_name` | `string` | No | Any valid string | Updated display name |\n| `email` | `string` | No | Any valid string | Updated email address |\n| `preferred_language` | `string` | No | Any valid string | Updated ISO 639-1 language code |\n| `team_id` | `string` | No | Any valid string | Assigned organizational department / team UUID |\n| `is_active` | `boolean` | No | Any valid boolean | Active status toggle (deactivated users cannot authenticate) |\n| `is_superuser` | `boolean` | No | Any valid boolean | Superuser privilege toggle (Superuser only) |\n| `group_ids` | `array` | No | Any valid array | Full replacement list of RBAC Group UUIDs assigned to this user |\n| `password` | `string` | No | Any valid string | New password if resetting user credentials |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "description": "## Update User\n\nUpdate user account attributes, active toggle, and RBAC group assignments.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `full_name` | `string` | No | Any valid string | Updated display name |\n| `email` | `string` | No | Any valid string | Updated email address |\n| `preferred_language` | `string` | No | Any valid string | Updated ISO 639-1 language code |\n| `team_id` | `string` | No | Any valid string | Assigned organizational department / team UUID |\n| `is_active` | `boolean` | No | Any valid boolean | Active status toggle (deactivated users cannot authenticate) |\n| `is_superuser` | `boolean` | No | Any valid boolean | Superuser privilege toggle (Superuser only) |\n| `group_ids` | `array` | No | Any valid array | Full replacement list of RBAC Group UUIDs assigned to this user |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"full_name\": \"Sarah Connor, Lead Auditor\",\n  \"group_ids\": [\n    \"{{active_group_id}}\"\n  ],\n  \"is_active\": true,\n  \"preferred_language\": \"en\"\n}",
