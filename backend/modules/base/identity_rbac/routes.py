@@ -158,6 +158,7 @@ async def login(
         full_name=user.full_name,
         user_type=user.user_type,
         is_superuser=user.is_superuser,
+        is_primary_admin=user.is_primary_admin,
         preferred_language=user.preferred_language,
         is_active=user.is_active,
         company_id=user.company_id,
@@ -196,6 +197,7 @@ async def get_me(
         full_name=current_user.full_name,
         user_type=current_user.user_type,
         is_superuser=current_user.is_superuser,
+        is_primary_admin=current_user.is_primary_admin,
         preferred_language=current_user.preferred_language,
         is_active=current_user.is_active,
         company_id=current_user.company_id,
@@ -244,6 +246,14 @@ async def create_user(
     if not company:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target company not found.")
 
+    # Only Primary Admin can grant is_superuser
+    if payload.is_superuser:
+        if not current_user.is_primary_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the primary system administrator can provision superuser accounts.",
+            )
+
     new_user = User(
         email=payload.email,
         username=payload.username,
@@ -251,7 +261,8 @@ async def create_user(
         full_name=payload.full_name,
         user_type=payload.user_type,
         preferred_language=payload.preferred_language,
-        is_superuser=payload.is_superuser if current_user.is_superuser else False,
+        is_superuser=payload.is_superuser if current_user.is_primary_admin else False,
+        is_primary_admin=False,
         company_id=target_company_id,
     )
     db.add(new_user)
@@ -328,6 +339,7 @@ async def get_user(
         full_name=user.full_name,
         user_type=user.user_type,
         is_superuser=user.is_superuser,
+        is_primary_admin=user.is_primary_admin,
         preferred_language=user.preferred_language,
         is_active=user.is_active,
         company_id=user.company_id,
@@ -357,6 +369,32 @@ async def update_user(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
 
+    # 1. Primary Admin Immunity & Protection
+    if user.is_primary_admin:
+        if current_user.id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="The primary system administrator account cannot be modified by other users.",
+            )
+        if payload.is_superuser is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The primary system administrator cannot revoke their own superuser status.",
+            )
+        if payload.is_active is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The primary system administrator cannot deactivate their own root account.",
+            )
+
+    # 2. Superuser Peer Protection (Secondary Superusers)
+    elif user.is_superuser:
+        if current_user.id != user.id and not current_user.is_primary_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the primary system administrator can modify another superuser account.",
+            )
+
     # Update basic fields
     if payload.full_name is not None:
         user.full_name = payload.full_name
@@ -373,9 +411,12 @@ async def update_user(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already in use.")
         user.email = payload.email
 
-    if payload.is_superuser is not None:
-        if not current_user.is_superuser:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only superusers can grant superuser access.")
+    if payload.is_superuser is not None and payload.is_superuser != user.is_superuser:
+        if not current_user.is_primary_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the primary system administrator can grant or revoke superuser privileges.",
+            )
         user.is_superuser = payload.is_superuser
 
     if payload.password is not None:
@@ -412,6 +453,7 @@ async def update_user(
         full_name=user.full_name,
         user_type=user.user_type,
         is_superuser=user.is_superuser,
+        is_primary_admin=user.is_primary_admin,
         preferred_language=user.preferred_language,
         is_active=user.is_active,
         company_id=user.company_id,
@@ -433,8 +475,10 @@ async def delete_user(
 ) -> Dict[str, Any]:
     """Soft-delete a user account.
     
-    Security Guard:
+    Security Guards:
     - Users cannot delete their own active authenticated account.
+    - Primary system administrator is permanent and cannot be deleted by anyone.
+    - Secondary superusers can only be deleted by the primary system administrator.
     """
     if user_id == current_user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own active session account.")
@@ -446,6 +490,20 @@ async def delete_user(
     user = (await db.execute(stmt)).scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    # Primary Admin Immunity
+    if user.is_primary_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The primary system administrator account is permanent and cannot be deleted.",
+        )
+
+    # Superuser Deletion Guard
+    if user.is_superuser and not current_user.is_primary_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the primary system administrator can delete a superuser account.",
+        )
 
     user.soft_delete(user_id=current_user.id)
     await db.commit()

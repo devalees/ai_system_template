@@ -305,6 +305,8 @@ def export_api_specifications(
             output_dir = Path(__file__).resolve().parent.parent.parent / "docs" / "api"
         else:
             output_dir = Path(__file__).resolve().parent.parent / "docs" / "api"
+    elif isinstance(output_dir, str):
+        output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     app = create_app()

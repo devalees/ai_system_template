@@ -204,6 +204,7 @@ async def setup_database(
             full_name=full_name,
             user_type="human",
             is_superuser=True,
+            is_primary_admin=True,
             preferred_language="en",
             company_id=company.id,
         )

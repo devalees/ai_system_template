@@ -377,7 +377,7 @@
           "Identity Administration"
         ],
         "summary": "Delete User",
-        "description": "Soft-delete a user account.\n\nSecurity Guard:\n- Users cannot delete their own active authenticated account.",
+        "description": "Soft-delete a user account.\n\nSecurity Guards:\n- Users cannot delete their own active authenticated account.\n- Primary system administrator is permanent and cannot be deleted by anyone.\n- Secondary superusers can only be deleted by the primary system administrator.",
         "operationId": "delete_user_api_v1_identity_rbac_users__user_id__delete",
         "security": [
           {
@@ -9873,6 +9873,11 @@
             "type": "boolean",
             "title": "Is Superuser"
           },
+          "is_primary_admin": {
+            "type": "boolean",
+            "title": "Is Primary Admin",
+            "default": false
+          },
           "preferred_language": {
             "type": "string",
             "title": "Preferred Language"
@@ -9954,6 +9959,11 @@
           "is_superuser": {
             "type": "boolean",
             "title": "Is Superuser"
+          },
+          "is_primary_admin": {
+            "type": "boolean",
+            "title": "Is Primary Admin",
+            "default": false
           },
           "preferred_language": {
             "type": "string",

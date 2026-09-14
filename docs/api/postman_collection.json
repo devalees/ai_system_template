@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "9e6290ed-ac4e-41e1-beda-e16e9823b112",
+    "_postman_id": "11b88771-ceb5-474f-925e-eacd5115e5b4",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -576,7 +576,7 @@
                 }
               ]
             },
-            "description": "## Delete User\n\nSoft-delete a user account.\n\nSecurity Guard:\n- Users cannot delete their own active authenticated account.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+            "description": "## Delete User\n\nSoft-delete a user account.\n\nSecurity Guards:\n- Users cannot delete their own active authenticated account.\n- Primary system administrator is permanent and cannot be deleted by anyone.\n- Secondary superusers can only be deleted by the primary system administrator.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },

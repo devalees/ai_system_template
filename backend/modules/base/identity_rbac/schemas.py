@@ -100,6 +100,7 @@ class UserRead(BaseModel):
     full_name: str
     user_type: str
     is_superuser: bool
+    is_primary_admin: bool = False
     preferred_language: str
     is_active: bool
     company_id: uuid.UUID
@@ -115,6 +116,7 @@ class UserDetailRead(BaseModel):
     full_name: str
     user_type: str
     is_superuser: bool
+    is_primary_admin: bool = False
     preferred_language: str
     is_active: bool
     company_id: uuid.UUID

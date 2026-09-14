@@ -843,3 +843,191 @@ async def test_bidirectional_group_user_management(db_session: AsyncSession):
         assert len(res_list_restored.json()) == 1
 
 
+@pytest.mark.asyncio
+async def test_primary_root_admin_immunity_and_hierarchy(db_session: AsyncSession):
+    """Verify primary root admin immunity, undeletability, and superuser governance hierarchy."""
+    comp_id = uuid.uuid4()
+    company = Company(
+        id=comp_id,
+        name="Hierarchy Enterprise",
+        code=f"HIER_{uuid.uuid4().hex[:4]}",
+        allow_registration=True,
+    )
+    # 1. Primary Root Admin (seeded by setup_database)
+    root_admin = User(
+        email=f"root_{uuid.uuid4().hex[:6]}@hier.com",
+        username=f"root_{uuid.uuid4().hex[:6]}",
+        hashed_password=hash_password("RootPass2026!"),
+        full_name="Root Primary Admin",
+        is_superuser=True,
+        is_primary_admin=True,
+        company_id=comp_id,
+    )
+    db_session.add_all([company, root_admin])
+    await db_session.commit()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Login as Root Primary Admin
+        res_root_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": root_admin.username, "password": "RootPass2026!"},
+        )
+        assert res_root_login.status_code == 200
+        root_token = res_root_login.json()["access_token"]
+        assert res_root_login.json()["user"]["is_primary_admin"] is True
+        assert res_root_login.json()["user"]["is_superuser"] is True
+        root_headers = {"Authorization": f"Bearer {root_token}"}
+
+        # 2. Root Admin provisions a Secondary Superuser
+        sec_su_name = f"sec_su_{uuid.uuid4().hex[:4]}"
+        res_sec_su = await client.post(
+            "/api/v1/identity_rbac/users",
+            json={
+                "email": f"{sec_su_name}@hier.com",
+                "username": sec_su_name,
+                "password": "SecPass2026!",
+                "full_name": "Secondary Superuser",
+                "is_superuser": True,
+                "company_id": str(company.id),
+            },
+            headers=root_headers,
+        )
+        assert res_sec_su.status_code == 201
+        sec_su_id = res_sec_su.json()["id"]
+
+        # Login as Secondary Superuser
+        res_sec_login = await client.post(
+            "/api/v1/identity_rbac/auth/login",
+            json={"identifier": sec_su_name, "password": "SecPass2026!"},
+        )
+        assert res_sec_login.status_code == 200
+        sec_token = res_sec_login.json()["access_token"]
+        assert res_sec_login.json()["user"]["is_primary_admin"] is False
+        assert res_sec_login.json()["user"]["is_superuser"] is True
+        sec_headers = {"Authorization": f"Bearer {sec_token}"}
+
+        # 3. Secondary Superuser CANNOT provision another superuser (403)
+        res_deny_su = await client.post(
+            "/api/v1/identity_rbac/users",
+            json={
+                "email": f"deny_{uuid.uuid4().hex[:4]}@hier.com",
+                "username": f"deny_{uuid.uuid4().hex[:4]}",
+                "password": "DenyPass2026!",
+                "full_name": "Denied Superuser",
+                "is_superuser": True,
+                "company_id": str(company.id),
+            },
+            headers=sec_headers,
+        )
+        assert res_deny_su.status_code == 403
+        assert "only the primary system administrator" in res_deny_su.json()["detail"].lower()
+
+        # But secondary superuser CAN provision normal user (201)
+        res_norm = await client.post(
+            "/api/v1/identity_rbac/users",
+            json={
+                "email": f"norm_{uuid.uuid4().hex[:4]}@hier.com",
+                "username": f"norm_{uuid.uuid4().hex[:4]}",
+                "password": "NormPass2026!",
+                "full_name": "Normal User",
+                "is_superuser": False,
+                "company_id": str(company.id),
+            },
+            headers=sec_headers,
+        )
+        assert res_norm.status_code == 201
+        norm_user_id = res_norm.json()["id"]
+
+        # 4. Secondary Superuser CANNOT delete Root Primary Admin (403)
+        res_del_root = await client.delete(
+            f"/api/v1/identity_rbac/users/{root_admin.id}",
+            headers=sec_headers,
+        )
+        assert res_del_root.status_code == 403
+        assert "permanent and cannot be deleted" in res_del_root.json()["detail"].lower()
+
+        # 5. Secondary Superuser CANNOT modify Root Primary Admin (403)
+        res_patch_root = await client.patch(
+            f"/api/v1/identity_rbac/users/{root_admin.id}",
+            json={"full_name": "Compromised Admin", "is_active": False},
+            headers=sec_headers,
+        )
+        assert res_patch_root.status_code == 403
+        assert "cannot be modified by other users" in res_patch_root.json()["detail"].lower()
+
+        # 6. Root Primary Admin CANNOT demote or deactivate own account (400)
+        res_self_demote = await client.patch(
+            f"/api/v1/identity_rbac/users/{root_admin.id}",
+            json={"is_superuser": False},
+            headers=root_headers,
+        )
+        assert res_self_demote.status_code == 400
+        assert "cannot revoke their own superuser status" in res_self_demote.json()["detail"].lower()
+
+        res_self_deact = await client.patch(
+            f"/api/v1/identity_rbac/users/{root_admin.id}",
+            json={"is_active": False},
+            headers=root_headers,
+        )
+        assert res_self_deact.status_code == 400
+        assert "cannot deactivate their own root account" in res_self_deact.json()["detail"].lower()
+
+        # 7. Root Primary Admin CANNOT delete self (400)
+        res_self_del = await client.delete(
+            f"/api/v1/identity_rbac/users/{root_admin.id}",
+            headers=root_headers,
+        )
+        assert res_self_del.status_code == 400
+        assert "cannot delete your own active session account" in res_self_del.json()["detail"].lower()
+
+        # 8. Create another secondary superuser via Root Admin
+        sec_su2_name = f"sec_su2_{uuid.uuid4().hex[:4]}"
+        res_sec_su2 = await client.post(
+            "/api/v1/identity_rbac/users",
+            json={
+                "email": f"{sec_su2_name}@hier.com",
+                "username": sec_su2_name,
+                "password": "SecPass2026!",
+                "full_name": "Secondary Superuser 2",
+                "is_superuser": True,
+                "company_id": str(company.id),
+            },
+            headers=root_headers,
+        )
+        assert res_sec_su2.status_code == 201
+        sec_su2_id = res_sec_su2.json()["id"]
+
+        # 9. Secondary Superuser 1 CANNOT modify or delete Secondary Superuser 2 (403)
+        res_peer_mod = await client.patch(
+            f"/api/v1/identity_rbac/users/{sec_su2_id}",
+            json={"full_name": "Peer Modified"},
+            headers=sec_headers,
+        )
+        assert res_peer_mod.status_code == 403
+        assert "only the primary system administrator can modify another superuser" in res_peer_mod.json()["detail"].lower()
+
+        res_peer_del = await client.delete(
+            f"/api/v1/identity_rbac/users/{sec_su2_id}",
+            headers=sec_headers,
+        )
+        assert res_peer_del.status_code == 403
+        assert "only the primary system administrator can delete a superuser" in res_peer_del.json()["detail"].lower()
+
+        # 10. Root Primary Admin CAN modify and delete Secondary Superusers
+        res_root_mod_su = await client.patch(
+            f"/api/v1/identity_rbac/users/{sec_su2_id}",
+            json={"full_name": "Demoted by Root", "is_superuser": False},
+            headers=root_headers,
+        )
+        assert res_root_mod_su.status_code == 200
+        assert res_root_mod_su.json()["is_superuser"] is False
+
+        res_root_del_su = await client.delete(
+            f"/api/v1/identity_rbac/users/{sec_su_id}",
+            headers=root_headers,
+        )
+        assert res_root_del_su.status_code == 200
+        assert res_root_del_su.json()["status"] == "deleted"
+
+
+
