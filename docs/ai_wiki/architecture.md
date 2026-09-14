@@ -355,5 +355,19 @@ The Orchestrator MCP server exposes two typed tools for the Chief of Staff:
     - `POST /api/v1/identity_rbac/groups/{group_id}/users/{user_id}`
     - `DELETE /api/v1/identity_rbac/groups/{group_id}/users/{user_id}`
 
+---
+
+### 6.5 Primary Root Admin Immunity & Hierarchical Superuser Governance (`is_primary_admin`)
+- **The Root Anchor Entity (`is_primary_admin: bool = True`)**:
+  - The initial administrator provisioned during `backend/setup_database.py` is designated as the sole Primary Root Admin (`is_primary_admin = True`, `is_superuser = True`).
+  - Solves the flat superuser privilege vulnerability, preventing rogue takeovers, hostile lockouts, and accidental founder account deletion.
+- **Hierarchical Governance Rules**:
+  - **Undeletability & Immunity**: The Primary Root Admin cannot be soft-deleted by anyone under any circumstances (`403 Forbidden`).
+  - **Modification Immunity**: Other users (including secondary superusers) are barred from modifying the Primary Admin's record (`403 Forbidden`).
+  - **Self-Protection Guards**: The Primary Admin cannot revoke their own `is_superuser` status or deactivate (`is_active = False`) their own root account (`400 Bad Request`).
+  - **Superuser Provisioning Monopoly**: Only the Primary Admin can grant or revoke `is_superuser = True` or provision new superuser accounts. Secondary superusers attempting to create or promote superusers receive `403 Forbidden`.
+  - **Superuser Peer Protection**: Secondary superusers cannot modify, demote, or soft-delete other secondary superusers; only the Primary Admin holds administrative lifecycle authority over secondary superusers.
+
+
 
 
