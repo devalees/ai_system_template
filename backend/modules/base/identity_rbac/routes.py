@@ -135,8 +135,10 @@ async def login(
     - Public endpoint.
     - Returns JWT token containing user identity and active tenant `company_id`.
     """
-    stmt = select(User).where(
-        (User.email == payload.identifier) | (User.username == payload.identifier)
+    stmt = (
+        select(User)
+        .where((User.email == payload.identifier) | (User.username == payload.identifier))
+        .execution_options(ignore_tenant=True)
     )
     user = (await db.execute(stmt)).scalar_one_or_none()
 

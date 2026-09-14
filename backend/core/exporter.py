@@ -202,8 +202,9 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
             # Headers
             headers = [
                 {"key": "Accept", "value": "application/json", "type": "text"},
-                {"key": "X-Company-ID", "value": "{{active_company_id}}", "type": "text"},
             ]
+            if not ("login" in path or "health" in path):
+                headers.append({"key": "X-Company-ID", "value": "{{active_company_id}}", "type": "text"})
 
             req_item: Dict[str, Any] = {
                 "name": summary,

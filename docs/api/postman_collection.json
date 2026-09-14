@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "9d112f26-db79-4a11-967f-13a34175e524",
+    "_postman_id": "93270c06-940a-4a5d-91f2-ea2206e0b118",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -275,11 +275,6 @@
               {
                 "key": "Accept",
                 "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "X-Company-ID",
-                "value": "{{active_company_id}}",
                 "type": "text"
               },
               {
@@ -3563,11 +3558,6 @@
               {
                 "key": "Accept",
                 "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "X-Company-ID",
-                "value": "{{active_company_id}}",
                 "type": "text"
               }
             ],
