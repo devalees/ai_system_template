@@ -296,3 +296,206 @@ async def test_hierarchical_category_engine_and_cycle_prevention(db_session: Asy
         await db_session.commit()
         await db_session.refresh(doc)
         assert doc.category_id == uuid.UUID(leaf_id)
+
+
+@pytest.mark.asyncio
+async def test_lookups_master_data_full_crud_and_patch(db_session: AsyncSession):
+    """Verify full CRUD lifecycle (GET /{id}, PATCH /{id}, DELETE /{id}) across all master data lookups."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Create test companies
+        comp_a = uuid.uuid4()
+        comp_b = uuid.uuid4()
+        db_session.add_all([
+            Company(id=comp_a, name="CRUD Co A", code=f"CRUDA_{comp_a.hex[:4]}"),
+            Company(id=comp_b, name="CRUD Co B", code=f"CRUDB_{comp_b.hex[:4]}"),
+        ])
+        await db_session.commit()
+
+        await SettingsService.update_settings(db_session, "identity_rbac", comp_a, {"allow_registration": True})
+        await SettingsService.update_settings(db_session, "identity_rbac", comp_b, {"allow_registration": True})
+
+        # Register and login Tenant A
+        user_a = f"crud_user_a_{uuid.uuid4().hex[:6]}"
+        await client.post(
+            "/api/v1/identity_rbac/auth/register",
+            json={"email": f"{user_a}@test.com", "username": user_a, "password": "Password123!", "full_name": "A", "company_id": str(comp_a)},
+        )
+        login_a = await client.post("/api/v1/identity_rbac/auth/login", json={"identifier": user_a, "password": "Password123!"})
+        headers_a = {"Authorization": f"Bearer {login_a.json()['access_token']}"}
+
+        # Register and login Tenant B
+        user_b = f"crud_user_b_{uuid.uuid4().hex[:6]}"
+        await client.post(
+            "/api/v1/identity_rbac/auth/register",
+            json={"email": f"{user_b}@test.com", "username": user_b, "password": "Password123!", "full_name": "B", "company_id": str(comp_b)},
+        )
+        login_b = await client.post("/api/v1/identity_rbac/auth/login", json={"identifier": user_b, "password": "Password123!"})
+        headers_b = {"Authorization": f"Bearer {login_b.json()['access_token']}"}
+
+        # 1. Country CRUD
+        country_res = await client.post(
+            "/api/v1/lookups/countries",
+            headers=headers_a,
+            json={"name": "Testland", "code": "TLD", "code_alpha2": "TL", "dialing_code": "+999", "currency_code": "TLD"},
+        )
+        assert country_res.status_code == 201
+        country_id = country_res.json()["id"]
+
+        # GET by ID
+        get_c = await client.get(f"/api/v1/lookups/countries/{country_id}", headers=headers_a)
+        assert get_c.status_code == 200
+        assert get_c.json()["name"] == "Testland"
+
+        # PATCH
+        patch_c = await client.patch(
+            f"/api/v1/lookups/countries/{country_id}",
+            headers=headers_a,
+            json={"name": "Testland Updated", "dialing_code": "+998"},
+        )
+        assert patch_c.status_code == 200
+        assert patch_c.json()["name"] == "Testland Updated"
+        assert patch_c.json()["dialing_code"] == "+998"
+
+        # Tenant B cannot access Tenant A's country
+        assert (await client.get(f"/api/v1/lookups/countries/{country_id}", headers=headers_b)).status_code == 404
+        assert (await client.patch(f"/api/v1/lookups/countries/{country_id}", headers=headers_b, json={"name": "Hack"})).status_code == 404
+
+        # 2. City CRUD
+        city_res = await client.post(
+            "/api/v1/lookups/cities",
+            headers=headers_a,
+            json={"name": "Test City", "country_id": country_id, "state_or_province": "Test State", "postal_code": "12345"},
+        )
+        assert city_res.status_code == 201
+        city_id = city_res.json()["id"]
+
+        # GET by ID
+        get_city = await client.get(f"/api/v1/lookups/cities/{city_id}", headers=headers_a)
+        assert get_city.status_code == 200
+        assert get_city.json()["name"] == "Test City"
+
+        # PATCH
+        patch_city = await client.patch(
+            f"/api/v1/lookups/cities/{city_id}",
+            headers=headers_a,
+            json={"name": "Test City Renamed", "postal_code": "54321"},
+        )
+        assert patch_city.status_code == 200
+        assert patch_city.json()["name"] == "Test City Renamed"
+        assert patch_city.json()["postal_code"] == "54321"
+
+        # DELETE City (Soft delete)
+        del_city = await client.delete(f"/api/v1/lookups/cities/{city_id}", headers=headers_a)
+        assert del_city.status_code == 204
+        assert (await client.get(f"/api/v1/lookups/cities/{city_id}", headers=headers_a)).status_code == 404
+
+        # DELETE Country
+        del_c = await client.delete(f"/api/v1/lookups/countries/{country_id}", headers=headers_a)
+        assert del_c.status_code == 204
+        assert (await client.get(f"/api/v1/lookups/countries/{country_id}", headers=headers_a)).status_code == 404
+
+        # 3. Currency CRUD
+        curr_res = await client.post(
+            "/api/v1/lookups/currencies",
+            headers=headers_a,
+            json={"code": "XTL", "name": "Test Currency", "symbol": "XT", "decimal_places": 2, "is_base": False},
+        )
+        assert curr_res.status_code == 201
+        curr_id = curr_res.json()["id"]
+
+        get_curr = await client.get(f"/api/v1/lookups/currencies/{curr_id}", headers=headers_a)
+        assert get_curr.status_code == 200
+        assert get_curr.json()["code"] == "XTL"
+
+        patch_curr = await client.patch(
+            f"/api/v1/lookups/currencies/{curr_id}",
+            headers=headers_a,
+            json={"name": "Test Currency Revised", "decimal_places": 4},
+        )
+        assert patch_curr.status_code == 200
+        assert patch_curr.json()["name"] == "Test Currency Revised"
+        assert patch_curr.json()["decimal_places"] == 4
+
+        del_curr = await client.delete(f"/api/v1/lookups/currencies/{curr_id}", headers=headers_a)
+        assert del_curr.status_code == 204
+        assert (await client.get(f"/api/v1/lookups/currencies/{curr_id}", headers=headers_a)).status_code == 404
+
+        # 4. Unit of Measure (UOM) CRUD
+        uom_res = await client.post(
+            "/api/v1/lookups/uom",
+            headers=headers_a,
+            json={"name": "Megapack", "code": "MPK", "category": "packaging", "rounding_precision": 1.0},
+        )
+        assert uom_res.status_code == 201
+        uom_id = uom_res.json()["id"]
+
+        get_uom = await client.get(f"/api/v1/lookups/uom/{uom_id}", headers=headers_a)
+        assert get_uom.status_code == 200
+        assert get_uom.json()["name"] == "Megapack"
+
+        patch_uom = await client.patch(
+            f"/api/v1/lookups/uom/{uom_id}",
+            headers=headers_a,
+            json={"name": "Megapack XL", "rounding_precision": 0.5},
+        )
+        assert patch_uom.status_code == 200
+        assert patch_uom.json()["name"] == "Megapack XL"
+        assert patch_uom.json()["rounding_precision"] == 0.5
+
+        del_uom = await client.delete(f"/api/v1/lookups/uom/{uom_id}", headers=headers_a)
+        assert del_uom.status_code == 204
+        assert (await client.get(f"/api/v1/lookups/uom/{uom_id}", headers=headers_a)).status_code == 404
+
+        # 5. Tax Type CRUD
+        tax_res = await client.post(
+            "/api/v1/lookups/tax-types",
+            headers=headers_a,
+            json={"name": "Special Luxury Tax", "code": "SLT", "rate": 25.0, "is_inclusive": False},
+        )
+        assert tax_res.status_code == 201
+        tax_id = tax_res.json()["id"]
+
+        get_tax = await client.get(f"/api/v1/lookups/tax-types/{tax_id}", headers=headers_a)
+        assert get_tax.status_code == 200
+        assert get_tax.json()["name"] == "Special Luxury Tax"
+
+        patch_tax = await client.patch(
+            f"/api/v1/lookups/tax-types/{tax_id}",
+            headers=headers_a,
+            json={"name": "Special Luxury Tax Updated", "rate": 27.5, "is_inclusive": True},
+        )
+        assert patch_tax.status_code == 200
+        assert patch_tax.json()["name"] == "Special Luxury Tax Updated"
+        assert patch_tax.json()["rate"] == 27.5
+        assert patch_tax.json()["is_inclusive"] is True
+
+        del_tax = await client.delete(f"/api/v1/lookups/tax-types/{tax_id}", headers=headers_a)
+        assert del_tax.status_code == 204
+        assert (await client.get(f"/api/v1/lookups/tax-types/{tax_id}", headers=headers_a)).status_code == 404
+
+        # 6. Tag CRUD
+        tag_res = await client.post(
+            "/api/v1/lookups/tags",
+            headers=headers_a,
+            json={"name": "High Priority QA", "color": "#ff0055", "model_target": "task"},
+        )
+        assert tag_res.status_code == 201
+        tag_id = tag_res.json()["id"]
+
+        get_tag = await client.get(f"/api/v1/lookups/tags/{tag_id}", headers=headers_a)
+        assert get_tag.status_code == 200
+        assert get_tag.json()["name"] == "High Priority QA"
+
+        patch_tag = await client.patch(
+            f"/api/v1/lookups/tags/{tag_id}",
+            headers=headers_a,
+            json={"name": "Critical QA", "color": "#00ff00"},
+        )
+        assert patch_tag.status_code == 200
+        assert patch_tag.json()["name"] == "Critical QA"
+        assert patch_tag.json()["color"] == "#00ff00"
+
+        del_tag = await client.delete(f"/api/v1/lookups/tags/{tag_id}", headers=headers_a)
+        assert del_tag.status_code == 204
+        assert (await client.get(f"/api/v1/lookups/tags/{tag_id}", headers=headers_a)).status_code == 404
+

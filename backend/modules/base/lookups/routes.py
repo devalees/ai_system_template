@@ -11,12 +11,12 @@ from modules.base.identity_rbac.dependencies import get_current_user
 from modules.base.identity_rbac.models import User
 from modules.base.lookups.models import Country, City, Currency, UnitOfMeasure, TaxType, Tag, Category
 from modules.base.lookups.schemas import (
-    CountryCreate, CountryRead,
-    CityCreate, CityRead,
-    CurrencyCreate, CurrencyRead,
-    UnitOfMeasureCreate, UnitOfMeasureRead,
-    TaxTypeCreate, TaxTypeRead,
-    TagCreate, TagRead,
+    CountryCreate, CountryUpdate, CountryRead,
+    CityCreate, CityUpdate, CityRead,
+    CurrencyCreate, CurrencyUpdate, CurrencyRead,
+    UnitOfMeasureCreate, UnitOfMeasureUpdate, UnitOfMeasureRead,
+    TaxTypeCreate, TaxTypeUpdate, TaxTypeRead,
+    TagCreate, TagUpdate, TagRead,
     CategoryCreate, CategoryUpdate, CategoryRead, CategoryTreeRead,
 )
 from modules.base.lookups.service import CategoryService
@@ -26,7 +26,7 @@ router = APIRouter()
 
 
 # ---------------- Seed Fixtures ----------------
-@router.post("/seed", response_model=Dict[str, int], tags=["Lookups Master Data"])
+@router.post("/seed", response_model=Dict[str, int])
 async def bootstrap_company_iso_lookups(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -68,6 +68,60 @@ async def create_country(
     return country
 
 
+@router.get("/countries/{id}", response_model=CountryRead, tags=["Countries"])
+async def get_country(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Country:
+    stmt = select(Country).where(Country.id == id, Country.company_id == current_user.company_id)
+    country = (await db.execute(stmt)).scalar_one_or_none()
+    if not country:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Country not found")
+    return country
+
+
+@router.patch("/countries/{id}", response_model=CountryRead, tags=["Countries"])
+async def update_country(
+    id: uuid.UUID,
+    payload: CountryUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Country:
+    stmt = select(Country).where(Country.id == id, Country.company_id == current_user.company_id)
+    country = (await db.execute(stmt)).scalar_one_or_none()
+    if not country:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Country not found")
+    data = payload.model_dump(exclude_unset=True)
+    if "code" in data and data["code"]:
+        data["code"] = data["code"].upper()
+    if "code_alpha2" in data and data["code_alpha2"]:
+        data["code_alpha2"] = data["code_alpha2"].upper()
+    if "currency_code" in data and data["currency_code"]:
+        data["currency_code"] = data["currency_code"].upper()
+    for field, val in data.items():
+        setattr(country, field, val)
+    country.updated_by_id = current_user.id
+    await db.commit()
+    await db.refresh(country)
+    return country
+
+
+@router.delete("/countries/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Countries"])
+async def delete_country(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(Country).where(Country.id == id, Country.company_id == current_user.company_id)
+    country = (await db.execute(stmt)).scalar_one_or_none()
+    if not country:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Country not found")
+    country.soft_delete(current_user.id)
+    await db.commit()
+    return None
+
+
 # ---------------- Cities ----------------
 @router.get("/cities", response_model=List[CityRead], tags=["Cities"])
 async def list_cities(
@@ -106,6 +160,58 @@ async def create_city(
     return city
 
 
+@router.get("/cities/{id}", response_model=CityRead, tags=["Cities"])
+async def get_city(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> City:
+    stmt = select(City).where(City.id == id, City.company_id == current_user.company_id)
+    city = (await db.execute(stmt)).scalar_one_or_none()
+    if not city:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="City not found")
+    return city
+
+
+@router.patch("/cities/{id}", response_model=CityRead, tags=["Cities"])
+async def update_city(
+    id: uuid.UUID,
+    payload: CityUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> City:
+    stmt = select(City).where(City.id == id, City.company_id == current_user.company_id)
+    city = (await db.execute(stmt)).scalar_one_or_none()
+    if not city:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="City not found")
+    data = payload.model_dump(exclude_unset=True)
+    if "country_id" in data and data["country_id"]:
+        country_stmt = select(Country).where(Country.id == data["country_id"], Country.company_id == current_user.company_id)
+        if not (await db.execute(country_stmt)).scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Country not found for this tenant.")
+    for field, val in data.items():
+        setattr(city, field, val)
+    city.updated_by_id = current_user.id
+    await db.commit()
+    await db.refresh(city)
+    return city
+
+
+@router.delete("/cities/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Cities"])
+async def delete_city(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(City).where(City.id == id, City.company_id == current_user.company_id)
+    city = (await db.execute(stmt)).scalar_one_or_none()
+    if not city:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="City not found")
+    city.soft_delete(current_user.id)
+    await db.commit()
+    return None
+
+
 # ---------------- Currencies ----------------
 @router.get("/currencies", response_model=List[CurrencyRead], tags=["Currencies"])
 async def list_currencies(
@@ -134,6 +240,56 @@ async def create_currency(
     await db.commit()
     await db.refresh(currency)
     return currency
+
+
+@router.get("/currencies/{id}", response_model=CurrencyRead, tags=["Currencies"])
+async def get_currency(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Currency:
+    stmt = select(Currency).where(Currency.id == id, Currency.company_id == current_user.company_id)
+    currency = (await db.execute(stmt)).scalar_one_or_none()
+    if not currency:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Currency not found")
+    return currency
+
+
+@router.patch("/currencies/{id}", response_model=CurrencyRead, tags=["Currencies"])
+async def update_currency(
+    id: uuid.UUID,
+    payload: CurrencyUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Currency:
+    stmt = select(Currency).where(Currency.id == id, Currency.company_id == current_user.company_id)
+    currency = (await db.execute(stmt)).scalar_one_or_none()
+    if not currency:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Currency not found")
+    data = payload.model_dump(exclude_unset=True)
+    if "code" in data and data["code"]:
+        data["code"] = data["code"].upper()
+    for field, val in data.items():
+        setattr(currency, field, val)
+    currency.updated_by_id = current_user.id
+    await db.commit()
+    await db.refresh(currency)
+    return currency
+
+
+@router.delete("/currencies/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Currencies"])
+async def delete_currency(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(Currency).where(Currency.id == id, Currency.company_id == current_user.company_id)
+    currency = (await db.execute(stmt)).scalar_one_or_none()
+    if not currency:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Currency not found")
+    currency.soft_delete(current_user.id)
+    await db.commit()
+    return None
 
 
 # ---------------- Units of Measure ----------------
@@ -168,6 +324,54 @@ async def create_unit_of_measure(
     return uom
 
 
+@router.get("/uom/{id}", response_model=UnitOfMeasureRead, tags=["Units of Measure"])
+async def get_unit_of_measure(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UnitOfMeasure:
+    stmt = select(UnitOfMeasure).where(UnitOfMeasure.id == id, UnitOfMeasure.company_id == current_user.company_id)
+    uom = (await db.execute(stmt)).scalar_one_or_none()
+    if not uom:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit of Measure not found")
+    return uom
+
+
+@router.patch("/uom/{id}", response_model=UnitOfMeasureRead, tags=["Units of Measure"])
+async def update_unit_of_measure(
+    id: uuid.UUID,
+    payload: UnitOfMeasureUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UnitOfMeasure:
+    stmt = select(UnitOfMeasure).where(UnitOfMeasure.id == id, UnitOfMeasure.company_id == current_user.company_id)
+    uom = (await db.execute(stmt)).scalar_one_or_none()
+    if not uom:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit of Measure not found")
+    data = payload.model_dump(exclude_unset=True)
+    for field, val in data.items():
+        setattr(uom, field, val)
+    uom.updated_by_id = current_user.id
+    await db.commit()
+    await db.refresh(uom)
+    return uom
+
+
+@router.delete("/uom/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Units of Measure"])
+async def delete_unit_of_measure(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(UnitOfMeasure).where(UnitOfMeasure.id == id, UnitOfMeasure.company_id == current_user.company_id)
+    uom = (await db.execute(stmt)).scalar_one_or_none()
+    if not uom:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit of Measure not found")
+    uom.soft_delete(current_user.id)
+    await db.commit()
+    return None
+
+
 # ---------------- Tax Types ----------------
 @router.get("/tax-types", response_model=List[TaxTypeRead], tags=["Tax Types"])
 async def list_tax_types(
@@ -195,6 +399,54 @@ async def create_tax_type(
     await db.commit()
     await db.refresh(tax)
     return tax
+
+
+@router.get("/tax-types/{id}", response_model=TaxTypeRead, tags=["Tax Types"])
+async def get_tax_type(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TaxType:
+    stmt = select(TaxType).where(TaxType.id == id, TaxType.company_id == current_user.company_id)
+    tax = (await db.execute(stmt)).scalar_one_or_none()
+    if not tax:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tax Type not found")
+    return tax
+
+
+@router.patch("/tax-types/{id}", response_model=TaxTypeRead, tags=["Tax Types"])
+async def update_tax_type(
+    id: uuid.UUID,
+    payload: TaxTypeUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TaxType:
+    stmt = select(TaxType).where(TaxType.id == id, TaxType.company_id == current_user.company_id)
+    tax = (await db.execute(stmt)).scalar_one_or_none()
+    if not tax:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tax Type not found")
+    data = payload.model_dump(exclude_unset=True)
+    for field, val in data.items():
+        setattr(tax, field, val)
+    tax.updated_by_id = current_user.id
+    await db.commit()
+    await db.refresh(tax)
+    return tax
+
+
+@router.delete("/tax-types/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Tax Types"])
+async def delete_tax_type(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(TaxType).where(TaxType.id == id, TaxType.company_id == current_user.company_id)
+    tax = (await db.execute(stmt)).scalar_one_or_none()
+    if not tax:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tax Type not found")
+    tax.soft_delete(current_user.id)
+    await db.commit()
+    return None
 
 
 # ---------------- Tags ----------------
@@ -226,6 +478,54 @@ async def create_tag(
     await db.commit()
     await db.refresh(tag)
     return tag
+
+
+@router.get("/tags/{id}", response_model=TagRead, tags=["Tags"])
+async def get_tag(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Tag:
+    stmt = select(Tag).where(Tag.id == id, Tag.company_id == current_user.company_id)
+    tag = (await db.execute(stmt)).scalar_one_or_none()
+    if not tag:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+    return tag
+
+
+@router.patch("/tags/{id}", response_model=TagRead, tags=["Tags"])
+async def update_tag(
+    id: uuid.UUID,
+    payload: TagUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Tag:
+    stmt = select(Tag).where(Tag.id == id, Tag.company_id == current_user.company_id)
+    tag = (await db.execute(stmt)).scalar_one_or_none()
+    if not tag:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+    data = payload.model_dump(exclude_unset=True)
+    for field, val in data.items():
+        setattr(tag, field, val)
+    tag.updated_by_id = current_user.id
+    await db.commit()
+    await db.refresh(tag)
+    return tag
+
+
+@router.delete("/tags/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Tags"])
+async def delete_tag(
+    id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(Tag).where(Tag.id == id, Tag.company_id == current_user.company_id)
+    tag = (await db.execute(stmt)).scalar_one_or_none()
+    if not tag:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+    tag.soft_delete(current_user.id)
+    await db.commit()
+    return None
 
 
 # ---------------- Categories (Hierarchical Taxonomy) ----------------

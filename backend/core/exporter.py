@@ -85,6 +85,14 @@ def _build_postman_url(path: str) -> Dict[str, Any]:
                 default_val = "{{active_model_name}}"
             elif var_name in ("record_id", "res_id"):
                 default_val = "{{active_record_id}}"
+            elif var_name == "id":
+                idx = segments.index(f"{{{var_name}}}")
+                if idx > 0:
+                    preceding_path = "/" + "/".join(segments[:idx])
+                    resource_key = _infer_resource_id_name(preceding_path)
+                    default_val = f"{{{{active_{resource_key}}}}}"
+                else:
+                    default_val = "{{active_record_id}}"
             else:
                 clean_name = var_name.replace("-", "_")
                 default_val = f"{{{{active_{clean_name}}}}}"
@@ -273,7 +281,40 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
         "item": [],
     }
 
-    folders: Dict[str, List[Dict[str, Any]]] = {}
+    SUBFOLDER_ORDER: Dict[str, List[str]] = {
+        "Normalized Master Data & Lookups": [
+            "Categories",
+            "Units of Measure",
+            "Countries",
+            "Cities",
+            "Currencies",
+            "Tax Types",
+            "Tags",
+        ],
+        "Identity & Contextual RBAC": [
+            "Authentication",
+            "Identity Administration",
+            "RBAC Administration",
+            "Tenant Administration",
+        ],
+        "Mail Gateway & Async Email Pipeline": [
+            "Mail Gateway - Pipeline",
+            "Mail Gateway - Servers",
+            "Mail Gateway - Templates",
+        ],
+        "Multi-Channel Notification Engine": [
+            "Notification Engine - Dispatch",
+            "Notification Engine - In-App",
+            "Notification Engine - Preferences",
+            "Notification Engine - Subscriptions",
+        ],
+        "Polymorphic Discussion & Real-time Collaboration": [
+            "Chatter Activities",
+            "Chatter Messages",
+        ],
+    }
+
+    folders: Dict[str, Dict[str, Any]] = {}
 
     for path, path_item in openapi_data.get("paths", {}).items():
         for method in ("get", "post", "put", "patch", "delete"):
@@ -281,7 +322,9 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
                 continue
 
             op = path_item[method]
-            tag = op.get("tags", ["General"])[0]
+            tags = op.get("tags", ["General"])
+            primary_tag = tags[0] if tags else "General"
+            sub_tag = tags[1] if len(tags) > 1 and tags[1] != primary_tag else None
             summary = op.get("summary") or f"{method.upper()} {path}"
             markdown_description = _format_markdown_docs(op, openapi_data, path, method)
 
@@ -348,6 +391,7 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
         if (recId) {{
             pm.environment.set("active_{resource_var}", recId);
             pm.environment.set("active_record_id", recId);
+            pm.environment.set("active_id", recId);
         }}
         if (json.queue_id) {{
             pm.environment.set("active_queue_id", json.queue_id);
@@ -370,16 +414,61 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
                     }
                 ]
 
-            if tag not in folders:
-                folders[tag] = []
-            folders[tag].append(req_item)
+            if primary_tag not in folders:
+                folders[primary_tag] = {"direct_items": [], "subfolders": {}}
+
+            if sub_tag:
+                if sub_tag not in folders[primary_tag]["subfolders"]:
+                    folders[primary_tag]["subfolders"][sub_tag] = []
+                folders[primary_tag]["subfolders"][sub_tag].append(req_item)
+            else:
+                folders[primary_tag]["direct_items"].append(req_item)
 
     # Sort folders into collection
-    for tag_name, items in sorted(folders.items()):
-        collection["item"].append({
-            "name": tag_name,
-            "item": items,
-        })
+    for tag_name, folder_data in sorted(folders.items()):
+        direct_items = folder_data["direct_items"]
+        subfolders = folder_data["subfolders"]
+
+        # Case 1: No subfolders at all -> flat items list
+        if not subfolders:
+            collection["item"].append({
+                "name": tag_name,
+                "item": direct_items,
+            })
+        # Case 2: Only 1 subfolder and no direct items -> flatten to avoid redundant nesting
+        elif len(subfolders) == 1 and not direct_items:
+            only_sub = list(subfolders.keys())[0]
+            collection["item"].append({
+                "name": tag_name,
+                "item": subfolders[only_sub],
+            })
+        # Case 3: Multiple subfolders or mixed direct items & subfolders -> hierarchical structure
+        else:
+            folder_items: List[Dict[str, Any]] = []
+
+            # Determine order of subfolders
+            preferred_order = SUBFOLDER_ORDER.get(tag_name, [])
+            subfolder_names = list(subfolders.keys())
+            if preferred_order:
+                ordered_subs = [s for s in preferred_order if s in subfolders]
+                remaining = sorted([s for s in subfolder_names if s not in preferred_order])
+                sorted_sub_keys = ordered_subs + remaining
+            else:
+                sorted_sub_keys = sorted(subfolder_names)
+
+            for sub_name in sorted_sub_keys:
+                folder_items.append({
+                    "name": sub_name,
+                    "item": subfolders[sub_name],
+                })
+
+            # Append any direct items at the root of this folder
+            folder_items.extend(direct_items)
+
+            collection["item"].append({
+                "name": tag_name,
+                "item": folder_items,
+            })
 
     return collection
 
@@ -420,7 +509,9 @@ def build_postman_environment(
             {"key": "active_uom_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_tax_type_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_tag_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_category_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_record_id", "value": "", "type": "default", "enabled": True},
+            {"key": "active_id", "value": "", "type": "default", "enabled": True},
             {"key": "active_module_name", "value": "identity_rbac", "type": "default", "enabled": True},
             {"key": "active_model_name", "value": "User", "type": "default", "enabled": True},
         ],

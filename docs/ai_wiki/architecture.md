@@ -467,7 +467,32 @@ To maintain structured, scalable taxonomy across the Sovereign platform without 
    - `GET /api/v1/lookups/categories/tree` provides full recursive nested tree visualization for UI tree navigators and menus.
    - Breadcrumb full paths (e.g., `Corporate Documents / Legal Contracts / Non-Disclosure Agreements`) are dynamically resolved.
 
+---
 
+### 6.9 Master Data Lookups Enterprise CRUD & Postman Sub-Folder Architecture
 
+#### 6.9.1 Complete REST Lifecycle & Typed PATCH Schemas
+All master data lookup models in [`backend/modules/base/lookups/models.py`](file:///home/ehab/Desktop/economy_editor/backend/modules/base/lookups/models.py) expose full enterprise CRUD endpoints (`GET /`, `POST /`, `GET /{id}`, `PATCH /{id}`, `DELETE /{id}`):
+- **Countries**: `CountryCreate`, `CountryUpdate`, `CountryRead` (codes auto-uppercased).
+- **Cities**: `CityCreate`, `CityUpdate`, `CityRead` (FK verified against tenant's countries).
+- **Currencies**: `CurrencyCreate`, `CurrencyUpdate`, `CurrencyRead` (currency code auto-uppercased).
+- **Units of Measure (UOM)**: `UnitOfMeasureCreate`, `UnitOfMeasureUpdate`, `UnitOfMeasureRead` (precision rounding).
+- **Tax Types**: `TaxTypeCreate`, `TaxTypeUpdate`, `TaxTypeRead` (rates, inclusive/exclusive toggle).
+- **Tags**: `TagCreate`, `TagUpdate`, `TagRead` (color, model target).
+- **Categories**: Full CRUD, nested tree API, breadcrumb path computation, and cycle prevention.
 
+All `DELETE /{id}` endpoints execute soft-deletion via `SoftDeleteMixin` (`deleted_at = utcnow()`, `deleted_by_id = current_user.id`), automatically excluded from active queries by the global database interceptor.
 
+#### 6.9.2 Hierarchical Postman Sub-Folder Organization
+To prevent bloated flat lists in API client collections:
+- The Postman Exporter ([`backend/core/exporter.py`](file:///home/ehab/Desktop/economy_editor/backend/core/exporter.py)) dynamically inspects OpenAPI tag arrays. When endpoints share a primary module tag (`tags[0]`) and have distinct sub-tags (`tags[1]`), it organizes them into clean nested subfolders:
+  - `Normalized Master Data & Lookups`:
+    - 📁 `Categories`
+    - 📁 `Units of Measure`
+    - 📁 `Countries`
+    - 📁 `Cities`
+    - 📁 `Currencies`
+    - 📁 `Tax Types`
+    - 📁 `Tags`
+    - ⚡ `Bootstrap Company ISO Lookups`
+- All path parameters (`{id}`) dynamically resolve to the specific active entity environment variable (`{{active_country_id}}`, `{{active_city_id}}`, `{{active_currency_id}}`, etc.), capturing newly created IDs via automated Postman test scripts.
