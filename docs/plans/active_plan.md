@@ -1920,11 +1920,12 @@ The following 13 base modules are already complete, tested, and active in the sy
 ### 2. Task Checklist & Granular Stages
 
 #### **Stage 43.1: Transactional Infrastructure & Invariants (P1 Foundations - IN_PROGRESS)**
-- [ ] **Sub-stage 43.1.1: Universal Sequence & Legal Auto-Numbering Engine (`sequences`)**
+- [x] **Sub-stage 43.1.1: Universal Sequence & Legal Auto-Numbering Engine (`sequences`)** - COMPLETED
   - Package: `backend/modules/base/sequences/`
-  - Model: `Sequence` (`code`, `name`, `prefix`, `suffix`, `padding`, `current_number`, `step`, `reset_period: never|yearly|monthly`, `last_reset_date`).
+  - Model: `Sequence` (`code`, `name`, `prefix`, `suffix`, `padding`, `current_number`, `step`, `reset_period: never|yearly|monthly|daily`, `last_reset_date`).
   - Service: Atomic `SequenceService.get_next_number(code, company_id)` using PostgreSQL `SELECT ... FOR UPDATE` row locks for gapless legal numbering (`INV/%(year)s/00001`).
-  - REST API: Full CRUD and test allocation endpoint (`POST /api/v1/sequences/{code}/next`).
+  - REST API: Full CRUD, seed fixtures endpoint, peek preview, and allocation endpoint (`POST /api/v1/sequences/{code}/next`).
+  - Automated tests: 4/4 passing in `test_sequences.py` (total test suite 97/97 passing in Docker).
 - [ ] **Sub-stage 43.1.2: Optimistic Concurrency Control (OCC) & Idempotency Shield (`concurrency`)**
   - Location: `backend/core/`
   - `OptimisticLockingMixin`: Adds `version_id: int = 1` to `BaseModel` with automatic increment and `WHERE version_id = :expected_version` verification (raising `409 Conflict` on lost updates).
@@ -2036,7 +2037,10 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Phase 43 initialized. Immediate focus: **Sub-stage 43.1.1: Universal Sequence & Legal Auto-Numbering Engine (`sequences`)**.
+Immediate focus: **Sub-stage 43.1.2: Optimistic Concurrency Control (OCC) & Idempotency Shield (`concurrency`)**.
+- Add `version_id: int = 1` on `BaseModel` and enforce optimistic locking interceptor.
+- Implement `IdempotencyMiddleware` with Redis 24h caching.
+- Add `test_concurrency_and_idempotency.py` tests.
 
 
 

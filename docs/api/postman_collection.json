@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "58ea666e-cac3-4c16-80c4-541513aa6ba3",
+    "_postman_id": "e7dddf95-f5cf-4c11-90cf-284a0cda363b",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -8145,6 +8145,423 @@
               "response": []
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Universal Sequence & Legal Auto-Numbering Engine",
+      "item": [
+        {
+          "name": "Seed Standard Document Sequences",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sequences/seed",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sequences",
+                "seed"
+              ],
+              "variable": []
+            },
+            "description": "## Seed Standard Document Sequences\n\nIdempotently creates standard legal sequences (Invoices, Sales Orders, Purchase Orders, Contracts, Customer/Vendor codes) for the active tenant company.\n\n**Endpoint**: `POST {{base_url}}/api/v1/sequences/seed`  \n**Tags**: `Universal Sequence & Legal Auto-Numbering Engine`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_seed_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Sequence Series",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sequences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sequences"
+              ],
+              "variable": []
+            },
+            "description": "## List Sequence Series\n\nList all active document numbering sequence definitions configured for the tenant company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/sequences/`  \n**Tags**: `Universal Sequence & Legal Auto-Numbering Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `search` | `query` | `string` | No | Search by name or sequence code |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Sequence Series",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sequences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sequences"
+              ],
+              "variable": []
+            },
+            "description": "## Create Sequence Series\n\nDefine a new legal document numbering sequence with custom prefix, padding, step, and reset policy.\n\n**Endpoint**: `POST {{base_url}}/api/v1/sequences/`  \n**Tags**: `Universal Sequence & Legal Auto-Numbering Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Human-readable title of the sequence series |\n| `code` | `string` | **Yes** | Any valid string | Unique programmatic sequence code |\n| `prefix` | `string` | No | Any valid string | Prefix template supporting date tokens %(year)s, %(month)s, %(day)s |\n| `suffix` | `string` | No | Any valid string | Optional suffix template |\n| `padding` | `integer` | No | Any valid integer | Zero-padding length for generated sequential number |\n| `step` | `integer` | No | Any valid integer | Increment step for each allocation |\n| `reset_period` | `string` | No | Any valid string | Automatic reset frequency: 'never' | 'yearly' | 'monthly' | 'daily' |\n| `is_active` | `boolean` | No | Any valid boolean | Whether this sequence is active and allocatable |\n| `current_number` | `integer` | No | Any valid integer | Initial base counter (next number will be current + step) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"account.invoice\",\n  \"current_number\": 0,\n  \"is_active\": true,\n  \"name\": \"Customer Invoices 2026\",\n  \"padding\": 5,\n  \"prefix\": \"INV/%(year)s/%(month)s/\",\n  \"reset_period\": \"yearly\",\n  \"step\": 1,\n  \"suffix\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_sequence_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Sequence Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sequences/:sequence_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sequences",
+                ":sequence_id"
+              ],
+              "variable": [
+                {
+                  "key": "sequence_id",
+                  "value": "{{active_sequence_id}}",
+                  "description": "Dynamic path parameter bound to {{active_sequence_id}}"
+                }
+              ]
+            },
+            "description": "## Get Sequence Details\n\nRetrieve details and current counter status of a specific sequence series by UUID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/sequences/{sequence_id}`  \n**Tags**: `Universal Sequence & Legal Auto-Numbering Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `sequence_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Sequence Series",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sequences/:sequence_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sequences",
+                ":sequence_id"
+              ],
+              "variable": [
+                {
+                  "key": "sequence_id",
+                  "value": "{{active_sequence_id}}",
+                  "description": "Dynamic path parameter bound to {{active_sequence_id}}"
+                }
+              ]
+            },
+            "description": "## Update Sequence Series\n\nUpdate title, prefix, padding, or reset rules for an existing sequence.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/sequences/{sequence_id}`  \n**Tags**: `Universal Sequence & Legal Auto-Numbering Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `sequence_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | Human-readable title |\n| `prefix` | `string` | No | Any valid string | Prefix template |\n| `suffix` | `string` | No | Any valid string | Suffix template |\n| `padding` | `integer` | No | Any valid integer | Zero-padding length |\n| `current_number` | `integer` | No | Any valid integer | Override counter (use with caution) |\n| `step` | `integer` | No | Any valid integer | Increment step |\n| `reset_period` | `string` | No | Any valid string | Reset frequency: 'never' | 'yearly' | 'monthly' | 'daily' |\n| `is_active` | `boolean` | No | Any valid boolean | Active status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Customer Invoices 2026 (Updated)\",\n  \"padding\": 6,\n  \"prefix\": \"INV/%(year)s/\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Soft-Delete Sequence",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sequences/:sequence_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sequences",
+                ":sequence_id"
+              ],
+              "variable": [
+                {
+                  "key": "sequence_id",
+                  "value": "{{active_sequence_id}}",
+                  "description": "Dynamic path parameter bound to {{active_sequence_id}}"
+                }
+              ]
+            },
+            "description": "## Soft-Delete Sequence\n\nSoft-deletes a sequence series. Past documents retaining this code are unaffected.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/sequences/{sequence_id}`  \n**Tags**: `Universal Sequence & Legal Auto-Numbering Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `sequence_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Atomically Allocate Next Number",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sequences/:code/next",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sequences",
+                ":code",
+                "next"
+              ],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": "{{active_code}}",
+                  "description": "Dynamic path parameter bound to {{active_code}}"
+                }
+              ]
+            },
+            "description": "## Atomically Allocate Next Number\n\nAtomically increments the sequence counter using PostgreSQL row locks and returns the formatted legal document number (e.g. 'INV/2026/09/00001').\n\n**Endpoint**: `POST {{base_url}}/api/v1/sequences/{code}/next`  \n**Tags**: `Universal Sequence & Legal Auto-Numbering Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_next_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preview Next Number (Non-Mutating)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sequences/:code/peek",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sequences",
+                ":code",
+                "peek"
+              ],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": "{{active_code}}",
+                  "description": "Dynamic path parameter bound to {{active_code}}"
+                }
+              ]
+            },
+            "description": "## Preview Next Number (Non-Mutating)\n\nPreview the formatted next number without incrementing the database counter or acquiring a row lock.\n\n**Endpoint**: `GET {{base_url}}/api/v1/sequences/{code}/peek`  \n**Tags**: `Universal Sequence & Legal Auto-Numbering Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `path` | `string` | **Yes** | - |\n| `context_date` | `query` | `string` | No | ISO datetime string for date token evaluation |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
         }
       ]
     },

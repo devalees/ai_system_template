@@ -2195,6 +2195,420 @@
         }
       }
     },
+    "/api/v1/sequences/seed": {
+      "post": {
+        "tags": [
+          "Universal Sequence & Legal Auto-Numbering Engine"
+        ],
+        "summary": "Seed Standard Document Sequences",
+        "description": "Idempotently creates standard legal sequences (Invoices, Sales Orders, Purchase Orders, Contracts, Customer/Vendor codes) for the active tenant company.",
+        "operationId": "bootstrap_company_sequences_api_v1_sequences_seed_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object",
+                  "title": "Response Bootstrap Company Sequences Api V1 Sequences Seed Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sequences/": {
+      "get": {
+        "tags": [
+          "Universal Sequence & Legal Auto-Numbering Engine"
+        ],
+        "summary": "List Sequence Series",
+        "description": "List all active document numbering sequence definitions configured for the tenant company.",
+        "operationId": "list_sequences_api_v1_sequences__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search by name or sequence code",
+              "title": "Search"
+            },
+            "description": "Search by name or sequence code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SequenceRead"
+                  },
+                  "title": "Response List Sequences Api V1 Sequences  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Universal Sequence & Legal Auto-Numbering Engine"
+        ],
+        "summary": "Create Sequence Series",
+        "description": "Define a new legal document numbering sequence with custom prefix, padding, step, and reset policy.",
+        "operationId": "create_sequence_api_v1_sequences__post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SequenceCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SequenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sequences/{sequence_id}": {
+      "get": {
+        "tags": [
+          "Universal Sequence & Legal Auto-Numbering Engine"
+        ],
+        "summary": "Get Sequence Details",
+        "description": "Retrieve details and current counter status of a specific sequence series by UUID.",
+        "operationId": "get_sequence_api_v1_sequences__sequence_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sequence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sequence Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SequenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Universal Sequence & Legal Auto-Numbering Engine"
+        ],
+        "summary": "Update Sequence Series",
+        "description": "Update title, prefix, padding, or reset rules for an existing sequence.",
+        "operationId": "update_sequence_api_v1_sequences__sequence_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sequence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sequence Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SequenceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SequenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Universal Sequence & Legal Auto-Numbering Engine"
+        ],
+        "summary": "Soft-Delete Sequence",
+        "description": "Soft-deletes a sequence series. Past documents retaining this code are unaffected.",
+        "operationId": "delete_sequence_api_v1_sequences__sequence_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sequence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sequence Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sequences/{code}/next": {
+      "post": {
+        "tags": [
+          "Universal Sequence & Legal Auto-Numbering Engine"
+        ],
+        "summary": "Atomically Allocate Next Number",
+        "description": "Atomically increments the sequence counter using PostgreSQL row locks and returns the formatted legal document number (e.g. 'INV/2026/09/00001').",
+        "operationId": "allocate_next_number_api_v1_sequences__code__next_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/NextNumberRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NextNumberResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sequences/{code}/peek": {
+      "get": {
+        "tags": [
+          "Universal Sequence & Legal Auto-Numbering Engine"
+        ],
+        "summary": "Preview Next Number (Non-Mutating)",
+        "description": "Preview the formatted next number without incrementing the database counter or acquiring a row lock.",
+        "operationId": "peek_next_number_api_v1_sequences__code__peek_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          },
+          {
+            "name": "context_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO datetime string for date token evaluation",
+              "title": "Context Date"
+            },
+            "description": "ISO datetime string for date token evaluation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NextNumberResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/i18n/locales": {
       "get": {
         "tags": [
@@ -13131,6 +13545,77 @@
           }
         }
       },
+      "NextNumberRequest": {
+        "properties": {
+          "context_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Date",
+            "description": "Context date for evaluating %(year)s, %(month)s, %(day)s tokens (defaults to current time)"
+          }
+        },
+        "type": "object",
+        "title": "NextNumberRequest",
+        "description": "Optional parameters when requesting or previewing the next sequence number.",
+        "example": {
+          "context_date": "2026-09-16T10:00:00Z"
+        }
+      },
+      "NextNumberResponse": {
+        "properties": {
+          "sequence_number": {
+            "type": "string",
+            "title": "Sequence Number",
+            "description": "The fully formatted legal sequence string",
+            "examples": [
+              "INV/2026/09/00001"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Sequence code",
+            "examples": [
+              "account.invoice"
+            ]
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number",
+            "description": "The raw integer allocated",
+            "examples": [
+              1
+            ]
+          },
+          "is_preview": {
+            "type": "boolean",
+            "title": "Is Preview",
+            "description": "True if previewed without mutating the database counter",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "sequence_number",
+          "code",
+          "number"
+        ],
+        "title": "NextNumberResponse",
+        "description": "Response returned upon allocating or previewing a sequence number.",
+        "example": {
+          "code": "account.invoice",
+          "is_preview": false,
+          "number": 1,
+          "sequence_number": "INV/2026/09/00001"
+        }
+      },
       "NotificationCountResponse": {
         "properties": {
           "unread_count": {
@@ -15265,6 +15750,362 @@
           ],
           "notification_id": "n0000000-0000-0000-0000-000000000001",
           "status": "delivered"
+        }
+      },
+      "SequenceCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Human-readable title of the sequence series",
+            "examples": [
+              "Customer Invoices 2026"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique programmatic sequence code",
+            "examples": [
+              "account.invoice"
+            ]
+          },
+          "prefix": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Prefix",
+            "description": "Prefix template supporting date tokens %(year)s, %(month)s, %(day)s",
+            "default": "",
+            "examples": [
+              "INV/%(year)s/"
+            ]
+          },
+          "suffix": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Suffix",
+            "description": "Optional suffix template",
+            "default": "",
+            "examples": [
+              "-SA"
+            ]
+          },
+          "padding": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Padding",
+            "description": "Zero-padding length for generated sequential number",
+            "default": 5,
+            "examples": [
+              5
+            ]
+          },
+          "step": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Step",
+            "description": "Increment step for each allocation",
+            "default": 1,
+            "examples": [
+              1
+            ]
+          },
+          "reset_period": {
+            "type": "string",
+            "title": "Reset Period",
+            "description": "Automatic reset frequency: 'never' | 'yearly' | 'monthly' | 'daily'",
+            "default": "never",
+            "examples": [
+              "yearly"
+            ]
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether this sequence is active and allocatable",
+            "default": true
+          },
+          "current_number": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Current Number",
+            "description": "Initial base counter (next number will be current + step)",
+            "default": 0,
+            "examples": [
+              0
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "SequenceCreate",
+        "description": "Schema for creating a new sequence.",
+        "example": {
+          "code": "account.invoice",
+          "current_number": 0,
+          "is_active": true,
+          "name": "Customer Invoices 2026",
+          "padding": 5,
+          "prefix": "INV/%(year)s/%(month)s/",
+          "reset_period": "yearly",
+          "step": 1,
+          "suffix": ""
+        }
+      },
+      "SequenceRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Human-readable title of the sequence series",
+            "examples": [
+              "Customer Invoices 2026"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique programmatic sequence code",
+            "examples": [
+              "account.invoice"
+            ]
+          },
+          "prefix": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Prefix",
+            "description": "Prefix template supporting date tokens %(year)s, %(month)s, %(day)s",
+            "default": "",
+            "examples": [
+              "INV/%(year)s/"
+            ]
+          },
+          "suffix": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Suffix",
+            "description": "Optional suffix template",
+            "default": "",
+            "examples": [
+              "-SA"
+            ]
+          },
+          "padding": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Padding",
+            "description": "Zero-padding length for generated sequential number",
+            "default": 5,
+            "examples": [
+              5
+            ]
+          },
+          "step": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Step",
+            "description": "Increment step for each allocation",
+            "default": 1,
+            "examples": [
+              1
+            ]
+          },
+          "reset_period": {
+            "type": "string",
+            "title": "Reset Period",
+            "description": "Automatic reset frequency: 'never' | 'yearly' | 'monthly' | 'daily'",
+            "default": "never",
+            "examples": [
+              "yearly"
+            ]
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether this sequence is active and allocatable",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique sequence record UUID"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id",
+            "description": "Tenant company UUID"
+          },
+          "current_number": {
+            "type": "integer",
+            "title": "Current Number",
+            "description": "Current highest allocated number"
+          },
+          "last_reset_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Reset Date",
+            "description": "Timestamp when the sequence counter was last reset"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "current_number",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SequenceRead",
+        "description": "Schema for reading sequence details."
+      },
+      "SequenceUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Human-readable title"
+          },
+          "prefix": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prefix",
+            "description": "Prefix template"
+          },
+          "suffix": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suffix",
+            "description": "Suffix template"
+          },
+          "padding": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 12.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Padding",
+            "description": "Zero-padding length"
+          },
+          "current_number": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Number",
+            "description": "Override counter (use with caution)"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step",
+            "description": "Increment step"
+          },
+          "reset_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reset Period",
+            "description": "Reset frequency: 'never' | 'yearly' | 'monthly' | 'daily'"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Active status"
+          }
+        },
+        "type": "object",
+        "title": "SequenceUpdate",
+        "description": "Schema for updating an existing sequence.",
+        "example": {
+          "name": "Customer Invoices 2026 (Updated)",
+          "padding": 6,
+          "prefix": "INV/%(year)s/"
         }
       },
       "SettingFieldMeta": {
