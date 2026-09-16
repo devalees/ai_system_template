@@ -195,14 +195,18 @@ class BaseModel(
         super().__init__(**kwargs)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize model instance attributes to a dictionary."""
+        """Serialize model instance attributes to a JSON-safe dictionary."""
+        from decimal import Decimal
+        from datetime import date
         result = {}
         for column in self.__table__.columns:
             val = getattr(self, column.name)
             if isinstance(val, uuid.UUID):
                 result[column.name] = str(val)
-            elif isinstance(val, datetime):
+            elif isinstance(val, (datetime, date)):
                 result[column.name] = val.isoformat()
+            elif isinstance(val, Decimal):
+                result[column.name] = float(val)
             else:
                 result[column.name] = val
         return result

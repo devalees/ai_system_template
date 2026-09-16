@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "26126f9c-059c-4421-96df-f26f5b3ce2cd",
+    "_postman_id": "ea21f2fb-fa8c-44b7-aea5-07c33f22996a",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -6038,6 +6038,621 @@
               ]
             },
             "description": "## Delete translation term\n\nSoft delete a translation term.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/i18n/terms/{term_id}`  \n**Tags**: `Multi-Language & Localization Engine, Internationalization (i18n)`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `term_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Multi-Level Governance & Approval Engine",
+      "item": [
+        {
+          "name": "List Approval Rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "rules"
+              ],
+              "variable": []
+            },
+            "description": "## List Approval Rules\n\nRetrieves approval rules for the active tenant, with optional model filtering.\n\n**Endpoint**: `GET {{base_url}}/api/v1/approvals/rules`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `query` | `string` | No | Filter rules by target model name |\n| `is_active` | `query` | `string` | No | Filter rules by operational status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Approval Rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "rules"
+              ],
+              "variable": []
+            },
+            "description": "## Create Approval Rule\n\nConfigures a new tiered approval gate with optional AST conditions and designated approvers.\n\n**Endpoint**: `POST {{base_url}}/api/v1/approvals/rules`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Descriptive title of approval rule |\n| `code` | `string` | **Yes** | Any valid string | Unique code for rule within company |\n| `res_model` | `string` | **Yes** | Any valid string | Target entity model name (e.g. 'party', 'invoice') |\n| `tier` | `integer` | No | Any valid integer | Sequential tier level (1, 2, 3...) |\n| `condition` | `object` | No | Any valid object | Universal AST filter criteria evaluated against entity attributes to trigger approval |\n| `approver_group_id` | `string` | No | Any valid string | Optional RBAC group ID authorized to review this tier |\n| `approver_user_id` | `string` | No | Any valid string | Optional specific user ID designated as tier approver |\n| `is_active` | `boolean` | No | Any valid boolean | Whether rule is operational |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"rule_high_credit\",\n  \"condition\": {\n    \"field\": \"credit_limit\",\n    \"operator\": \"gt\",\n    \"value\": 50000.0\n  },\n  \"is_active\": true,\n  \"name\": \"High Credit Limit Sign-off\",\n  \"res_model\": \"{{active_model_name}}\",\n  \"tier\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_rule_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Approval Rule",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/rules/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "rules",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_rule_id}}",
+                  "description": "Dynamic path parameter bound to {{active_rule_id}}"
+                }
+              ]
+            },
+            "description": "## Get Approval Rule\n\nFetches details of a specific approval rule.\n\n**Endpoint**: `GET {{base_url}}/api/v1/approvals/rules/{id}`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Approval rule UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Approval Rule",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/rules/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "rules",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_rule_id}}",
+                  "description": "Dynamic path parameter bound to {{active_rule_id}}"
+                }
+              ]
+            },
+            "description": "## Update Approval Rule\n\nUpdates criteria, tier level, or assigned approver for a rule.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/approvals/rules/{id}`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Approval rule UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `tier` | `integer` | No | Any valid integer | tier attribute |\n| `condition` | `object` | No | Any valid object | condition attribute |\n| `approver_group_id` | `string` | No | Any valid string | approver_group_id attribute |\n| `approver_user_id` | `string` | No | Any valid string | approver_user_id attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Executive Credit Limit Sign-off\",\n  \"tier\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Approval Rule",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/rules/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "rules",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_rule_id}}",
+                  "description": "Dynamic path parameter bound to {{active_rule_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Approval Rule\n\nPermanently deletes an approval rule.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/approvals/rules/{id}`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Approval rule UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Approval Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/requests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "requests"
+              ],
+              "variable": []
+            },
+            "description": "## Submit Approval Request\n\nSubmits an entity for approval, evaluating active rules to assign tiers and approvers.\n\n**Endpoint**: `POST {{base_url}}/api/v1/approvals/requests`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `string` | **Yes** | Any valid string | Target entity model name |\n| `res_id` | `string` | **Yes** | Any valid string | Target record UUID |\n| `summary` | `string` | No | Any valid string | Brief justification for request |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"res_id\": \"{{active_record_id}}\",\n  \"res_model\": \"{{active_model_name}}\",\n  \"summary\": \"Customer requested 100k credit limit expansion\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_request_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approver Inbox",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/inbox",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "inbox"
+              ],
+              "variable": []
+            },
+            "description": "## Approver Inbox\n\nLists pending approval tickets assigned to the active user or their groups.\n\n**Endpoint**: `GET {{base_url}}/api/v1/approvals/inbox`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `state` | `query` | `string` | No | Filter inbox by state (pending, approved, rejected) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Approval Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/requests/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "requests",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_request_id}}",
+                  "description": "Dynamic path parameter bound to {{active_request_id}}"
+                }
+              ]
+            },
+            "description": "## Get Approval Request\n\nRetrieves an approval ticket with its full sign-off audit trail.\n\n**Endpoint**: `GET {{base_url}}/api/v1/approvals/requests/{id}`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Approval request UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/requests/:id/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "requests",
+                ":id",
+                "approve"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_request_id}}",
+                  "description": "Dynamic path parameter bound to {{active_request_id}}"
+                }
+              ]
+            },
+            "description": "## Approve Request\n\nRecords an approval sign-off decision with audited commentary.\n\n**Endpoint**: `POST {{base_url}}/api/v1/approvals/requests/{id}/approve`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Approval request UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `comments` | `string` | No | Any valid string | Audited commentary or justification for decision |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Approved based on Q3 audited financial balance sheet.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_approve_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/requests/:id/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "requests",
+                ":id",
+                "reject"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_request_id}}",
+                  "description": "Dynamic path parameter bound to {{active_request_id}}"
+                }
+              ]
+            },
+            "description": "## Reject Request\n\nRecords a rejection decision with audited commentary.\n\n**Endpoint**: `POST {{base_url}}/api/v1/approvals/requests/{id}/reject`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Approval request UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `comments` | `string` | No | Any valid string | Audited commentary or justification for decision |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Approved based on Q3 audited financial balance sheet.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_reject_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Record Approval History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/approvals/entity/:res_model/:res_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "approvals",
+                "entity",
+                ":res_model",
+                ":res_id"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "res_id",
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
+                }
+              ]
+            },
+            "description": "## Get Record Approval History\n\nRetrieves all historical and pending approval tickets associated with a business record.\n\n**Endpoint**: `GET {{base_url}}/api/v1/approvals/entity/{res_model}/{res_id}`  \n**Tags**: `Multi-Level Governance & Approval Engine, Multi-Level Governance & Approval Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name (e.g. 'party', 'invoice') |\n| `res_id` | `path` | `string` | **Yes** | Target record UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }

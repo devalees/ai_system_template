@@ -11306,6 +11306,639 @@
         }
       }
     },
+    "/api/v1/approvals/rules": {
+      "post": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Create Approval Rule",
+        "description": "Configures a new tiered approval gate with optional AST conditions and designated approvers.",
+        "operationId": "create_approval_rule_api_v1_approvals_rules_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRuleCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "List Approval Rules",
+        "description": "Retrieves approval rules for the active tenant, with optional model filtering.",
+        "operationId": "list_approval_rules_api_v1_approvals_rules_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter rules by target model name",
+              "title": "Res Model"
+            },
+            "description": "Filter rules by target model name"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter rules by operational status",
+              "title": "Is Active"
+            },
+            "description": "Filter rules by operational status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalRuleResponse"
+                  },
+                  "title": "Response List Approval Rules Api V1 Approvals Rules Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/rules/{id}": {
+      "get": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Get Approval Rule",
+        "description": "Fetches details of a specific approval rule.",
+        "operationId": "get_approval_rule_api_v1_approvals_rules__id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Approval rule UUID",
+              "title": "Id"
+            },
+            "description": "Approval rule UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Update Approval Rule",
+        "description": "Updates criteria, tier level, or assigned approver for a rule.",
+        "operationId": "update_approval_rule_api_v1_approvals_rules__id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Approval rule UUID",
+              "title": "Id"
+            },
+            "description": "Approval rule UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRuleUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Delete Approval Rule",
+        "description": "Permanently deletes an approval rule.",
+        "operationId": "delete_approval_rule_api_v1_approvals_rules__id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Approval rule UUID",
+              "title": "Id"
+            },
+            "description": "Approval rule UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/requests": {
+      "post": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Submit Approval Request",
+        "description": "Submits an entity for approval, evaluating active rules to assign tiers and approvers.",
+        "operationId": "submit_approval_request_api_v1_approvals_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/approvals/inbox": {
+      "get": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Approver Inbox",
+        "description": "Lists pending approval tickets assigned to the active user or their groups.",
+        "operationId": "get_approver_inbox_api_v1_approvals_inbox_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter inbox by state (pending, approved, rejected)",
+              "default": "pending",
+              "title": "State"
+            },
+            "description": "Filter inbox by state (pending, approved, rejected)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalRequestResponse"
+                  },
+                  "title": "Response Get Approver Inbox Api V1 Approvals Inbox Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/requests/{id}": {
+      "get": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Get Approval Request",
+        "description": "Retrieves an approval ticket with its full sign-off audit trail.",
+        "operationId": "get_approval_request_api_v1_approvals_requests__id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Approval request UUID",
+              "title": "Id"
+            },
+            "description": "Approval request UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/requests/{id}/approve": {
+      "post": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Approve Request",
+        "description": "Records an approval sign-off decision with audited commentary.",
+        "operationId": "approve_request_api_v1_approvals_requests__id__approve_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Approval request UUID",
+              "title": "Id"
+            },
+            "description": "Approval request UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDecisionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/requests/{id}/reject": {
+      "post": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Reject Request",
+        "description": "Records a rejection decision with audited commentary.",
+        "operationId": "reject_request_api_v1_approvals_requests__id__reject_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Approval request UUID",
+              "title": "Id"
+            },
+            "description": "Approval request UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDecisionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/entity/{res_model}/{res_id}": {
+      "get": {
+        "tags": [
+          "Multi-Level Governance & Approval Engine",
+          "Multi-Level Governance & Approval Engine"
+        ],
+        "summary": "Get Record Approval History",
+        "description": "Retrieves all historical and pending approval tickets associated with a business record.",
+        "operationId": "get_record_approval_history_api_v1_approvals_entity__res_model___res_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name (e.g. 'party', 'invoice')",
+              "title": "Res Model"
+            },
+            "description": "Target model name (e.g. 'party', 'invoice')"
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target record UUID",
+              "title": "Res Id"
+            },
+            "description": "Target record UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalRequestResponse"
+                  },
+                  "title": "Response Get Record Approval History Api V1 Approvals Entity  Res Model   Res Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/kernel/modules": {
       "get": {
         "tags": [
@@ -12196,6 +12829,659 @@
         "example": {
           "is_default": true,
           "street2": "Building 45, Floor 4 (Expanded)"
+        }
+      },
+      "ApprovalActionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "comments": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "request_id",
+          "actor_id",
+          "action",
+          "comments",
+          "created_at"
+        ],
+        "title": "ApprovalActionResponse",
+        "description": "Response schema for an executed approval or rejection action.",
+        "example": {
+          "action": "approve",
+          "actor_id": "44444444-4444-4444-4444-444444444444",
+          "comments": "Credit assessment verified against commercial registration.",
+          "created_at": "2026-09-16T12:00:00Z",
+          "id": "22222222-2222-2222-2222-222222222222",
+          "request_id": "33333333-3333-3333-3333-333333333333"
+        }
+      },
+      "ApprovalDecisionRequest": {
+        "properties": {
+          "comments": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments",
+            "description": "Audited commentary or justification for decision"
+          }
+        },
+        "type": "object",
+        "title": "ApprovalDecisionRequest",
+        "description": "Request payload to approve or reject a ticket.",
+        "example": {
+          "comments": "Approved based on Q3 audited financial balance sheet."
+        }
+      },
+      "ApprovalDecisionResponse": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "res_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Res Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "comments": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments"
+          },
+          "action_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Action Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "res_model",
+          "res_id",
+          "state",
+          "action",
+          "actor_id",
+          "comments"
+        ],
+        "title": "ApprovalDecisionResponse",
+        "description": "Response representing result of an approval decision.",
+        "example": {
+          "action": "approve",
+          "action_time": "2026-09-16T12:00:00Z",
+          "actor_id": "44444444-4444-4444-4444-444444444444",
+          "comments": "Approved based on Q3 audited financial balance sheet.",
+          "request_id": "33333333-3333-3333-3333-333333333333",
+          "res_id": "55555555-5555-5555-5555-555555555555",
+          "res_model": "party",
+          "state": "approved"
+        }
+      },
+      "ApprovalRequestCreate": {
+        "properties": {
+          "res_model": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Res Model",
+            "description": "Target entity model name"
+          },
+          "res_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Res Id",
+            "description": "Target record UUID"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary",
+            "description": "Brief justification for request"
+          }
+        },
+        "type": "object",
+        "required": [
+          "res_model",
+          "res_id"
+        ],
+        "title": "ApprovalRequestCreate",
+        "description": "Request payload to initiate an approval ticket for an entity.",
+        "example": {
+          "res_id": "55555555-5555-5555-5555-555555555555",
+          "res_model": "party",
+          "summary": "Customer requested 100k credit limit expansion"
+        }
+      },
+      "ApprovalRequestResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          },
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "res_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Res Id"
+          },
+          "requested_by_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By Id"
+          },
+          "approver_group_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver Group Id"
+          },
+          "approver_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver User Id"
+          },
+          "tier": {
+            "type": "integer",
+            "title": "Tier"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "target_snapshot": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Snapshot"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/ApprovalActionResponse"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "rule_id",
+          "res_model",
+          "res_id",
+          "requested_by_id",
+          "approver_group_id",
+          "approver_user_id",
+          "tier",
+          "state",
+          "summary",
+          "target_snapshot",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ApprovalRequestResponse",
+        "description": "Response schema representing an approval request and its action trail.",
+        "example": {
+          "actions": [],
+          "company_id": "00000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-16T12:00:00Z",
+          "id": "33333333-3333-3333-3333-333333333333",
+          "requested_by_id": "66666666-6666-6666-6666-666666666666",
+          "res_id": "55555555-5555-5555-5555-555555555555",
+          "res_model": "party",
+          "rule_id": "11111111-1111-1111-1111-111111111111",
+          "state": "pending",
+          "summary": "Customer requested 100k credit limit expansion",
+          "target_snapshot": {
+            "credit_limit": 100000.0
+          },
+          "tier": 1,
+          "updated_at": "2026-09-16T12:00:00Z"
+        }
+      },
+      "ApprovalRuleCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Descriptive title of approval rule"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique code for rule within company"
+          },
+          "res_model": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Res Model",
+            "description": "Target entity model name (e.g. 'party', 'invoice')"
+          },
+          "tier": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Tier",
+            "description": "Sequential tier level (1, 2, 3...)",
+            "default": 1
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition",
+            "description": "Universal AST filter criteria evaluated against entity attributes to trigger approval"
+          },
+          "approver_group_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver Group Id",
+            "description": "Optional RBAC group ID authorized to review this tier"
+          },
+          "approver_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver User Id",
+            "description": "Optional specific user ID designated as tier approver"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether rule is operational",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "res_model"
+        ],
+        "title": "ApprovalRuleCreate",
+        "description": "Schema for registering a new approval rule.",
+        "example": {
+          "code": "rule_high_credit",
+          "condition": {
+            "field": "credit_limit",
+            "operator": "gt",
+            "value": 50000.0
+          },
+          "is_active": true,
+          "name": "High Credit Limit Sign-off",
+          "res_model": "party",
+          "tier": 1
+        }
+      },
+      "ApprovalRuleResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Descriptive title of approval rule"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique code for rule within company"
+          },
+          "res_model": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Res Model",
+            "description": "Target entity model name (e.g. 'party', 'invoice')"
+          },
+          "tier": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Tier",
+            "description": "Sequential tier level (1, 2, 3...)",
+            "default": 1
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition",
+            "description": "Universal AST filter criteria evaluated against entity attributes to trigger approval"
+          },
+          "approver_group_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver Group Id",
+            "description": "Optional RBAC group ID authorized to review this tier"
+          },
+          "approver_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver User Id",
+            "description": "Optional specific user ID designated as tier approver"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether rule is operational",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "res_model",
+          "id",
+          "company_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ApprovalRuleResponse",
+        "description": "Response schema for approval rule.",
+        "example": {
+          "code": "rule_high_credit",
+          "company_id": "00000000-0000-0000-0000-000000000001",
+          "condition": {
+            "field": "credit_limit",
+            "operator": "gt",
+            "value": 50000.0
+          },
+          "created_at": "2026-09-16T12:00:00Z",
+          "id": "11111111-1111-1111-1111-111111111111",
+          "is_active": true,
+          "name": "High Credit Limit Sign-off",
+          "res_model": "party",
+          "tier": 1,
+          "updated_at": "2026-09-16T12:00:00Z"
+        }
+      },
+      "ApprovalRuleUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition"
+          },
+          "approver_group_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver Group Id"
+          },
+          "approver_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver User Id"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "ApprovalRuleUpdate",
+        "description": "Schema for updating an existing approval rule.",
+        "example": {
+          "name": "Executive Credit Limit Sign-off",
+          "tier": 2
         }
       },
       "AuditLogRead": {

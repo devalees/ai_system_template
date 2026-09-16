@@ -1965,11 +1965,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Record Lock Interceptor: `RecordLockInterceptor` hooking into SQLAlchemy `before_flush` session events, physically blocking unauthorized `UPDATE` or `DELETE` on frozen records at the database level with `422 Unprocessable Entity` (`RECORD_FROZEN`).
   - REST API: 11 endpoints (`/api/v1/workflows/*`) covering workflow definitions CRUD, transition rules management, available transitions introspection for records, transition trigger execution, administrative unfreeze override, and audit history queries.
   - Automated tests: 4/4 passing in `test_workflows.py` (full suite 119/119 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [ ] **Sub-stage 43.2.3: Multi-Level Governance & Approval Engine (`approvals`)**
-  - Package: `backend/modules/base/approvals/`
-  - Models: `ApprovalRule` (`res_model`, `condition` AST, `tier`, `approver_group_id`, `approver_user_id`), `ApprovalRequest` (`rule_id`, `res_model`, `res_id`, `state: pending|approved|rejected|cancelled`), `ApprovalAction` (`request_id`, `actor_id`, `action`, `comments`).
-  - Engine: Integrates with `workflows` to gate state transitions on required approvals and dispatches alerts via `notification_engine`.
-  - REST API: Approval rules CRUD, pending request inbox, and approve/reject decision endpoints.
+- [x] **Sub-stage 43.2.3: Multi-Level Governance & Approval Engine (`approvals`)** - COMPLETED
+  - Package: `backend/modules/base/approvals/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+  - Models: `ApprovalRule` (`name`, `code`, `res_model`, `tier`, `condition` AST, `approver_group_id`, `approver_user_id`, `is_active`), `ApprovalRequest` (`rule_id`, `res_model`, `res_id`, `requested_by_id`, `approver_group_id`, `approver_user_id`, `tier`, `state: pending|approved|rejected|cancelled`, `summary`, `target_snapshot`), `ApprovalAction` (`request_id`, `actor_id`, `action: approve|reject|cancel`, `comments`).
+  - Engine: `ApprovalService` evaluating AST condition criteria against target records via `ASTConditionEvaluator`, assigning multi-tier approval gates, routing to specific approver inboxes, enforcing strict sign-off authorization (user, group membership, or superuser), and broadcasting lifecycle events on `EventBus`.
+  - REST API: 11 endpoints (`/api/v1/approvals/*`) covering approval rules CRUD, approval request submission, approver personal inbox, ticket detail retrieval, approve/reject decision execution, and entity approval history logs.
+  - Automated tests: 4/4 passing in `test_approvals.py` (full suite 123/123 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 - [ ] **Sub-stage 43.2.4: Company-Wide Calendar & Recurring Events (`calendar`)**
   - Package: `backend/modules/base/calendar/`
   - Models: `CalendarEvent` (`title`, `description`, `start_time`, `end_time`, `is_all_day`, `recurrence_rule` RRULE, `res_model`, `res_id`), `EventAttendee` (`event_id`, `user_id`, `party_contact_id`, `status: accepted|declined|tentative`).
@@ -2044,14 +2045,13 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Sub-stage 43.2.1 (`parties`) and Sub-stage 43.2.2 (`workflows`) are COMPLETED.
-Immediate focus: **Sub-stage 43.2.3: Multi-Level Governance & Approval Engine (`approvals`)** (Stage 43.2: Universal Parties, Workflows & Approvals).
-- Create `backend/modules/base/approvals/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `ApprovalRule` (`res_model`, `condition` AST, `tier`, `approver_group_id`, `approver_user_id`).
-- Implement `ApprovalRequest` (`rule_id`, `res_model`, `res_id`, `state: pending|approved|rejected|cancelled`).
-- Implement `ApprovalAction` (`request_id`, `actor_id`, `action`, `comments`).
-- Integrate with `workflows` state machine and dispatch notification alerts via `notification_engine`.
-- Add unit tests in `backend/tests/test_approvals.py`.
+Sub-stages 43.2.1 (`parties`), 43.2.2 (`workflows`), and 43.2.3 (`approvals`) are COMPLETED.
+Immediate focus: **Sub-stage 43.2.4: Company-Wide Calendar & Recurring Events (`calendar`)** (Stage 43.2: Universal Parties, Workflows & Approvals).
+- Create `backend/modules/base/calendar/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `CalendarEvent` (`title`, `description`, `start_time`, `end_time`, `is_all_day`, `recurrence_rule` RRULE, `res_model`, `res_id`, `organizer_id`, `location`).
+- Implement `EventAttendee` (`event_id`, `user_id`, `party_contact_id`, `status: accepted|declined|tentative`, `notes`).
+- Implement RRULE recurrence calculation and RFC 5545 iCalendar generation/parsing.
+- Add unit tests in `backend/tests/test_calendar.py`.
 
 
 

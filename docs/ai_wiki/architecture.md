@@ -752,6 +752,18 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
   - Raises `RecordFrozenException` formatted into `HTTP 422 Unprocessable Entity` (`RECORD_FROZEN`).
   - Administrative unfreeze endpoint (`POST /api/v1/workflows/{res_model}/{res_id}/unfreeze`) permits authorized overrides with mandatory reason logging.
 
+#### 6.13.9 Multi-Level Governance & Approval Engine (`approvals`)
+- **Package**: `backend/modules/base/approvals/`
+- **Models (`ApprovalRule`, `ApprovalRequest`, `ApprovalAction`)**:
+  - `ApprovalRule`: Declares conditional approval gates for business entities (`res_model`) with sequential hierarchy levels (`tier: int`), Universal AST condition criteria, designated approver groups (`approver_group_id`), or specific user assignees (`approver_user_id`).
+  - `ApprovalRequest`: Individual sign-off ticket bound to a business record, storing the current state (`pending`, `approved`, `rejected`, `cancelled`), tier level, requester identity, and a frozen attribute snapshot of the target entity (`target_snapshot`).
+  - `ApprovalAction`: Audited sign-off log capturing each approve/reject/cancel decision with timestamp, actor attribution, and formal commentary.
+- **Dynamic Routing & Approver Inbox**:
+  - `ApprovalService.submit_request()` evaluates entity attributes against active rules in memory via `ASTConditionEvaluator` to assign designated approvers and tiers.
+  - User inbox endpoint (`GET /api/v1/approvals/inbox`) filters pending tickets specifically actionable by the current user based on direct user assignment, RBAC group membership, or administrative superuser scope.
+  - Unauthorized sign-off attempts are strictly rejected with `HTTP 403 Forbidden` (`PERMISSION_DENIED`).
+
+
 
 
 
