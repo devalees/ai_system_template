@@ -2011,17 +2011,18 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Automated tests: 3/3 passing in `test_resources.py` (full test suite 143/143 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 
 #### **Stage 43.4: Execution, Commitments & Operations (P3)**
-- [x] **Sub-stage 43.4.1: Universal Work Items & Tasks (`work_items`)** - COMPLETED
+- [x] **Sub-stage 43.4.1: Universal Work Items & Tasks (`work_items`)** - COMPLETED (Commit: `fc96e20`)
   - Package: `backend/modules/base/work_items/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
   - Models: `WorkItemStage` (`name`, `code`, `sequence`, `is_closed`, `color`), `WorkItem` (`item_number`, `title`, `description`, `res_model`, `res_id`, `parent_id`, `priority`, `stage_id`, `assigned_to_id`, `estimated_hours`, `spent_hours`, `due_date`, `is_closed`), `WorkItemDependency` (`predecessor_id`, `successor_id`, `dependency_type: finish_to_start|start_to_start|finish_to_finish|start_to_finish`).
   - Service: `WorkItemService` supporting recursive sub-task hierarchy trees (`get_subtask_tree`), BFS cycle prevention rejecting circular task dependencies, and Kanban pipeline stage transitions.
   - REST API: 11 endpoints (`/api/v1/work_items/*`) covering stages CRUD, task management, hierarchical trees (`/{id}/tree`), dependency links, and stage transitions (`/{id}/stage`).
   - Automated tests: 4/4 passing in `test_work_items.py` (full test suite 147/147 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [ ] **Sub-stage 43.4.2: Contracts, Agreements & Subscriptions (`contracts`)**
-  - Package: `backend/modules/base/contracts/`
-  - Models: `Contract` (`sequence_number`, `title`, `party_id`, `contract_type: customer|vendor|employment|lease`, `start_date`, `end_date`, `billing_frequency: one_off|monthly|quarterly|annual`, `amount`, `currency_id`, `state`).
-  - Engine: Recurring renewal terms, auto-renewal notices, and document attachments.
-  - REST API: Contract CRUD, renewal/expiry tracking, and state transition endpoints.
+- [x] **Sub-stage 43.4.2: Contracts, Agreements & Subscriptions (`contracts`)** - COMPLETED
+  - Package: `backend/modules/base/contracts/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+  - Models: `Contract` (`sequence_number`, `title`, `party_id`, `contract_type: customer|vendor|employment|lease|nda|service|partnership|other`, `start_date`, `end_date`, `billing_frequency: one_off|monthly|quarterly|semi_annual|annual`, `amount`, `currency_id`, `auto_renew`, `notice_days`, `state: draft|active|expired|terminated|cancelled`), `ContractLine` (`contract_id`, `name`, `quantity`, `unit_price`, `subtotal`, `notes`).
+  - Service: `ContractService` supporting auto-line subtotal computation, dynamic expiring contract queries (`get_expiring_contracts`), state transitions (`activate`, `renew`, `terminate`, `cancel`), renewal tracking with previous contract linkage, and `EventBus` state mutation dispatches.
+  - REST API: 10 REST endpoints (`/api/v1/contracts/*`) covering contract CRUD, contract lines, state transitions (`/{id}/activate`, `/{id}/renew`, `/{id}/terminate`, `/{id}/cancel`), and expiring contracts lookup (`/expiring`).
+  - Automated tests: 3/3 passing in `test_contracts.py` (full test suite 150/150 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 
 #### **Stage 43.5: Sovereign AI Agent Bridge & FastMCP Tool Reflection (Final Stage Integration)**
 - [ ] **Sub-stage 43.5.1: `invoke_ai_agent` TCA Action Executor**
@@ -2055,15 +2056,16 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 - *2026-09-16*: Stage 43.2 (Universal Parties, Workflows, Approvals & Calendar) 100% completed.
 - *2026-09-16*: Stage 43.3 (Commercial Rules & Operational Engines - P2) 100% completed across all 5 sub-stages (`uom`, `pricing`, `taxes`, `payments`, `resources`).
-- *2026-09-16*: Sub-stage 43.4.1 (Universal Work Items & Tasks) completed with DAG dependency cycle prevention and recursive sub-task trees.
+- *2026-09-16*: Stage 43.4 (Execution, Commitments & Operations - P3) 100% completed across `work_items` and `contracts`. Baseline passes 150/150 tests.
 
 ### 4. Current Focus
-Sub-stage 43.4.1 (`work_items`) is COMPLETED.
-Immediate focus: **Sub-stage 43.4.2: Contracts, Agreements & Subscriptions (`contracts`)** (Stage 43.4: Execution, Commitments & Operations - P3).
-- Create `backend/modules/base/contracts/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `Contract` (`sequence_number`, `title`, `party_id`, `contract_type: customer|vendor|employment|lease`, `start_date`, `end_date`, `billing_frequency: one_off|monthly|quarterly|annual`, `amount`, `currency_id`, `auto_renew`, `notice_days`, `state: draft|active|expired|terminated|cancelled`).
-- Implement `ContractService` managing state transitions, renewal schedules, and expiry tracking.
-- Add unit tests in `backend/tests/test_contracts.py`.
+Stage 43.4 is 100% COMPLETED.
+Immediate focus: **Stage 43.5: Sovereign AI Agent Bridge & FastMCP Tool Reflection (Final Stage Integration)**.
+- **Sub-stage 43.5.1**: Implement `invoke_ai_agent` action handler in `backend/modules/base/automated_actions/engine/handlers/ai_handler.py` with asynchronous Hermes Gateway dispatch and template interpolation.
+- **Sub-stage 43.5.2**: Implement FastMCP Dynamic Tool Reflection Server dynamically discovering and exporting typed tools for all `ai_enabled == True` modules.
+- **Sub-stage 43.5.3**: Chatter Feedback Loop & Distributed Langfuse Tracing.
+- **Sub-stage 43.5.4**: Empirical End-to-End Golden Benchmark Verification.
+
 
 
 

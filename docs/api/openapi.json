@@ -15843,6 +15843,592 @@
         ]
       }
     },
+    "/api/v1/contracts": {
+      "post": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Create Contract",
+        "description": "Registers a new commercial contract, subscription, or agreement.",
+        "operationId": "create_contract_api_v1_contracts_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "List Contracts",
+        "description": "Lists contracts for active tenant company with optional filters.",
+        "operationId": "list_contracts_api_v1_contracts_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "party_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by customer or vendor party UUID",
+              "title": "Party Id"
+            },
+            "description": "Filter by customer or vendor party UUID"
+          },
+          {
+            "name": "contract_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by type (customer, vendor, employment, lease, subscription)",
+              "title": "Contract Type"
+            },
+            "description": "Filter by type (customer, vendor, employment, lease, subscription)"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by state (draft, active, expired, terminated, cancelled)",
+              "title": "State"
+            },
+            "description": "Filter by state (draft, active, expired, terminated, cancelled)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContractResponse"
+                  },
+                  "title": "Response List Contracts Api V1 Contracts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/expiring": {
+      "get": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Get Expiring Contracts",
+        "description": "Lists active contracts nearing their expiration date within a specified horizon (default 30 days).",
+        "operationId": "get_expiring_contracts_api_v1_contracts_expiring_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "horizon_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 1,
+              "description": "Day lookahead horizon",
+              "default": 30,
+              "title": "Horizon Days"
+            },
+            "description": "Day lookahead horizon"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContractResponse"
+                  },
+                  "title": "Response Get Expiring Contracts Api V1 Contracts Expiring Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{contract_id}": {
+      "get": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Get Contract",
+        "description": "Fetch single contract details by UUID.",
+        "operationId": "get_contract_api_v1_contracts__contract_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Contract UUID",
+              "title": "Contract Id"
+            },
+            "description": "Contract UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Update Contract",
+        "description": "Update contract terms or financial commitment.",
+        "operationId": "update_contract_api_v1_contracts__contract_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Contract UUID",
+              "title": "Contract Id"
+            },
+            "description": "Contract UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Delete Contract",
+        "description": "Soft-deletes a contract.",
+        "operationId": "delete_contract_api_v1_contracts__contract_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Contract UUID",
+              "title": "Contract Id"
+            },
+            "description": "Contract UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{contract_id}/activate": {
+      "post": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Activate Contract",
+        "description": "Transitions a draft contract to active status.",
+        "operationId": "activate_contract_api_v1_contracts__contract_id__activate_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Contract UUID",
+              "title": "Contract Id"
+            },
+            "description": "Contract UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{contract_id}/renew": {
+      "post": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Renew Contract",
+        "description": "Extends the contract expiration date and sets state to active.",
+        "operationId": "renew_contract_api_v1_contracts__contract_id__renew_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Contract UUID",
+              "title": "Contract Id"
+            },
+            "description": "Contract UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractRenewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{contract_id}/terminate": {
+      "post": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Terminate Contract",
+        "description": "Terminates an active contract prematurely with an optional audit reason.",
+        "operationId": "terminate_contract_api_v1_contracts__contract_id__terminate_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Contract UUID",
+              "title": "Contract Id"
+            },
+            "description": "Contract UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractTerminateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{contract_id}/cancel": {
+      "post": {
+        "tags": [
+          "Contracts, Agreements & Subscriptions",
+          "Contracts, Agreements & Subscriptions"
+        ],
+        "summary": "Cancel Contract",
+        "description": "Cancels a contract.",
+        "operationId": "cancel_contract_api_v1_contracts__contract_id__cancel_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Contract UUID",
+              "title": "Contract Id"
+            },
+            "description": "Contract UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/approvals/rules": {
       "post": {
         "tags": [
@@ -21578,6 +22164,600 @@
           "message": "SMTP handshake and authentication successful",
           "success": true
         }
+      },
+      "ContractCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Contract or agreement title"
+          },
+          "party_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Party Id",
+            "description": "Target party (Customer, Vendor, or Employee) UUID"
+          },
+          "contract_type": {
+            "type": "string",
+            "pattern": "^(customer|vendor|employment|lease|subscription)$",
+            "title": "Contract Type",
+            "description": "Contract classification",
+            "default": "customer"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Agreement effective start date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "Expiration or termination date"
+          },
+          "billing_frequency": {
+            "type": "string",
+            "pattern": "^(one_off|monthly|quarterly|semi_annual|annual)$",
+            "title": "Billing Frequency",
+            "description": "Payment or invoice cycle",
+            "default": "monthly"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount",
+            "description": "Total contract monetary commitment",
+            "default": "0.00"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "description": "Contract anchor currency UUID"
+          },
+          "auto_renew": {
+            "type": "boolean",
+            "title": "Auto Renew",
+            "description": "Whether contract automatically extends on expiry",
+            "default": false
+          },
+          "notice_days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Notice Days",
+            "description": "Required days of notice prior to termination",
+            "default": 30
+          },
+          "terms_and_conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms And Conditions",
+            "description": "Legal clauses or scope of work"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Internal commercial notes"
+          },
+          "sequence_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence Number",
+            "description": "Custom reference or agreement number"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ContractLineCreate"
+            },
+            "type": "array",
+            "title": "Lines",
+            "description": "Deliverable lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "party_id",
+          "start_date"
+        ],
+        "title": "ContractCreate",
+        "example": {
+          "amount": "120000.00",
+          "auto_renew": true,
+          "billing_frequency": "monthly",
+          "contract_type": "customer",
+          "end_date": "2026-12-31",
+          "lines": [
+            {
+              "name": "Dedicated Managed Kubernetes Cluster",
+              "quantity": "1.0000",
+              "unit_price": "10000.0000"
+            }
+          ],
+          "notice_days": 60,
+          "party_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+          "sequence_number": "MSA-2026-004",
+          "start_date": "2026-01-01",
+          "title": "Cloud Infrastructure Master Services Agreement"
+        }
+      },
+      "ContractLineCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Service or deliverable description"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity",
+            "description": "Delivered volume or subscription count",
+            "default": "1.0000"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Unit Price",
+            "description": "Agreed rate per unit",
+            "default": "0.0000"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ContractLineCreate"
+      },
+      "ContractLineResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Service or deliverable description"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity",
+            "description": "Delivered volume or subscription count",
+            "default": "1.0000"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price",
+            "description": "Agreed rate per unit",
+            "default": "0.0000"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "contract_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Contract Id"
+          },
+          "subtotal": {
+            "type": "string",
+            "title": "Subtotal"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "contract_id",
+          "subtotal",
+          "created_at"
+        ],
+        "title": "ContractLineResponse"
+      },
+      "ContractRenewRequest": {
+        "properties": {
+          "new_end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "New End Date",
+            "description": "Extended agreement end date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_end_date"
+        ],
+        "title": "ContractRenewRequest"
+      },
+      "ContractResponse": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Contract or agreement title"
+          },
+          "party_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Party Id",
+            "description": "Target party (Customer, Vendor, or Employee) UUID"
+          },
+          "contract_type": {
+            "type": "string",
+            "pattern": "^(customer|vendor|employment|lease|subscription)$",
+            "title": "Contract Type",
+            "description": "Contract classification",
+            "default": "customer"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Agreement effective start date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "Expiration or termination date"
+          },
+          "billing_frequency": {
+            "type": "string",
+            "pattern": "^(one_off|monthly|quarterly|semi_annual|annual)$",
+            "title": "Billing Frequency",
+            "description": "Payment or invoice cycle",
+            "default": "monthly"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Total contract monetary commitment",
+            "default": "0.00"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "description": "Contract anchor currency UUID"
+          },
+          "auto_renew": {
+            "type": "boolean",
+            "title": "Auto Renew",
+            "description": "Whether contract automatically extends on expiry",
+            "default": false
+          },
+          "notice_days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Notice Days",
+            "description": "Required days of notice prior to termination",
+            "default": 30
+          },
+          "terms_and_conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms And Conditions",
+            "description": "Legal clauses or scope of work"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Internal commercial notes"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "sequence_number": {
+            "type": "string",
+            "title": "Sequence Number"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "party_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Name"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ContractLineResponse"
+            },
+            "type": "array",
+            "title": "Lines",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "party_id",
+          "start_date",
+          "id",
+          "company_id",
+          "sequence_number",
+          "state",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ContractResponse"
+      },
+      "ContractTerminateRequest": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Commercial or regulatory reason for early termination"
+          }
+        },
+        "type": "object",
+        "title": "ContractTerminateRequest"
+      },
+      "ContractUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "contract_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(customer|vendor|employment|lease|subscription)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Type"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "billing_frequency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(one_off|monthly|quarterly|semi_annual|annual)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Frequency"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id"
+          },
+          "auto_renew": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Renew"
+          },
+          "notice_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice Days"
+          },
+          "terms_and_conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms And Conditions"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "title": "ContractUpdate"
       },
       "CountryCreate": {
         "properties": {

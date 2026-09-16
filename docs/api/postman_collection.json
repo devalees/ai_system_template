@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "ea39fb04-450e-4711-9575-c9edfaa24556",
+    "_postman_id": "320bd5f8-508f-467c-85d9-3256d3753fe0",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -931,6 +931,563 @@
             "description": "## Get Default Entity Address\n\nRetrieve the designated default address for an entity (optionally filtered by address type).\n\n**Endpoint**: `GET {{base_url}}/api/v1/addresses/entity/{res_model}/{res_id}/default`  \n**Tags**: `Composite Addresses & Geographic Locations, Composite Addresses & Geographic Locations`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n| `address_type` | `query` | `string` | No | Address type to look for (e.g. 'billing', 'shipping') |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Contracts, Agreements & Subscriptions",
+      "item": [
+        {
+          "name": "List Contracts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts"
+              ],
+              "variable": []
+            },
+            "description": "## List Contracts\n\nLists contracts for active tenant company with optional filters.\n\n**Endpoint**: `GET {{base_url}}/api/v1/contracts`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `query` | `string` | No | Filter by customer or vendor party UUID |\n| `contract_type` | `query` | `string` | No | Filter by type (customer, vendor, employment, lease, subscription) |\n| `state` | `query` | `string` | No | Filter by state (draft, active, expired, terminated, cancelled) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts"
+              ],
+              "variable": []
+            },
+            "description": "## Create Contract\n\nRegisters a new commercial contract, subscription, or agreement.\n\n**Endpoint**: `POST {{base_url}}/api/v1/contracts`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `title` | `string` | **Yes** | Any valid string | Contract or agreement title |\n| `party_id` | `string` | **Yes** | Any valid string | Target party (Customer, Vendor, or Employee) UUID |\n| `contract_type` | `string` | No | Any valid string | Contract classification |\n| `start_date` | `string` | **Yes** | Any valid string | Agreement effective start date |\n| `end_date` | `string` | No | Any valid string | Expiration or termination date |\n| `billing_frequency` | `string` | No | Any valid string | Payment or invoice cycle |\n| `amount` | `string` | No | Any valid string | Total contract monetary commitment |\n| `currency_id` | `string` | No | Any valid string | Contract anchor currency UUID |\n| `auto_renew` | `boolean` | No | Any valid boolean | Whether contract automatically extends on expiry |\n| `notice_days` | `integer` | No | Any valid integer | Required days of notice prior to termination |\n| `terms_and_conditions` | `string` | No | Any valid string | Legal clauses or scope of work |\n| `notes` | `string` | No | Any valid string | Internal commercial notes |\n| `sequence_number` | `string` | No | Any valid string | Custom reference or agreement number |\n| `lines` | `array` | No | Any valid array | Deliverable lines |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"120000.00\",\n  \"auto_renew\": true,\n  \"billing_frequency\": \"monthly\",\n  \"contract_type\": \"customer\",\n  \"end_date\": \"2026-12-31\",\n  \"lines\": [\n    {\n      \"name\": \"Dedicated Managed Kubernetes Cluster\",\n      \"quantity\": \"1.0000\",\n      \"unit_price\": \"10000.0000\"\n    }\n  ],\n  \"notice_days\": 60,\n  \"party_id\": \"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d\",\n  \"sequence_number\": \"MSA-2026-004\",\n  \"start_date\": \"2026-01-01\",\n  \"title\": \"Cloud Infrastructure Master Services Agreement\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_contract_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Expiring Contracts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/expiring",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                "expiring"
+              ],
+              "variable": []
+            },
+            "description": "## Get Expiring Contracts\n\nLists active contracts nearing their expiration date within a specified horizon (default 30 days).\n\n**Endpoint**: `GET {{base_url}}/api/v1/contracts/expiring`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `horizon_days` | `query` | `integer` | No | Day lookahead horizon |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Contract",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/:contract_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                ":contract_id"
+              ],
+              "variable": [
+                {
+                  "key": "contract_id",
+                  "value": "{{active_contract_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contract_id}}"
+                }
+              ]
+            },
+            "description": "## Get Contract\n\nFetch single contract details by UUID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/contracts/{contract_id}`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `contract_id` | `path` | `string` | **Yes** | Contract UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Contract",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/:contract_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                ":contract_id"
+              ],
+              "variable": [
+                {
+                  "key": "contract_id",
+                  "value": "{{active_contract_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contract_id}}"
+                }
+              ]
+            },
+            "description": "## Update Contract\n\nUpdate contract terms or financial commitment.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/contracts/{contract_id}`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `contract_id` | `path` | `string` | **Yes** | Contract UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `title` | `string` | No | Any valid string | title attribute |\n| `contract_type` | `string` | No | Any valid string | contract_type attribute |\n| `start_date` | `string` | No | Any valid string | start_date attribute |\n| `end_date` | `string` | No | Any valid string | end_date attribute |\n| `billing_frequency` | `string` | No | Any valid string | billing_frequency attribute |\n| `amount` | `string` | No | Any valid string | amount attribute |\n| `currency_id` | `string` | No | Any valid string | currency_id attribute |\n| `auto_renew` | `boolean` | No | Any valid boolean | auto_renew attribute |\n| `notice_days` | `integer` | No | Any valid integer | notice_days attribute |\n| `terms_and_conditions` | `string` | No | Any valid string | terms_and_conditions attribute |\n| `notes` | `string` | No | Any valid string | notes attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Contract",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/:contract_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                ":contract_id"
+              ],
+              "variable": [
+                {
+                  "key": "contract_id",
+                  "value": "{{active_contract_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contract_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Contract\n\nSoft-deletes a contract.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/contracts/{contract_id}`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `contract_id` | `path` | `string` | **Yes** | Contract UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/:contract_id/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                ":contract_id",
+                "activate"
+              ],
+              "variable": [
+                {
+                  "key": "contract_id",
+                  "value": "{{active_contract_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contract_id}}"
+                }
+              ]
+            },
+            "description": "## Activate Contract\n\nTransitions a draft contract to active status.\n\n**Endpoint**: `POST {{base_url}}/api/v1/contracts/{contract_id}/activate`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `contract_id` | `path` | `string` | **Yes** | Contract UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_activate_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Renew Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/:contract_id/renew",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                ":contract_id",
+                "renew"
+              ],
+              "variable": [
+                {
+                  "key": "contract_id",
+                  "value": "{{active_contract_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contract_id}}"
+                }
+              ]
+            },
+            "description": "## Renew Contract\n\nExtends the contract expiration date and sets state to active.\n\n**Endpoint**: `POST {{base_url}}/api/v1/contracts/{contract_id}/renew`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `contract_id` | `path` | `string` | **Yes** | Contract UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `new_end_date` | `string` | **Yes** | Any valid string | Extended agreement end date |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_end_date\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_renew_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Terminate Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/:contract_id/terminate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                ":contract_id",
+                "terminate"
+              ],
+              "variable": [
+                {
+                  "key": "contract_id",
+                  "value": "{{active_contract_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contract_id}}"
+                }
+              ]
+            },
+            "description": "## Terminate Contract\n\nTerminates an active contract prematurely with an optional audit reason.\n\n**Endpoint**: `POST {{base_url}}/api/v1/contracts/{contract_id}/terminate`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `contract_id` | `path` | `string` | **Yes** | Contract UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `reason` | `string` | No | Any valid string | Commercial or regulatory reason for early termination |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_terminate_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/:contract_id/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                ":contract_id",
+                "cancel"
+              ],
+              "variable": [
+                {
+                  "key": "contract_id",
+                  "value": "{{active_contract_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contract_id}}"
+                }
+              ]
+            },
+            "description": "## Cancel Contract\n\nCancels a contract.\n\n**Endpoint**: `POST {{base_url}}/api/v1/contracts/{contract_id}/cancel`  \n**Tags**: `Contracts, Agreements & Subscriptions, Contracts, Agreements & Subscriptions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `contract_id` | `path` | `string` | **Yes** | Contract UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_cancel_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },

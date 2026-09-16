@@ -830,6 +830,15 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
   - `WorkItemService.add_dependency()` executes BFS cycle detection on the dependency graph, rejecting self-loops and circular task dependencies.
   - `WorkItemService.get_subtask_tree()` builds recursive hierarchical task trees.
 
+#### 6.13.17 Contracts, Agreements & Subscriptions (`contracts`)
+- **Package**: `backend/modules/base/contracts/`
+- **Models (`Contract`, `ContractLine`)**:
+  - `Contract`: Legal agreements, vendor engagements, customer MSAs, and recurring subscriptions (`sequence_number`, `title`, `party_id`, `contract_type`: customer, vendor, employment, lease, subscription, `start_date`, `end_date`, `billing_frequency`, `amount`, `currency_id`, `auto_renew`, `notice_days`, `state`: draft, active, expired, terminated, cancelled).
+  - `ContractLine`: Itemized commitments, deliverables, or subscription fee components (`name`, `quantity`, `unit_price`, `subtotal`).
+- **Contract Lifecycle Engine**:
+  - `ContractService` manages state transitions (draft -> active -> renew / terminate), renewal date extension rules, and early-notice expiration queries (`get_expiring_contracts`).
+
+
 
 
 
