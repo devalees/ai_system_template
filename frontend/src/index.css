@@ -1,0 +1,166 @@
+/* ==========================================================================
+   Sovereign Design System — Pure Vanilla CSS Custom Properties & Reset
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Shell Layout Dimensions */
+  --header-height: 48px;
+  --subnav-height: 40px;
+  --controlbar-height: 48px;
+  --chatter-dock-width: 380px;
+
+  /* Transitions */
+  --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   Theme 1: Sovereign Dark (Glassmorphic Obsidian & Neon Accent)
+   ========================================================================== */
+[data-theme="sovereign-dark"] {
+  --bg-app: #090d13;
+  --bg-canvas: #0d1117;
+  --bg-surface: #161b22;
+  --bg-card: #1c2128;
+  --bg-subtle: rgba(255, 255, 255, 0.04);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+
+  --border-subtle: #30363d;
+  --border-strong: #484f58;
+
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+
+  --accent-primary: #388bfd;
+  --accent-hover: #58a6ff;
+  --accent-subtle: rgba(56, 139, 253, 0.15);
+
+  --success: #2ea043;
+  --warning: #d29922;
+  --danger: #f85149;
+  --info: #58a6ff;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+  /* Wireframe Skeleton Debug Markers */
+  --wf-border: #444c56;
+  --wf-bg: rgba(56, 139, 253, 0.03);
+  --wf-label: #58a6ff;
+}
+
+/* ==========================================================================
+   Theme 2: Enterprise Light (Stripe / Linear High-Contrast Clean)
+   ========================================================================== */
+[data-theme="enterprise-light"] {
+  color-scheme: light;
+  --bg-app: #f6f8fa;
+  --bg-canvas: #ffffff;
+  --bg-surface: #f6f8fa;
+  --bg-card: #ffffff;
+  --bg-subtle: rgba(0, 0, 0, 0.03);
+  --bg-hover: rgba(0, 0, 0, 0.06);
+
+  --border-subtle: #d0d7de;
+  --border-strong: #afb8c1;
+
+  --text-primary: #1f2328;
+  --text-secondary: #656d76;
+  --text-muted: #8c959f;
+
+  --accent-primary: #0969da;
+  --accent-hover: #1f883d;
+  --accent-subtle: rgba(9, 105, 218, 0.1);
+
+  --success: #1a7f37;
+  --warning: #9a6700;
+  --danger: #cf222e;
+  --info: #0969da;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Wireframe Skeleton Debug Markers */
+  --wf-border: #0969da;
+  --wf-bg: rgba(9, 105, 218, 0.04);
+  --wf-label: #0969da;
+}
+
+/* ==========================================================================
+   Base Layout Styling
+   ========================================================================== */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* Wireframe Visual Skeleton Styles */
+.wf-box {
+  border: 1.5px dashed var(--wf-border);
+  background: var(--wf-bg);
+  position: relative;
+  transition: var(--transition-fast);
+}
+.wf-box:hover {
+  border-color: var(--accent-hover);
+}
+.wf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--wf-label);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}

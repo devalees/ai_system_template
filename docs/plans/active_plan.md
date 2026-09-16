@@ -2426,23 +2426,23 @@ Construct the **Sovereign Frontend Platform** from the ground up as a zero-bloat
 ### 2. Task Checklist & Progress
 
 #### Milestone 51.1: Platform Foundation & Zero-Bloat Tooling
-- [ ] **Stage 51.1.1: Project Scaffolding & Minimalist Tooling Setup** - PENDING
-  - Initialize `frontend/` directory with Vite, React 19, TypeScript.
-  - Configure minimalist `package.json` maintaining strict direct runtime dependency cap under 5–7 packages (`react`, `react-dom`, `lucide-react`).
-  - Configure `tsconfig.json` with strict type checking and clean path aliases (`@kernel/*`, `@ui/*`, `@modules/*`).
-  - Configure `vite.config.ts` with development proxy routing `/api` to FastAPI on `:8000`.
-  - Establish `src/index.css` foundational CSS custom properties (`:root` tokens) and zero-margin reset.
-  - Verify live development server startup (`npm run dev` / `http://localhost:5173`) with zero errors.
+- [x] **Stage 51.1.1: Project Scaffolding & Minimalist Tooling Setup** - COMPLETED
+  - Initialized `frontend/` directory with Vite 6, React 19, TypeScript 5.7.
+  - Configured minimalist `package.json` maintaining strict runtime dependency cap of only 3 packages (`react`, `react-dom`, `lucide-react`).
+  - Configured `tsconfig.json` with strict type checking and clean path aliases (`@kernel/*`, `@ui/*`, `@modules/*`).
+  - Configured `vite.config.ts` with development proxy routing `/api` to FastAPI on `:8000`.
+  - Established `src/index.css` foundational CSS custom properties (`:root` tokens) and zero-margin reset.
+  - Verified live development server startup (`http://localhost:5173`) and TypeScript compilation (`tsc --noEmit`) with 0 errors.
 
 #### Milestone 51.2: The Invariant Master Shell (Wireframe-First & Theming)
-- [ ] **Stage 51.2.1: Master Shell Structural Wireframe (Lines & Labels Agreement)** - PENDING
-  - Build pure HTML bordered skeleton (`border: 1px dashed/solid`) for the outer application shell.
-  - Explicitly demarcate and label structural zones:
-    - Top 48px Header: `[App Switcher Drawer]`, `[Active Company Context]`, `[Cmd+K Universal Search]`, `[User Profile & Theme Toggle]`.
-    - Contextual Sub-Navigation: Horizontal module menu bar (`Orders`, `Invoicing`, `Reporting`, `Configuration`).
-    - Control Bar: `[Hierarchical Breadcrumbs]`, `[Action Buttons: New, Confirm, Print]`, `[Universal Search & Filter Box]`, `[View Switcher: List, Kanban, Pivot]`.
-    - Polymorphic Viewport Canvas Placeholder.
-  - Launch live on `http://localhost:5173` and obtain User Visual Sign-Off before styling.
+- [/] **Stage 51.2.1: Master Shell Structural Wireframe (Lines & Labels Agreement)** - IN PROGRESS
+  - Built pure HTML bordered skeleton (`border: 1.5px dashed`) in `MasterShellWireframe.tsx` for the outer application shell.
+  - Explicitly demarcated and labeled structural zones:
+    - Top 48px Header: `[1.1 App Launcher]`, `[1.2 Active Company: Acme Corp]`, `[1.3 Cmd+K Universal Command Bar]`, `[1.4 Notifications]`, `[1.5 User Profile]`.
+    - Contextual Sub-Navigation: Horizontal module menu bar (`Orders`, `Quotations`, `Customers`, `To Invoice`, `Products`, `Reporting`, `Configuration`) dynamically switching between Sales, Accounting, Purchases, Settings.
+    - Control Bar: `[3.1 Breadcrumbs]`, `[3.2 Primary Actions: + New, Confirm, Print]`, `[3.3 Universal Filter Hub]`, `[3.4 View Switcher: List Table, Form Sheet, Financial Report, Settings]`.
+    - Polymorphic Viewport Canvases: Interactive switcher displaying wireframes for Canvas 1 (Data Grid), Canvas 2 (Document Sheet + Fluid Splitter + Docked Chatter), Canvas 3 (Financial Ledgers), and Canvas 4 (Typed Settings).
+  - Deployed live on `http://localhost:5173` and verified with browser subagent. Awaiting User Visual Sign-Off.
 - [ ] **Stage 51.2.2: Master Shell Styling, Theming & Interactive Navigation** - PENDING
   - Apply pure Vanilla CSS design tokens supporting `sovereign-dark` and `enterprise-light` dynamically via `:root` attributes.
   * Implement interactive App Launcher modal drawer switching between Sales, Accounting, Purchases, and Settings.
