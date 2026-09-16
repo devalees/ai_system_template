@@ -76,6 +76,13 @@ class SaleService:
             untaxed += subtotal
             tax_total += tax_amt
 
+            # Handle analytic cascading and explicit line analytic account
+            line_analytic_id = line_dict.pop("analytic_account_id", None)
+            if line_analytic_id and not line_dict.get("analytic_distribution"):
+                line_dict["analytic_distribution"] = {str(line_analytic_id): 100.0}
+            elif not line_dict.get("analytic_distribution") and order.analytic_account_id:
+                line_dict["analytic_distribution"] = {str(order.analytic_account_id): 100.0}
+
             line = SaleOrderLine(
                 **line_dict,
                 order_id=order.id,
@@ -208,7 +215,6 @@ class SaleService:
 
         # Construct balanced Invoice lines:
         # Debit: Accounts Receivable (Total amount)
-        # Credit: Income / Revenue (Total amount)
         invoice_lines = [
             AccountMoveLineCreate(
                 account_id=receivable_acc.id,
@@ -217,19 +223,40 @@ class SaleService:
                 debit=order.amount_total,
                 credit=Decimal("0.0000"),
                 currency_id=order.currency_id,
-            ),
-            AccountMoveLineCreate(
-                account_id=income_acc.id,
-                party_id=order.party_id,
-                name=f"Sales Revenue - {order.order_number}",
-                debit=Decimal("0.0000"),
-                credit=order.amount_total,
-                currency_id=order.currency_id,
-                analytic_distribution={str(order.analytic_account_id): 100.0}
-                if order.analytic_account_id
-                else {},
-            ),
+            )
         ]
+
+        if order.lines:
+            for l in order.lines:
+                dist = dict(l.analytic_distribution or {})
+                if not dist and order.analytic_account_id:
+                    dist = {str(order.analytic_account_id): 100.0}
+                invoice_lines.append(
+                    AccountMoveLineCreate(
+                        account_id=income_acc.id,
+                        party_id=order.party_id,
+                        product_id=l.product_id,
+                        name=f"{l.name} - {order.order_number}",
+                        debit=Decimal("0.0000"),
+                        credit=l.price_total,
+                        currency_id=order.currency_id,
+                        analytic_distribution=dist,
+                    )
+                )
+        else:
+            invoice_lines.append(
+                AccountMoveLineCreate(
+                    account_id=income_acc.id,
+                    party_id=order.party_id,
+                    name=f"Sales Revenue - {order.order_number}",
+                    debit=Decimal("0.0000"),
+                    credit=order.amount_total,
+                    currency_id=order.currency_id,
+                    analytic_distribution={str(order.analytic_account_id): 100.0}
+                    if order.analytic_account_id
+                    else {},
+                )
+            )
 
         invoice_payload = AccountMoveCreate(
             move_type="out_invoice",
@@ -239,6 +266,7 @@ class SaleService:
             party_id=order.party_id,
             currency_id=order.currency_id,
             payment_term_id=order.payment_term_id,
+            analytic_account_id=order.analytic_account_id,
             lines=invoice_lines,
         )
 

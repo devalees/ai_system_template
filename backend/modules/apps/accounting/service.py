@@ -119,6 +119,12 @@ class AccountingService:
 
         for line_dto in lines_data:
             line_dict = line_dto.model_dump()
+            line_analytic_id = line_dict.pop("analytic_account_id", None)
+            if line_analytic_id and not line_dict.get("analytic_distribution"):
+                line_dict["analytic_distribution"] = {str(line_analytic_id): 100.0}
+            elif not line_dict.get("analytic_distribution") and move.analytic_account_id:
+                line_dict["analytic_distribution"] = {str(move.analytic_account_id): 100.0}
+
             balance = line_dto.debit - line_dto.credit
             line = AccountMoveLine(
                 **line_dict,

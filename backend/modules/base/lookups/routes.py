@@ -599,6 +599,11 @@ async def create_category(
         is_active=cat.is_active,
         full_path=cat.name,
         children_count=0,
+        income_account_id=cat.income_account_id,
+        expense_account_id=cat.expense_account_id,
+        sale_tax_ids=cat.sale_tax_ids,
+        purchase_tax_ids=cat.purchase_tax_ids,
+        custom_fields=cat.custom_fields or {},
     )
 
 
@@ -634,6 +639,11 @@ async def get_category(
         is_active=cat.is_active,
         full_path=cat.name,
         children_count=0,
+        income_account_id=cat.income_account_id,
+        expense_account_id=cat.expense_account_id,
+        sale_tax_ids=cat.sale_tax_ids,
+        purchase_tax_ids=cat.purchase_tax_ids,
+        custom_fields=cat.custom_fields or {},
     )
 
 
@@ -674,6 +684,11 @@ async def update_category(
         is_active=cat.is_active,
         full_path=cat.name,
         children_count=0,
+        income_account_id=cat.income_account_id,
+        expense_account_id=cat.expense_account_id,
+        sale_tax_ids=cat.sale_tax_ids,
+        purchase_tax_ids=cat.purchase_tax_ids,
+        custom_fields=cat.custom_fields or {},
     )
 
 

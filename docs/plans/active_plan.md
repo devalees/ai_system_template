@@ -2157,7 +2157,7 @@ Phase 45 Triple-Engine Financial Suite (`accounting`, `sales`, `purchases`) comp
 
 ## Phase 46: Universal Product & Item Master Data Base Module (`products`)
 
-- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `main`
 - **Last Updated**: 2026-09-16 22:22:00+03:00
 
@@ -2175,17 +2175,17 @@ Implement the missing **4th Master Data Pillar** (`products`) as a decoupled, en
    - Synchronize OpenAPI specs and Postman collections via `backend/core/exporter.py`.
 
 ### 2. Task Checklist & Progress
-- [x] **Stage 46.1: `products` Base Module Core Architecture (`manifest.py`, `models.py`, `schemas.py`, `settings.py`, `service.py`, `routes.py`)** - COMPLETED
+- [x] **Stage 46.1: `products` Base Module Core Architecture (`manifest.py`, `models.py`, `schemas.py`, `settings.py`, `service.py`, `routes.py`)** - COMPLETED (Commit: `9389ba6`)
   - Package: `backend/modules/base/products/`
   - Model: `Product` (`code`, `name`, `description`, `product_type: storable|consumable|service`, `uom_id`, `purchase_uom_id`, `sale_price`, `cost_price`, `sale_tax_ids`, `purchase_tax_ids`, `income_account_id`, `expense_account_id`, `is_saleable`, `is_purchasable`, `is_active`, `category_id` via `CategorizableMixin`).
   - Settings: `ProductSettings` (`default_product_type`, `enforce_unique_barcodes`, `allow_negative_stock`, `require_product_category`).
   - Service: `ProductService` with code uniqueness validation, UoM/Category verification, soft deletion, and line default resolution (`resolve_product_defaults`).
   - REST API: 6 endpoints (`/api/v1/products/*`) covering CRUD, listings, filtering, and defaults resolution.
-- [x] **Stage 46.2: Upstream Transactional Integration (`sales`, `purchases`, `accounting`)** - COMPLETED
+- [x] **Stage 46.2: Upstream Transactional Integration (`sales`, `purchases`, `accounting`)** - COMPLETED (Commit: `9389ba6`)
   - Added `product_id: Mapped[Optional[UUID]]` foreign key to `SaleOrderLine`, `PurchaseOrderLine`, and `AccountMoveLine`.
   - Added `product_id` to Pydantic Create/Read schemas across sales, purchases, and accounting.
   - Implemented smart auto-population in `SaleService.create_sale_order` and `PurchaseService.create_purchase_order` auto-filling `name`, `unit_price`, `uom_id`, and `tax_ids` from `Product` defaults.
-- [x] **Stage 46.3: Automated Testing, Empirical Verification & Continuous API Sync** - COMPLETED
+- [x] **Stage 46.3: Automated Testing, Empirical Verification & Continuous API Sync** - COMPLETED (Commit: `9389ba6`)
   - Authored comprehensive test suite `tests/test_products.py` (3/3 passing in Docker).
   - Verified full platform test suite: **171 / 171 unit tests passing 100% in Docker** with zero regressions.
   - Synchronized continuous OpenAPI specs (`docs/api/openapi.json`) and Postman collections (`docs/api/postman_collection.json`).
@@ -2197,7 +2197,49 @@ Implement the missing **4th Master Data Pillar** (`products`) as a decoupled, en
 - *2026-09-16*: Product catalog permissions (`products.product.*`) harvested and registered with Super Administrators.
 
 ### 4. Current Focus
-Phase 46 Universal Product & Item Master Data Base Module is **100% COMPLETED** across all sub-stages. Full platform baseline: **171 / 171 unit tests passing**. Platform is officially ready for Milestone/Pillar 3: The Frontend.
+Phase 46 completed and verified. Transitioned to Phase 47.
+
+---
+
+## Phase 47: Category Default Inheritance & Analytic Account Auto-Cascading
+
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-16 23:20:00+03:00
+
+### 1. Objective & Scope
+Implement two essential enterprise architectural capabilities prior to Pillar 3 Frontend:
+1. **Product Category Hierarchy Inheritance / Fallback Engine**:
+   - Products inherit default accounting accounts (`income_account_id`, `expense_account_id`) and taxes (`sale_tax_ids`, `purchase_tax_ids`) recursively up the Category hierarchy (`parent_id` chain) if left empty on the product.
+   - Products with explicit account or tax values override category defaults.
+2. **Analytic Accounts (Cost Centers) Cascading & Line Overrides**:
+   - Order lines (`SaleOrderLine`, `PurchaseOrderLine`) and Journal items (`AccountMoveLine`) automatically inherit header `analytic_account_id` when unspecified.
+   - Individual lines support explicit `analytic_account_id` or `analytic_distribution` overrides.
+   - Header `analytic_account_id` added to `AccountMove` (Invoices/Bills).
+   - 1-click Invoice/Bill generation forwards line-level analytic distributions and product linkages cleanly into generated journal items.
+
+### 2. Task Checklist & Progress
+- [x] **Stage 47.1: Category Default Accounting & Tax Inheritance** - COMPLETED
+  - Added `income_account_id`, `expense_account_id`, `sale_tax_ids`, and `purchase_tax_ids` properties to `Category` model mapped to `custom_fields` JSONB with full Pydantic schema validation.
+  - Implemented recursive category tree traversal in `ProductService.resolve_product_defaults` resolving missing accounts and taxes from direct category or any parent category up to root.
+- [x] **Stage 47.2: Analytic Account Cascading & Document Line Forwarding** - COMPLETED
+  - Added `analytic_account_id` column and foreign key to `AccountMove` (`accounting_moves`).
+  - Added `@property def analytic_account_id` on `SaleOrderLine`, `PurchaseOrderLine`, and `AccountMoveLine` for seamless Pydantic serialization.
+  - Implemented automatic header cascading in `AccountingService.create_move`, `SaleService.create_sale_order`, and `PurchaseService.create_purchase_order`.
+  - Updated 1-click billing/invoicing (`create_invoice_from_order`, `create_bill_from_order`) to preserve line-level `analytic_distribution` and `product_id`.
+- [x] **Stage 47.3: Comprehensive Automated Testing & Platform Verification** - COMPLETED
+  - Authored `tests/test_category_inheritance_and_analytics.py` (4/4 passing).
+  - Executed full test suite: **175 / 175 tests passing 100% in Docker** with 0 regressions.
+  - Synchronized OpenAPI (`docs/api/openapi.json`) and Postman (`docs/api/postman_collection.json`).
+
+### 3. Key Decisions & Architecture Invariants (Phase 47)
+- *2026-09-16*: Zero migration risk for lookups: Category account and tax defaults leverage `custom_fields` JSONB with typed Pydantic models and ORM properties.
+- *2026-09-16*: Multi-dimensional Odoo-standard analytic distribution: Header and line `analytic_account_id` seamlessly map to `{str(analytic_account_id): 100.0}` distribution while preserving fine-grained split distributions.
+- *2026-09-16*: Full preservation of product and analytic cost center linkages across the entire document lifecycle (SO/PO -> Invoice/Bill -> General Ledger).
+
+### 4. Current Focus
+Phase 47 is **100% COMPLETED**. All 4 foundational master data pillars and financial engines are ratified with 175 passing tests. Ready to proceed to Pillar 3: Frontend.
+
 
 
 

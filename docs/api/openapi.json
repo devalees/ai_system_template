@@ -19961,6 +19961,18 @@
             ],
             "title": "Invoice Date Due"
           },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
           "lines": {
             "items": {
               "$ref": "#/components/schemas/AccountMoveLineCreate"
@@ -20078,6 +20090,18 @@
               }
             ],
             "title": "Tax Id"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
           },
           "analytic_distribution": {
             "additionalProperties": {
@@ -20200,6 +20224,18 @@
               }
             ],
             "title": "Tax Id"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
           },
           "analytic_distribution": {
             "additionalProperties": {
@@ -20334,6 +20370,18 @@
               }
             ],
             "title": "Invoice Date Due"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
           },
           "lines": {
             "items": {
@@ -24576,6 +24624,76 @@
             "title": "Sequence",
             "description": "Sorting sequence order in UI",
             "default": 10
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id",
+            "description": "Default income account inherited by child categories and products"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id",
+            "description": "Default expense account inherited by child categories and products"
+          },
+          "sale_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Tax Ids",
+            "description": "Default customer taxes inherited by child categories and products"
+          },
+          "purchase_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Tax Ids",
+            "description": "Default vendor taxes inherited by child categories and products"
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields",
+            "description": "Extensible JSONB custom fields"
           }
         },
         "type": "object",
@@ -24690,6 +24808,62 @@
             "type": "integer",
             "title": "Children Count",
             "default": 0
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id"
+          },
+          "sale_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Tax Ids"
+          },
+          "purchase_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Tax Ids"
+          },
+          "custom_fields": {
+            "type": "object",
+            "title": "Custom Fields"
           }
         },
         "type": "object",
@@ -24801,6 +24975,62 @@
             "type": "integer",
             "title": "Children Count",
             "default": 0
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id"
+          },
+          "sale_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Tax Ids"
+          },
+          "purchase_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Tax Ids"
+          },
+          "custom_fields": {
+            "type": "object",
+            "title": "Custom Fields"
           },
           "children": {
             "items": {
@@ -24935,6 +25165,76 @@
               }
             ],
             "title": "Is Active"
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id",
+            "description": "Default income account inherited by child categories and products"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id",
+            "description": "Default expense account inherited by child categories and products"
+          },
+          "sale_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Tax Ids",
+            "description": "Default customer taxes inherited by child categories and products"
+          },
+          "purchase_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Tax Ids",
+            "description": "Default vendor taxes inherited by child categories and products"
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields",
+            "description": "Extensible JSONB custom fields"
           }
         },
         "type": "object",
@@ -34059,6 +34359,18 @@
             "type": "array",
             "title": "Tax Ids"
           },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
           "analytic_distribution": {
             "additionalProperties": {
               "type": "number"
@@ -34132,6 +34444,18 @@
           "price_total": {
             "type": "string",
             "title": "Price Total"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
           },
           "analytic_distribution": {
             "additionalProperties": {
@@ -36328,6 +36652,18 @@
             "type": "array",
             "title": "Tax Ids"
           },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
           "analytic_distribution": {
             "additionalProperties": {
               "type": "number"
@@ -36405,6 +36741,18 @@
           "price_total": {
             "type": "string",
             "title": "Price Total"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
           },
           "analytic_distribution": {
             "additionalProperties": {

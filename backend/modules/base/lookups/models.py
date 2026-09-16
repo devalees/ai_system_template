@@ -126,3 +126,28 @@ class Category(BaseModel):
         lazy="selectin",
         order_by="Category.sequence",
     )
+
+    @property
+    def income_account_id(self) -> Optional[uuid.UUID]:
+        """Optional default income account inherited by child categories and products."""
+        val = (self.custom_fields or {}).get("income_account_id")
+        return uuid.UUID(str(val)) if val else None
+
+    @property
+    def expense_account_id(self) -> Optional[uuid.UUID]:
+        """Optional default expense account inherited by child categories and products."""
+        val = (self.custom_fields or {}).get("expense_account_id")
+        return uuid.UUID(str(val)) if val else None
+
+    @property
+    def sale_tax_ids(self) -> List[str]:
+        """Optional default customer taxes inherited by child categories and products."""
+        val = (self.custom_fields or {}).get("sale_tax_ids", [])
+        return [str(x) for x in val] if val else []
+
+    @property
+    def purchase_tax_ids(self) -> List[str]:
+        """Optional default vendor taxes inherited by child categories and products."""
+        val = (self.custom_fields or {}).get("purchase_tax_ids", [])
+        return [str(x) for x in val] if val else []
+

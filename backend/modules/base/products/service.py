@@ -279,8 +279,35 @@ class ProductService:
         is_sale = (for_operation == "sale")
         target_uom_id = product.uom_id if (is_sale or not product.purchase_uom_id) else product.purchase_uom_id
         target_price = product.sale_price if is_sale else product.cost_price
-        target_taxes = product.sale_tax_ids if is_sale else product.purchase_tax_ids
+        target_taxes = list(product.sale_tax_ids or []) if is_sale else list(product.purchase_tax_ids or [])
         target_account_id = product.income_account_id if is_sale else product.expense_account_id
+
+        # Hierarchical Fallback: Walk up Category ancestors if account or taxes are missing
+        curr_cat = product.category
+        while curr_cat and (not target_account_id or not target_taxes):
+            if not target_account_id:
+                cat_acc = curr_cat.income_account_id if is_sale else curr_cat.expense_account_id
+                if cat_acc:
+                    target_account_id = cat_acc
+            if not target_taxes:
+                cat_taxes = curr_cat.sale_tax_ids if is_sale else curr_cat.purchase_tax_ids
+                if cat_taxes:
+                    target_taxes = [str(t) for t in cat_taxes]
+
+            if curr_cat.parent_id and (not target_account_id or not target_taxes):
+                parent_stmt = (
+                    select(Category)
+                    .where(
+                        and_(
+                            Category.id == curr_cat.parent_id,
+                            Category.company_id == company_id,
+                            Category.deleted_at.is_(None),
+                        )
+                    )
+                )
+                curr_cat = (await db.execute(parent_stmt)).scalar_one_or_none()
+            else:
+                curr_cat = None
 
         return {
             "product_id": str(product.id),
@@ -289,6 +316,6 @@ class ProductService:
             "product_type": product.product_type,
             "uom_id": str(target_uom_id),
             "unit_price": float(target_price),
-            "tax_ids": target_taxes,
+            "tax_ids": [str(t) for t in target_taxes] if target_taxes else [],
             "account_id": str(target_account_id) if target_account_id else None,
         }

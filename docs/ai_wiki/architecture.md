@@ -942,5 +942,22 @@ To complete the foundational enterprise master data core (`Company`, `Account`, 
   - Retains backward compatibility: lines without a `product_id` remain fully functional for one-off charges or freeform items.
 - Invoices and Journal Items (`AccountMoveLine`) track `product_id`, unlocking financial margin reporting, revenue attribution, and tax audits by product or category.
 
+---
+
+### 6.16 Category Hierarchy Defaults & Multi-Dimensional Analytic Cascading
+
+#### 6.16.1 Hierarchical Category Default Fallback Engine
+To eliminate redundant account and tax configuration across large product catalogs, the platform implements a recursive Category fallback engine:
+- **`Category` Defaults**: Categories support optional default GL accounts (`income_account_id`, `expense_account_id`) and taxes (`sale_tax_ids`, `purchase_tax_ids`) persisted via `custom_fields` JSONB with zero database schema churn.
+- **Recursive Upward Tree Traversal**: In `ProductService.resolve_product_defaults()`, if any account or tax attribute is unspecified on the product itself, the system recursively walks up the category tree (`Category.parent_id` chain) until it resolves the setting or reaches the root category.
+- **Explicit Override Precedence**: An account or tax explicitly defined at the product level immediately overrides category defaults.
+
+#### 6.16.2 Analytic Account Cascading & Document Line Forwarding
+To streamline managerial accounting and cost-center allocations without requiring repetitive line-level data entry:
+- **Header-to-Line Auto-Cascading**: When creating Sales Orders (`SaleOrder`), Purchase Orders (`PurchaseOrder`), or Journal Moves/Invoices (`AccountMove`), the header's `analytic_account_id` automatically cascades as a 100% split (`{str(analytic_account_id): 100.0}`) into any line where analytic distribution is unspecified.
+- **Line-Level Override Precedence**: Any order or move line specifying its own `analytic_account_id` or explicit `analytic_distribution` overrides the header allocation.
+- **1-Click Billing & Invoicing Distribution Propagation**: In `create_invoice_from_order` and `create_bill_from_order`, the invoice/bill header inherits `analytic_account_id` from the source order, and each document line propagates both `product_id` and line-level `analytic_distribution` into the generated journal items (`AccountMoveLine`), ensuring gapless analytics upon posting.
+
+
 
 

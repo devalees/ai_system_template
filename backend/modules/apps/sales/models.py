@@ -135,3 +135,16 @@ class SaleOrderLine(BaseModel):
     )
 
     order: Mapped["SaleOrder"] = relationship("SaleOrder", back_populates="lines")
+
+    @property
+    def analytic_account_id(self) -> Optional[uuid.UUID]:
+        """Convenience property resolving primary analytic account from distribution."""
+        if self.analytic_distribution:
+            key = next(iter(self.analytic_distribution.keys()), None)
+            if key:
+                try:
+                    return uuid.UUID(str(key))
+                except (ValueError, TypeError):
+                    return None
+        return None
+

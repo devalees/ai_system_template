@@ -14,6 +14,7 @@ class PurchaseOrderLineCreate(BaseModel):
     uom_id: Optional[uuid.UUID] = None
     unit_price: Optional[Decimal] = Field(None, ge=0)
     tax_ids: List[str] = Field(default_factory=list)
+    analytic_account_id: Optional[uuid.UUID] = None
     analytic_distribution: Dict[str, float] = Field(default_factory=dict)
 
 
@@ -28,6 +29,7 @@ class PurchaseOrderLineRead(BaseModel):
     tax_ids: List[str]
     price_subtotal: Decimal
     price_total: Decimal
+    analytic_account_id: Optional[uuid.UUID] = None
     analytic_distribution: Dict[str, float]
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)

@@ -88,6 +88,7 @@ class AccountMoveLineCreate(BaseModel):
     amount_currency: Optional[Decimal] = None
     currency_id: Optional[uuid.UUID] = None
     tax_id: Optional[uuid.UUID] = None
+    analytic_account_id: Optional[uuid.UUID] = None
     analytic_distribution: Dict[str, float] = Field(default_factory=dict)
 
 
@@ -106,6 +107,7 @@ class AccountMoveLineRead(BaseModel):
     reconciled: bool
     matching_number: Optional[str] = None
     tax_id: Optional[uuid.UUID] = None
+    analytic_account_id: Optional[uuid.UUID] = None
     analytic_distribution: Dict[str, float]
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
@@ -121,6 +123,7 @@ class AccountMoveCreate(BaseModel):
     payment_term_id: Optional[uuid.UUID] = None
     fiscal_period_id: Optional[uuid.UUID] = None
     invoice_date_due: Optional[date] = None
+    analytic_account_id: Optional[uuid.UUID] = None
     lines: List[AccountMoveLineCreate] = Field(..., min_length=2)
 
 
@@ -130,6 +133,7 @@ class AccountMoveUpdate(BaseModel):
     party_id: Optional[uuid.UUID] = None
     payment_term_id: Optional[uuid.UUID] = None
     invoice_date_due: Optional[date] = None
+    analytic_account_id: Optional[uuid.UUID] = None
 
 
 class AccountMoveRead(BaseModel):
@@ -148,6 +152,7 @@ class AccountMoveRead(BaseModel):
     payment_term_id: Optional[uuid.UUID] = None
     fiscal_period_id: Optional[uuid.UUID] = None
     invoice_date_due: Optional[date] = None
+    analytic_account_id: Optional[uuid.UUID] = None
     lines: List[AccountMoveLineRead] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime

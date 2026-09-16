@@ -1,8 +1,9 @@
 """Pydantic request and response schemas for Master Data Lookups."""
 
 import uuid
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
+
 
 
 # 1. Country
@@ -304,6 +305,11 @@ class CategoryCreate(BaseModel):
     color: str = Field("#3b82f6", max_length=20, description="Hex color badge for UI")
     icon: Optional[str] = Field(None, max_length=50, description="Icon identifier for UI navigation")
     sequence: int = Field(10, ge=0, description="Sorting sequence order in UI")
+    income_account_id: Optional[uuid.UUID] = Field(None, description="Default income account inherited by child categories and products")
+    expense_account_id: Optional[uuid.UUID] = Field(None, description="Default expense account inherited by child categories and products")
+    sale_tax_ids: Optional[List[uuid.UUID]] = Field(None, description="Default customer taxes inherited by child categories and products")
+    purchase_tax_ids: Optional[List[uuid.UUID]] = Field(None, description="Default vendor taxes inherited by child categories and products")
+    custom_fields: Optional[Dict[str, Any]] = Field(None, description="Extensible JSONB custom fields")
 
 
 class CategoryUpdate(BaseModel):
@@ -326,6 +332,11 @@ class CategoryUpdate(BaseModel):
     icon: Optional[str] = Field(None, max_length=50)
     sequence: Optional[int] = Field(None, ge=0)
     is_active: Optional[bool] = None
+    income_account_id: Optional[uuid.UUID] = Field(None, description="Default income account inherited by child categories and products")
+    expense_account_id: Optional[uuid.UUID] = Field(None, description="Default expense account inherited by child categories and products")
+    sale_tax_ids: Optional[List[uuid.UUID]] = Field(None, description="Default customer taxes inherited by child categories and products")
+    purchase_tax_ids: Optional[List[uuid.UUID]] = Field(None, description="Default vendor taxes inherited by child categories and products")
+    custom_fields: Optional[Dict[str, Any]] = Field(None, description="Extensible JSONB custom fields")
 
 
 class CategoryRead(BaseModel):
@@ -345,6 +356,12 @@ class CategoryRead(BaseModel):
     is_active: bool
     full_path: Optional[str] = None
     children_count: int = 0
+    income_account_id: Optional[uuid.UUID] = None
+    expense_account_id: Optional[uuid.UUID] = None
+    sale_tax_ids: Optional[List[str]] = None
+    purchase_tax_ids: Optional[List[str]] = None
+    custom_fields: Dict[str, Any] = Field(default_factory=dict)
+
 
 
 class CategoryTreeRead(CategoryRead):

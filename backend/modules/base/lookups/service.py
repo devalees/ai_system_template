@@ -69,7 +69,18 @@ class CategoryService:
                 status_code=400,
             )
 
-        # 3. Instantiate model
+        # 3. Process accounting defaults into custom_fields
+        cf = dict(payload.custom_fields or {})
+        if payload.income_account_id is not None:
+            cf["income_account_id"] = str(payload.income_account_id)
+        if payload.expense_account_id is not None:
+            cf["expense_account_id"] = str(payload.expense_account_id)
+        if payload.sale_tax_ids is not None:
+            cf["sale_tax_ids"] = [str(x) for x in payload.sale_tax_ids]
+        if payload.purchase_tax_ids is not None:
+            cf["purchase_tax_ids"] = [str(x) for x in payload.purchase_tax_ids]
+
+        # 4. Instantiate model
         category = Category(
             company_id=company_id,
             name=payload.name,
@@ -81,6 +92,7 @@ class CategoryService:
             icon=payload.icon,
             sequence=payload.sequence,
             created_by_id=user_id,
+            custom_fields=cf,
         )
         db.add(category)
         await db.commit()
@@ -129,9 +141,29 @@ class CategoryService:
                     status_code=400,
                 )
 
-        # Update attributes
+        # Update standard model attributes
         for field, val in update_data.items():
+            if field in ("income_account_id", "expense_account_id", "sale_tax_ids", "purchase_tax_ids", "custom_fields"):
+                continue
             setattr(category, field, val)
+
+        # Update custom fields and accounting defaults
+        cf = dict(category.custom_fields or {})
+        if "custom_fields" in update_data and update_data["custom_fields"] is not None:
+            cf.update(update_data["custom_fields"])
+        if "income_account_id" in update_data:
+            val = update_data["income_account_id"]
+            cf["income_account_id"] = str(val) if val else None
+        if "expense_account_id" in update_data:
+            val = update_data["expense_account_id"]
+            cf["expense_account_id"] = str(val) if val else None
+        if "sale_tax_ids" in update_data:
+            val = update_data["sale_tax_ids"]
+            cf["sale_tax_ids"] = [str(x) for x in val] if val else []
+        if "purchase_tax_ids" in update_data:
+            val = update_data["purchase_tax_ids"]
+            cf["purchase_tax_ids"] = [str(x) for x in val] if val else []
+        category.custom_fields = cf
 
         category.updated_by_id = user_id
         await db.commit()
@@ -266,6 +298,11 @@ class CategoryService:
                     is_active=cat.is_active,
                     full_path=full_path,
                     children_count=counts.get(cat.id, 0),
+                    income_account_id=cat.income_account_id,
+                    expense_account_id=cat.expense_account_id,
+                    sale_tax_ids=cat.sale_tax_ids,
+                    purchase_tax_ids=cat.purchase_tax_ids,
+                    custom_fields=cat.custom_fields or {},
                 )
             )
         return output

@@ -15,6 +15,7 @@ class SaleOrderLineCreate(BaseModel):
     unit_price: Optional[Decimal] = Field(None, ge=0)
     discount_percent: float = Field(default=0.0, ge=0.0, le=100.0)
     tax_ids: List[str] = Field(default_factory=list)
+    analytic_account_id: Optional[uuid.UUID] = None
     analytic_distribution: Dict[str, float] = Field(default_factory=dict)
 
 
@@ -30,6 +31,7 @@ class SaleOrderLineRead(BaseModel):
     tax_ids: List[str]
     price_subtotal: Decimal
     price_total: Decimal
+    analytic_account_id: Optional[uuid.UUID] = None
     analytic_distribution: Dict[str, float]
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)

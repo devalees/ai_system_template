@@ -75,6 +75,13 @@ class PurchaseService:
             untaxed += subtotal
             tax_total += tax_amt
 
+            # Handle analytic cascading and explicit line analytic account
+            line_analytic_id = line_dict.pop("analytic_account_id", None)
+            if line_analytic_id and not line_dict.get("analytic_distribution"):
+                line_dict["analytic_distribution"] = {str(line_analytic_id): 100.0}
+            elif not line_dict.get("analytic_distribution") and order.analytic_account_id:
+                line_dict["analytic_distribution"] = {str(order.analytic_account_id): 100.0}
+
             line = PurchaseOrderLine(
                 **line_dict,
                 order_id=order.id,
@@ -212,20 +219,41 @@ class PurchaseService:
             payable_acc = all_accs[1]
 
         # Construct balanced Vendor Bill lines:
-        # Debit: Expense Account (Total amount)
+        bill_lines = []
+        if order.lines:
+            for l in order.lines:
+                dist = dict(l.analytic_distribution or {})
+                if not dist and order.analytic_account_id:
+                    dist = {str(order.analytic_account_id): 100.0}
+                bill_lines.append(
+                    AccountMoveLineCreate(
+                        account_id=expense_acc.id,
+                        party_id=order.party_id,
+                        product_id=l.product_id,
+                        name=f"{l.name} - {order.order_number}",
+                        debit=l.price_total,
+                        credit=Decimal("0.0000"),
+                        currency_id=order.currency_id,
+                        analytic_distribution=dist,
+                    )
+                )
+        else:
+            bill_lines.append(
+                AccountMoveLineCreate(
+                    account_id=expense_acc.id,
+                    party_id=order.party_id,
+                    name=f"Vendor Expense - {order.order_number}",
+                    debit=order.amount_total,
+                    credit=Decimal("0.0000"),
+                    currency_id=order.currency_id,
+                    analytic_distribution={str(order.analytic_account_id): 100.0}
+                    if order.analytic_account_id
+                    else {},
+                )
+            )
+
         # Credit: Accounts Payable (Total amount)
-        bill_lines = [
-            AccountMoveLineCreate(
-                account_id=expense_acc.id,
-                party_id=order.party_id,
-                name=f"Vendor Expense - {order.order_number}",
-                debit=order.amount_total,
-                credit=Decimal("0.0000"),
-                currency_id=order.currency_id,
-                analytic_distribution={str(order.analytic_account_id): 100.0}
-                if order.analytic_account_id
-                else {},
-            ),
+        bill_lines.append(
             AccountMoveLineCreate(
                 account_id=payable_acc.id,
                 party_id=order.party_id,
@@ -233,8 +261,8 @@ class PurchaseService:
                 debit=Decimal("0.0000"),
                 credit=order.amount_total,
                 currency_id=order.currency_id,
-            ),
-        ]
+            )
+        )
 
         bill_payload = AccountMoveCreate(
             move_type="in_invoice",
@@ -244,6 +272,7 @@ class PurchaseService:
             party_id=order.party_id,
             currency_id=order.currency_id,
             payment_term_id=order.payment_term_id,
+            analytic_account_id=order.analytic_account_id,
             lines=bill_lines,
         )
 

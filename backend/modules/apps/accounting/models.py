@@ -159,9 +159,17 @@ class AccountMove(BaseModel):
         nullable=True,
     )
     invoice_date_due: Mapped[Optional[date]] = mapped_column(sa.Date, nullable=True)
+    analytic_account_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        sa.ForeignKey("accounting_analytic_accounts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        doc="Default header analytic cost center cascading to journal lines",
+    )
 
     # Relationships
     journal: Mapped["AccountJournal"] = relationship("AccountJournal")
+    analytic_account: Mapped[Optional["AnalyticAccount"]] = relationship("AnalyticAccount")
     lines: Mapped[List["AccountMoveLine"]] = relationship(
         "AccountMoveLine",
         back_populates="move",
@@ -249,6 +257,18 @@ class AccountMoveLine(BaseModel):
     # Relationships
     move: Mapped["AccountMove"] = relationship("AccountMove", back_populates="lines")
     account: Mapped["Account"] = relationship("Account")
+
+    @property
+    def analytic_account_id(self) -> Optional[uuid.UUID]:
+        """Convenience property resolving primary analytic account from distribution."""
+        if self.analytic_distribution:
+            key = next(iter(self.analytic_distribution.keys()), None)
+            if key:
+                try:
+                    return uuid.UUID(str(key))
+                except (ValueError, TypeError):
+                    return None
+        return None
 
 
 # ============================================================================
