@@ -838,16 +838,26 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
 - **Contract Lifecycle Engine**:
   - `ContractService` manages state transitions (draft -> active -> renew / terminate), renewal date extension rules, and early-notice expiration queries (`get_expiring_contracts`).
 
-
-
-
-
-
-
-
-
-
-
-
-
+#### 6.13.18 Sovereign AI Agent Bridge & FastMCP Tool Reflection (`mcp_bridge`)
+- **Packages**: `backend/core/mcp_bridge/`, `backend/modules/base/automated_actions/handlers/ai_handler.py`, and `agent_service/mcp/sovereign_server.py`.
+- **Core Architecture & Philosophy**:
+  - Unifies the enterprise headless backend and the Sovereign Autonomous AI Agent platform (`agent_service/`) into a closed-loop cognitive operating system.
+  - **Dynamic Tool Reflection**: The Kernel introspects all `ai_enabled == True` modules across the platform and dynamically reflects 9 typed domain capability tools:
+    1. `query_records`: Multi-tenant entity filtering and data access.
+    2. `check_fiscal_period`: Real-time calendar posting validation against open/locked periods.
+    3. `get_party_profile`: Complete customer/vendor dossier, credit limit, and hierarchy.
+    4. `calculate_pricing`: Multi-tier price lists, volume breaks, and promotional windows.
+    5. `calculate_taxes`: Jurisdictional VAT/sales tax calculations and fiscal positions.
+    6. `calculate_payment_terms`: Cash flow installment schedules and fractional splits.
+    7. `submit_approval_request`: Declarative multi-tier governance sign-off initiation.
+    8. `transition_workflow_state`: Audited lifecycle state transitions with guard evaluations.
+    9. `check_resource_availability`: Booking collision detection and capacity allocation.
+- **TCA Action Handler (`invoke_ai_agent`)**:
+  - Integrated into the event-driven Trigger-Condition-Action (TCA) engine.
+  - Administrators attach automated actions to any model mutation event (`on_create`, `on_update`, `on_state_change`) with Jinja2 prompt interpolation.
+  - Dispatches requests to Hermes Agent Gateway (`/v1/chat/completions`) with calibrated profile parameters (`orchestrator`, `qa_auditor`, `cost_controller`, `security_guard`).
+- **Chatter Feedback Loop**:
+  - The AI agent's structured reasoning and audit verdicts are automatically published directly into the target record's polymorphic Chatter thread (`author_type="ai_agent"`), creating an immutable, human-visible decision timeline.
+- **Distributed LLMOps Observability (Langfuse Tracing)**:
+  - Non-blocking execution trace events are ingested into the platform's independent Langfuse instance (`:3100`), tracking generation spans, token consumption, latency, and tool invocation waterfalls.
 

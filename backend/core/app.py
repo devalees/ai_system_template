@@ -74,6 +74,11 @@ def create_app() -> FastAPI:
     kernel.resolve_dependencies()
     kernel.load(app=app)
 
+    # 4.1. Mount Sovereign FastMCP AI Agent Bridge
+    from core.mcp_bridge.routes import router as mcp_router
+    app.include_router(mcp_router, prefix="/api/v1/mcp")
+
+
     # 5. Micro-Kernel Registry Diagnostics Endpoint
     @app.get("/api/v1/kernel/modules", tags=["Kernel Diagnostics"])
     async def get_kernel_modules() -> Dict[str, Any]:

@@ -9,6 +9,7 @@ from modules.base.automated_actions.handlers.record_handler import (
     CreateRecordActionHandler, CreateRecordActionConfig,
 )
 from modules.base.automated_actions.handlers.webhook_handler import InvokeWebhookActionHandler, InvokeWebhookActionConfig
+from modules.base.automated_actions.handlers.ai_handler import AIAgentActionHandler, AIAgentActionConfig
 
 __all__ = [
     "BaseActionHandler",
@@ -25,4 +26,7 @@ __all__ = [
     "CreateRecordActionConfig",
     "InvokeWebhookActionHandler",
     "InvokeWebhookActionConfig",
+    "AIAgentActionHandler",
+    "AIAgentActionConfig",
 ]
+

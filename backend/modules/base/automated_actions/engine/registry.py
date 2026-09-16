@@ -11,6 +11,7 @@ from modules.base.automated_actions.handlers.record_handler import (
     CreateRecordActionHandler,
 )
 from modules.base.automated_actions.handlers.webhook_handler import InvokeWebhookActionHandler
+from modules.base.automated_actions.handlers.ai_handler import AIAgentActionHandler
 
 logger = logging.getLogger("sovereign.automated_actions.registry")
 
@@ -31,9 +32,11 @@ class ActionRegistry:
             UpdateRecordActionHandler(),
             CreateRecordActionHandler(),
             InvokeWebhookActionHandler(),
+            AIAgentActionHandler(),
         ]
         for handler in built_in:
             self.register(handler)
+
 
     def register(self, handler: BaseActionHandler) -> None:
         """Register an action handler instance."""

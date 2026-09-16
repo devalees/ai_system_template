@@ -17710,6 +17710,97 @@
         }
       }
     },
+    "/api/v1/mcp/tools": {
+      "get": {
+        "tags": [
+          "Sovereign FastMCP AI Bridge"
+        ],
+        "summary": "List Reflected FastMCP Tools",
+        "description": "Returns all dynamically reflected FastMCP tools and JSON schemas exposed to Sovereign AI Agents.",
+        "operationId": "list_mcp_tools_api_v1_mcp_tools_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MCPToolDefinition"
+                  },
+                  "type": "array",
+                  "title": "Response List Mcp Tools Api V1 Mcp Tools Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/execute": {
+      "post": {
+        "tags": [
+          "Sovereign FastMCP AI Bridge"
+        ],
+        "summary": "Execute Reflected FastMCP Tool",
+        "description": "Invokes a specific reflected FastMCP tool with validated parameters within active company context.",
+        "operationId": "execute_mcp_tool_api_v1_mcp_execute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPToolCallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPToolCallResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/status": {
+      "get": {
+        "tags": [
+          "Sovereign FastMCP AI Bridge"
+        ],
+        "summary": "FastMCP Bridge Status & AI Modules",
+        "description": "Returns telemetry summary of available MCP tools and list of all ai_enabled modules in the kernel.",
+        "operationId": "get_mcp_status_api_v1_mcp_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Mcp Status Api V1 Mcp Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/kernel/modules": {
       "get": {
         "tags": [
@@ -25269,6 +25360,123 @@
           "identifier": "admin",
           "password": "AdminPassword2026!"
         }
+      },
+      "MCPToolCallRequest": {
+        "properties": {
+          "tool": {
+            "type": "string",
+            "title": "Tool",
+            "description": "Target tool identifier (e.g. 'calculate_pricing', 'check_fiscal_period')"
+          },
+          "arguments": {
+            "type": "object",
+            "title": "Arguments",
+            "description": "Dictionary of typed keyword arguments"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id",
+            "description": "Optional tenant context override (defaults to session company)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tool"
+        ],
+        "title": "MCPToolCallRequest",
+        "description": "Unified invocation payload for FastMCP dynamic tool execution."
+      },
+      "MCPToolCallResponse": {
+        "properties": {
+          "tool": {
+            "type": "string",
+            "title": "Tool"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "'success' | 'error'"
+          },
+          "result": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "duration_ms": {
+            "type": "number",
+            "title": "Duration Ms",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "tool",
+          "status"
+        ],
+        "title": "MCPToolCallResponse",
+        "description": "Standardized result envelope returned by FastMCP tool execution."
+      },
+      "MCPToolDefinition": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique tool identifier name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Semantic purpose and instructions for agent tool selection"
+          },
+          "parameters": {
+            "type": "object",
+            "title": "Parameters",
+            "description": "JSON Schema object describing required and optional arguments"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Functional category (e.g. accounting, commercial, workflow)",
+            "default": "business_capability"
+          },
+          "module": {
+            "type": "string",
+            "title": "Module",
+            "description": "Originating base module"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "parameters",
+          "module"
+        ],
+        "title": "MCPToolDefinition",
+        "description": "Metadata describing an exposed FastMCP tool for AI Agent reflection."
       },
       "MailMessageCreate": {
         "properties": {

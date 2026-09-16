@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "320bd5f8-508f-467c-85d9-3256d3753fe0",
+    "_postman_id": "6749e664-4521-4e67-89e9-5e660d799088",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -11964,6 +11964,154 @@
               ]
             },
             "description": "## Delete Resource Allocation\n\nDeletes a resource allocation.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/resources/allocations/{allocation_id}`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `allocation_id` | `path` | `string` | **Yes** | Allocation UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sovereign FastMCP AI Bridge",
+      "item": [
+        {
+          "name": "List Reflected FastMCP Tools",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mcp/tools",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mcp",
+                "tools"
+              ],
+              "variable": []
+            },
+            "description": "## List Reflected FastMCP Tools\n\nReturns all dynamically reflected FastMCP tools and JSON schemas exposed to Sovereign AI Agents.\n\n**Endpoint**: `GET {{base_url}}/api/v1/mcp/tools`  \n**Tags**: `Sovereign FastMCP AI Bridge`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Reflected FastMCP Tool",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mcp/execute",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mcp",
+                "execute"
+              ],
+              "variable": []
+            },
+            "description": "## Execute Reflected FastMCP Tool\n\nInvokes a specific reflected FastMCP tool with validated parameters within active company context.\n\n**Endpoint**: `POST {{base_url}}/api/v1/mcp/execute`  \n**Tags**: `Sovereign FastMCP AI Bridge`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `tool` | `string` | **Yes** | Any valid string | Target tool identifier (e.g. 'calculate_pricing', 'check_fiscal_period') |\n| `arguments` | `object` | No | Any valid object | Dictionary of typed keyword arguments |\n| `company_id` | `string` | No | Any valid string | Optional tenant context override (defaults to session company) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tool\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_execute_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "FastMCP Bridge Status & AI Modules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mcp/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mcp",
+                "status"
+              ],
+              "variable": []
+            },
+            "description": "## FastMCP Bridge Status & AI Modules\n\nReturns telemetry summary of available MCP tools and list of all ai_enabled modules in the kernel.\n\n**Endpoint**: `GET {{base_url}}/api/v1/mcp/status`  \n**Tags**: `Sovereign FastMCP AI Bridge`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
         }
