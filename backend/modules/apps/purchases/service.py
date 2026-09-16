@@ -44,15 +44,39 @@ class PurchaseService:
         tax_total = Decimal("0.0000")
 
         for l_dto in payload.lines:
-            subtotal = l_dto.quantity * l_dto.unit_price
-            tax_amt = (subtotal * Decimal("0.15")) if l_dto.tax_ids else Decimal("0.0000")
+            line_dict = l_dto.model_dump()
+            if l_dto.product_id:
+                try:
+                    from modules.base.products.service import ProductService
+                    defaults = await ProductService.resolve_product_defaults(
+                        db, company_id, l_dto.product_id, for_operation="purchase"
+                    )
+                    if not line_dict.get("name"):
+                        line_dict["name"] = defaults["name"]
+                    if line_dict.get("unit_price") is None:
+                        line_dict["unit_price"] = Decimal(str(defaults["unit_price"]))
+                    if not line_dict.get("uom_id") and defaults.get("uom_id"):
+                        line_dict["uom_id"] = uuid.UUID(defaults["uom_id"])
+                    if not line_dict.get("tax_ids") and defaults.get("tax_ids"):
+                        line_dict["tax_ids"] = defaults["tax_ids"]
+                except Exception:
+                    pass
+
+            if line_dict.get("name") is None:
+                line_dict["name"] = "Item"
+            if line_dict.get("unit_price") is None:
+                line_dict["unit_price"] = Decimal("0.0000")
+
+            unit_price = line_dict["unit_price"]
+            subtotal = l_dto.quantity * unit_price
+            tax_amt = (subtotal * Decimal("0.15")) if line_dict.get("tax_ids") else Decimal("0.0000")
             total = subtotal + tax_amt
 
             untaxed += subtotal
             tax_total += tax_amt
 
             line = PurchaseOrderLine(
-                **l_dto.model_dump(),
+                **line_dict,
                 order_id=order.id,
                 company_id=company_id,
                 price_subtotal=subtotal,

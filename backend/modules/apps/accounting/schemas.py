@@ -81,6 +81,7 @@ class AccountJournalRead(AccountJournalBase):
 class AccountMoveLineCreate(BaseModel):
     account_id: uuid.UUID
     party_id: Optional[uuid.UUID] = None
+    product_id: Optional[uuid.UUID] = None
     name: str = Field(..., max_length=255)
     debit: Decimal = Field(default=Decimal("0.0000"), ge=0)
     credit: Decimal = Field(default=Decimal("0.0000"), ge=0)
@@ -95,6 +96,7 @@ class AccountMoveLineRead(BaseModel):
     move_id: uuid.UUID
     account_id: uuid.UUID
     party_id: Optional[uuid.UUID] = None
+    product_id: Optional[uuid.UUID] = None
     name: str
     debit: Decimal
     credit: Decimal

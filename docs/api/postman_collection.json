@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "f97eef70-9070-4499-966b-921556b0c309",
+    "_postman_id": "47b788c7-e0b1-4856-b82f-cdb68b7161e8",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -12567,6 +12567,276 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Product & Catalog Master Data",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "variable": []
+            },
+            "description": "## List Products\n\nRetrieves a list of catalog products filtered by type, category, or search string.\n\n**Endpoint**: `GET {{base_url}}/api/v1/products`  \n**Tags**: `Product & Catalog Master Data, Product & Catalog Master Data`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `search` | `query` | `string` | No | Search across code and name |\n| `product_type` | `query` | `string` | No | Filter by storable, consumable, service |\n| `category_id` | `query` | `string` | No | Filter by category UUID |\n| `is_saleable` | `query` | `string` | No | Filter saleable items |\n| `is_purchasable` | `query` | `string` | No | Filter purchasable items |\n| `is_active` | `query` | `string` | No | Filter active/inactive items |\n| `skip` | `query` | `integer` | No | - |\n| `limit` | `query` | `integer` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "variable": []
+            },
+            "description": "## Create Product\n\nRegisters a new catalog item, SKU, or service in the enterprise catalog.\n\n**Endpoint**: `POST {{base_url}}/api/v1/products`  \n**Tags**: `Product & Catalog Master Data, Product & Catalog Master Data`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `string` | **Yes** | Any valid string | Internal SKU, item reference, or barcode (e.g. PROD-00001) |\n| `name` | `string` | **Yes** | Any valid string | Display name of the product or service |\n| `description` | `string` | No | Any valid string | Detailed specification or notes |\n| `product_type` | `string` | No | Any valid string | Product classification: 'storable', 'consumable', 'service' |\n| `uom_id` | `string` | **Yes** | Any valid string | Default sales/inventory unit of measure UUID |\n| `purchase_uom_id` | `string` | No | Any valid string | Default procurement unit of measure UUID |\n| `sale_price` | `string` | No | Any valid string | Standard sales price |\n| `cost_price` | `string` | No | Any valid string | Standard cost / purchase price |\n| `sale_tax_ids` | `array` | No | Any valid array | Default sales tax UUID strings |\n| `purchase_tax_ids` | `array` | No | Any valid array | Default purchase tax UUID strings |\n| `income_account_id` | `string` | No | Any valid string | Default revenue GL account UUID |\n| `expense_account_id` | `string` | No | Any valid string | Default expense/COGS GL account UUID |\n| `category_id` | `string` | No | Any valid string | Hierarchical category UUID |\n| `is_saleable` | `boolean` | No | Any valid boolean | Whether this product can be added to customer quotations/sales orders |\n| `is_purchasable` | `boolean` | No | Any valid boolean | Whether this product can be added to vendor RFQs/purchase orders |\n| `is_active` | `boolean` | No | Any valid boolean | Operational visibility toggle |\n| `custom_fields` | `object` | No | Any valid object | Extensible custom attributes JSONB |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PROD-1001\",\n  \"cost_price\": 75.0,\n  \"description\": \"High-durability mechanical component\",\n  \"is_active\": true,\n  \"is_purchasable\": true,\n  \"is_saleable\": true,\n  \"name\": \"Industrial Widget Pro\",\n  \"product_type\": \"storable\",\n  \"purchase_tax_ids\": [],\n  \"sale_price\": 120.0,\n  \"sale_tax_ids\": [],\n  \"uom_id\": \"00000000-0000-0000-0000-000000000001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_product_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Product Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/:product_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":product_id"
+              ],
+              "variable": [
+                {
+                  "key": "product_id",
+                  "value": "{{active_product_id}}",
+                  "description": "Dynamic path parameter bound to {{active_product_id}}"
+                }
+              ]
+            },
+            "description": "## Get Product Detail\n\nRetrieves full detail of a specific product including UoM and Category metadata.\n\n**Endpoint**: `GET {{base_url}}/api/v1/products/{product_id}`  \n**Tags**: `Product & Catalog Master Data, Product & Catalog Master Data`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `product_id` | `path` | `string` | **Yes** | Target product UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/:product_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":product_id"
+              ],
+              "variable": [
+                {
+                  "key": "product_id",
+                  "value": "{{active_product_id}}",
+                  "description": "Dynamic path parameter bound to {{active_product_id}}"
+                }
+              ]
+            },
+            "description": "## Update Product\n\nPartially updates an existing product's attributes.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/products/{product_id}`  \n**Tags**: `Product & Catalog Master Data, Product & Catalog Master Data`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `product_id` | `path` | `string` | **Yes** | Target product UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `string` | No | Any valid string | code attribute |\n| `name` | `string` | No | Any valid string | name attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `product_type` | `string` | No | Any valid string | product_type attribute |\n| `uom_id` | `string` | No | Any valid string | uom_id attribute |\n| `purchase_uom_id` | `string` | No | Any valid string | purchase_uom_id attribute |\n| `sale_price` | `string` | No | Any valid string | sale_price attribute |\n| `cost_price` | `string` | No | Any valid string | cost_price attribute |\n| `sale_tax_ids` | `array` | No | Any valid array | sale_tax_ids attribute |\n| `purchase_tax_ids` | `array` | No | Any valid array | purchase_tax_ids attribute |\n| `income_account_id` | `string` | No | Any valid string | income_account_id attribute |\n| `expense_account_id` | `string` | No | Any valid string | expense_account_id attribute |\n| `category_id` | `string` | No | Any valid string | category_id attribute |\n| `is_saleable` | `boolean` | No | Any valid boolean | is_saleable attribute |\n| `is_purchasable` | `boolean` | No | Any valid boolean | is_purchasable attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n| `custom_fields` | `object` | No | Any valid object | custom_fields attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/:product_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":product_id"
+              ],
+              "variable": [
+                {
+                  "key": "product_id",
+                  "value": "{{active_product_id}}",
+                  "description": "Dynamic path parameter bound to {{active_product_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Product\n\nSoft-deletes a product from the enterprise catalog.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/products/{product_id}`  \n**Tags**: `Product & Catalog Master Data, Product & Catalog Master Data`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `product_id` | `path` | `string` | **Yes** | Target product UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve Product Defaults",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/:product_id/defaults",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":product_id",
+                "defaults"
+              ],
+              "variable": [
+                {
+                  "key": "product_id",
+                  "value": "{{active_product_id}}",
+                  "description": "Dynamic path parameter bound to {{active_product_id}}"
+                }
+              ]
+            },
+            "description": "## Resolve Product Defaults\n\nCalculates line auto-population defaults (UoM, unit price, taxes, account) for sales or purchases.\n\n**Endpoint**: `GET {{base_url}}/api/v1/products/{product_id}/defaults`  \n**Tags**: `Product & Catalog Master Data, Product & Catalog Master Data`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `product_id` | `path` | `string` | **Yes** | Target product UUID |\n| `for_operation` | `query` | `string` | No | Context operation |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
         }
       ]
     },

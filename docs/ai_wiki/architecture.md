@@ -913,4 +913,34 @@ The Enterprise Financial Suite implements a high-performance **Triple-Engine** a
   - 3-way matching policy support.
 - **Settings**: `PurchaseSettings` (`po_approval_threshold`, `three_way_matching_policy`, `bill_control_policy`, `lock_confirmed_orders`).
 
+---
+
+### 6.15 Universal Product & Item Master Data Base Module (`products`)
+
+#### 6.15.1 Architectural Scope: The 4th Master Data Pillar
+To complete the foundational enterprise master data core (`Company`, `Account`, `Party`, `Product`), the `products` base module provides a unified, cross-domain catalog item repository:
+- **Package**: `backend/modules/base/products/`
+- **Model (`Product`)**:
+  - `code`: SKU, Barcode, or item reference (`String(64)`, unique per company).
+  - `name`: Product title (translatable, indexed).
+  - `description`: Detailed specification or notes.
+  - `product_type`: Classification enum (`storable`, `consumable`, `service`).
+  - `category_id`: Foreign key link to `lookup_categories.id` via `CategorizableMixin`.
+  - `uom_id`: Default Sales and Inventory unit of measure (`uom_units.id`).
+  - `purchase_uom_id`: Default Procurement unit of measure (`uom_units.id`).
+  - `sale_price`: Base selling price (`Numeric(18, 4)`).
+  - `cost_price`: Standard purchase/inventory cost (`Numeric(18, 4)`).
+  - `sale_tax_ids`: JSONB array of default sales tax IDs.
+  - `purchase_tax_ids`: JSONB array of default purchase tax IDs.
+  - `income_account_id` & `expense_account_id`: Default General Ledger revenue and COGS account linkages.
+  - `is_saleable`, `is_purchasable`, `is_active`: Operational lifecycle toggles.
+
+#### 6.15.2 Upstream Transactional Integration & Auto-Population
+- `SaleOrderLine`, `PurchaseOrderLine`, and `AccountMoveLine` maintain an optional foreign key `product_id: Mapped[Optional[UUID]]`.
+- When `product_id` is supplied on an order line:
+  - Automatically resolves defaults via `ProductService.resolve_product_defaults()`: description (`name`), operation-specific unit price (`sale_price` or `cost_price`), operation-specific UoM (`uom_id` or `purchase_uom_id`), and operation-specific tax IDs.
+  - Retains backward compatibility: lines without a `product_id` remain fully functional for one-off charges or freeform items.
+- Invoices and Journal Items (`AccountMoveLine`) track `product_id`, unlocking financial margin reporting, revenue attribution, and tax audits by product or category.
+
+
 

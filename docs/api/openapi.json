@@ -13812,6 +13812,452 @@
         }
       }
     },
+    "/api/v1/products": {
+      "post": {
+        "tags": [
+          "Product & Catalog Master Data",
+          "Product & Catalog Master Data"
+        ],
+        "summary": "Create Product",
+        "description": "Registers a new catalog item, SKU, or service in the enterprise catalog.",
+        "operationId": "create_product_api_v1_products_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Product & Catalog Master Data",
+          "Product & Catalog Master Data"
+        ],
+        "summary": "List Products",
+        "description": "Retrieves a list of catalog products filtered by type, category, or search string.",
+        "operationId": "list_products_api_v1_products_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search across code and name",
+              "title": "Search"
+            },
+            "description": "Search across code and name"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by storable, consumable, service",
+              "title": "Product Type"
+            },
+            "description": "Filter by storable, consumable, service"
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category UUID",
+              "title": "Category Id"
+            },
+            "description": "Filter by category UUID"
+          },
+          {
+            "name": "is_saleable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter saleable items",
+              "title": "Is Saleable"
+            },
+            "description": "Filter saleable items"
+          },
+          {
+            "name": "is_purchasable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter purchasable items",
+              "title": "Is Purchasable"
+            },
+            "description": "Filter purchasable items"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter active/inactive items",
+              "title": "Is Active"
+            },
+            "description": "Filter active/inactive items"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductDetailRead"
+                  },
+                  "title": "Response List Products Api V1 Products Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/{product_id}": {
+      "get": {
+        "tags": [
+          "Product & Catalog Master Data",
+          "Product & Catalog Master Data"
+        ],
+        "summary": "Get Product Detail",
+        "description": "Retrieves full detail of a specific product including UoM and Category metadata.",
+        "operationId": "get_product_api_v1_products__product_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target product UUID",
+              "title": "Product Id"
+            },
+            "description": "Target product UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Product & Catalog Master Data",
+          "Product & Catalog Master Data"
+        ],
+        "summary": "Update Product",
+        "description": "Partially updates an existing product's attributes.",
+        "operationId": "update_product_api_v1_products__product_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target product UUID",
+              "title": "Product Id"
+            },
+            "description": "Target product UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Product & Catalog Master Data",
+          "Product & Catalog Master Data"
+        ],
+        "summary": "Delete Product",
+        "description": "Soft-deletes a product from the enterprise catalog.",
+        "operationId": "delete_product_api_v1_products__product_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target product UUID",
+              "title": "Product Id"
+            },
+            "description": "Target product UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/{product_id}/defaults": {
+      "get": {
+        "tags": [
+          "Product & Catalog Master Data",
+          "Product & Catalog Master Data"
+        ],
+        "summary": "Resolve Product Defaults",
+        "description": "Calculates line auto-population defaults (UoM, unit price, taxes, account) for sales or purchases.",
+        "operationId": "resolve_defaults_api_v1_products__product_id__defaults_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target product UUID",
+              "title": "Product Id"
+            },
+            "description": "Target product UUID"
+          },
+          {
+            "name": "for_operation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "sale",
+                "purchase"
+              ],
+              "type": "string",
+              "description": "Context operation",
+              "default": "sale",
+              "title": "For Operation"
+            },
+            "description": "Context operation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Resolve Defaults Api V1 Products  Product Id  Defaults Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/parties/": {
       "post": {
         "tags": [
@@ -19552,6 +19998,18 @@
             ],
             "title": "Party Id"
           },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
           "name": {
             "type": "string",
             "maxLength": 255,
@@ -19664,6 +20122,18 @@
               }
             ],
             "title": "Party Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
           },
           "name": {
             "type": "string",
@@ -32823,6 +33293,640 @@
         "type": "object",
         "title": "PriceListUpdate"
       },
+      "ProductCreate": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Code",
+            "description": "Internal SKU, item reference, or barcode (e.g. PROD-00001)"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name",
+            "description": "Display name of the product or service"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed specification or notes"
+          },
+          "product_type": {
+            "type": "string",
+            "pattern": "^(storable|consumable|service)$",
+            "title": "Product Type",
+            "description": "Product classification: 'storable', 'consumable', 'service'",
+            "default": "storable"
+          },
+          "uom_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Uom Id",
+            "description": "Default sales/inventory unit of measure UUID"
+          },
+          "purchase_uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Uom Id",
+            "description": "Default procurement unit of measure UUID"
+          },
+          "sale_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Sale Price",
+            "description": "Standard sales price",
+            "default": "0.0000"
+          },
+          "cost_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Cost Price",
+            "description": "Standard cost / purchase price",
+            "default": "0.0000"
+          },
+          "sale_tax_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sale Tax Ids",
+            "description": "Default sales tax UUID strings"
+          },
+          "purchase_tax_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Purchase Tax Ids",
+            "description": "Default purchase tax UUID strings"
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id",
+            "description": "Default revenue GL account UUID"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id",
+            "description": "Default expense/COGS GL account UUID"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id",
+            "description": "Hierarchical category UUID"
+          },
+          "is_saleable": {
+            "type": "boolean",
+            "title": "Is Saleable",
+            "description": "Whether this product can be added to customer quotations/sales orders",
+            "default": true
+          },
+          "is_purchasable": {
+            "type": "boolean",
+            "title": "Is Purchasable",
+            "description": "Whether this product can be added to vendor RFQs/purchase orders",
+            "default": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Operational visibility toggle",
+            "default": true
+          },
+          "custom_fields": {
+            "type": "object",
+            "title": "Custom Fields",
+            "description": "Extensible custom attributes JSONB"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "uom_id"
+        ],
+        "title": "ProductCreate",
+        "description": "Payload schema for creating a new product.",
+        "example": {
+          "code": "PROD-1001",
+          "cost_price": 75.0,
+          "description": "High-durability mechanical component",
+          "is_active": true,
+          "is_purchasable": true,
+          "is_saleable": true,
+          "name": "Industrial Widget Pro",
+          "product_type": "storable",
+          "purchase_tax_ids": [],
+          "sale_price": 120.0,
+          "sale_tax_ids": [],
+          "uom_id": "00000000-0000-0000-0000-000000000001"
+        }
+      },
+      "ProductDetailRead": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Code",
+            "description": "Internal SKU, item reference, or barcode (e.g. PROD-00001)"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name",
+            "description": "Display name of the product or service"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed specification or notes"
+          },
+          "product_type": {
+            "type": "string",
+            "pattern": "^(storable|consumable|service)$",
+            "title": "Product Type",
+            "description": "Product classification: 'storable', 'consumable', 'service'",
+            "default": "storable"
+          },
+          "uom_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Uom Id",
+            "description": "Default sales/inventory unit of measure UUID"
+          },
+          "purchase_uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Uom Id",
+            "description": "Default procurement unit of measure UUID"
+          },
+          "sale_price": {
+            "type": "string",
+            "title": "Sale Price",
+            "description": "Standard sales price",
+            "default": "0.0000"
+          },
+          "cost_price": {
+            "type": "string",
+            "title": "Cost Price",
+            "description": "Standard cost / purchase price",
+            "default": "0.0000"
+          },
+          "sale_tax_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sale Tax Ids",
+            "description": "Default sales tax UUID strings"
+          },
+          "purchase_tax_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Purchase Tax Ids",
+            "description": "Default purchase tax UUID strings"
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id",
+            "description": "Default revenue GL account UUID"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id",
+            "description": "Default expense/COGS GL account UUID"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id",
+            "description": "Hierarchical category UUID"
+          },
+          "is_saleable": {
+            "type": "boolean",
+            "title": "Is Saleable",
+            "description": "Whether this product can be added to customer quotations/sales orders",
+            "default": true
+          },
+          "is_purchasable": {
+            "type": "boolean",
+            "title": "Is Purchasable",
+            "description": "Whether this product can be added to vendor RFQs/purchase orders",
+            "default": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Operational visibility toggle",
+            "default": true
+          },
+          "custom_fields": {
+            "type": "object",
+            "title": "Custom Fields",
+            "description": "Extensible custom attributes JSONB"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "version_id": {
+            "type": "integer",
+            "title": "Version Id"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name"
+          },
+          "uom_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uom Name"
+          },
+          "uom_symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uom Symbol"
+          },
+          "purchase_uom_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Uom Name"
+          },
+          "purchase_uom_symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Uom Symbol"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "uom_id",
+          "id",
+          "company_id",
+          "created_at",
+          "updated_at",
+          "version_id"
+        ],
+        "title": "ProductDetailRead",
+        "description": "Enriched product detail with resolved category and UoM metadata."
+      },
+      "ProductUpdate": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "product_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(storable|consumable|service)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Type"
+          },
+          "uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uom Id"
+          },
+          "purchase_uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Uom Id"
+          },
+          "sale_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Price"
+          },
+          "cost_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Price"
+          },
+          "sale_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Tax Ids"
+          },
+          "purchase_tax_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Tax Ids"
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "is_saleable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Saleable"
+          },
+          "is_purchasable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Purchasable"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields"
+          }
+        },
+        "type": "object",
+        "title": "ProductUpdate",
+        "description": "Payload schema for updating an existing product (PATCH)."
+      },
       "PurchaseOrderCreate": {
         "properties": {
           "party_id": {
@@ -32884,9 +33988,28 @@
       },
       "PurchaseOrderLineCreate": {
         "properties": {
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
           "name": {
-            "type": "string",
-            "maxLength": 255,
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Name"
           },
           "quantity": {
@@ -32922,6 +34045,9 @@
               },
               {
                 "type": "string"
+              },
+              {
+                "type": "null"
               }
             ],
             "title": "Unit Price"
@@ -32942,10 +34068,6 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "unit_price"
-        ],
         "title": "PurchaseOrderLineCreate"
       },
       "PurchaseOrderLineRead": {
@@ -32959,6 +34081,18 @@
             "type": "string",
             "format": "uuid",
             "title": "Order Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
           },
           "name": {
             "type": "string",
@@ -35116,9 +36250,28 @@
       },
       "SaleOrderLineCreate": {
         "properties": {
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
           "name": {
-            "type": "string",
-            "maxLength": 255,
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Name"
           },
           "quantity": {
@@ -35154,6 +36307,9 @@
               },
               {
                 "type": "string"
+              },
+              {
+                "type": "null"
               }
             ],
             "title": "Unit Price"
@@ -35181,10 +36337,6 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "unit_price"
-        ],
         "title": "SaleOrderLineCreate"
       },
       "SaleOrderLineRead": {
@@ -35198,6 +36350,18 @@
             "type": "string",
             "format": "uuid",
             "title": "Order Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
           },
           "name": {
             "type": "string",

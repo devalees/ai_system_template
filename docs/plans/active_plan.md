@@ -2151,7 +2151,55 @@ Implement the enterprise-grade **Triple-Engine Financial Suite** as modular busi
 - *2026-09-16*: Eager loading (`selectinload`) applied across all document collections (`lines`, `depreciation_lines`) to guarantee zero `MissingGreenlet` async SQLAlchemy exceptions.
 
 ### 4. Current Focus
-Phase 45 Triple-Engine Financial Suite (`accounting`, `sales`, `purchases`) completed and verified with 168/168 passing tests. Platform is ready for next phase.
+Phase 45 Triple-Engine Financial Suite (`accounting`, `sales`, `purchases`) completed and verified with 168/168 passing tests. Platform is ready for Phase 46.
+
+---
+
+## Phase 46: Universal Product & Item Master Data Base Module (`products`)
+
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-16 22:22:00+03:00
+
+### 1. Objective & Scope
+Implement the missing **4th Master Data Pillar** (`products`) as a decoupled, enterprise-grade base module in `backend/modules/base/products/`, and seamlessly integrate `product_id` into Sales Orders, Purchase Orders, and Accounting Move Lines:
+1. **`products` Base Module**:
+   - Model: `Product` with SKU/barcode `code`, `name` (translatable), `description`, `product_type` (`storable`, `consumable`, `service`), `uom_id` and `purchase_uom_id`, `sale_price` and `cost_price`, `sale_tax_ids` and `purchase_tax_ids`, `income_account_id` and `expense_account_id`, `is_saleable`, `is_purchasable`, `is_active`, and `CategorizableMixin` (`category_id`).
+   - Typed `ProductSettings`: default product type, barcode enforcement, and stock policy toggles.
+   - `ProductService` & REST API (`/api/v1/products/*`).
+2. **Upstream Integration**:
+   - Add `product_id` to `SaleOrderLine`, `PurchaseOrderLine`, and `AccountMoveLine`.
+   - Auto-populate line description, price, UoM, and taxes when `product_id` is supplied.
+3. **Automated Testing & API Synchronization**:
+   - Dedicated test suite (`tests/test_products.py`).
+   - Synchronize OpenAPI specs and Postman collections via `backend/core/exporter.py`.
+
+### 2. Task Checklist & Progress
+- [x] **Stage 46.1: `products` Base Module Core Architecture (`manifest.py`, `models.py`, `schemas.py`, `settings.py`, `service.py`, `routes.py`)** - COMPLETED
+  - Package: `backend/modules/base/products/`
+  - Model: `Product` (`code`, `name`, `description`, `product_type: storable|consumable|service`, `uom_id`, `purchase_uom_id`, `sale_price`, `cost_price`, `sale_tax_ids`, `purchase_tax_ids`, `income_account_id`, `expense_account_id`, `is_saleable`, `is_purchasable`, `is_active`, `category_id` via `CategorizableMixin`).
+  - Settings: `ProductSettings` (`default_product_type`, `enforce_unique_barcodes`, `allow_negative_stock`, `require_product_category`).
+  - Service: `ProductService` with code uniqueness validation, UoM/Category verification, soft deletion, and line default resolution (`resolve_product_defaults`).
+  - REST API: 6 endpoints (`/api/v1/products/*`) covering CRUD, listings, filtering, and defaults resolution.
+- [x] **Stage 46.2: Upstream Transactional Integration (`sales`, `purchases`, `accounting`)** - COMPLETED
+  - Added `product_id: Mapped[Optional[UUID]]` foreign key to `SaleOrderLine`, `PurchaseOrderLine`, and `AccountMoveLine`.
+  - Added `product_id` to Pydantic Create/Read schemas across sales, purchases, and accounting.
+  - Implemented smart auto-population in `SaleService.create_sale_order` and `PurchaseService.create_purchase_order` auto-filling `name`, `unit_price`, `uom_id`, and `tax_ids` from `Product` defaults.
+- [x] **Stage 46.3: Automated Testing, Empirical Verification & Continuous API Sync** - COMPLETED
+  - Authored comprehensive test suite `tests/test_products.py` (3/3 passing in Docker).
+  - Verified full platform test suite: **171 / 171 unit tests passing 100% in Docker** with zero regressions.
+  - Synchronized continuous OpenAPI specs (`docs/api/openapi.json`) and Postman collections (`docs/api/postman_collection.json`).
+
+### 3. Key Decisions & Architecture Invariants (Phase 46)
+- *2026-09-16*: Completed the **4th Master Data Pillar** (`products`), unifying Company, Accounts, Parties, and Products as foundational base master data before launching the Frontend.
+- *2026-09-16*: Backward-compatible `product_id: Optional[UUID]` allowing freeform manual lines or automated catalog item lookups interchangeably.
+- *2026-09-16*: Auto-population resolves operation-specific UoM (`uom_id` for sales vs `purchase_uom_id` for purchases) and operation-specific price/tax sets (`sale_price` / `sale_tax_ids` vs `cost_price` / `purchase_tax_ids`).
+- *2026-09-16*: Product catalog permissions (`products.product.*`) harvested and registered with Super Administrators.
+
+### 4. Current Focus
+Phase 46 Universal Product & Item Master Data Base Module is **100% COMPLETED** across all sub-stages. Full platform baseline: **171 / 171 unit tests passing**. Platform is officially ready for Milestone/Pillar 3: The Frontend.
+
+
 
 
 

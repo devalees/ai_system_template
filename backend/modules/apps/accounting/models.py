@@ -193,6 +193,13 @@ class AccountMoveLine(BaseModel):
         nullable=True,
         index=True,
     )
+    product_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        sa.ForeignKey("products.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        doc="Optional catalog product linkage",
+    )
     name: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     debit: Mapped[Decimal] = mapped_column(
         sa.Numeric(18, 4),

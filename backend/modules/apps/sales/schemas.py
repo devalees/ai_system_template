@@ -8,10 +8,11 @@ from pydantic import BaseModel, Field, ConfigDict
 
 
 class SaleOrderLineCreate(BaseModel):
-    name: str = Field(..., max_length=255)
+    product_id: Optional[uuid.UUID] = None
+    name: Optional[str] = Field(None, max_length=255)
     quantity: Decimal = Field(default=Decimal("1.0000"), gt=0)
     uom_id: Optional[uuid.UUID] = None
-    unit_price: Decimal = Field(..., ge=0)
+    unit_price: Optional[Decimal] = Field(None, ge=0)
     discount_percent: float = Field(default=0.0, ge=0.0, le=100.0)
     tax_ids: List[str] = Field(default_factory=list)
     analytic_distribution: Dict[str, float] = Field(default_factory=dict)
@@ -20,6 +21,7 @@ class SaleOrderLineCreate(BaseModel):
 class SaleOrderLineRead(BaseModel):
     id: uuid.UUID
     order_id: uuid.UUID
+    product_id: Optional[uuid.UUID] = None
     name: str
     quantity: Decimal
     uom_id: Optional[uuid.UUID] = None
