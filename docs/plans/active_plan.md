@@ -1919,7 +1919,7 @@ The following 13 base modules are already complete, tested, and active in the sy
 
 ### 2. Task Checklist & Granular Stages
 
-#### **Stage 43.1: Transactional Infrastructure & Invariants (P1 Foundations - IN_PROGRESS)**
+#### **Stage 43.1: Transactional Infrastructure & Invariants (P1 Foundations - COMPLETED)**
 - [x] **Sub-stage 43.1.1: Universal Sequence & Legal Auto-Numbering Engine (`sequences`)** - COMPLETED
   - Package: `backend/modules/base/sequences/`
   - Model: `Sequence` (`code`, `name`, `prefix`, `suffix`, `padding`, `current_number`, `step`, `reset_period: never|yearly|monthly|daily`, `last_reset_date`).
@@ -1944,11 +1944,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Service: `AddressService` providing polymorphic entity linkage, single-default address guarantee per type/entity, default address resolution, normalized relational city/country loading, and soft deletion.
   - REST API: Full CRUD, entity address listing (`/entity/{res_model}/{res_id}`), and default address resolution (`/entity/{res_model}/{res_id}/default`).
   - Automated tests: 3/3 passing in `test_addresses.py` (total test suite 108/108 passing in Docker).
-- [ ] **Sub-stage 43.1.5: Money, Multi-Currency & Historical FX Engine (`fx_engine`)**
+- [x] **Sub-stage 43.1.5: Money, Multi-Currency & Historical FX Engine (`fx_engine`)** - COMPLETED
   - Package: `backend/modules/base/fx_engine/`
-  - Model: `ExchangeRate` (`from_currency_id`, `to_currency_id`, `rate`, `effective_date`, `source: manual|central_bank`).
-  - Service: `CurrencyService.convert(amount, from_curr, to_curr, date)` and currency rounding rules respecting ISO decimal precision.
-  - REST API: Rates CRUD, live conversion endpoint, and daily rate synchronization job.
+  - Model: `ExchangeRate` (`from_currency_id`, `to_currency_id`, `rate: Numeric(18,6)`, `inverse_rate: Numeric(18,6)`, `effective_date`, `source: manual|central_bank|ecb|cbe`).
+  - Service: `FXService.convert(amount, from_curr, to_curr, date)` supporting direct rates, inverse rate lookup, base currency triangulation (`EUR -> USD -> EGP`), and ISO decimal precision rounding.
+  - REST API: Full CRUD on `/rates` and currency conversion endpoint (`POST /convert`).
+  - Automated tests: 3/3 passing in `test_fx_engine.py` (total test suite 111/111 passing in Docker).
 
 #### **Stage 43.2: Universal Parties, Workflows & Approvals (P1 Core)**
 - [ ] **Sub-stage 43.2.1: Universal Party & Contact Engine (`parties`)**
@@ -2041,11 +2042,13 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Immediate focus: **Sub-stage 43.1.5: Money, Multi-Currency & Historical FX Engine (`fx_engine`)**.
-- Create `backend/modules/base/fx_engine/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `ExchangeRate` model (`from_currency_id`, `to_currency_id`, `rate: Numeric(18,6)`, `effective_date`, `source: manual|central_bank`).
-- Implement `FXService.convert(amount, from_curr, to_curr, date)` and ISO currency rounding rules.
-- Add unit tests in `backend/tests/test_fx_engine.py`.
+Stage 43.1 (Transactional Infrastructure & Invariants) is 100% COMPLETED.
+Immediate focus: **Sub-stage 43.2.1: Universal Party & Contact Engine (`parties`)** (Stage 43.2: Universal Parties, Workflows & Approvals).
+- Create `backend/modules/base/parties/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement Unified `Party` model (`name`, `legal_name`, `is_company: bool`, `parent_id` self-referential FK for corporate hierarchies, `is_customer: bool`, `is_vendor: bool`, `tax_id`, `commercial_reg_no`, `currency_id`, `credit_limit`).
+- Implement child `PartyContact` model (`party_id`, `name`, `job_title`, `email`, `phone`, `is_primary`).
+- Implement inter-company linkage connecting internal `Company` tenants to their external `Partner` counterpart.
+- Add unit tests in `backend/tests/test_parties.py`.
 
 
 

@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "c8ecfd72-74b7-4186-a59b-15b1522b2de4",
+    "_postman_id": "602afcca-dc23-4175-8af5-422d84bcf75d",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -4852,6 +4852,332 @@
             }
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Money, Multi-Currency & Historical FX Engine",
+      "item": [
+        {
+          "name": "List Exchange Rates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fx_engine/rates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fx_engine",
+                "rates"
+              ],
+              "variable": []
+            },
+            "description": "## List Exchange Rates\n\nRetrieve historical exchange rates with optional filtering by currency pair.\n\n**Endpoint**: `GET {{base_url}}/api/v1/fx_engine/rates`  \n**Tags**: `Money, Multi-Currency & Historical FX Engine, Money, Multi-Currency & Historical FX Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `from_currency_id` | `query` | `string` | No | Filter by source currency ID |\n| `to_currency_id` | `query` | `string` | No | Filter by target currency ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Exchange Rate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fx_engine/rates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fx_engine",
+                "rates"
+              ],
+              "variable": []
+            },
+            "description": "## Create Exchange Rate\n\nRegister a new daily exchange rate between two currencies with automatic inverse rate calculation.\n\n**Endpoint**: `POST {{base_url}}/api/v1/fx_engine/rates`  \n**Tags**: `Money, Multi-Currency & Historical FX Engine, Money, Multi-Currency & Historical FX Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `from_currency_id` | `string` | **Yes** | Any valid string | Source currency ID (lookup_currencies). |\n| `to_currency_id` | `string` | **Yes** | Any valid string | Target currency ID (lookup_currencies). |\n| `rate` | `string` | **Yes** | Any valid string | Conversion multiplier (1 Source = Rate Target). |\n| `effective_date` | `string` | **Yes** | Any valid string | Date on which this rate took effect. |\n| `source` | `string` | No | Any valid string | Rate provider: 'manual', 'central_bank', 'ecb', 'cbe'. |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"effective_date\": \"2026-03-15\",\n  \"from_currency_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"rate\": 48.5,\n  \"source\": \"central_bank\",\n  \"to_currency_id\": \"00000000-0000-0000-0000-000000000001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_rate_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Exchange Rate by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fx_engine/rates/:rate_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fx_engine",
+                "rates",
+                ":rate_id"
+              ],
+              "variable": [
+                {
+                  "key": "rate_id",
+                  "value": "{{active_rate_id}}",
+                  "description": "Dynamic path parameter bound to {{active_rate_id}}"
+                }
+              ]
+            },
+            "description": "## Get Exchange Rate by ID\n\nRetrieve details for a single exchange rate entry.\n\n**Endpoint**: `GET {{base_url}}/api/v1/fx_engine/rates/{rate_id}`  \n**Tags**: `Money, Multi-Currency & Historical FX Engine, Money, Multi-Currency & Historical FX Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `rate_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Exchange Rate",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fx_engine/rates/:rate_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fx_engine",
+                "rates",
+                ":rate_id"
+              ],
+              "variable": [
+                {
+                  "key": "rate_id",
+                  "value": "{{active_rate_id}}",
+                  "description": "Dynamic path parameter bound to {{active_rate_id}}"
+                }
+              ]
+            },
+            "description": "## Update Exchange Rate\n\nUpdate rate multiplier or provider source with automatic inverse rate recalculation.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/fx_engine/rates/{rate_id}`  \n**Tags**: `Money, Multi-Currency & Historical FX Engine, Money, Multi-Currency & Historical FX Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `rate_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `rate` | `string` | No | Any valid string | rate attribute |\n| `source` | `string` | No | Any valid string | source attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rate\": 49.1,\n  \"source\": \"cbe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Exchange Rate",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fx_engine/rates/:rate_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fx_engine",
+                "rates",
+                ":rate_id"
+              ],
+              "variable": [
+                {
+                  "key": "rate_id",
+                  "value": "{{active_rate_id}}",
+                  "description": "Dynamic path parameter bound to {{active_rate_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Exchange Rate\n\nSoft-delete an exchange rate record.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/fx_engine/rates/{rate_id}`  \n**Tags**: `Money, Multi-Currency & Historical FX Engine, Money, Multi-Currency & Historical FX Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `rate_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Convert Monetary Amount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fx_engine/convert",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fx_engine",
+                "convert"
+              ],
+              "variable": []
+            },
+            "description": "## Convert Monetary Amount\n\nConvert monetary values across currencies using direct, inverse, or triangulated exchange rates with ISO decimal rounding.\n\n**Endpoint**: `POST {{base_url}}/api/v1/fx_engine/convert`  \n**Tags**: `Money, Multi-Currency & Historical FX Engine, Money, Multi-Currency & Historical FX Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `amount` | `string` | **Yes** | Any valid string | Monetary quantity to convert. |\n| `from_currency_id` | `string` | **Yes** | Any valid string | Source currency ID. |\n| `to_currency_id` | `string` | **Yes** | Any valid string | Target currency ID. |\n| `effective_date` | `string` | No | Any valid string | Valuation date (defaults to today). |\n| `round_precision` | `integer` | No | Any valid integer | Decimal places to round to (defaults to target currency decimal_places). |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"effective_date\": \"2026-03-15\",\n  \"from_currency_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"to_currency_id\": \"00000000-0000-0000-0000-000000000001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_convert_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },

@@ -658,5 +658,73 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
 - `POST /api/v1/identity_rbac/users/{user_id}/permissions`: Sets or updates a direct grant or explicit negative revocation override (`is_granted: bool`).
 - `DELETE /api/v1/identity_rbac/users/{user_id}/permissions/{permission_id}`: Removes a direct override, reverting the user to standard group-inherited permissions.
 
+---
+
+### 6.13 Transactional Infrastructure & Domain Invariants (Phase 43.1 Foundation)
+
+#### 6.13.1 Universal Sequence & Legal Auto-Numbering Engine (`sequences`)
+- **Package**: `backend/modules/base/sequences/`
+- **Model (`Sequence`)**:
+  - Encapsulates `code`, `name`, `prefix`, `suffix`, `padding`, `current_number`, `step`, `reset_period` (`never`, `yearly`, `monthly`, `daily`), and `last_reset_date`.
+- **Atomic Concurrency Guarantee**:
+  - Uses PostgreSQL `SELECT ... FOR UPDATE` row locking during `SequenceService.get_next_number()`.
+  - Guarantees zero sequence gaps, zero collisions, and strict sequential ordering under heavy parallel request loads.
+- **Dynamic Token Interpolation**:
+  - Supports template tokens in prefixes/suffixes: `%(year)s`, `%(year_short)s`, `%(month)s`, `%(day)s` (e.g., `INV/%(year)s/00001`).
+- **Periodic Reset Engine**:
+  - Evaluates periodic reset triggers on sequence allocation, resetting numbering cleanly upon year/month/day boundaries.
+
+#### 6.13.2 Optimistic Concurrency Control (OCC)
+- **Location**: `backend/core/concurrency.py` & `backend/core/base_models.py`
+- **`OptimisticLockingMixin`**:
+  - Injects `version_id: Mapped[int] = mapped_column(Integer, default=1, server_default=text("1"), nullable=False)`.
+  - Automatically configures SQLAlchemy mapper `version_id_col = cls.version_id`.
+- **Lost-Update Shield**:
+  - SQLAlchemy automatically appends `WHERE version_id = :expected_version` to every UPDATE statement.
+  - If a concurrent transaction modified or deleted the record in the interim, SQLAlchemy raises `StaleDataError`.
+  - Registered `stale_data_exception_handler` translates the error into machine-actionable `HTTP 409 Conflict` (`CONCURRENCY_CONFLICT`).
+- **Explicit Version Assertion**:
+  - `assert_version_match(record, expected_version)` enables pre-flight validation against client-supplied version headers or payload attributes.
+
+#### 6.13.3 Idempotency Shield Middleware
+- **Location**: `backend/core/idempotency.py`
+- **`IdempotencyMiddleware`**:
+  - Intercepts mutating HTTP requests (`POST`, `PUT`, `PATCH`, `DELETE`) carrying `Idempotency-Key` or `X-Idempotency-Key`.
+  - **Distributed In-Flight Lock**: Sets `sovereign:idempotency:{company_id}:{key}` with status `"in_progress"` and 60-second TTL via `SET NX EX 60`. Rejects concurrent in-flight duplicates with `409 Conflict` (`IDEMPOTENCY_IN_PROGRESS`).
+  - **Zero-Duplicate Cache Hit**: Caches successful downstream responses (`status_code < 500`) in Redis for 24 hours (86,400s). Subsequent identical requests return the cached response with `X-Idempotency-Status: HIT` without re-executing business side-effects.
+  - **Failure Resilience**: Automatically deletes the Redis lock on `status_code >= 500`, enabling clients to retry safely after server-side transient errors.
+
+#### 6.13.4 Fiscal Calendar & Period Locking Engine (`fiscal_calendar`)
+- **Package**: `backend/modules/base/fiscal_calendar/`
+- **Models (`FiscalYear`, `FiscalPeriod`)**:
+  - `FiscalYear`: `code`, `name`, `date_from`, `date_to`, `is_closed`.
+  - `FiscalPeriod`: `fiscal_year_id`, `code`, `name`, `date_from`, `date_to`, `period_type` (`month`, `quarter`), `state` (`open`, `closing`, `locked`).
+- **Backdating & Audit Integrity**:
+  - `FiscalCalendarService.assert_period_open(company_id, target_date)` blocks financial journal postings or ledger mutations falling into closed or locked periods (`FiscalPeriodClosedException`, `400 Bad Request`).
+  - Supports automatic generation of 12 monthly or 4 quarterly periods upon year creation.
+  - Annual closing cascades lock all child periods and permanently blocks reopening.
+
+#### 6.13.5 Composite Addresses & Geographic Locations (`addresses`)
+- **Package**: `backend/modules/base/addresses/`
+- **Model (`Address`)**:
+  - Polymorphic entity attachment via `res_model` and `res_id`.
+  - Address classification (`billing`, `shipping`, `branch`, `warehouse`, `contact`, `headquarters`, `other`).
+  - Geographic coordinates (`geo_lat`, `geo_lng`) for routing and mapping.
+  - Normalized foreign keys to `lookup_cities` and `lookup_countries`.
+- **Single-Default Guarantee**:
+  - Enforces that setting an address as `is_default = True` automatically unsets previous defaults of the same `address_type` for that entity.
+  - Generates standardized human-readable `formatted_address` strings.
+
+#### 6.13.6 Money, Multi-Currency & Historical FX Engine (`fx_engine`)
+- **Package**: `backend/modules/base/fx_engine/`
+- **Model (`ExchangeRate`)**:
+  - Records pair conversion rate (`rate: Numeric(18,6)`), auto-computed inverse rate (`inverse_rate: Numeric(18,6)`), effective date, and provider source.
+- **Conversion & Triangulation Math**:
+  - Resolves direct exchange rates on or before valuation date.
+  - Inverts rates dynamically if only the inverse pair exists (`1.0 / rate`).
+  - Triangulates through the company's base currency if no direct or inverse pair exists (`EUR -> USD -> EGP`).
+  - Enforces ISO-4217 currency decimal precision rounding (e.g., 2 decimals for USD/EGP, 3 for KWD, 0 for JPY).
+
+
 
 

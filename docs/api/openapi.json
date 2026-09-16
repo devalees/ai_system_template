@@ -7631,6 +7631,331 @@
         }
       }
     },
+    "/api/v1/fx_engine/rates": {
+      "post": {
+        "tags": [
+          "Money, Multi-Currency & Historical FX Engine",
+          "Money, Multi-Currency & Historical FX Engine"
+        ],
+        "summary": "Create Exchange Rate",
+        "description": "Register a new daily exchange rate between two currencies with automatic inverse rate calculation.",
+        "operationId": "create_exchange_rate_api_v1_fx_engine_rates_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeRateCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRateRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Money, Multi-Currency & Historical FX Engine",
+          "Money, Multi-Currency & Historical FX Engine"
+        ],
+        "summary": "List Exchange Rates",
+        "description": "Retrieve historical exchange rates with optional filtering by currency pair.",
+        "operationId": "list_exchange_rates_api_v1_fx_engine_rates_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from_currency_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by source currency ID",
+              "title": "From Currency Id"
+            },
+            "description": "Filter by source currency ID"
+          },
+          {
+            "name": "to_currency_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target currency ID",
+              "title": "To Currency Id"
+            },
+            "description": "Filter by target currency ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExchangeRateRead"
+                  },
+                  "title": "Response List Exchange Rates Api V1 Fx Engine Rates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fx_engine/rates/{rate_id}": {
+      "get": {
+        "tags": [
+          "Money, Multi-Currency & Historical FX Engine",
+          "Money, Multi-Currency & Historical FX Engine"
+        ],
+        "summary": "Get Exchange Rate by ID",
+        "description": "Retrieve details for a single exchange rate entry.",
+        "operationId": "get_exchange_rate_api_v1_fx_engine_rates__rate_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rate Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRateRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Money, Multi-Currency & Historical FX Engine",
+          "Money, Multi-Currency & Historical FX Engine"
+        ],
+        "summary": "Update Exchange Rate",
+        "description": "Update rate multiplier or provider source with automatic inverse rate recalculation.",
+        "operationId": "update_exchange_rate_api_v1_fx_engine_rates__rate_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rate Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeRateUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRateRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Money, Multi-Currency & Historical FX Engine",
+          "Money, Multi-Currency & Historical FX Engine"
+        ],
+        "summary": "Delete Exchange Rate",
+        "description": "Soft-delete an exchange rate record.",
+        "operationId": "delete_exchange_rate_api_v1_fx_engine_rates__rate_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rate Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fx_engine/convert": {
+      "post": {
+        "tags": [
+          "Money, Multi-Currency & Historical FX Engine",
+          "Money, Multi-Currency & Historical FX Engine"
+        ],
+        "summary": "Convert Monetary Amount",
+        "description": "Convert monetary values across currencies using direct, inverse, or triangulated exchange rates with ISO decimal rounding.",
+        "operationId": "convert_currency_api_v1_fx_engine_convert_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrencyConvertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyConvertResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/addresses/": {
       "post": {
         "tags": [
@@ -12643,6 +12968,129 @@
           "status": "generating"
         }
       },
+      "CurrencyConvertRequest": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount",
+            "description": "Monetary quantity to convert."
+          },
+          "from_currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From Currency Id",
+            "description": "Source currency ID."
+          },
+          "to_currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Currency Id",
+            "description": "Target currency ID."
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Date",
+            "description": "Valuation date (defaults to today)."
+          },
+          "round_precision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Round Precision",
+            "description": "Decimal places to round to (defaults to target currency decimal_places)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "from_currency_id",
+          "to_currency_id"
+        ],
+        "title": "CurrencyConvertRequest",
+        "description": "Request payload for converting monetary amounts across currencies.",
+        "example": {
+          "amount": 100.0,
+          "effective_date": "2026-03-15",
+          "from_currency_id": "00000000-0000-0000-0000-000000000000",
+          "to_currency_id": "00000000-0000-0000-0000-000000000001"
+        }
+      },
+      "CurrencyConvertResponse": {
+        "properties": {
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "converted_amount": {
+            "type": "string",
+            "title": "Converted Amount"
+          },
+          "from_currency_code": {
+            "type": "string",
+            "title": "From Currency Code"
+          },
+          "to_currency_code": {
+            "type": "string",
+            "title": "To Currency Code"
+          },
+          "rate_used": {
+            "type": "string",
+            "title": "Rate Used"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date"
+          },
+          "triangulation_used": {
+            "type": "boolean",
+            "title": "Triangulation Used",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "converted_amount",
+          "from_currency_code",
+          "to_currency_code",
+          "rate_used",
+          "effective_date"
+        ],
+        "title": "CurrencyConvertResponse",
+        "description": "Structured response detailing the conversion calculation and exchange rate utilized.",
+        "example": {
+          "amount": 100.0,
+          "converted_amount": 4850.0,
+          "effective_date": "2026-03-15",
+          "from_currency_code": "USD",
+          "rate_used": 48.5,
+          "to_currency_code": "EGP",
+          "triangulation_used": false
+        }
+      },
       "CurrencyCreate": {
         "properties": {
           "code": {
@@ -13035,6 +13483,207 @@
           "res_id": "c0000000-0000-0000-0000-000000000001",
           "res_model": "contract",
           "storage_path": "a0000000-0000-0000-0000-000000000001/e3/e3b0c442..."
+        }
+      },
+      "ExchangeRateCreate": {
+        "properties": {
+          "from_currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From Currency Id",
+            "description": "Source currency ID (lookup_currencies)."
+          },
+          "to_currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Currency Id",
+            "description": "Target currency ID (lookup_currencies)."
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Rate",
+            "description": "Conversion multiplier (1 Source = Rate Target)."
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date",
+            "description": "Date on which this rate took effect."
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Source",
+            "description": "Rate provider: 'manual', 'central_bank', 'ecb', 'cbe'.",
+            "default": "manual"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_currency_id",
+          "to_currency_id",
+          "rate",
+          "effective_date"
+        ],
+        "title": "ExchangeRateCreate",
+        "description": "Payload for creating a new exchange rate entry.",
+        "example": {
+          "effective_date": "2026-03-15",
+          "from_currency_id": "00000000-0000-0000-0000-000000000000",
+          "rate": 48.5,
+          "source": "central_bank",
+          "to_currency_id": "00000000-0000-0000-0000-000000000001"
+        }
+      },
+      "ExchangeRateRead": {
+        "properties": {
+          "from_currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From Currency Id",
+            "description": "Source currency ID (lookup_currencies)."
+          },
+          "to_currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Currency Id",
+            "description": "Target currency ID (lookup_currencies)."
+          },
+          "rate": {
+            "type": "string",
+            "title": "Rate",
+            "description": "Conversion multiplier (1 Source = Rate Target)."
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date",
+            "description": "Date on which this rate took effect."
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Source",
+            "description": "Rate provider: 'manual', 'central_bank', 'ecb', 'cbe'.",
+            "default": "manual"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "inverse_rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inverse Rate"
+          },
+          "from_currency_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Currency Code"
+          },
+          "to_currency_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Currency Code"
+          },
+          "version_id": {
+            "type": "integer",
+            "title": "Version Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_currency_id",
+          "to_currency_id",
+          "rate",
+          "effective_date",
+          "id",
+          "company_id",
+          "version_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ExchangeRateRead",
+        "description": "Serialized exchange rate details with relational currency codes."
+      },
+      "ExchangeRateUpdate": {
+        "properties": {
+          "rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "title": "ExchangeRateUpdate",
+        "description": "Payload for modifying an existing exchange rate.",
+        "example": {
+          "rate": 49.1,
+          "source": "cbe"
         }
       },
       "ExecutionMode": {
