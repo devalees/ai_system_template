@@ -1979,7 +1979,7 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Automated tests: 5/5 passing in `test_calendar.py`. Continuous OpenAPI and Postman synchronization verified.
 
 #### **Stage 43.3: Commercial Rules & Operational Engines (P2)**
-- [x] **Sub-stage 43.3.1: UOM Conversion Ratio Matrix (`uom`)** - COMPLETED
+- [x] **Sub-stage 43.3.1: UOM Conversion Ratio Matrix (`uom`)** - COMPLETED (Commit: `ae606e3`)
   - Package: `backend/modules/base/uom/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
   - Models: `UOMCategory` (`name`, `description`), `UOMUnit` (`category_id`, `name`, `code`, `symbol`, `uom_type: reference|bigger|smaller`, `ratio: Decimal`, `rounding_precision: Decimal`), `UOMConversionRule` (`from_uom_id`, `to_uom_id`, `ratio: Decimal`, `res_model`, `res_id`).
   - Service: `UOMService.convert(quantity, from_uom, to_uom)` with category reference normalization (`from_uom -> ref -> to_uom`), inverse rule resolution, and discrete precision rounding intervals.
