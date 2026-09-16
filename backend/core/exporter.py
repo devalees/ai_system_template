@@ -278,6 +278,13 @@ def convert_openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
                 {"key": "token", "value": "{{auth_token}}", "type": "string"}
             ]
         },
+        "variable": [
+            {"key": "base_url", "value": "http://localhost:8000", "type": "string"},
+            {"key": "admin_username", "value": "admin", "type": "string"},
+            {"key": "admin_password", "value": "AdminPassword2026!", "type": "string"},
+            {"key": "auth_token", "value": "", "type": "string"},
+            {"key": "active_company_id", "value": "", "type": "string"},
+        ],
         "item": [],
     }
 
