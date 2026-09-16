@@ -1997,17 +1997,18 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Computational Engine: `TaxService.compute_taxes()` evaluating multi-line taxes, fiscal position substitutions/exemptions, B2C inclusive extractions, cascading compound taxes, and VAT summaries.
   - REST API: 13 endpoints (`/api/v1/taxes/*`) covering taxes CRUD, fiscal position management, mapping rules, and tax calculation (`/compute`).
   - Automated tests: 3/3 passing in `test_taxes.py` (full test suite 137/137 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [x] **Sub-stage 43.3.4: Payment Terms, Methods & Transactions (`payments`)** - COMPLETED
+- [x] **Sub-stage 43.3.4: Payment Terms, Methods & Transactions (`payments`)** - COMPLETED (Commit: `84b93d1`)
   - Package: `backend/modules/base/payments/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
   - Models: `PaymentMethod` (`name`, `code`, `method_type: manual|electronic|bank|cash`, `is_active`), `PaymentTerms` (`name`, `code`, `description`, `is_active`), `PaymentTermsLine` (`terms_id`, `sequence`, `value_type: percent|fixed|balance`, `value`, `days`, `option: days_after_invoice|end_of_month|days_after_end_of_month`), `PaymentTransaction` (`payment_number`, `res_model`, `res_id`, `party_id`, `payment_method_id`, `transaction_type: inbound|outbound`, `amount`, `currency_id`, `payment_date`, `status: draft|cleared|reconciled|cancelled`).
   - Service: `PaymentTermsService.compute_due_dates()` generating cash flow installment schedules with end-of-month calendar logic and fractional balance allocation.
   - REST API: 13 endpoints (`/api/v1/payments/*`) covering payment method CRUD, payment terms management, installment schedule calculation (`/terms/compute-schedule`), and transaction lifecycle transitions (`/clear`, `/reconcile`, `/cancel`).
   - Automated tests: 3/3 passing in `test_payments.py` (full test suite 140/140 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [ ] **Sub-stage 43.3.5: Resource Scheduling & Capacity Allocation (`resources`)**
-  - Package: `backend/modules/base/resources/`
-  - Models: `Resource` (`name`, `code`, `resource_type: human|equipment|vehicle|space`, `capacity_per_day`, `user_id`, `is_active`), `ResourceAllocation` (`resource_id`, `res_model`, `res_id`, `start_time`, `end_time`, `hours_allocated`, `status: planned|confirmed|completed|cancelled`).
-  - Service: `ResourceService.check_availability()` and collision/double-booking detection against calendar availability.
-  - REST API: Resource CRUD, allocation schedules, and collision check endpoint (`/check-availability`).
+- [x] **Sub-stage 43.3.5: Resource Scheduling & Capacity Allocation (`resources`)** - COMPLETED
+  - Package: `backend/modules/base/resources/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+  - Models: `Resource` (`name`, `code`, `resource_type: human|equipment|vehicle|space`, `capacity_per_day`, `cost_per_hour`, `user_id`, `is_active`), `ResourceAllocation` (`resource_id`, `res_model`, `res_id`, `start_time`, `end_time`, `hours_allocated`, `status: planned|confirmed|completed|cancelled`, `notes`).
+  - Service: `ResourceService.check_availability()` detecting overlapping bookings (`start_time < candidate_end AND end_time > candidate_start`) with double-booking prevention.
+  - REST API: 11 endpoints (`/api/v1/resources/*`) covering resource CRUD, capacity availability checks (`/check-availability`), and allocation scheduling management.
+  - Automated tests: 3/3 passing in `test_resources.py` (full test suite 143/143 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 
 #### **Stage 43.4: Execution, Commitments & Operations (P3)**
 - [ ] **Sub-stage 43.4.1: Universal Work Items & Tasks (`work_items`)**
@@ -2051,19 +2052,20 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Enforced strict dependency DAG: Stage 43.1 (Infrastructure/Invariants) $\rightarrow$ Stage 43.2 (Parties & Workflows) $\rightarrow$ Stage 43.3 (Commercial Rules) $\rightarrow$ Stage 43.4 (Execution & Contracts) $\rightarrow$ Stage 43.5 (AI Agent Bridge).
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 - *2026-09-16*: Stage 43.2 (Universal Parties, Workflows, Approvals & Calendar) 100% completed.
-- *2026-09-16*: Sub-stage 43.3.1 (UOM Conversion Ratio Matrix) completed.
-- *2026-09-16*: Sub-stage 43.3.2 (Pricing Engine & Multi-Tier Price Lists) completed with volume breaks and promotional validity.
-- *2026-09-16*: Sub-stage 43.3.3 (Multi-Jurisdiction Tax Engine & Fiscal Positions) completed with compound, inclusive, and tax substitution/exemption rules.
-- *2026-09-16*: Sub-stage 43.3.4 (Payment Terms, Methods & Transactions) completed with cash flow installment calculator and transaction state machine.
+- *2026-09-16*: Stage 43.3 (Commercial Rules & Operational Engines - P2) 100% completed across all 5 sub-stages:
+  - Sub-stage 43.3.1 (`uom`): Intra-category reference normalization & explicit cross-category rules.
+  - Sub-stage 43.3.2 (`pricing`): Multi-tier price lists, volume breaks, and promotional validity windows.
+  - Sub-stage 43.3.3 (`taxes`): Multi-jurisdiction tax engine, fiscal position substitutions, and compound/inclusive taxes.
+  - Sub-stage 43.3.4 (`payments`): Payment methods, cash flow installment calculations, and transaction lifecycle.
+  - Sub-stage 43.3.5 (`resources`): Capacity calendars, booking allocations, and collision prevention.
 
 ### 4. Current Focus
-Sub-stages 43.3.1 (`uom`), 43.3.2 (`pricing`), 43.3.3 (`taxes`), and 43.3.4 (`payments`) are COMPLETED.
-Immediate focus: **Sub-stage 43.3.5: Resource Scheduling & Capacity Allocation (`resources`)** (Stage 43.3: Commercial Rules & Operational Engines - P2).
-- Create `backend/modules/base/resources/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `Resource` (`name`, `code`, `resource_type: human|equipment|vehicle|space`, `capacity_per_day`, `user_id`, `is_active`) and `ResourceAllocation` (`resource_id`, `res_model`, `res_id`, `start_time`, `end_time`, `hours_allocated`, `status: planned|confirmed|completed|cancelled`).
-- Implement `ResourceService.check_availability()` collision and capacity overload detection.
-- Add unit tests in `backend/tests/test_resources.py`.
-
+Stage 43.3 (Commercial Rules & Operational Engines - P2) is 100% COMPLETED.
+Immediate focus: **Stage 43.4: Execution, Commitments & Operations (P3)** $\rightarrow$ **Sub-stage 43.4.1: Universal Work Items & Tasks (`work_items`)**.
+- Create `backend/modules/base/work_items/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `WorkItem` (`title`, `description`, `res_model`, `res_id`, `parent_id`, `priority`, `stage_id`, `assigned_to_id`, `estimated_hours`, `spent_hours`, `due_date`, `is_closed`) and `WorkItemDependency` (`predecessor_id`, `successor_id`, `dependency_type: finish_to_start|start_to_start|finish_to_finish|start_to_finish`).
+- Implement `WorkItemService` supporting hierarchical sub-task trees, dependency cycle detection, and Kanban stage transitions.
+- Add unit tests in `backend/tests/test_work_items.py`.
 
 
 

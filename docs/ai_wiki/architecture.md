@@ -812,6 +812,15 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
 - **Cash Flow Due Date Calculation**:
   - `PaymentTermsService.compute_due_dates()` allocates invoice totals across installment lines, computes end-of-month calendar dates, and ensures zero fractional penny leakage.
 
+#### 6.13.15 Resource Scheduling & Capacity Allocation (`resources`)
+- **Package**: `backend/modules/base/resources/`
+- **Models (`Resource`, `ResourceAllocation`)**:
+  - `Resource`: Enterprise schedulable resources (`name`, `code`, `resource_type`: human, equipment, vehicle, space, `capacity_per_day`, `cost_per_hour`, `user_id`, `is_active`).
+  - `ResourceAllocation`: Time-bounded capacity reservation (`resource_id`, `res_model`, `res_id`, `start_time`, `end_time`, `hours_allocated`, `status`: planned, confirmed, completed, cancelled).
+- **Collision Detection Engine**:
+  - `ResourceService.check_availability()` evaluates overlapping active bookings (`start_time < candidate_end AND end_time > candidate_start`) to prevent double-booking conflicts unless explicitly overridden (`allow_overbooking=True`).
+
+
 
 
 

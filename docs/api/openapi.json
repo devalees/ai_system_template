@@ -15647,6 +15647,654 @@
         }
       }
     },
+    "/api/v1/resources": {
+      "post": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Create Resource",
+        "description": "Registers a new schedulable resource (personnel, equipment, vehicle, or room).",
+        "operationId": "create_resource_api_v1_resources_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "List Resources",
+        "description": "Lists resources for current tenant company.",
+        "operationId": "list_resources_api_v1_resources_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by resource type: human, equipment, vehicle, space",
+              "title": "Resource Type"
+            },
+            "description": "Filter by resource type: human, equipment, vehicle, space"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResourceResponse"
+                  },
+                  "title": "Response List Resources Api V1 Resources Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{resource_id}": {
+      "get": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Get Resource",
+        "description": "Fetch single resource details by UUID.",
+        "operationId": "get_resource_api_v1_resources__resource_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Resource UUID",
+              "title": "Resource Id"
+            },
+            "description": "Resource UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Update Resource",
+        "description": "Updates resource parameters, capacity, or active status.",
+        "operationId": "update_resource_api_v1_resources__resource_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Resource UUID",
+              "title": "Resource Id"
+            },
+            "description": "Resource UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Delete Resource",
+        "description": "Soft-deletes a resource.",
+        "operationId": "delete_resource_api_v1_resources__resource_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Resource UUID",
+              "title": "Resource Id"
+            },
+            "description": "Resource UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/check-availability": {
+      "post": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Check Resource Availability",
+        "description": "Detects overlapping bookings and verifies if a resource is available during a given timeframe.",
+        "operationId": "check_availability_api_v1_resources_check_availability_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckAvailabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckAvailabilityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resources/allocations": {
+      "post": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Create Resource Allocation",
+        "description": "Books capacity on a resource with collision prevention.",
+        "operationId": "create_allocation_api_v1_resources_allocations_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceAllocationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceAllocationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "List Resource Allocations",
+        "description": "Lists allocations for current tenant with optional filtering.",
+        "operationId": "list_allocations_api_v1_resources_allocations_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by resource UUID",
+              "title": "Resource Id"
+            },
+            "description": "Filter by resource UUID"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status (planned, confirmed, completed, cancelled)",
+              "title": "Status"
+            },
+            "description": "Filter by status (planned, confirmed, completed, cancelled)"
+          },
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target model",
+              "title": "Res Model"
+            },
+            "description": "Filter by target model"
+          },
+          {
+            "name": "res_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target entity UUID",
+              "title": "Res Id"
+            },
+            "description": "Filter by target entity UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResourceAllocationResponse"
+                  },
+                  "title": "Response List Allocations Api V1 Resources Allocations Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/allocations/{allocation_id}": {
+      "get": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Get Resource Allocation",
+        "description": "Fetch single allocation details by UUID.",
+        "operationId": "get_allocation_api_v1_resources_allocations__allocation_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "allocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Allocation UUID",
+              "title": "Allocation Id"
+            },
+            "description": "Allocation UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceAllocationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Update Resource Allocation",
+        "description": "Update timing, allocated hours, status, or notes.",
+        "operationId": "update_allocation_api_v1_resources_allocations__allocation_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "allocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Allocation UUID",
+              "title": "Allocation Id"
+            },
+            "description": "Allocation UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceAllocationUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceAllocationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Resource Scheduling & Capacity Allocation",
+          "Resource Scheduling & Capacity Allocation"
+        ],
+        "summary": "Delete Resource Allocation",
+        "description": "Deletes a resource allocation.",
+        "operationId": "delete_allocation_api_v1_resources_allocations__allocation_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "allocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Allocation UUID",
+              "title": "Allocation Id"
+            },
+            "description": "Allocation UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/kernel/modules": {
       "get": {
         "tags": [
@@ -19346,6 +19994,98 @@
           "new_password": "NewSecurePassword2026!"
         }
       },
+      "CheckAvailabilityRequest": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id",
+            "description": "Target resource UUID"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time",
+            "description": "Desired booking start"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time",
+            "description": "Desired booking end"
+          },
+          "exclude_allocation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclude Allocation Id",
+            "description": "Optional allocation to exclude (e.g. self when editing)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_id",
+          "start_time",
+          "end_time"
+        ],
+        "title": "CheckAvailabilityRequest",
+        "example": {
+          "end_time": "2026-09-17T17:00:00Z",
+          "resource_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+          "start_time": "2026-09-17T09:00:00Z"
+        }
+      },
+      "CheckAvailabilityResponse": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id"
+          },
+          "resource_name": {
+            "type": "string",
+            "title": "Resource Name"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available",
+            "description": "True if no overlapping confirmed/planned allocations exist"
+          },
+          "conflicts_count": {
+            "type": "integer",
+            "title": "Conflicts Count"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/ConflictingAllocationItem"
+            },
+            "type": "array",
+            "title": "Conflicts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_id",
+          "resource_name",
+          "is_available",
+          "conflicts_count",
+          "conflicts"
+        ],
+        "title": "CheckAvailabilityResponse",
+        "example": {
+          "conflicts": [],
+          "conflicts_count": 0,
+          "is_available": true,
+          "resource_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+          "resource_name": "Senior Solutions Architect"
+        }
+      },
       "CityCreate": {
         "properties": {
           "name": {
@@ -19916,6 +20656,65 @@
           "target_id": "6b4550dd-f558-418e-b506-95e26eeda277",
           "target_model": "User"
         }
+      },
+      "ConflictingAllocationItem": {
+        "properties": {
+          "allocation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Allocation Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "hours_allocated": {
+            "type": "string",
+            "title": "Hours Allocated"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "allocation_id",
+          "start_time",
+          "end_time",
+          "hours_allocated",
+          "status"
+        ],
+        "title": "ConflictingAllocationItem"
       },
       "ConnectionTestResponse": {
         "properties": {
@@ -28148,6 +28947,559 @@
           "new_password": "NewSecurePassword2026!",
           "token": "pr_9f8d7c6b5a4321_sample_token"
         }
+      },
+      "ResourceAllocationCreate": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id",
+            "description": "Target resource UUID"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target entity model (e.g. 'work_items')"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Target record UUID"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time",
+            "description": "Booking start timestamp with timezone"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time",
+            "description": "Booking end timestamp with timezone"
+          },
+          "hours_allocated": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Hours Allocated",
+            "description": "Committed duration in hours"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Booking notes"
+          },
+          "allow_overbooking": {
+            "type": "boolean",
+            "title": "Allow Overbooking",
+            "description": "Whether to bypass collision prevention",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_id",
+          "start_time",
+          "end_time",
+          "hours_allocated"
+        ],
+        "title": "ResourceAllocationCreate",
+        "example": {
+          "allow_overbooking": false,
+          "end_time": "2026-09-17T17:00:00Z",
+          "hours_allocated": "8.00",
+          "notes": "Sprint planning session",
+          "res_model": "work_items",
+          "resource_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+          "start_time": "2026-09-17T09:00:00Z"
+        }
+      },
+      "ResourceAllocationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id"
+          },
+          "resource_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Name"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "hours_allocated": {
+            "type": "string",
+            "title": "Hours Allocated"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "resource_id",
+          "start_time",
+          "end_time",
+          "hours_allocated",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ResourceAllocationResponse"
+      },
+      "ResourceAllocationUpdate": {
+        "properties": {
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "hours_allocated": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours Allocated"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(planned|confirmed|completed|cancelled)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "title": "ResourceAllocationUpdate"
+      },
+      "ResourceCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Resource display title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "resource_type": {
+            "type": "string",
+            "pattern": "^(human|equipment|vehicle|space)$",
+            "title": "Resource Type",
+            "description": "Type: human, equipment, vehicle, or space",
+            "default": "human"
+          },
+          "capacity_per_day": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Capacity Per Day",
+            "description": "Standard working hours per day",
+            "default": "8.00"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "Linked user account for human resources"
+          },
+          "cost_per_hour": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Cost Per Hour",
+            "description": "Standard hourly cost",
+            "default": "0.00"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational specifications"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "ResourceCreate",
+        "example": {
+          "capacity_per_day": "8.00",
+          "code": "RES_ARCH_01",
+          "cost_per_hour": "120.00",
+          "description": "Technical design and architecture lead",
+          "name": "Senior Solutions Architect",
+          "resource_type": "human"
+        }
+      },
+      "ResourceResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Resource display title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "resource_type": {
+            "type": "string",
+            "pattern": "^(human|equipment|vehicle|space)$",
+            "title": "Resource Type",
+            "description": "Type: human, equipment, vehicle, or space",
+            "default": "human"
+          },
+          "capacity_per_day": {
+            "type": "string",
+            "title": "Capacity Per Day",
+            "description": "Standard working hours per day",
+            "default": "8.00"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "Linked user account for human resources"
+          },
+          "cost_per_hour": {
+            "type": "string",
+            "title": "Cost Per Hour",
+            "description": "Standard hourly cost",
+            "default": "0.00"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational specifications"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ResourceResponse"
+      },
+      "ResourceUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "resource_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(human|equipment|vehicle|space)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Type"
+          },
+          "capacity_per_day": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity Per Day"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "cost_per_hour": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Per Hour"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "title": "ResourceUpdate"
       },
       "SendMailRequest": {
         "properties": {

@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "896e00e7-7991-40f3-bb17-6cd1fa1232b4",
+    "_postman_id": "cb8e5e7e-29bc-4443-ba7d-7e808e6b772c",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -10872,6 +10872,543 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Resource Scheduling & Capacity Allocation",
+      "item": [
+        {
+          "name": "List Resources",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources"
+              ],
+              "variable": []
+            },
+            "description": "## List Resources\n\nLists resources for current tenant company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/resources`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `resource_type` | `query` | `string` | No | Filter by resource type: human, equipment, vehicle, space |\n| `is_active` | `query` | `string` | No | Filter by active status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Resource",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources"
+              ],
+              "variable": []
+            },
+            "description": "## Create Resource\n\nRegisters a new schedulable resource (personnel, equipment, vehicle, or room).\n\n**Endpoint**: `POST {{base_url}}/api/v1/resources`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Resource display title |\n| `code` | `string` | **Yes** | Any valid string | Unique reference code |\n| `resource_type` | `string` | No | Any valid string | Type: human, equipment, vehicle, or space |\n| `capacity_per_day` | `string` | No | Any valid string | Standard working hours per day |\n| `user_id` | `string` | No | Any valid string | Linked user account for human resources |\n| `cost_per_hour` | `string` | No | Any valid string | Standard hourly cost |\n| `description` | `string` | No | Any valid string | Operational specifications |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacity_per_day\": \"8.00\",\n  \"code\": \"RES_ARCH_01\",\n  \"cost_per_hour\": \"120.00\",\n  \"description\": \"Technical design and architecture lead\",\n  \"name\": \"Senior Solutions Architect\",\n  \"resource_type\": \"human\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_resource_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Resource",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/:resource_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                ":resource_id"
+              ],
+              "variable": [
+                {
+                  "key": "resource_id",
+                  "value": "{{active_resource_id}}",
+                  "description": "Dynamic path parameter bound to {{active_resource_id}}"
+                }
+              ]
+            },
+            "description": "## Get Resource\n\nFetch single resource details by UUID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/resources/{resource_id}`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `resource_id` | `path` | `string` | **Yes** | Resource UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Resource",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/:resource_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                ":resource_id"
+              ],
+              "variable": [
+                {
+                  "key": "resource_id",
+                  "value": "{{active_resource_id}}",
+                  "description": "Dynamic path parameter bound to {{active_resource_id}}"
+                }
+              ]
+            },
+            "description": "## Update Resource\n\nUpdates resource parameters, capacity, or active status.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/resources/{resource_id}`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `resource_id` | `path` | `string` | **Yes** | Resource UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `resource_type` | `string` | No | Any valid string | resource_type attribute |\n| `capacity_per_day` | `string` | No | Any valid string | capacity_per_day attribute |\n| `user_id` | `string` | No | Any valid string | user_id attribute |\n| `cost_per_hour` | `string` | No | Any valid string | cost_per_hour attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Resource",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/:resource_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                ":resource_id"
+              ],
+              "variable": [
+                {
+                  "key": "resource_id",
+                  "value": "{{active_resource_id}}",
+                  "description": "Dynamic path parameter bound to {{active_resource_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Resource\n\nSoft-deletes a resource.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/resources/{resource_id}`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `resource_id` | `path` | `string` | **Yes** | Resource UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Resource Availability",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/check-availability",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                "check-availability"
+              ],
+              "variable": []
+            },
+            "description": "## Check Resource Availability\n\nDetects overlapping bookings and verifies if a resource is available during a given timeframe.\n\n**Endpoint**: `POST {{base_url}}/api/v1/resources/check-availability`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `resource_id` | `string` | **Yes** | Any valid string | Target resource UUID |\n| `start_time` | `string` | **Yes** | Any valid string | Desired booking start |\n| `end_time` | `string` | **Yes** | Any valid string | Desired booking end |\n| `exclude_allocation_id` | `string` | No | Any valid string | Optional allocation to exclude (e.g. self when editing) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"end_time\": \"2026-09-17T17:00:00Z\",\n  \"resource_id\": \"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d\",\n  \"start_time\": \"2026-09-17T09:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_check_availability_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Resource Allocations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/allocations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                "allocations"
+              ],
+              "variable": []
+            },
+            "description": "## List Resource Allocations\n\nLists allocations for current tenant with optional filtering.\n\n**Endpoint**: `GET {{base_url}}/api/v1/resources/allocations`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `resource_id` | `query` | `string` | No | Filter by resource UUID |\n| `status` | `query` | `string` | No | Filter by status (planned, confirmed, completed, cancelled) |\n| `res_model` | `query` | `string` | No | Filter by target model |\n| `res_id` | `query` | `string` | No | Filter by target entity UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Resource Allocation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/allocations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                "allocations"
+              ],
+              "variable": []
+            },
+            "description": "## Create Resource Allocation\n\nBooks capacity on a resource with collision prevention.\n\n**Endpoint**: `POST {{base_url}}/api/v1/resources/allocations`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `resource_id` | `string` | **Yes** | Any valid string | Target resource UUID |\n| `res_model` | `string` | No | Any valid string | Target entity model (e.g. 'work_items') |\n| `res_id` | `string` | No | Any valid string | Target record UUID |\n| `start_time` | `string` | **Yes** | Any valid string | Booking start timestamp with timezone |\n| `end_time` | `string` | **Yes** | Any valid string | Booking end timestamp with timezone |\n| `hours_allocated` | `string` | **Yes** | Any valid string | Committed duration in hours |\n| `notes` | `string` | No | Any valid string | Booking notes |\n| `allow_overbooking` | `boolean` | No | Any valid boolean | Whether to bypass collision prevention |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allow_overbooking\": false,\n  \"end_time\": \"2026-09-17T17:00:00Z\",\n  \"hours_allocated\": \"8.00\",\n  \"notes\": \"Sprint planning session\",\n  \"res_model\": \"{{active_model_name}}\",\n  \"resource_id\": \"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d\",\n  \"start_time\": \"2026-09-17T09:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_allocation_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Resource Allocation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/allocations/:allocation_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                "allocations",
+                ":allocation_id"
+              ],
+              "variable": [
+                {
+                  "key": "allocation_id",
+                  "value": "{{active_allocation_id}}",
+                  "description": "Dynamic path parameter bound to {{active_allocation_id}}"
+                }
+              ]
+            },
+            "description": "## Get Resource Allocation\n\nFetch single allocation details by UUID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/resources/allocations/{allocation_id}`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `allocation_id` | `path` | `string` | **Yes** | Allocation UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Resource Allocation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/allocations/:allocation_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                "allocations",
+                ":allocation_id"
+              ],
+              "variable": [
+                {
+                  "key": "allocation_id",
+                  "value": "{{active_allocation_id}}",
+                  "description": "Dynamic path parameter bound to {{active_allocation_id}}"
+                }
+              ]
+            },
+            "description": "## Update Resource Allocation\n\nUpdate timing, allocated hours, status, or notes.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/resources/allocations/{allocation_id}`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `allocation_id` | `path` | `string` | **Yes** | Allocation UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `start_time` | `string` | No | Any valid string | start_time attribute |\n| `end_time` | `string` | No | Any valid string | end_time attribute |\n| `hours_allocated` | `string` | No | Any valid string | hours_allocated attribute |\n| `status` | `string` | No | Any valid string | status attribute |\n| `notes` | `string` | No | Any valid string | notes attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Resource Allocation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/allocations/:allocation_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resources",
+                "allocations",
+                ":allocation_id"
+              ],
+              "variable": [
+                {
+                  "key": "allocation_id",
+                  "value": "{{active_allocation_id}}",
+                  "description": "Dynamic path parameter bound to {{active_allocation_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Resource Allocation\n\nDeletes a resource allocation.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/resources/allocations/{allocation_id}`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `allocation_id` | `path` | `string` | **Yes** | Allocation UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
         }
       ]
     },
