@@ -10628,6 +10628,684 @@
         }
       }
     },
+    "/api/v1/workflows/definitions": {
+      "post": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Create Workflow Definition",
+        "description": "Registers a new declarative state machine lifecycle for a target entity model.",
+        "operationId": "create_workflow_definition_api_v1_workflows_definitions_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowDefinitionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "List Workflow Definitions",
+        "description": "Lists all state machine definitions for the active tenant, with optional filtering.",
+        "operationId": "list_workflow_definitions_api_v1_workflows_definitions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target model name",
+              "title": "Res Model"
+            },
+            "description": "Filter by target model name"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by operational status",
+              "title": "Is Active"
+            },
+            "description": "Filter by operational status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowDefinitionResponse"
+                  },
+                  "title": "Response List Workflow Definitions Api V1 Workflows Definitions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflows/definitions/{id}": {
+      "get": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Get Workflow Definition",
+        "description": "Retrieves a workflow definition with its full list of state transitions.",
+        "operationId": "get_workflow_definition_api_v1_workflows_definitions__id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Workflow definition UUID",
+              "title": "Id"
+            },
+            "description": "Workflow definition UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Update Workflow Definition",
+        "description": "Updates metadata, state list, or active status of a workflow definition.",
+        "operationId": "update_workflow_definition_api_v1_workflows_definitions__id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Workflow definition UUID",
+              "title": "Id"
+            },
+            "description": "Workflow definition UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowDefinitionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Delete Workflow Definition",
+        "description": "Permanently deletes a workflow definition and all its transitions.",
+        "operationId": "delete_workflow_definition_api_v1_workflows_definitions__id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Workflow definition UUID",
+              "title": "Id"
+            },
+            "description": "Workflow definition UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflows/definitions/{id}/transitions": {
+      "post": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Add Workflow Transition",
+        "description": "Adds a transition rule (with optional AST guard conditions and record freeze flags).",
+        "operationId": "add_workflow_transition_api_v1_workflows_definitions__id__transitions_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Workflow definition UUID",
+              "title": "Id"
+            },
+            "description": "Workflow definition UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowTransitionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowTransitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflows/transitions/{transition_id}": {
+      "delete": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Delete Workflow Transition",
+        "description": "Deletes a specific transition rule.",
+        "operationId": "delete_workflow_transition_api_v1_workflows_transitions__transition_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transition_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Transition rule UUID",
+              "title": "Transition Id"
+            },
+            "description": "Transition rule UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflows/{res_model}/{res_id}/transitions": {
+      "get": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Get Available Transitions for Record",
+        "description": "Computes which triggers are currently actionable for a specific record based on its state, RBAC, and guards.",
+        "operationId": "get_available_transitions_for_record_api_v1_workflows__res_model___res_id__transitions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name (e.g. 'party', 'sales_order')",
+              "title": "Res Model"
+            },
+            "description": "Target model name (e.g. 'party', 'sales_order')"
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target record UUID",
+              "title": "Res Id"
+            },
+            "description": "Target record UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AvailableTransitionResponse"
+                  },
+                  "title": "Response Get Available Transitions For Record Api V1 Workflows  Res Model   Res Id  Transitions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflows/{res_model}/{res_id}/execute": {
+      "post": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Execute Workflow Transition",
+        "description": "Triggers a state machine transition on a business record, verifying guards, RBAC, and applying record freezes.",
+        "operationId": "execute_workflow_transition_api_v1_workflows__res_model___res_id__execute_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name (e.g. 'party', 'sales_order')",
+              "title": "Res Model"
+            },
+            "description": "Target model name (e.g. 'party', 'sales_order')"
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target record UUID",
+              "title": "Res Id"
+            },
+            "description": "Target record UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteTransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowTransitionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflows/{res_model}/{res_id}/unfreeze": {
+      "post": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Administrative Record Unfreeze",
+        "description": "Overrides a frozen record lock to permit operational corrections.",
+        "operationId": "unfreeze_record_api_v1_workflows__res_model___res_id__unfreeze_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name",
+              "title": "Res Model"
+            },
+            "description": "Target model name"
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target record UUID",
+              "title": "Res Id"
+            },
+            "description": "Target record UUID"
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Audited operational reason for unfreezing",
+              "default": "",
+              "title": "Reason"
+            },
+            "description": "Audited operational reason for unfreezing"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflows/{res_model}/{res_id}/history": {
+      "get": {
+        "tags": [
+          "Workflow State Machine & Record Freeze",
+          "Workflows & State Machine Engine"
+        ],
+        "summary": "Get Record Workflow History",
+        "description": "Returns chronological audit logs of all past state transitions executed on the record.",
+        "operationId": "get_record_workflow_history_api_v1_workflows__res_model___res_id__history_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name",
+              "title": "Res Model"
+            },
+            "description": "Target model name"
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target record UUID",
+              "title": "Res Id"
+            },
+            "description": "Target record UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowExecutionLogResponse"
+                  },
+                  "title": "Response Get Record Workflow History Api V1 Workflows  Res Model   Res Id  History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/kernel/modules": {
       "get": {
         "tags": [
@@ -12032,6 +12710,59 @@
           "is_active": true,
           "name": "Send Welcome Email on User Signup (Updated)",
           "sequence": 5
+        }
+      },
+      "AvailableTransitionResponse": {
+        "properties": {
+          "trigger_name": {
+            "type": "string",
+            "title": "Trigger Name"
+          },
+          "from_state": {
+            "type": "string",
+            "title": "From State"
+          },
+          "to_state": {
+            "type": "string",
+            "title": "To State"
+          },
+          "freeze_record": {
+            "type": "boolean",
+            "title": "Freeze Record"
+          },
+          "required_permission": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Permission"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "trigger_name",
+          "from_state",
+          "to_state",
+          "freeze_record"
+        ],
+        "title": "AvailableTransitionResponse",
+        "description": "Available trigger for a given record in its current state.",
+        "example": {
+          "freeze_record": false,
+          "from_state": "draft",
+          "required_permission": "workflow:transition",
+          "sequence": 10,
+          "to_state": "confirmed",
+          "trigger_name": "confirm"
         }
       },
       "BackupRecordRead": {
@@ -14279,6 +15010,40 @@
         "example": {
           "rate": 49.1,
           "source": "cbe"
+        }
+      },
+      "ExecuteTransitionRequest": {
+        "properties": {
+          "trigger_name": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Trigger Name",
+            "description": "Trigger action name (e.g. 'post', 'confirm')"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Optional context metadata recorded in transition log"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trigger_name"
+        ],
+        "title": "ExecuteTransitionRequest",
+        "description": "Request payload to trigger a state transition on a business entity.",
+        "example": {
+          "metadata": {
+            "reason": "End-of-month finalization"
+          },
+          "trigger_name": "post"
         }
       },
       "ExecutionMode": {
@@ -21679,6 +22444,725 @@
         "description": "Request payload to verify account email address using a single-use token.",
         "example": {
           "token": "em_1a2b3c4d5e6f_sample_token"
+        }
+      },
+      "WorkflowDefinitionCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Display name of the workflow"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique code for this workflow within company"
+          },
+          "res_model": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Res Model",
+            "description": "Target entity model name (e.g. 'Party', 'Invoice')"
+          },
+          "state_field": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "State Field",
+            "description": "Field name storing state on target record",
+            "default": "state"
+          },
+          "initial_state": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Initial State",
+            "description": "Initial state code when records are created",
+            "default": "draft"
+          },
+          "states": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowStateItem"
+            },
+            "type": "array",
+            "title": "States",
+            "description": "Ordered list of state descriptors"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether workflow is operational",
+            "default": true
+          },
+          "transitions": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowTransitionCreate"
+            },
+            "type": "array",
+            "title": "Transitions",
+            "description": "Initial list of state transitions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "res_model"
+        ],
+        "title": "WorkflowDefinitionCreate",
+        "description": "Schema for registering a new workflow definition.",
+        "example": {
+          "code": "so_workflow_standard",
+          "initial_state": "draft",
+          "is_active": true,
+          "name": "Standard Order Workflow",
+          "res_model": "sales_order",
+          "state_field": "state",
+          "states": [
+            {
+              "code": "draft",
+              "is_frozen": false,
+              "label": "Draft",
+              "sequence": 10
+            },
+            {
+              "code": "confirmed",
+              "is_frozen": false,
+              "label": "Confirmed",
+              "sequence": 20
+            },
+            {
+              "code": "posted",
+              "is_frozen": true,
+              "label": "Posted",
+              "sequence": 30
+            },
+            {
+              "code": "cancelled",
+              "is_frozen": true,
+              "label": "Cancelled",
+              "sequence": 40
+            }
+          ],
+          "transitions": [
+            {
+              "freeze_record": false,
+              "from_state": "draft",
+              "sequence": 10,
+              "to_state": "confirmed",
+              "trigger_name": "confirm"
+            },
+            {
+              "freeze_record": true,
+              "from_state": "confirmed",
+              "sequence": 20,
+              "to_state": "posted",
+              "trigger_name": "post"
+            },
+            {
+              "freeze_record": true,
+              "from_state": "*",
+              "sequence": 30,
+              "to_state": "cancelled",
+              "trigger_name": "cancel"
+            }
+          ]
+        }
+      },
+      "WorkflowDefinitionResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Display name of the workflow"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique code for this workflow within company"
+          },
+          "res_model": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Res Model",
+            "description": "Target entity model name (e.g. 'Party', 'Invoice')"
+          },
+          "state_field": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "State Field",
+            "description": "Field name storing state on target record",
+            "default": "state"
+          },
+          "initial_state": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Initial State",
+            "description": "Initial state code when records are created",
+            "default": "draft"
+          },
+          "states": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowStateItem"
+            },
+            "type": "array",
+            "title": "States",
+            "description": "Ordered list of state descriptors"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether workflow is operational",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "transitions": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowTransitionResponse"
+            },
+            "type": "array",
+            "title": "Transitions"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "res_model",
+          "id",
+          "company_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkflowDefinitionResponse",
+        "description": "Full schema for workflow definition response including transitions.",
+        "example": {
+          "code": "so_workflow_standard",
+          "company_id": "00000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-16T12:00:00Z",
+          "id": "22222222-2222-2222-2222-222222222222",
+          "initial_state": "draft",
+          "is_active": true,
+          "name": "Standard Order Workflow",
+          "res_model": "sales_order",
+          "state_field": "state",
+          "states": [
+            {
+              "code": "draft",
+              "is_frozen": false,
+              "label": "Draft",
+              "sequence": 10
+            },
+            {
+              "code": "posted",
+              "is_frozen": true,
+              "label": "Posted",
+              "sequence": 20
+            }
+          ],
+          "transitions": [],
+          "updated_at": "2026-09-16T12:00:00Z"
+        }
+      },
+      "WorkflowDefinitionUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "state_field": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Field"
+          },
+          "initial_state": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initial State"
+          },
+          "states": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/WorkflowStateItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "States"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "WorkflowDefinitionUpdate",
+        "description": "Schema for updating an existing workflow definition.",
+        "example": {
+          "is_active": true,
+          "name": "Standard Order Workflow v2"
+        }
+      },
+      "WorkflowExecutionLogResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "workflow_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Id"
+          },
+          "transition_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transition Id"
+          },
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "res_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Res Id"
+          },
+          "from_state": {
+            "type": "string",
+            "title": "From State"
+          },
+          "to_state": {
+            "type": "string",
+            "title": "To State"
+          },
+          "trigger_name": {
+            "type": "string",
+            "title": "Trigger Name"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "metadata_snapshot": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata Snapshot"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workflow_id",
+          "transition_id",
+          "res_model",
+          "res_id",
+          "from_state",
+          "to_state",
+          "trigger_name",
+          "actor_id",
+          "metadata_snapshot",
+          "created_at"
+        ],
+        "title": "WorkflowExecutionLogResponse",
+        "description": "Audit trail response schema for past workflow state transitions.",
+        "example": {
+          "actor_id": "55555555-5555-5555-5555-555555555555",
+          "created_at": "2026-09-16T12:00:00Z",
+          "from_state": "draft",
+          "id": "44444444-4444-4444-4444-444444444444",
+          "metadata_snapshot": {
+            "frozen": true,
+            "state_field": "state"
+          },
+          "res_id": "33333333-3333-3333-3333-333333333333",
+          "res_model": "party",
+          "to_state": "posted",
+          "transition_id": "11111111-1111-1111-1111-111111111111",
+          "trigger_name": "post",
+          "workflow_id": "22222222-2222-2222-2222-222222222222"
+        }
+      },
+      "WorkflowStateItem": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique code for the state (e.g. 'draft', 'confirmed')"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Label",
+            "description": "Human-readable title (e.g. 'Draft', 'Confirmed')"
+          },
+          "is_frozen": {
+            "type": "boolean",
+            "title": "Is Frozen",
+            "description": "Whether entities in this state are immutable/frozen",
+            "default": false
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Sequence",
+            "description": "Display sequence order",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "label"
+        ],
+        "title": "WorkflowStateItem",
+        "description": "Schema defining an individual state node in a workflow state machine.",
+        "example": {
+          "code": "posted",
+          "is_frozen": true,
+          "label": "Posted / Finalized",
+          "sequence": 30
+        }
+      },
+      "WorkflowTransitionCreate": {
+        "properties": {
+          "trigger_name": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Trigger Name",
+            "description": "Action or trigger button identifier (e.g. 'post')"
+          },
+          "from_state": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "From State",
+            "description": "Source state code or '*' for any state"
+          },
+          "to_state": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "To State",
+            "description": "Destination state code"
+          },
+          "required_permission": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Permission",
+            "description": "Optional required RBAC permission (e.g. 'workflow:transition')"
+          },
+          "guard_condition": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guard Condition",
+            "description": "Optional Universal AST condition dictionary evaluated against entity attributes"
+          },
+          "freeze_record": {
+            "type": "boolean",
+            "title": "Freeze Record",
+            "description": "Whether to lock the record upon executing this transition",
+            "default": false
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Sequence",
+            "description": "Sequence priority for ordering triggers",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "trigger_name",
+          "from_state",
+          "to_state"
+        ],
+        "title": "WorkflowTransitionCreate",
+        "description": "Schema for creating a new workflow transition.",
+        "example": {
+          "freeze_record": false,
+          "from_state": "submitted",
+          "guard_condition": {
+            "field": "credit_limit",
+            "operator": "gt",
+            "value": 0
+          },
+          "required_permission": "workflow:transition",
+          "sequence": 20,
+          "to_state": "approved",
+          "trigger_name": "approve"
+        }
+      },
+      "WorkflowTransitionResponse": {
+        "properties": {
+          "trigger_name": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Trigger Name",
+            "description": "Action or trigger button identifier (e.g. 'post')"
+          },
+          "from_state": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "From State",
+            "description": "Source state code or '*' for any state"
+          },
+          "to_state": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "To State",
+            "description": "Destination state code"
+          },
+          "required_permission": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Permission",
+            "description": "Optional required RBAC permission (e.g. 'workflow:transition')"
+          },
+          "guard_condition": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guard Condition",
+            "description": "Optional Universal AST condition dictionary evaluated against entity attributes"
+          },
+          "freeze_record": {
+            "type": "boolean",
+            "title": "Freeze Record",
+            "description": "Whether to lock the record upon executing this transition",
+            "default": false
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Sequence",
+            "description": "Sequence priority for ordering triggers",
+            "default": 10
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "workflow_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workflow Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trigger_name",
+          "from_state",
+          "to_state",
+          "id",
+          "workflow_id",
+          "company_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkflowTransitionResponse",
+        "description": "Full schema for a workflow transition response.",
+        "example": {
+          "company_id": "00000000-0000-0000-0000-000000000001",
+          "created_at": "2026-09-16T12:00:00Z",
+          "freeze_record": true,
+          "from_state": "approved",
+          "id": "11111111-1111-1111-1111-111111111111",
+          "required_permission": "workflow:transition",
+          "sequence": 30,
+          "to_state": "posted",
+          "trigger_name": "post",
+          "updated_at": "2026-09-16T12:00:00Z",
+          "workflow_id": "22222222-2222-2222-2222-222222222222"
+        }
+      },
+      "WorkflowTransitionResult": {
+        "properties": {
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Record Id"
+          },
+          "from_state": {
+            "type": "string",
+            "title": "From State"
+          },
+          "to_state": {
+            "type": "string",
+            "title": "To State"
+          },
+          "trigger_name": {
+            "type": "string",
+            "title": "Trigger Name"
+          },
+          "is_frozen": {
+            "type": "boolean",
+            "title": "Is Frozen"
+          },
+          "state_field": {
+            "type": "string",
+            "title": "State Field"
+          },
+          "transition_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Transition Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "res_model",
+          "record_id",
+          "from_state",
+          "to_state",
+          "trigger_name",
+          "is_frozen",
+          "state_field"
+        ],
+        "title": "WorkflowTransitionResult",
+        "description": "Result of an executed state transition.",
+        "example": {
+          "from_state": "draft",
+          "is_frozen": true,
+          "record_id": "33333333-3333-3333-3333-333333333333",
+          "res_model": "party",
+          "state_field": "state",
+          "to_state": "posted",
+          "transition_time": "2026-09-16T12:00:00Z",
+          "trigger_name": "post"
         }
       }
     },

@@ -725,6 +725,34 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
   - Triangulates through the company's base currency if no direct or inverse pair exists (`EUR -> USD -> EGP`).
   - Enforces ISO-4217 currency decimal precision rounding (e.g., 2 decimals for USD/EGP, 3 for KWD, 0 for JPY).
 
+#### 6.13.7 Universal Party, Contacts & Corporate Hierarchies Engine (`parties`)
+- **Package**: `backend/modules/base/parties/`
+- **Models (`Party`, `PartyContact`)**:
+  - `Party`: Unified partner identity with dual `is_customer` and `is_vendor` roles (OASIS/Odoo standard), legal entity name, `tax_id`, `commercial_reg_no`, and `credit_limit`.
+  - `PartyContact`: Child entity capturing individual contacts with job titles, emails, phone numbers, and single-primary contact enforcement.
+- **Corporate Holding Hierarchies**:
+  - Self-referential `parent_id` foreign key supporting multi-tier corporate hierarchies (Parent Holding -> Subsidiary -> Branch).
+  - Built-in acyclic traversal engine (`_assert_no_cyclic_hierarchy`) preventing circular parent assignments.
+  - Hierarchical tree endpoint (`GET /api/v1/parties/hierarchy`) delivering recursive organizational trees.
+- **Inter-Company Entity Linkage**:
+  - `linked_company_id` foreign key linking external partner identity in Company A to internal tenant Company B, laying the groundwork for automated inter-company transaction clearing.
+
+#### 6.13.8 Declarative Workflow State Machine & Physical Record Freeze (`workflows`)
+- **Package**: `backend/modules/base/workflows/`
+- **Models (`WorkflowDefinition`, `WorkflowTransition`, `WorkflowExecutionLog`)**:
+  - `WorkflowDefinition`: Configures a state machine lifecycle for a target `res_model` with a designated `state_field`, `initial_state`, and an ordered list of `states` (each specifying `code`, `label`, `is_frozen: bool`, `sequence`).
+  - `WorkflowTransition`: Allowed trigger rules between states, supporting wildcard `*` from-states, required RBAC permission codes (`required_permission`), Universal AST guard conditions (`guard_condition`), and automatic destination record freeze flags (`freeze_record`).
+  - `WorkflowExecutionLog`: Audit trail capturing chronological state movements with actor attribution, trigger names, and metadata snapshots.
+- **AST Condition Guards & Dynamic Evaluation**:
+  - Transitions evaluate Universal AST filter trees against current entity attributes in memory using `ASTConditionEvaluator` with zero SQL queries and zero `eval()`.
+  - Available transitions query (`GET /api/v1/workflows/{res_model}/{res_id}/transitions`) pre-evaluates state, user RBAC capabilities, and AST guards to return only actionable triggers.
+- **Physical Database-Level Record Lock Interceptor (`RecordLockInterceptor`)**:
+  - Registered as a global SQLAlchemy session `before_flush` lifecycle event hook.
+  - Inspects `session.dirty` and `session.deleted` instances. If an entity is marked locked/frozen (`_is_locked = True` in `custom_fields` or `is_locked = True` column) and is not undergoing an authorized workflow transition (`_allow_workflow_mutation = True`), the interceptor rejects the transaction.
+  - Raises `RecordFrozenException` formatted into `HTTP 422 Unprocessable Entity` (`RECORD_FROZEN`).
+  - Administrative unfreeze endpoint (`POST /api/v1/workflows/{res_model}/{res_id}/unfreeze`) permits authorized overrides with mandatory reason logging.
+
+
 
 
 

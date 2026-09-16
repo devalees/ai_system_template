@@ -99,10 +99,21 @@ class ExtensibleModelMixin:
         return (self.custom_fields or {}).get(key, default)
 
     def set_custom_field(self, key: str, value: Any) -> None:
-        """Set value in custom_fields dict."""
-        if self.custom_fields is None:
-            self.custom_fields = {}
-        self.custom_fields[key] = value
+        """Set value in custom_fields dict and flag attribute as modified."""
+        new_cf = dict(self.custom_fields or {})
+        new_cf[key] = value
+        self.custom_fields = new_cf
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(self, "custom_fields")
+
+    def remove_custom_field(self, key: str) -> None:
+        """Remove a key from custom_fields dict and flag attribute as modified."""
+        new_cf = dict(self.custom_fields or {})
+        if key in new_cf:
+            del new_cf[key]
+            self.custom_fields = new_cf
+            from sqlalchemy.orm.attributes import flag_modified
+            flag_modified(self, "custom_fields")
 
 
 class ArchivableMixin:

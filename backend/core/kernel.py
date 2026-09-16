@@ -206,6 +206,13 @@ class Kernel:
         except Exception as exc:
             logger.warning(f"Lifecycle interceptors registration skipped: {exc}")
 
+        # Register Workflow Record Lock Interceptors
+        try:
+            from modules.base.workflows.interceptors import register_record_lock_interceptor
+            register_record_lock_interceptor()
+        except Exception as exc:
+            logger.warning(f"Workflow record lock interceptor registration skipped: {exc}")
+
         # Seed default report templates
         try:
             from modules.base.reporting.fixtures import seed_default_report_templates

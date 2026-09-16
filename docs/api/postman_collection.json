@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "2f5f3516-964f-42de-be9a-c41647f28297",
+    "_postman_id": "26126f9c-059c-4421-96df-f26f5b3ce2cd",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -10514,6 +10514,638 @@
               ]
             },
             "description": "## Download generated export file\n\nStream exported CSV, Excel, or JSON file to client.\n\n**Endpoint**: `GET {{base_url}}/api/v1/import_export/jobs/{job_id}/download`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `job_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Workflow State Machine & Record Freeze",
+      "item": [
+        {
+          "name": "List Workflow Definitions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/definitions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                "definitions"
+              ],
+              "variable": []
+            },
+            "description": "## List Workflow Definitions\n\nLists all state machine definitions for the active tenant, with optional filtering.\n\n**Endpoint**: `GET {{base_url}}/api/v1/workflows/definitions`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `query` | `string` | No | Filter by target model name |\n| `is_active` | `query` | `string` | No | Filter by operational status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Workflow Definition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/definitions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                "definitions"
+              ],
+              "variable": []
+            },
+            "description": "## Create Workflow Definition\n\nRegisters a new declarative state machine lifecycle for a target entity model.\n\n**Endpoint**: `POST {{base_url}}/api/v1/workflows/definitions`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Display name of the workflow |\n| `code` | `string` | **Yes** | Any valid string | Unique code for this workflow within company |\n| `res_model` | `string` | **Yes** | Any valid string | Target entity model name (e.g. 'Party', 'Invoice') |\n| `state_field` | `string` | No | Any valid string | Field name storing state on target record |\n| `initial_state` | `string` | No | Any valid string | Initial state code when records are created |\n| `states` | `array` | No | Any valid array | Ordered list of state descriptors |\n| `is_active` | `boolean` | No | Any valid boolean | Whether workflow is operational |\n| `transitions` | `array` | No | Any valid array | Initial list of state transitions |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"so_workflow_standard\",\n  \"initial_state\": \"draft\",\n  \"is_active\": true,\n  \"name\": \"Standard Order Workflow\",\n  \"res_model\": \"{{active_model_name}}\",\n  \"state_field\": \"state\",\n  \"states\": [\n    {\n      \"code\": \"draft\",\n      \"is_frozen\": false,\n      \"label\": \"Draft\",\n      \"sequence\": 10\n    },\n    {\n      \"code\": \"confirmed\",\n      \"is_frozen\": false,\n      \"label\": \"Confirmed\",\n      \"sequence\": 20\n    },\n    {\n      \"code\": \"posted\",\n      \"is_frozen\": true,\n      \"label\": \"Posted\",\n      \"sequence\": 30\n    },\n    {\n      \"code\": \"cancelled\",\n      \"is_frozen\": true,\n      \"label\": \"Cancelled\",\n      \"sequence\": 40\n    }\n  ],\n  \"transitions\": [\n    {\n      \"freeze_record\": false,\n      \"from_state\": \"draft\",\n      \"sequence\": 10,\n      \"to_state\": \"confirmed\",\n      \"trigger_name\": \"confirm\"\n    },\n    {\n      \"freeze_record\": true,\n      \"from_state\": \"confirmed\",\n      \"sequence\": 20,\n      \"to_state\": \"posted\",\n      \"trigger_name\": \"post\"\n    },\n    {\n      \"freeze_record\": true,\n      \"from_state\": \"*\",\n      \"sequence\": 30,\n      \"to_state\": \"cancelled\",\n      \"trigger_name\": \"cancel\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_definition_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Workflow Definition",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/definitions/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                "definitions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_definition_id}}",
+                  "description": "Dynamic path parameter bound to {{active_definition_id}}"
+                }
+              ]
+            },
+            "description": "## Get Workflow Definition\n\nRetrieves a workflow definition with its full list of state transitions.\n\n**Endpoint**: `GET {{base_url}}/api/v1/workflows/definitions/{id}`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Workflow definition UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Workflow Definition",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/definitions/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                "definitions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_definition_id}}",
+                  "description": "Dynamic path parameter bound to {{active_definition_id}}"
+                }
+              ]
+            },
+            "description": "## Update Workflow Definition\n\nUpdates metadata, state list, or active status of a workflow definition.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/workflows/definitions/{id}`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Workflow definition UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `state_field` | `string` | No | Any valid string | state_field attribute |\n| `initial_state` | `string` | No | Any valid string | initial_state attribute |\n| `states` | `array` | No | Any valid array | states attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": true,\n  \"name\": \"Standard Order Workflow v2\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Workflow Definition",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/definitions/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                "definitions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_definition_id}}",
+                  "description": "Dynamic path parameter bound to {{active_definition_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Workflow Definition\n\nPermanently deletes a workflow definition and all its transitions.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/workflows/definitions/{id}`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Workflow definition UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Workflow Transition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/definitions/:id/transitions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                "definitions",
+                ":id",
+                "transitions"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{active_definition_id}}",
+                  "description": "Dynamic path parameter bound to {{active_definition_id}}"
+                }
+              ]
+            },
+            "description": "## Add Workflow Transition\n\nAdds a transition rule (with optional AST guard conditions and record freeze flags).\n\n**Endpoint**: `POST {{base_url}}/api/v1/workflows/definitions/{id}/transitions`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `id` | `path` | `string` | **Yes** | Workflow definition UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `trigger_name` | `string` | **Yes** | Any valid string | Action or trigger button identifier (e.g. 'post') |\n| `from_state` | `string` | **Yes** | Any valid string | Source state code or '*' for any state |\n| `to_state` | `string` | **Yes** | Any valid string | Destination state code |\n| `required_permission` | `string` | No | Any valid string | Optional required RBAC permission (e.g. 'workflow:transition') |\n| `guard_condition` | `object` | No | Any valid object | Optional Universal AST condition dictionary evaluated against entity attributes |\n| `freeze_record` | `boolean` | No | Any valid boolean | Whether to lock the record upon executing this transition |\n| `sequence` | `integer` | No | Any valid integer | Sequence priority for ordering triggers |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"freeze_record\": false,\n  \"from_state\": \"submitted\",\n  \"guard_condition\": {\n    \"field\": \"credit_limit\",\n    \"operator\": \"gt\",\n    \"value\": 0\n  },\n  \"required_permission\": \"workflow:transition\",\n  \"sequence\": 20,\n  \"to_state\": \"approved\",\n  \"trigger_name\": \"approve\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_transition_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Workflow Transition",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/transitions/:transition_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                "transitions",
+                ":transition_id"
+              ],
+              "variable": [
+                {
+                  "key": "transition_id",
+                  "value": "{{active_transition_id}}",
+                  "description": "Dynamic path parameter bound to {{active_transition_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Workflow Transition\n\nDeletes a specific transition rule.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/workflows/transitions/{transition_id}`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `transition_id` | `path` | `string` | **Yes** | Transition rule UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Transitions for Record",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/:res_model/:res_id/transitions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                ":res_model",
+                ":res_id",
+                "transitions"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "res_id",
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
+                }
+              ]
+            },
+            "description": "## Get Available Transitions for Record\n\nComputes which triggers are currently actionable for a specific record based on its state, RBAC, and guards.\n\n**Endpoint**: `GET {{base_url}}/api/v1/workflows/{res_model}/{res_id}/transitions`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name (e.g. 'party', 'sales_order') |\n| `res_id` | `path` | `string` | **Yes** | Target record UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Workflow Transition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/:res_model/:res_id/execute",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                ":res_model",
+                ":res_id",
+                "execute"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "res_id",
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
+                }
+              ]
+            },
+            "description": "## Execute Workflow Transition\n\nTriggers a state machine transition on a business record, verifying guards, RBAC, and applying record freezes.\n\n**Endpoint**: `POST {{base_url}}/api/v1/workflows/{res_model}/{res_id}/execute`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name (e.g. 'party', 'sales_order') |\n| `res_id` | `path` | `string` | **Yes** | Target record UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `trigger_name` | `string` | **Yes** | Any valid string | Trigger action name (e.g. 'post', 'confirm') |\n| `metadata` | `object` | No | Any valid object | Optional context metadata recorded in transition log |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metadata\": {\n    \"reason\": \"End-of-month finalization\"\n  },\n  \"trigger_name\": \"post\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_execute_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Administrative Record Unfreeze",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/:res_model/:res_id/unfreeze",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                ":res_model",
+                ":res_id",
+                "unfreeze"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "res_id",
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
+                }
+              ]
+            },
+            "description": "## Administrative Record Unfreeze\n\nOverrides a frozen record lock to permit operational corrections.\n\n**Endpoint**: `POST {{base_url}}/api/v1/workflows/{res_model}/{res_id}/unfreeze`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name |\n| `res_id` | `path` | `string` | **Yes** | Target record UUID |\n| `reason` | `query` | `string` | No | Audited operational reason for unfreezing |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_unfreeze_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Record Workflow History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/workflows/:res_model/:res_id/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflows",
+                ":res_model",
+                ":res_id",
+                "history"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "res_id",
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
+                }
+              ]
+            },
+            "description": "## Get Record Workflow History\n\nReturns chronological audit logs of all past state transitions executed on the record.\n\n**Endpoint**: `GET {{base_url}}/api/v1/workflows/{res_model}/{res_id}/history`  \n**Tags**: `Workflow State Machine & Record Freeze, Workflows & State Machine Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name |\n| `res_id` | `path` | `string` | **Yes** | Target record UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }

@@ -1958,12 +1958,13 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Service: `PartyService` with cyclic hierarchy detection, self-parenting prevention, single-primary contact enforcement, and bidirectional inter-company linkage.
   - REST API: 10 REST endpoints (`/api/v1/parties/*`) covering partner CRUD, contacts management, corporate hierarchy tree generation, customer/vendor filtering, and inter-company linkage resolution.
   - Automated tests: 4/4 passing in `test_parties.py` (full suite 115/115 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [ ] **Sub-stage 43.2.2: Declarative Workflow State Machine & Record Freeze (`workflows`)**
-  - Package: `backend/modules/base/workflows/`
-  - Models: `WorkflowDefinition` (`res_model`, `initial_state`, `states`), `WorkflowTransition` (`trigger_name`, `from_state`, `to_state`, `required_permission`, `guard_condition`, `freeze_record: bool`).
-  - Engine: `WorkflowEngine.transition()` executing AST condition guards, verifying RBAC permissions, emitting TCA `on_state_change`, and setting `_is_locked = True` for frozen records.
-  - `RecordLockInterceptor`: SQLAlchemy event interceptor rejecting `UPDATE` or `DELETE` on frozen/posted records at the database layer.
-  - REST API: Workflow definition CRUD, available transitions query, and state execution endpoint.
+- [x] **Sub-stage 43.2.2: Declarative Workflow State Machine & Record Freeze (`workflows`)** - COMPLETED
+  - Package: `backend/modules/base/workflows/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `interceptors.py`, `routes.py`, `__init__.py`).
+  - Models: `WorkflowDefinition` (`name`, `code`, `res_model`, `state_field`, `initial_state`, `states` JSONB with `is_frozen: bool`, `is_active`), `WorkflowTransition` (`trigger_name`, `from_state`, `to_state`, `required_permission`, `guard_condition` AST, `freeze_record: bool`, `sequence`), `WorkflowExecutionLog` (audit trail with actors, triggers, states).
+  - Engine: `WorkflowService` executing in-memory AST condition guards via `ASTConditionEvaluator`, validating RBAC capabilities via `FLACService.has_permission()`, applying transitions with `_allow_workflow_mutation` lifecycle bypass, and broadcasting state change events on `EventBus`.
+  - Record Lock Interceptor: `RecordLockInterceptor` hooking into SQLAlchemy `before_flush` session events, physically blocking unauthorized `UPDATE` or `DELETE` on frozen records at the database level with `422 Unprocessable Entity` (`RECORD_FROZEN`).
+  - REST API: 11 endpoints (`/api/v1/workflows/*`) covering workflow definitions CRUD, transition rules management, available transitions introspection for records, transition trigger execution, administrative unfreeze override, and audit history queries.
+  - Automated tests: 4/4 passing in `test_workflows.py` (full suite 119/119 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 - [ ] **Sub-stage 43.2.3: Multi-Level Governance & Approval Engine (`approvals`)**
   - Package: `backend/modules/base/approvals/`
   - Models: `ApprovalRule` (`res_model`, `condition` AST, `tier`, `approver_group_id`, `approver_user_id`), `ApprovalRequest` (`rule_id`, `res_model`, `res_id`, `state: pending|approved|rejected|cancelled`), `ApprovalAction` (`request_id`, `actor_id`, `action`, `comments`).
@@ -2043,13 +2044,14 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Sub-stage 43.2.1 (`parties`) is COMPLETED.
-Immediate focus: **Sub-stage 43.2.2: Declarative Workflow State Machine & Record Freeze (`workflows`)** (Stage 43.2: Universal Parties, Workflows & Approvals).
-- Create `backend/modules/base/workflows/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `interceptors.py`, `routes.py`, `__init__.py`).
-- Implement `WorkflowDefinition` (`res_model`, `initial_state`, `states`), `WorkflowTransition` (`trigger_name`, `from_state`, `to_state`, `required_permission`, `guard_condition`, `freeze_record: bool`).
-- Implement `RecordLockInterceptor`: SQLAlchemy session listener preventing `UPDATE` and `DELETE` on frozen records at the database level.
-- Implement `WorkflowEngine` executing AST condition guards, validating RBAC permissions, and triggering state transitions.
-- Add unit tests in `backend/tests/test_workflows.py`.
+Sub-stage 43.2.1 (`parties`) and Sub-stage 43.2.2 (`workflows`) are COMPLETED.
+Immediate focus: **Sub-stage 43.2.3: Multi-Level Governance & Approval Engine (`approvals`)** (Stage 43.2: Universal Parties, Workflows & Approvals).
+- Create `backend/modules/base/approvals/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `ApprovalRule` (`res_model`, `condition` AST, `tier`, `approver_group_id`, `approver_user_id`).
+- Implement `ApprovalRequest` (`rule_id`, `res_model`, `res_id`, `state: pending|approved|rejected|cancelled`).
+- Implement `ApprovalAction` (`request_id`, `actor_id`, `action`, `comments`).
+- Integrate with `workflows` state machine and dispatch notification alerts via `notification_engine`.
+- Add unit tests in `backend/tests/test_approvals.py`.
 
 
 
