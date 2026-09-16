@@ -17062,6 +17062,867 @@
         }
       }
     },
+    "/api/v1/accounting/accounts": {
+      "get": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "List Accounts",
+        "description": "List all Chart of Accounts entries for the active company.",
+        "operationId": "list_accounts_api_v1_accounting_accounts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Accounts Api V1 Accounting Accounts Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Account",
+        "description": "Create a new Chart of Accounts record.",
+        "operationId": "create_account_api_v1_accounting_accounts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/journals": {
+      "get": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "List Journals",
+        "description": "List all Accounting Journals for the active company.",
+        "operationId": "list_journals_api_v1_accounting_journals_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountJournalRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Journals Api V1 Accounting Journals Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Journal",
+        "description": "Create a new Accounting Journal.",
+        "operationId": "create_journal_api_v1_accounting_journals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountJournalCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountJournalRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/moves": {
+      "get": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "List Moves",
+        "description": "List Journal Entries, Invoices, and Vendor Bills.",
+        "operationId": "list_moves_api_v1_accounting_moves_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "move_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Move Type"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountMoveRead"
+                  },
+                  "title": "Response List Moves Api V1 Accounting Moves Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Move",
+        "description": "Create a draft Journal Move, Customer Invoice, or Vendor Bill.",
+        "operationId": "create_move_api_v1_accounting_moves_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountMoveCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMoveRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/moves/{move_id}/post": {
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Post Move",
+        "description": "Post a journal move, validating double-entry balance and stamping legal sequence.",
+        "operationId": "post_move_api_v1_accounting_moves__move_id__post_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "move_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Move Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMoveRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/reconcile": {
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Reconcile Lines",
+        "description": "Perform open-item reconciliation matching debits and credits.",
+        "operationId": "reconcile_lines_api_v1_accounting_reconcile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "title": "Line Ids"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/analytic-plans": {
+      "get": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "List Analytic Plans",
+        "description": "List all Analytic Dimension Plans.",
+        "operationId": "list_analytic_plans_api_v1_accounting_analytic_plans_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AnalyticPlanRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Analytic Plans Api V1 Accounting Analytic Plans Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Analytic Plan",
+        "description": "Create a new Analytic Plan.",
+        "operationId": "create_analytic_plan_api_v1_accounting_analytic_plans_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyticPlanCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticPlanRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/analytic-accounts": {
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Analytic Account",
+        "description": "Create a new Analytic Cost / Profit Center.",
+        "operationId": "create_analytic_account_api_v1_accounting_analytic_accounts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyticAccountCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticAccountRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/asset-categories": {
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Asset Category",
+        "description": "Create a new Asset Category with depreciation parameters.",
+        "operationId": "create_asset_category_api_v1_accounting_asset_categories_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCategoryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetCategoryRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/assets": {
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Asset",
+        "description": "Register a Fixed Asset and calculate its amortization schedule.",
+        "operationId": "create_asset_api_v1_accounting_assets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/assets/lines/{line_id}/post": {
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Post Asset Depreciation Line",
+        "description": "Post a monthly asset depreciation line as a journal entry.",
+        "operationId": "post_asset_depreciation_line_api_v1_accounting_assets_lines__line_id__post_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Line Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMoveRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/budgetary-positions": {
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Budgetary Position",
+        "description": "Create a budgetary position grouping accounts.",
+        "operationId": "create_budgetary_position_api_v1_accounting_budgetary_positions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetaryPositionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetaryPositionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/budgets": {
+      "post": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Create Budget",
+        "description": "Create a new budget plan.",
+        "operationId": "create_budget_api_v1_accounting_budgets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/budgets/{budget_id}/analysis": {
+      "get": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Get Budget Analysis",
+        "description": "Get real-time Planned vs Actual vs Theoretical analysis for budget lines.",
+        "operationId": "get_budget_analysis_api_v1_accounting_budgets__budget_id__analysis_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "budget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Budget Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/reports/trial-balance": {
+      "get": {
+        "tags": [
+          "Financial Accounting & General Ledger",
+          "Financial Accounting & General Ledger"
+        ],
+        "summary": "Get Trial Balance",
+        "description": "Generate real-time Trial Balance report.",
+        "operationId": "get_trial_balance_api_v1_accounting_reports_trial_balance_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "default": "2026-01-01",
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "default": "2026-12-31",
+              "title": "Date To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrialBalanceItem"
+                  },
+                  "title": "Response Get Trial Balance Api V1 Accounting Reports Trial Balance Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/resources": {
       "post": {
         "tags": [
@@ -17710,6 +18571,518 @@
         }
       }
     },
+    "/api/v1/sales/orders": {
+      "get": {
+        "tags": [
+          "Sales & Customer Order Management",
+          "Sales & Customer Order Management"
+        ],
+        "summary": "List Orders",
+        "description": "List all Sales Quotations and Orders for the active company.",
+        "operationId": "list_orders_api_v1_sales_orders_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SaleOrderRead"
+                  },
+                  "title": "Response List Orders Api V1 Sales Orders Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sales & Customer Order Management",
+          "Sales & Customer Order Management"
+        ],
+        "summary": "Create Order",
+        "description": "Create a new Sales Quotation.",
+        "operationId": "create_order_api_v1_sales_orders_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaleOrderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleOrderRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sales/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "Sales & Customer Order Management",
+          "Sales & Customer Order Management"
+        ],
+        "summary": "Get Order",
+        "description": "Retrieve a single Sales Order by ID.",
+        "operationId": "get_order_api_v1_sales_orders__order_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleOrderRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sales/orders/{order_id}/confirm": {
+      "post": {
+        "tags": [
+          "Sales & Customer Order Management",
+          "Sales & Customer Order Management"
+        ],
+        "summary": "Confirm Order",
+        "description": "Confirm a Quotation into a Sales Order, stamping legal sequence.",
+        "operationId": "confirm_order_api_v1_sales_orders__order_id__confirm_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleOrderRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sales/orders/{order_id}/create-invoice": {
+      "post": {
+        "tags": [
+          "Sales & Customer Order Management",
+          "Sales & Customer Order Management"
+        ],
+        "summary": "Create Invoice From Order",
+        "description": "1-Click generation of draft Customer Invoice in Accounting from confirmed Sales Order.",
+        "operationId": "create_invoice_from_order_api_v1_sales_orders__order_id__create_invoice_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMoveRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/purchases/orders": {
+      "get": {
+        "tags": [
+          "Purchases & Vendor Procurement",
+          "Purchases & Vendor Procurement"
+        ],
+        "summary": "List Orders",
+        "description": "List all Purchase Orders and RFQs for the active company.",
+        "operationId": "list_orders_api_v1_purchases_orders_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderRead"
+                  },
+                  "title": "Response List Orders Api V1 Purchases Orders Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Purchases & Vendor Procurement",
+          "Purchases & Vendor Procurement"
+        ],
+        "summary": "Create Order",
+        "description": "Create a new Request for Quotation (RFQ) or Purchase Order draft.",
+        "operationId": "create_order_api_v1_purchases_orders_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseOrderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/purchases/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "Purchases & Vendor Procurement",
+          "Purchases & Vendor Procurement"
+        ],
+        "summary": "Get Order",
+        "description": "Retrieve a single Purchase Order by ID.",
+        "operationId": "get_order_api_v1_purchases_orders__order_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/purchases/orders/{order_id}/confirm": {
+      "post": {
+        "tags": [
+          "Purchases & Vendor Procurement",
+          "Purchases & Vendor Procurement"
+        ],
+        "summary": "Confirm Order",
+        "description": "Confirm a Purchase Order, evaluating approval thresholds and stamping legal sequence.",
+        "operationId": "confirm_order_api_v1_purchases_orders__order_id__confirm_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/purchases/orders/{order_id}/create-bill": {
+      "post": {
+        "tags": [
+          "Purchases & Vendor Procurement",
+          "Purchases & Vendor Procurement"
+        ],
+        "summary": "Create Bill From Order",
+        "description": "1-Click generation of draft Vendor Bill in Accounting from confirmed Purchase Order.",
+        "operationId": "create_bill_from_order_api_v1_purchases_orders__order_id__create_bill_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMoveRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/mcp/tools": {
       "get": {
         "tags": [
@@ -17870,6 +19243,747 @@
   },
   "components": {
     "schemas": {
+      "AccountCreate": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "account_type": {
+            "type": "string",
+            "title": "Account Type",
+            "description": "asset_current, asset_non_current, liability_current, liability_non_current, equity, income, expense, expense_depreciation"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id"
+          },
+          "reconcilable": {
+            "type": "boolean",
+            "title": "Reconcilable",
+            "default": false
+          },
+          "is_deprecated": {
+            "type": "boolean",
+            "title": "Is Deprecated",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "account_type"
+        ],
+        "title": "AccountCreate"
+      },
+      "AccountJournalCreate": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "sale",
+              "purchase",
+              "bank",
+              "cash",
+              "general"
+            ],
+            "title": "Type"
+          },
+          "default_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Account Id"
+          },
+          "sequence_code": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sequence Code",
+            "default": "account.general"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "type"
+        ],
+        "title": "AccountJournalCreate"
+      },
+      "AccountJournalRead": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "sale",
+              "purchase",
+              "bank",
+              "cash",
+              "general"
+            ],
+            "title": "Type"
+          },
+          "default_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Account Id"
+          },
+          "sequence_code": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sequence Code",
+            "default": "account.general"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "type",
+          "id",
+          "company_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AccountJournalRead"
+      },
+      "AccountMoveCreate": {
+        "properties": {
+          "move_type": {
+            "type": "string",
+            "enum": [
+              "entry",
+              "out_invoice",
+              "out_refund",
+              "in_invoice",
+              "in_refund"
+            ],
+            "title": "Move Type",
+            "default": "entry"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "journal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Journal Id"
+          },
+          "party_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Id"
+          },
+          "currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Currency Id"
+          },
+          "payment_term_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Term Id"
+          },
+          "fiscal_period_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Period Id"
+          },
+          "invoice_date_due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Date Due"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AccountMoveLineCreate"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "journal_id",
+          "currency_id",
+          "lines"
+        ],
+        "title": "AccountMoveCreate"
+      },
+      "AccountMoveLineCreate": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "party_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "debit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Debit",
+            "default": "0.0000"
+          },
+          "credit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Credit",
+            "default": "0.0000"
+          },
+          "amount_currency": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Currency"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id"
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Id"
+          },
+          "analytic_distribution": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Analytic Distribution"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_id",
+          "name"
+        ],
+        "title": "AccountMoveLineCreate"
+      },
+      "AccountMoveLineRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "move_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Move Id"
+          },
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "party_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "debit": {
+            "type": "string",
+            "title": "Debit"
+          },
+          "credit": {
+            "type": "string",
+            "title": "Credit"
+          },
+          "balance": {
+            "type": "string",
+            "title": "Balance"
+          },
+          "amount_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Currency"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id"
+          },
+          "reconciled": {
+            "type": "boolean",
+            "title": "Reconciled"
+          },
+          "matching_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matching Number"
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Id"
+          },
+          "analytic_distribution": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Analytic Distribution"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "move_id",
+          "account_id",
+          "name",
+          "debit",
+          "credit",
+          "balance",
+          "reconciled",
+          "analytic_distribution",
+          "created_at"
+        ],
+        "title": "AccountMoveLineRead"
+      },
+      "AccountMoveRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "move_type": {
+            "type": "string",
+            "title": "Move Type"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "journal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Journal Id"
+          },
+          "party_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Id"
+          },
+          "currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Currency Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "amount_total": {
+            "type": "string",
+            "title": "Amount Total"
+          },
+          "amount_residual": {
+            "type": "string",
+            "title": "Amount Residual"
+          },
+          "payment_term_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Term Id"
+          },
+          "fiscal_period_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Period Id"
+          },
+          "invoice_date_due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Date Due"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AccountMoveLineRead"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "name",
+          "move_type",
+          "date",
+          "journal_id",
+          "currency_id",
+          "state",
+          "amount_total",
+          "amount_residual",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AccountMoveRead"
+      },
+      "AccountRead": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "account_type": {
+            "type": "string",
+            "title": "Account Type",
+            "description": "asset_current, asset_non_current, liability_current, liability_non_current, equity, income, expense, expense_depreciation"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id"
+          },
+          "reconcilable": {
+            "type": "boolean",
+            "title": "Reconcilable",
+            "default": false
+          },
+          "is_deprecated": {
+            "type": "boolean",
+            "title": "Is Deprecated",
+            "default": false
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "account_type",
+          "id",
+          "company_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AccountRead"
+      },
       "ActionExecutionLogRead": {
         "properties": {
           "id": {
@@ -18693,6 +20807,226 @@
           "street2": "Building 45, Floor 4 (Expanded)"
         }
       },
+      "AnalyticAccountCreate": {
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Plan Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          },
+          "party_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_id",
+          "name",
+          "code"
+        ],
+        "title": "AnalyticAccountCreate"
+      },
+      "AnalyticAccountRead": {
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Plan Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          },
+          "party_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_id",
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "created_at"
+        ],
+        "title": "AnalyticAccountRead"
+      },
+      "AnalyticPlanCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "AnalyticPlanCreate"
+      },
+      "AnalyticPlanRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "created_at"
+        ],
+        "title": "AnalyticPlanRead"
+      },
       "ApprovalActionResponse": {
         "properties": {
           "id": {
@@ -19345,6 +21679,332 @@
           "name": "Executive Credit Limit Sign-off",
           "tier": 2
         }
+      },
+      "AssetCategoryCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "journal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Journal Id"
+          },
+          "asset_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Asset Account Id"
+          },
+          "depr_expense_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Depr Expense Account Id"
+          },
+          "accum_depr_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Accum Depr Account Id"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "straight_line",
+              "declining",
+              "units"
+            ],
+            "title": "Method",
+            "default": "straight_line"
+          },
+          "duration_months": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Months",
+            "default": 36
+          },
+          "prorata": {
+            "type": "boolean",
+            "title": "Prorata",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "journal_id",
+          "asset_account_id",
+          "depr_expense_account_id",
+          "accum_depr_account_id"
+        ],
+        "title": "AssetCategoryCreate"
+      },
+      "AssetCategoryRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "journal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Journal Id"
+          },
+          "asset_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Asset Account Id"
+          },
+          "depr_expense_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Depr Expense Account Id"
+          },
+          "accum_depr_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Accum Depr Account Id"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "straight_line",
+              "declining",
+              "units"
+            ],
+            "title": "Method",
+            "default": "straight_line"
+          },
+          "duration_months": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Months",
+            "default": 36
+          },
+          "prorata": {
+            "type": "boolean",
+            "title": "Prorata",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "journal_id",
+          "asset_account_id",
+          "depr_expense_account_id",
+          "accum_depr_account_id",
+          "id",
+          "company_id",
+          "created_at"
+        ],
+        "title": "AssetCategoryRead"
+      },
+      "AssetCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id"
+          },
+          "purchase_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Purchase Date"
+          },
+          "original_value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Original Value"
+          },
+          "salvage_value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Salvage Value",
+            "default": "0.0000"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "category_id",
+          "purchase_date",
+          "original_value"
+        ],
+        "title": "AssetCreate"
+      },
+      "AssetDepreciationLineRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "asset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Asset Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "depreciation_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Depreciation Date"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "remaining_value": {
+            "type": "string",
+            "title": "Remaining Value"
+          },
+          "accumulated_depreciation": {
+            "type": "string",
+            "title": "Accumulated Depreciation"
+          },
+          "move_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Move Id"
+          },
+          "is_posted": {
+            "type": "boolean",
+            "title": "Is Posted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "sequence",
+          "depreciation_date",
+          "amount",
+          "remaining_value",
+          "accumulated_depreciation",
+          "is_posted"
+        ],
+        "title": "AssetDepreciationLineRead"
+      },
+      "AssetRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id"
+          },
+          "purchase_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Purchase Date"
+          },
+          "original_value": {
+            "type": "string",
+            "title": "Original Value"
+          },
+          "salvage_value": {
+            "type": "string",
+            "title": "Salvage Value"
+          },
+          "depreciable_value": {
+            "type": "string",
+            "title": "Depreciable Value"
+          },
+          "book_value": {
+            "type": "string",
+            "title": "Book Value"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "depreciation_lines": {
+            "items": {
+              "$ref": "#/components/schemas/AssetDepreciationLineRead"
+            },
+            "type": "array",
+            "title": "Depreciation Lines"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "name",
+          "category_id",
+          "purchase_date",
+          "original_value",
+          "salvage_value",
+          "depreciable_value",
+          "book_value",
+          "state",
+          "created_at"
+        ],
+        "title": "AssetRead"
       },
       "AttendeeCreate": {
         "properties": {
@@ -20365,6 +23025,356 @@
           "file"
         ],
         "title": "Body_upload_attachment_api_v1_documents_upload_post"
+      },
+      "BudgetCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Date From"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Date To"
+          },
+          "responsible_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsible Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetLineCreate"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "date_from",
+          "date_to"
+        ],
+        "title": "BudgetCreate"
+      },
+      "BudgetLineCreate": {
+        "properties": {
+          "position_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Id"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Date From"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Date To"
+          },
+          "planned_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Planned Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date_from",
+          "date_to",
+          "planned_amount"
+        ],
+        "title": "BudgetLineCreate"
+      },
+      "BudgetLineRead": {
+        "properties": {
+          "position_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Id"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Date From"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Date To"
+          },
+          "planned_amount": {
+            "type": "string",
+            "title": "Planned Amount"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "budget_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Budget Id"
+          },
+          "practical_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Practical Amount",
+            "default": "0.0000"
+          },
+          "theoritical_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theoritical Amount",
+            "default": "0.0000"
+          },
+          "percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percentage",
+            "default": 0.0
+          },
+          "variance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variance",
+            "default": "0.0000"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date_from",
+          "date_to",
+          "planned_amount",
+          "id",
+          "budget_id"
+        ],
+        "title": "BudgetLineRead"
+      },
+      "BudgetRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Date From"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Date To"
+          },
+          "responsible_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsible Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetLineRead"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "name",
+          "date_from",
+          "date_to",
+          "state",
+          "created_at"
+        ],
+        "title": "BudgetRead"
+      },
+      "BudgetaryPositionCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          },
+          "account_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Account Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "BudgetaryPositionCreate"
+      },
+      "BudgetaryPositionRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          },
+          "account_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Account Ids"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "created_at"
+        ],
+        "title": "BudgetaryPositionRead"
       },
       "CalendarEventCreate": {
         "properties": {
@@ -29813,6 +32823,333 @@
         "type": "object",
         "title": "PriceListUpdate"
       },
+      "PurchaseOrderCreate": {
+        "properties": {
+          "party_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Party Id"
+          },
+          "order_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Order Date"
+          },
+          "currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Currency Id"
+          },
+          "payment_term_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Term Id"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderLineCreate"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "party_id",
+          "order_date",
+          "currency_id",
+          "lines"
+        ],
+        "title": "PurchaseOrderCreate"
+      },
+      "PurchaseOrderLineCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity",
+            "default": "1.0000"
+          },
+          "uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uom Id"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Unit Price"
+          },
+          "tax_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tax Ids"
+          },
+          "analytic_distribution": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Analytic Distribution"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "unit_price"
+        ],
+        "title": "PurchaseOrderLineCreate"
+      },
+      "PurchaseOrderLineRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uom Id"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price"
+          },
+          "tax_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tax Ids"
+          },
+          "price_subtotal": {
+            "type": "string",
+            "title": "Price Subtotal"
+          },
+          "price_total": {
+            "type": "string",
+            "title": "Price Total"
+          },
+          "analytic_distribution": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Analytic Distribution"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_id",
+          "name",
+          "quantity",
+          "unit_price",
+          "tax_ids",
+          "price_subtotal",
+          "price_total",
+          "analytic_distribution",
+          "created_at"
+        ],
+        "title": "PurchaseOrderLineRead"
+      },
+      "PurchaseOrderRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "order_number": {
+            "type": "string",
+            "title": "Order Number"
+          },
+          "party_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Party Id"
+          },
+          "order_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Order Date"
+          },
+          "currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Currency Id"
+          },
+          "payment_term_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Term Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "bill_status": {
+            "type": "string",
+            "title": "Bill Status"
+          },
+          "amount_untaxed": {
+            "type": "string",
+            "title": "Amount Untaxed"
+          },
+          "amount_tax": {
+            "type": "string",
+            "title": "Amount Tax"
+          },
+          "amount_total": {
+            "type": "string",
+            "title": "Amount Total"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
+          "bill_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bill Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderLineRead"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "order_number",
+          "party_id",
+          "order_date",
+          "currency_id",
+          "state",
+          "bill_status",
+          "amount_untaxed",
+          "amount_tax",
+          "amount_total",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PurchaseOrderRead"
+      },
       "PushSubscriptionCreate": {
         "properties": {
           "endpoint": {
@@ -31717,6 +35054,345 @@
         },
         "type": "object",
         "title": "ResourceUpdate"
+      },
+      "SaleOrderCreate": {
+        "properties": {
+          "party_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Party Id"
+          },
+          "order_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Order Date"
+          },
+          "currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Currency Id"
+          },
+          "payment_term_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Term Id"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/SaleOrderLineCreate"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "party_id",
+          "order_date",
+          "currency_id",
+          "lines"
+        ],
+        "title": "SaleOrderCreate"
+      },
+      "SaleOrderLineCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity",
+            "default": "1.0000"
+          },
+          "uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uom Id"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Unit Price"
+          },
+          "discount_percent": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Discount Percent",
+            "default": 0.0
+          },
+          "tax_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tax Ids"
+          },
+          "analytic_distribution": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Analytic Distribution"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "unit_price"
+        ],
+        "title": "SaleOrderLineCreate"
+      },
+      "SaleOrderLineRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uom Id"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price"
+          },
+          "discount_percent": {
+            "type": "number",
+            "title": "Discount Percent"
+          },
+          "tax_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tax Ids"
+          },
+          "price_subtotal": {
+            "type": "string",
+            "title": "Price Subtotal"
+          },
+          "price_total": {
+            "type": "string",
+            "title": "Price Total"
+          },
+          "analytic_distribution": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Analytic Distribution"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_id",
+          "name",
+          "quantity",
+          "unit_price",
+          "discount_percent",
+          "tax_ids",
+          "price_subtotal",
+          "price_total",
+          "analytic_distribution",
+          "created_at"
+        ],
+        "title": "SaleOrderLineRead"
+      },
+      "SaleOrderRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "order_number": {
+            "type": "string",
+            "title": "Order Number"
+          },
+          "party_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Party Id"
+          },
+          "order_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Order Date"
+          },
+          "currency_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Currency Id"
+          },
+          "payment_term_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Term Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "invoice_status": {
+            "type": "string",
+            "title": "Invoice Status"
+          },
+          "amount_untaxed": {
+            "type": "string",
+            "title": "Amount Untaxed"
+          },
+          "amount_tax": {
+            "type": "string",
+            "title": "Amount Tax"
+          },
+          "amount_total": {
+            "type": "string",
+            "title": "Amount Total"
+          },
+          "analytic_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analytic Account Id"
+          },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/SaleOrderLineRead"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "order_number",
+          "party_id",
+          "order_date",
+          "currency_id",
+          "state",
+          "invoice_status",
+          "amount_untaxed",
+          "amount_tax",
+          "amount_total",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SaleOrderRead"
       },
       "SendMailRequest": {
         "properties": {
@@ -33827,6 +37503,69 @@
             "en": "Tax Invoices"
           }
         }
+      },
+      "TrialBalanceItem": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "title": "Account Id"
+          },
+          "account_code": {
+            "type": "string",
+            "title": "Account Code"
+          },
+          "account_name": {
+            "type": "string",
+            "title": "Account Name"
+          },
+          "account_type": {
+            "type": "string",
+            "title": "Account Type"
+          },
+          "initial_debit": {
+            "type": "string",
+            "title": "Initial Debit"
+          },
+          "initial_credit": {
+            "type": "string",
+            "title": "Initial Credit"
+          },
+          "period_debit": {
+            "type": "string",
+            "title": "Period Debit"
+          },
+          "period_credit": {
+            "type": "string",
+            "title": "Period Credit"
+          },
+          "ending_debit": {
+            "type": "string",
+            "title": "Ending Debit"
+          },
+          "ending_credit": {
+            "type": "string",
+            "title": "Ending Credit"
+          },
+          "ending_balance": {
+            "type": "string",
+            "title": "Ending Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_id",
+          "account_code",
+          "account_name",
+          "account_type",
+          "initial_debit",
+          "initial_credit",
+          "period_debit",
+          "period_credit",
+          "ending_debit",
+          "ending_credit",
+          "ending_balance"
+        ],
+        "title": "TrialBalanceItem"
       },
       "TriggerType": {
         "type": "string",

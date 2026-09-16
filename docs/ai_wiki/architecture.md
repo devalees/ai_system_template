@@ -868,3 +868,49 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
 - **Distributed LLMOps Observability (Langfuse Tracing)**:
   - Non-blocking execution trace events are ingested into the platform's independent Langfuse instance (`:3100`), tracking generation spans, token consumption, latency, and tool invocation waterfalls.
 
+---
+
+### 6.14 Enterprise Financial Suite (`backend/modules/apps/`)
+
+The Enterprise Financial Suite implements a high-performance **Triple-Engine** architecture designed as modular business applications residing in `backend/modules/apps/`, seamlessly orchestrating with the underlying foundational modules (`sequences`, `taxes`, `payments`, `fx_engine`, `fiscal_calendar`, `parties`, `workflows`, `approvals`, `reporting`).
+
+#### 6.14.1 Core Financial Accounting & General Ledger (`accounting`)
+- **Package**: `backend/modules/apps/accounting/`
+- **Core Models**:
+  - `Account`: Hierarchical Chart of Accounts (`code`, `name`, `account_type`: asset, liability, equity, income, expense, `reconcilable`, `parent_id`).
+  - `AccountJournal`: Multi-journal system (`code`, `name`, `type`: sale, purchase, cash, bank, general, `sequence_code`).
+  - `AccountMove` & `AccountMoveLine`: General Ledger and Transaction documents (`move_type`: entry, out_invoice, in_invoice, `state`: draft, posted, cancelled, `date`, `amount_total`).
+  - `AnalyticPlan`, `AnalyticAccount`, `AnalyticLine`: Odoo-style multi-dimensional cost/profit center tracking with granular percentage distributions (`analytic_distribution: JSONB`).
+  - `AssetCategory`, `Asset`, `AssetDepreciationLine`: Fixed Asset management with automated amortization schedule generation (straight-line, declining, units) and periodic journal posting.
+  - `BudgetaryPosition`, `Budget`, `BudgetLine`: Dynamic budgetary control comparing Planned vs Actual (derived live from posted move lines) and Theoretical linear burn.
+- **Key Capabilities**:
+  - Balanced double-entry enforcement ($\sum \text{debits} = \sum \text{credits}$).
+  - Legal gapless numbering via `sequences`.
+  - Fiscal period posting guards via `fiscal_calendar`.
+  - Open-item debit/credit reconciliation.
+  - Real-time financial reporting (Trial Balance, P&L, Balance Sheet).
+- **Settings**: `AccountingSettings` (`tax_cash_basis`, `anglo_saxon_accounting`, `auto_post_depreciation`, `budget_enforcement_level`, `budget_warning_threshold`, `lock_posted_moves`).
+
+#### 6.14.2 Sales Order Management (`sales`)
+- **Package**: `backend/modules/apps/sales/`
+- **Core Models**:
+  - `SaleOrder`: Quotations and confirmed sales orders (`order_number`, `party_id`, `state`: draft, sent, sale, cancelled, `invoice_status`: no, to_invoice, invoiced, `amount_untaxed`, `amount_tax`, `amount_total`).
+  - `SaleOrderLine`: Itemized products and services (`product_id`, `quantity`, `unit_price`, `discount_percent`, `price_subtotal`, `price_total`).
+- **Key Capabilities**:
+  - Quotation lifecycle management and legal sequence stamping.
+  - Line-level discount factors and tax computations.
+  - 1-Click Customer Invoice creation bridging directly into `accounting.AccountMove` (`move_type="out_invoice"`).
+- **Settings**: `SalesSettings` (`quotation_validity_days`, `default_invoicing_policy`, `discount_policy`, `require_signature`).
+
+#### 6.14.3 Purchases & Vendor Procurement (`purchases`)
+- **Package**: `backend/modules/apps/purchases/`
+- **Core Models**:
+  - `PurchaseOrder`: RFQs and confirmed purchase orders (`order_number`, `party_id`, `state`: draft, sent, to_approve, purchase, cancelled, `invoice_status`: no, to_invoice, invoiced, `amount_untaxed`, `amount_tax`, `amount_total`).
+  - `PurchaseOrderLine`: Procurement items (`product_id`, `quantity`, `unit_price`, `price_subtotal`, `price_total`).
+- **Key Capabilities**:
+  - Purchase order authorization workflow: orders exceeding `po_approval_threshold` automatically route to `to_approve` before confirmation.
+  - 1-Click Vendor Bill creation bridging directly into `accounting.AccountMove` (`move_type="in_invoice"`).
+  - 3-way matching policy support.
+- **Settings**: `PurchaseSettings` (`po_approval_threshold`, `three_way_matching_policy`, `bill_control_policy`, `lock_confirmed_orders`).
+
+

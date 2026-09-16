@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "87f5760e-469d-4bdd-80e1-1cfa73aca26d",
+    "_postman_id": "f97eef70-9070-4499-966b-921556b0c309",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2241,6 +2241,1117 @@
               "response": []
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Financial Accounting & General Ledger",
+      "item": [
+        {
+          "name": "List Accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "accounts"
+              ],
+              "variable": []
+            },
+            "description": "## List Accounts\n\nList all Chart of Accounts entries for the active company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/accounting/accounts`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "accounts"
+              ],
+              "variable": []
+            },
+            "description": "## Create Account\n\nCreate a new Chart of Accounts record.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/accounts`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `string` | **Yes** | Any valid string | code attribute |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `account_type` | `string` | **Yes** | Any valid string | asset_current, asset_non_current, liability_current, liability_non_current, equity, income, expense, expense_depreciation |\n| `parent_id` | `string` | No | Any valid string | parent_id attribute |\n| `currency_id` | `string` | No | Any valid string | currency_id attribute |\n| `reconcilable` | `boolean` | No | Any valid boolean | reconcilable attribute |\n| `is_deprecated` | `boolean` | No | Any valid boolean | is_deprecated attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"string\",\n  \"name\": \"string\",\n  \"account_type\": \"string\",\n  \"reconcilable\": true,\n  \"is_deprecated\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_account_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Journals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/journals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "journals"
+              ],
+              "variable": []
+            },
+            "description": "## List Journals\n\nList all Accounting Journals for the active company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/accounting/journals`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Journal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/journals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "journals"
+              ],
+              "variable": []
+            },
+            "description": "## Create Journal\n\nCreate a new Accounting Journal.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/journals`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `code` | `string` | **Yes** | Any valid string | code attribute |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `type` | `string` | **Yes** | `sale, purchase, bank, cash, general` | type attribute |\n| `default_account_id` | `string` | No | Any valid string | default_account_id attribute |\n| `sequence_code` | `string` | No | Any valid string | sequence_code attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"string\",\n  \"name\": \"string\",\n  \"type\": \"string\",\n  \"sequence_code\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_journal_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Moves",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/moves",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "moves"
+              ],
+              "variable": []
+            },
+            "description": "## List Moves\n\nList Journal Entries, Invoices, and Vendor Bills.\n\n**Endpoint**: `GET {{base_url}}/api/v1/accounting/moves`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `move_type` | `query` | `string` | No | - |\n| `state` | `query` | `string` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Move",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/moves",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "moves"
+              ],
+              "variable": []
+            },
+            "description": "## Create Move\n\nCreate a draft Journal Move, Customer Invoice, or Vendor Bill.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/moves`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `move_type` | `string` | No | `entry, out_invoice, out_refund, in_invoice, in_refund` | move_type attribute |\n| `date` | `string` | **Yes** | Any valid string | date attribute |\n| `ref` | `string` | No | Any valid string | ref attribute |\n| `journal_id` | `string` | **Yes** | Any valid string | journal_id attribute |\n| `party_id` | `string` | No | Any valid string | party_id attribute |\n| `currency_id` | `string` | **Yes** | Any valid string | currency_id attribute |\n| `payment_term_id` | `string` | No | Any valid string | payment_term_id attribute |\n| `fiscal_period_id` | `string` | No | Any valid string | fiscal_period_id attribute |\n| `invoice_date_due` | `string` | No | Any valid string | invoice_date_due attribute |\n| `lines` | `array` | **Yes** | Any valid array | lines attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"move_type\": \"string\",\n  \"date\": \"string\",\n  \"journal_id\": \"string\",\n  \"currency_id\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_move_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Post Move",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/moves/:move_id/post",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "moves",
+                ":move_id",
+                "post"
+              ],
+              "variable": [
+                {
+                  "key": "move_id",
+                  "value": "{{active_move_id}}",
+                  "description": "Dynamic path parameter bound to {{active_move_id}}"
+                }
+              ]
+            },
+            "description": "## Post Move\n\nPost a journal move, validating double-entry balance and stamping legal sequence.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/moves/{move_id}/post`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `move_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_post_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reconcile Lines",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/reconcile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "reconcile"
+              ],
+              "variable": []
+            },
+            "description": "## Reconcile Lines\n\nPerform open-item reconciliation matching debits and credits.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/reconcile`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_reconcile_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Analytic Plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/analytic-plans",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "analytic-plans"
+              ],
+              "variable": []
+            },
+            "description": "## List Analytic Plans\n\nList all Analytic Dimension Plans.\n\n**Endpoint**: `GET {{base_url}}/api/v1/accounting/analytic-plans`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Analytic Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/analytic-plans",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "analytic-plans"
+              ],
+              "variable": []
+            },
+            "description": "## Create Analytic Plan\n\nCreate a new Analytic Plan.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/analytic-plans`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `code` | `string` | **Yes** | Any valid string | code attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `color` | `string` | No | Any valid string | color attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_analytic_plan_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Analytic Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/analytic-accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "analytic-accounts"
+              ],
+              "variable": []
+            },
+            "description": "## Create Analytic Account\n\nCreate a new Analytic Cost / Profit Center.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/analytic-accounts`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `plan_id` | `string` | **Yes** | Any valid string | plan_id attribute |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `code` | `string` | **Yes** | Any valid string | code attribute |\n| `party_id` | `string` | No | Any valid string | party_id attribute |\n| `parent_id` | `string` | No | Any valid string | parent_id attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": \"string\",\n  \"name\": \"string\",\n  \"code\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_analytic_account_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Asset Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/asset-categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "asset-categories"
+              ],
+              "variable": []
+            },
+            "description": "## Create Asset Category\n\nCreate a new Asset Category with depreciation parameters.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/asset-categories`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `journal_id` | `string` | **Yes** | Any valid string | journal_id attribute |\n| `asset_account_id` | `string` | **Yes** | Any valid string | asset_account_id attribute |\n| `depr_expense_account_id` | `string` | **Yes** | Any valid string | depr_expense_account_id attribute |\n| `accum_depr_account_id` | `string` | **Yes** | Any valid string | accum_depr_account_id attribute |\n| `method` | `string` | No | `straight_line, declining, units` | method attribute |\n| `duration_months` | `integer` | No | Any valid integer | duration_months attribute |\n| `prorata` | `boolean` | No | Any valid boolean | prorata attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"journal_id\": \"string\",\n  \"asset_account_id\": \"string\",\n  \"depr_expense_account_id\": \"string\",\n  \"accum_depr_account_id\": \"string\",\n  \"method\": \"string\",\n  \"duration_months\": 0,\n  \"prorata\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_asset_category_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Asset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/assets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "assets"
+              ],
+              "variable": []
+            },
+            "description": "## Create Asset\n\nRegister a Fixed Asset and calculate its amortization schedule.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/assets`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `category_id` | `string` | **Yes** | Any valid string | category_id attribute |\n| `purchase_date` | `string` | **Yes** | Any valid string | purchase_date attribute |\n| `original_value` | `string` | **Yes** | Any valid string | original_value attribute |\n| `salvage_value` | `string` | No | Any valid string | salvage_value attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"category_id\": \"string\",\n  \"purchase_date\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_asset_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Post Asset Depreciation Line",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/assets/lines/:line_id/post",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "assets",
+                "lines",
+                ":line_id",
+                "post"
+              ],
+              "variable": [
+                {
+                  "key": "line_id",
+                  "value": "{{active_line_id}}",
+                  "description": "Dynamic path parameter bound to {{active_line_id}}"
+                }
+              ]
+            },
+            "description": "## Post Asset Depreciation Line\n\nPost a monthly asset depreciation line as a journal entry.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/assets/lines/{line_id}/post`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `line_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_post_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Budgetary Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/budgetary-positions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "budgetary-positions"
+              ],
+              "variable": []
+            },
+            "description": "## Create Budgetary Position\n\nCreate a budgetary position grouping accounts.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/budgetary-positions`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `code` | `string` | **Yes** | Any valid string | code attribute |\n| `account_ids` | `array` | No | Any valid array | account_ids attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_budgetary_position_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Budget",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/budgets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "budgets"
+              ],
+              "variable": []
+            },
+            "description": "## Create Budget\n\nCreate a new budget plan.\n\n**Endpoint**: `POST {{base_url}}/api/v1/accounting/budgets`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `date_from` | `string` | **Yes** | Any valid string | date_from attribute |\n| `date_to` | `string` | **Yes** | Any valid string | date_to attribute |\n| `responsible_id` | `string` | No | Any valid string | responsible_id attribute |\n| `lines` | `array` | No | Any valid array | lines attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"date_from\": \"string\",\n  \"date_to\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_budget_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Budget Analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/budgets/:budget_id/analysis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "budgets",
+                ":budget_id",
+                "analysis"
+              ],
+              "variable": [
+                {
+                  "key": "budget_id",
+                  "value": "{{active_budget_id}}",
+                  "description": "Dynamic path parameter bound to {{active_budget_id}}"
+                }
+              ]
+            },
+            "description": "## Get Budget Analysis\n\nGet real-time Planned vs Actual vs Theoretical analysis for budget lines.\n\n**Endpoint**: `GET {{base_url}}/api/v1/accounting/budgets/{budget_id}/analysis`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `budget_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trial Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accounting/reports/trial-balance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounting",
+                "reports",
+                "trial-balance"
+              ],
+              "variable": []
+            },
+            "description": "## Get Trial Balance\n\nGenerate real-time Trial Balance report.\n\n**Endpoint**: `GET {{base_url}}/api/v1/accounting/reports/trial-balance`  \n**Tags**: `Financial Accounting & General Ledger, Financial Accounting & General Ledger`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `date_from` | `query` | `string` | No | - |\n| `date_to` | `query` | `string` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
         }
       ]
     },
@@ -11460,6 +12571,303 @@
       ]
     },
     {
+      "name": "Purchases & Vendor Procurement",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchases/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "orders"
+              ],
+              "variable": []
+            },
+            "description": "## List Orders\n\nList all Purchase Orders and RFQs for the active company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/purchases/orders`  \n**Tags**: `Purchases & Vendor Procurement, Purchases & Vendor Procurement`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `state` | `query` | `string` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchases/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "orders"
+              ],
+              "variable": []
+            },
+            "description": "## Create Order\n\nCreate a new Request for Quotation (RFQ) or Purchase Order draft.\n\n**Endpoint**: `POST {{base_url}}/api/v1/purchases/orders`  \n**Tags**: `Purchases & Vendor Procurement, Purchases & Vendor Procurement`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `string` | **Yes** | Any valid string | party_id attribute |\n| `order_date` | `string` | **Yes** | Any valid string | order_date attribute |\n| `currency_id` | `string` | **Yes** | Any valid string | currency_id attribute |\n| `payment_term_id` | `string` | No | Any valid string | payment_term_id attribute |\n| `analytic_account_id` | `string` | No | Any valid string | analytic_account_id attribute |\n| `lines` | `array` | **Yes** | Any valid array | lines attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"party_id\": \"string\",\n  \"order_date\": \"string\",\n  \"currency_id\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_order_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchases/orders/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "orders",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "{{active_order_id}}",
+                  "description": "Dynamic path parameter bound to {{active_order_id}}"
+                }
+              ]
+            },
+            "description": "## Get Order\n\nRetrieve a single Purchase Order by ID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/purchases/orders/{order_id}`  \n**Tags**: `Purchases & Vendor Procurement, Purchases & Vendor Procurement`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `order_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchases/orders/:order_id/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "orders",
+                ":order_id",
+                "confirm"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "{{active_order_id}}",
+                  "description": "Dynamic path parameter bound to {{active_order_id}}"
+                }
+              ]
+            },
+            "description": "## Confirm Order\n\nConfirm a Purchase Order, evaluating approval thresholds and stamping legal sequence.\n\n**Endpoint**: `POST {{base_url}}/api/v1/purchases/orders/{order_id}/confirm`  \n**Tags**: `Purchases & Vendor Procurement, Purchases & Vendor Procurement`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `order_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_confirm_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Bill From Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/purchases/orders/:order_id/create-bill",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "orders",
+                ":order_id",
+                "create-bill"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "{{active_order_id}}",
+                  "description": "Dynamic path parameter bound to {{active_order_id}}"
+                }
+              ]
+            },
+            "description": "## Create Bill From Order\n\n1-Click generation of draft Vendor Bill in Accounting from confirmed Purchase Order.\n\n**Endpoint**: `POST {{base_url}}/api/v1/purchases/orders/{order_id}/create-bill`  \n**Tags**: `Purchases & Vendor Procurement, Purchases & Vendor Procurement`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `order_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_create_bill_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Resource Scheduling & Capacity Allocation",
       "item": [
         {
@@ -11993,6 +13401,303 @@
             "description": "## Delete Resource Allocation\n\nDeletes a resource allocation.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/resources/allocations/{allocation_id}`  \n**Tags**: `Resource Scheduling & Capacity Allocation, Resource Scheduling & Capacity Allocation`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `allocation_id` | `path` | `string` | **Yes** | Allocation UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sales & Customer Order Management",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sales/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sales",
+                "orders"
+              ],
+              "variable": []
+            },
+            "description": "## List Orders\n\nList all Sales Quotations and Orders for the active company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/sales/orders`  \n**Tags**: `Sales & Customer Order Management, Sales & Customer Order Management`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `state` | `query` | `string` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sales/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sales",
+                "orders"
+              ],
+              "variable": []
+            },
+            "description": "## Create Order\n\nCreate a new Sales Quotation.\n\n**Endpoint**: `POST {{base_url}}/api/v1/sales/orders`  \n**Tags**: `Sales & Customer Order Management, Sales & Customer Order Management`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `string` | **Yes** | Any valid string | party_id attribute |\n| `order_date` | `string` | **Yes** | Any valid string | order_date attribute |\n| `currency_id` | `string` | **Yes** | Any valid string | currency_id attribute |\n| `payment_term_id` | `string` | No | Any valid string | payment_term_id attribute |\n| `analytic_account_id` | `string` | No | Any valid string | analytic_account_id attribute |\n| `lines` | `array` | **Yes** | Any valid array | lines attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"party_id\": \"string\",\n  \"order_date\": \"string\",\n  \"currency_id\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_order_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sales/orders/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sales",
+                "orders",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "{{active_order_id}}",
+                  "description": "Dynamic path parameter bound to {{active_order_id}}"
+                }
+              ]
+            },
+            "description": "## Get Order\n\nRetrieve a single Sales Order by ID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/sales/orders/{order_id}`  \n**Tags**: `Sales & Customer Order Management, Sales & Customer Order Management`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `order_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sales/orders/:order_id/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sales",
+                "orders",
+                ":order_id",
+                "confirm"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "{{active_order_id}}",
+                  "description": "Dynamic path parameter bound to {{active_order_id}}"
+                }
+              ]
+            },
+            "description": "## Confirm Order\n\nConfirm a Quotation into a Sales Order, stamping legal sequence.\n\n**Endpoint**: `POST {{base_url}}/api/v1/sales/orders/{order_id}/confirm`  \n**Tags**: `Sales & Customer Order Management, Sales & Customer Order Management`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `order_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_confirm_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Invoice From Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sales/orders/:order_id/create-invoice",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sales",
+                "orders",
+                ":order_id",
+                "create-invoice"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "{{active_order_id}}",
+                  "description": "Dynamic path parameter bound to {{active_order_id}}"
+                }
+              ]
+            },
+            "description": "## Create Invoice From Order\n\n1-Click generation of draft Customer Invoice in Accounting from confirmed Sales Order.\n\n**Endpoint**: `POST {{base_url}}/api/v1/sales/orders/{order_id}/create-invoice`  \n**Tags**: `Sales & Customer Order Management, Sales & Customer Order Management`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `order_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_create_invoice_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
