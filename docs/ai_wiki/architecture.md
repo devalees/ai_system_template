@@ -793,6 +793,16 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
   - `PricingService.evaluate_price()` matches eligible rules by quantity threshold (`min_quantity <= qty`) and time-window validity (`valid_from <= now <= valid_to`).
   - Precedence hierarchy: Product-specific rule (Score 3) > Category-specific rule (Score 2) > Global catalog rule (Score 1), with tie-breaking by highest volume tier break (`min_quantity.desc()`) and execution sequence (`sequence.asc()`).
 
+#### 6.13.13 Multi-Jurisdiction Tax Engine & Fiscal Positions (`taxes`)
+- **Package**: `backend/modules/base/taxes/`
+- **Models (`Tax`, `TaxFiscalPosition`, `TaxFiscalPositionRule`)**:
+  - `Tax`: Comprehensive tax definitions supporting percentage, fixed amounts, inclusive (gross/B2C) tax extraction, and compounding rules (`include_base_amount`).
+  - `TaxFiscalPosition`: Jurisdiction rules mapping customer/vendor profiles, countries, and cross-border export statuses (`name`, `code`, `country_id`, `auto_apply`, `vat_required`, `note`).
+  - `TaxFiscalPositionRule`: Tax substitution and exemption rules (`source_tax_id -> dest_tax_id`, where null destination designates tax exemption).
+- **Computational Tax Engine**:
+  - `TaxService.compute_taxes()` dynamically evaluates document order lines, applies fiscal position substitutions, handles inclusive gross extractions (`base = gross / (1 + R_inc)`), and evaluates cascading compound taxes sorted by sequence.
+
+
 
 
 

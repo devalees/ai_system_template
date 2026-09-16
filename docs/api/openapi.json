@@ -9201,6 +9201,705 @@
         ]
       }
     },
+    "/api/v1/taxes": {
+      "post": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Create Tax Definition",
+        "description": "Registers a new tax definition (percentage, fixed, inclusive, or compound).",
+        "operationId": "create_tax_api_v1_taxes_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "List Tax Definitions",
+        "description": "Retrieves all taxes defined for the active tenant company.",
+        "operationId": "list_taxes_api_v1_taxes_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by scope: sales, purchase, or none",
+              "title": "Scope"
+            },
+            "description": "Filter by scope: sales, purchase, or none"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxResponse"
+                  },
+                  "title": "Response List Taxes Api V1 Taxes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taxes/{tax_id}": {
+      "get": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Get Tax Definition",
+        "description": "Fetch single tax configuration by UUID.",
+        "operationId": "get_tax_api_v1_taxes__tax_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tax_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Tax UUID",
+              "title": "Tax Id"
+            },
+            "description": "Tax UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Update Tax Definition",
+        "description": "Update parameters or rate of an existing tax.",
+        "operationId": "update_tax_api_v1_taxes__tax_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tax_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Tax UUID",
+              "title": "Tax Id"
+            },
+            "description": "Tax UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Delete Tax Definition",
+        "description": "Soft-deletes a tax definition.",
+        "operationId": "delete_tax_api_v1_taxes__tax_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tax_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Tax UUID",
+              "title": "Tax Id"
+            },
+            "description": "Tax UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taxes/fiscal-positions": {
+      "post": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Create Fiscal Position",
+        "description": "Creates a jurisdiction or export fiscal position mapping.",
+        "operationId": "create_fiscal_position_api_v1_taxes_fiscal_positions_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FiscalPositionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalPositionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "List Fiscal Positions",
+        "description": "Lists all fiscal positions for current tenant company.",
+        "operationId": "list_fiscal_positions_api_v1_taxes_fiscal_positions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FiscalPositionResponse"
+                  },
+                  "title": "Response List Fiscal Positions Api V1 Taxes Fiscal Positions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taxes/fiscal-positions/{position_id}": {
+      "get": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Get Fiscal Position",
+        "description": "Fetch single fiscal position with its mapping rules.",
+        "operationId": "get_fiscal_position_api_v1_taxes_fiscal_positions__position_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Fiscal position UUID",
+              "title": "Position Id"
+            },
+            "description": "Fiscal position UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalPositionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Update Fiscal Position",
+        "description": "Updates fiscal position settings or active status.",
+        "operationId": "update_fiscal_position_api_v1_taxes_fiscal_positions__position_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Fiscal position UUID",
+              "title": "Position Id"
+            },
+            "description": "Fiscal position UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FiscalPositionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalPositionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Delete Fiscal Position",
+        "description": "Soft-deletes a fiscal position and cascades to its rules.",
+        "operationId": "delete_fiscal_position_api_v1_taxes_fiscal_positions__position_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Fiscal position UUID",
+              "title": "Position Id"
+            },
+            "description": "Fiscal position UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taxes/fiscal-positions/{position_id}/rules": {
+      "post": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Add Fiscal Position Rule",
+        "description": "Appends a tax mapping rule (source -> destination or exemption) to a fiscal position.",
+        "operationId": "add_fiscal_position_rule_api_v1_taxes_fiscal_positions__position_id__rules_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Fiscal position UUID",
+              "title": "Position Id"
+            },
+            "description": "Fiscal position UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FiscalPositionRuleCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalPositionRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taxes/fiscal-positions/rules/{rule_id}": {
+      "delete": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Delete Fiscal Position Rule",
+        "description": "Deletes a specific tax mapping rule.",
+        "operationId": "delete_fiscal_position_rule_api_v1_taxes_fiscal_positions_rules__rule_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Rule UUID",
+              "title": "Rule Id"
+            },
+            "description": "Rule UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taxes/compute": {
+      "post": {
+        "tags": [
+          "Tax Engine & Fiscal Positions",
+          "Tax Engine & Fiscal Positions"
+        ],
+        "summary": "Compute Taxes for Document Lines",
+        "description": "Calculates multi-line taxes, inclusive/exclusive bases, compounding, and fiscal position substitutions.",
+        "operationId": "compute_taxes_api_v1_taxes_compute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxComputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxComputeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/addresses/": {
       "post": {
         "tags": [
@@ -19476,6 +20175,420 @@
         "title": "FiscalPeriodRead",
         "description": "Serialized representation of a fiscal period."
       },
+      "FiscalPositionCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Fiscal position title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational notes"
+          },
+          "auto_apply": {
+            "type": "boolean",
+            "title": "Auto Apply",
+            "description": "Whether to automatically match customer country",
+            "default": false
+          },
+          "country_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Id",
+            "description": "Country target for auto-matching"
+          },
+          "vat_required": {
+            "type": "boolean",
+            "title": "Vat Required",
+            "description": "Whether customer tax_id is mandatory to qualify",
+            "default": false
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Mandatory legal disclaimer printed on invoice"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/FiscalPositionRuleBase"
+            },
+            "type": "array",
+            "title": "Rules",
+            "description": "Initial tax mapping rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "FiscalPositionCreate",
+        "example": {
+          "auto_apply": false,
+          "code": "FP_EXPORT",
+          "description": "Zero-rated tax position for international exports",
+          "name": "Export Customer (Outside Jurisdiction)",
+          "note": "Exempt from domestic VAT under Article 32 of Tax Law.",
+          "rules": [],
+          "vat_required": false
+        }
+      },
+      "FiscalPositionResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Fiscal position title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational notes"
+          },
+          "auto_apply": {
+            "type": "boolean",
+            "title": "Auto Apply",
+            "description": "Whether to automatically match customer country",
+            "default": false
+          },
+          "country_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Id",
+            "description": "Country target for auto-matching"
+          },
+          "vat_required": {
+            "type": "boolean",
+            "title": "Vat Required",
+            "description": "Whether customer tax_id is mandatory to qualify",
+            "default": false
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Mandatory legal disclaimer printed on invoice"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/FiscalPositionRuleResponse"
+            },
+            "type": "array",
+            "title": "Rules",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "FiscalPositionResponse"
+      },
+      "FiscalPositionRuleBase": {
+        "properties": {
+          "source_tax_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Tax Id",
+            "description": "Default line tax to be mapped"
+          },
+          "dest_tax_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dest Tax Id",
+            "description": "Replacement tax (or None to make the line tax-exempt)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_tax_id"
+        ],
+        "title": "FiscalPositionRuleBase"
+      },
+      "FiscalPositionRuleCreate": {
+        "properties": {
+          "source_tax_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Tax Id",
+            "description": "Default line tax to be mapped"
+          },
+          "dest_tax_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dest Tax Id",
+            "description": "Replacement tax (or None to make the line tax-exempt)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_tax_id"
+        ],
+        "title": "FiscalPositionRuleCreate",
+        "example": {
+          "dest_tax_id": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+          "source_tax_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+        }
+      },
+      "FiscalPositionRuleResponse": {
+        "properties": {
+          "source_tax_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Tax Id",
+            "description": "Default line tax to be mapped"
+          },
+          "dest_tax_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dest Tax Id",
+            "description": "Replacement tax (or None to make the line tax-exempt)"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "position_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Position Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "source_tax_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Tax Name"
+          },
+          "dest_tax_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dest Tax Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_tax_id",
+          "id",
+          "position_id",
+          "created_at"
+        ],
+        "title": "FiscalPositionRuleResponse"
+      },
+      "FiscalPositionUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "auto_apply": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Apply"
+          },
+          "country_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Id"
+          },
+          "vat_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vat Required"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "FiscalPositionUpdate"
+      },
       "FiscalYearCreate": {
         "properties": {
           "name": {
@@ -26037,6 +27150,527 @@
           "name": "Critical Priority"
         }
       },
+      "TaxComputeRequest": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/TaxLineInput"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Lines",
+            "description": "Order/Invoice lines to evaluate"
+          },
+          "fiscal_position_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Position Id",
+            "description": "Optional fiscal position mapping"
+          },
+          "currency_rounding": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Currency Rounding",
+            "description": "Smallest currency fraction",
+            "default": "0.01"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines"
+        ],
+        "title": "TaxComputeRequest",
+        "example": {
+          "currency_rounding": "0.01",
+          "lines": [
+            {
+              "discount_percentage": "10.0",
+              "line_id": "line-1",
+              "price_unit": "100.00",
+              "quantity": "2.0",
+              "tax_ids": [
+                "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+              ]
+            }
+          ]
+        }
+      },
+      "TaxComputeResponse": {
+        "properties": {
+          "subtotal": {
+            "type": "string",
+            "title": "Subtotal",
+            "description": "Total net taxable subtotal across all lines"
+          },
+          "total_tax": {
+            "type": "string",
+            "title": "Total Tax",
+            "description": "Total tax amount across all lines"
+          },
+          "total_amount": {
+            "type": "string",
+            "title": "Total Amount",
+            "description": "Gross total (subtotal + total_tax)"
+          },
+          "fiscal_position_applied": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Position Applied",
+            "description": "Title of fiscal position applied, if any"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/TaxLineResult"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "tax_summary": {
+            "items": {
+              "$ref": "#/components/schemas/TaxSummaryItem"
+            },
+            "type": "array",
+            "title": "Tax Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subtotal",
+          "total_tax",
+          "total_amount",
+          "lines",
+          "tax_summary"
+        ],
+        "title": "TaxComputeResponse",
+        "example": {
+          "lines": [],
+          "subtotal": "180.00",
+          "tax_summary": [],
+          "total_amount": "207.00",
+          "total_tax": "27.00"
+        }
+      },
+      "TaxCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Tax display title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "tax_scope": {
+            "type": "string",
+            "pattern": "^(sales|purchase|none)$",
+            "title": "Tax Scope",
+            "description": "Scope: sales, purchase, or none",
+            "default": "sales"
+          },
+          "calculation_type": {
+            "type": "string",
+            "pattern": "^(percent|fixed|division)$",
+            "title": "Calculation Type",
+            "description": "Calculation mode: percent, fixed, or division",
+            "default": "percent"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount",
+            "description": "Tax rate percentage (e.g. 15.0) or fixed amount",
+            "default": "0.0000"
+          },
+          "is_inclusive": {
+            "type": "boolean",
+            "title": "Is Inclusive",
+            "description": "True if unit price includes this tax (B2C/gross)",
+            "default": false
+          },
+          "include_base_amount": {
+            "type": "boolean",
+            "title": "Include Base Amount",
+            "description": "True if tax amount compounds into base for subsequent taxes",
+            "default": false
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Evaluation sequence for compounding rules",
+            "default": 10
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Regulatory reference or notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "TaxCreate",
+        "example": {
+          "amount": "15.0000",
+          "calculation_type": "percent",
+          "code": "VAT_15",
+          "description": "Standard 15% domestic sales VAT",
+          "include_base_amount": false,
+          "is_inclusive": false,
+          "name": "Value Added Tax (15%)",
+          "sequence": 10,
+          "tax_scope": "sales"
+        }
+      },
+      "TaxLineBreakdownItem": {
+        "properties": {
+          "tax_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tax Id"
+          },
+          "tax_name": {
+            "type": "string",
+            "title": "Tax Name"
+          },
+          "rate": {
+            "type": "string",
+            "title": "Rate"
+          },
+          "base_amount": {
+            "type": "string",
+            "title": "Base Amount"
+          },
+          "tax_amount": {
+            "type": "string",
+            "title": "Tax Amount"
+          },
+          "is_inclusive": {
+            "type": "boolean",
+            "title": "Is Inclusive"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tax_id",
+          "tax_name",
+          "rate",
+          "base_amount",
+          "tax_amount",
+          "is_inclusive"
+        ],
+        "title": "TaxLineBreakdownItem"
+      },
+      "TaxLineInput": {
+        "properties": {
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id",
+            "description": "Arbitrary client line identifier"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Price Unit",
+            "description": "Unit sales or purchase price"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity",
+            "description": "Quantity",
+            "default": "1.0"
+          },
+          "discount_percentage": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Discount Percentage",
+            "description": "Line discount %",
+            "default": "0.0"
+          },
+          "tax_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Tax Ids",
+            "description": "Applicable tax IDs on line"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price_unit"
+        ],
+        "title": "TaxLineInput"
+      },
+      "TaxLineResult": {
+        "properties": {
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "price_unit": {
+            "type": "string",
+            "title": "Price Unit"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "discount_percentage": {
+            "type": "string",
+            "title": "Discount Percentage"
+          },
+          "effective_unit_price": {
+            "type": "string",
+            "title": "Effective Unit Price"
+          },
+          "net_subtotal": {
+            "type": "string",
+            "title": "Net Subtotal"
+          },
+          "total_tax": {
+            "type": "string",
+            "title": "Total Tax"
+          },
+          "total_amount": {
+            "type": "string",
+            "title": "Total Amount"
+          },
+          "tax_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/TaxLineBreakdownItem"
+            },
+            "type": "array",
+            "title": "Tax Breakdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price_unit",
+          "quantity",
+          "discount_percentage",
+          "effective_unit_price",
+          "net_subtotal",
+          "total_tax",
+          "total_amount"
+        ],
+        "title": "TaxLineResult"
+      },
+      "TaxResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Tax display title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "tax_scope": {
+            "type": "string",
+            "pattern": "^(sales|purchase|none)$",
+            "title": "Tax Scope",
+            "description": "Scope: sales, purchase, or none",
+            "default": "sales"
+          },
+          "calculation_type": {
+            "type": "string",
+            "pattern": "^(percent|fixed|division)$",
+            "title": "Calculation Type",
+            "description": "Calculation mode: percent, fixed, or division",
+            "default": "percent"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Tax rate percentage (e.g. 15.0) or fixed amount",
+            "default": "0.0000"
+          },
+          "is_inclusive": {
+            "type": "boolean",
+            "title": "Is Inclusive",
+            "description": "True if unit price includes this tax (B2C/gross)",
+            "default": false
+          },
+          "include_base_amount": {
+            "type": "boolean",
+            "title": "Include Base Amount",
+            "description": "True if tax amount compounds into base for subsequent taxes",
+            "default": false
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Evaluation sequence for compounding rules",
+            "default": 10
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Regulatory reference or notes"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "TaxResponse"
+      },
+      "TaxSummaryItem": {
+        "properties": {
+          "tax_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tax Id"
+          },
+          "tax_name": {
+            "type": "string",
+            "title": "Tax Name"
+          },
+          "rate": {
+            "type": "string",
+            "title": "Rate"
+          },
+          "total_base": {
+            "type": "string",
+            "title": "Total Base"
+          },
+          "total_tax": {
+            "type": "string",
+            "title": "Total Tax"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tax_id",
+          "tax_name",
+          "rate",
+          "total_base",
+          "total_tax"
+        ],
+        "title": "TaxSummaryItem"
+      },
       "TaxTypeCreate": {
         "properties": {
           "name": {
@@ -26199,6 +27833,118 @@
           "name": "Standard VAT 15% (Revised)",
           "rate": 15.0
         }
+      },
+      "TaxUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "tax_scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(sales|purchase|none)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Scope"
+          },
+          "calculation_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(percent|fixed|division)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation Type"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "is_inclusive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Inclusive"
+          },
+          "include_base_amount": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include Base Amount"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "title": "TaxUpdate"
       },
       "TokenResponse": {
         "properties": {

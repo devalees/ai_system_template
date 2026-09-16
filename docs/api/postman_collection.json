@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "bae6f268-5a19-4504-8ef2-98fe5b26b7dd",
+    "_postman_id": "7ec1cd1f-aea1-4e25-baeb-4a2c6fe95b14",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -9987,6 +9987,669 @@
             "description": "## Root Endpoint\n\nRoot API platform status and documentation links.\n\n**Endpoint**: `GET {{base_url}}/`  \n**Tags**: `System Diagnostics`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tax Engine & Fiscal Positions",
+      "item": [
+        {
+          "name": "List Tax Definitions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes"
+              ],
+              "variable": []
+            },
+            "description": "## List Tax Definitions\n\nRetrieves all taxes defined for the active tenant company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/taxes`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `scope` | `query` | `string` | No | Filter by scope: sales, purchase, or none |\n| `is_active` | `query` | `string` | No | Filter by active status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tax Definition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes"
+              ],
+              "variable": []
+            },
+            "description": "## Create Tax Definition\n\nRegisters a new tax definition (percentage, fixed, inclusive, or compound).\n\n**Endpoint**: `POST {{base_url}}/api/v1/taxes`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Tax display title |\n| `code` | `string` | **Yes** | Any valid string | Unique reference code |\n| `tax_scope` | `string` | No | Any valid string | Scope: sales, purchase, or none |\n| `calculation_type` | `string` | No | Any valid string | Calculation mode: percent, fixed, or division |\n| `amount` | `string` | No | Any valid string | Tax rate percentage (e.g. 15.0) or fixed amount |\n| `is_inclusive` | `boolean` | No | Any valid boolean | True if unit price includes this tax (B2C/gross) |\n| `include_base_amount` | `boolean` | No | Any valid boolean | True if tax amount compounds into base for subsequent taxes |\n| `sequence` | `integer` | No | Any valid integer | Evaluation sequence for compounding rules |\n| `description` | `string` | No | Any valid string | Regulatory reference or notes |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"15.0000\",\n  \"calculation_type\": \"percent\",\n  \"code\": \"VAT_15\",\n  \"description\": \"Standard 15% domestic sales VAT\",\n  \"include_base_amount\": false,\n  \"is_inclusive\": false,\n  \"name\": \"Value Added Tax (15%)\",\n  \"sequence\": 10,\n  \"tax_scope\": \"sales\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_taxe_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Tax Definition",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/:tax_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                ":tax_id"
+              ],
+              "variable": [
+                {
+                  "key": "tax_id",
+                  "value": "{{active_tax_id}}",
+                  "description": "Dynamic path parameter bound to {{active_tax_id}}"
+                }
+              ]
+            },
+            "description": "## Get Tax Definition\n\nFetch single tax configuration by UUID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/taxes/{tax_id}`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `tax_id` | `path` | `string` | **Yes** | Tax UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Tax Definition",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/:tax_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                ":tax_id"
+              ],
+              "variable": [
+                {
+                  "key": "tax_id",
+                  "value": "{{active_tax_id}}",
+                  "description": "Dynamic path parameter bound to {{active_tax_id}}"
+                }
+              ]
+            },
+            "description": "## Update Tax Definition\n\nUpdate parameters or rate of an existing tax.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/taxes/{tax_id}`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `tax_id` | `path` | `string` | **Yes** | Tax UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `tax_scope` | `string` | No | Any valid string | tax_scope attribute |\n| `calculation_type` | `string` | No | Any valid string | calculation_type attribute |\n| `amount` | `string` | No | Any valid string | amount attribute |\n| `is_inclusive` | `boolean` | No | Any valid boolean | is_inclusive attribute |\n| `include_base_amount` | `boolean` | No | Any valid boolean | include_base_amount attribute |\n| `sequence` | `integer` | No | Any valid integer | sequence attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Tax Definition",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/:tax_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                ":tax_id"
+              ],
+              "variable": [
+                {
+                  "key": "tax_id",
+                  "value": "{{active_tax_id}}",
+                  "description": "Dynamic path parameter bound to {{active_tax_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Tax Definition\n\nSoft-deletes a tax definition.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/taxes/{tax_id}`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `tax_id` | `path` | `string` | **Yes** | Tax UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Fiscal Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/fiscal-positions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                "fiscal-positions"
+              ],
+              "variable": []
+            },
+            "description": "## List Fiscal Positions\n\nLists all fiscal positions for current tenant company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/taxes/fiscal-positions`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `is_active` | `query` | `string` | No | Filter by active status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Fiscal Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/fiscal-positions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                "fiscal-positions"
+              ],
+              "variable": []
+            },
+            "description": "## Create Fiscal Position\n\nCreates a jurisdiction or export fiscal position mapping.\n\n**Endpoint**: `POST {{base_url}}/api/v1/taxes/fiscal-positions`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Fiscal position title |\n| `code` | `string` | **Yes** | Any valid string | Unique reference code |\n| `description` | `string` | No | Any valid string | Operational notes |\n| `auto_apply` | `boolean` | No | Any valid boolean | Whether to automatically match customer country |\n| `country_id` | `string` | No | Any valid string | Country target for auto-matching |\n| `vat_required` | `boolean` | No | Any valid boolean | Whether customer tax_id is mandatory to qualify |\n| `note` | `string` | No | Any valid string | Mandatory legal disclaimer printed on invoice |\n| `rules` | `array` | No | Any valid array | Initial tax mapping rules |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auto_apply\": false,\n  \"code\": \"FP_EXPORT\",\n  \"description\": \"Zero-rated tax position for international exports\",\n  \"name\": \"Export Customer (Outside Jurisdiction)\",\n  \"note\": \"Exempt from domestic VAT under Article 32 of Tax Law.\",\n  \"rules\": [],\n  \"vat_required\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_fiscal_position_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Fiscal Position",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/fiscal-positions/:position_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                "fiscal-positions",
+                ":position_id"
+              ],
+              "variable": [
+                {
+                  "key": "position_id",
+                  "value": "{{active_position_id}}",
+                  "description": "Dynamic path parameter bound to {{active_position_id}}"
+                }
+              ]
+            },
+            "description": "## Get Fiscal Position\n\nFetch single fiscal position with its mapping rules.\n\n**Endpoint**: `GET {{base_url}}/api/v1/taxes/fiscal-positions/{position_id}`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `position_id` | `path` | `string` | **Yes** | Fiscal position UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Fiscal Position",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/fiscal-positions/:position_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                "fiscal-positions",
+                ":position_id"
+              ],
+              "variable": [
+                {
+                  "key": "position_id",
+                  "value": "{{active_position_id}}",
+                  "description": "Dynamic path parameter bound to {{active_position_id}}"
+                }
+              ]
+            },
+            "description": "## Update Fiscal Position\n\nUpdates fiscal position settings or active status.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/taxes/fiscal-positions/{position_id}`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `position_id` | `path` | `string` | **Yes** | Fiscal position UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n| `auto_apply` | `boolean` | No | Any valid boolean | auto_apply attribute |\n| `country_id` | `string` | No | Any valid string | country_id attribute |\n| `vat_required` | `boolean` | No | Any valid boolean | vat_required attribute |\n| `note` | `string` | No | Any valid string | note attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Fiscal Position",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/fiscal-positions/:position_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                "fiscal-positions",
+                ":position_id"
+              ],
+              "variable": [
+                {
+                  "key": "position_id",
+                  "value": "{{active_position_id}}",
+                  "description": "Dynamic path parameter bound to {{active_position_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Fiscal Position\n\nSoft-deletes a fiscal position and cascades to its rules.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/taxes/fiscal-positions/{position_id}`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `position_id` | `path` | `string` | **Yes** | Fiscal position UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Fiscal Position Rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/fiscal-positions/:position_id/rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                "fiscal-positions",
+                ":position_id",
+                "rules"
+              ],
+              "variable": [
+                {
+                  "key": "position_id",
+                  "value": "{{active_position_id}}",
+                  "description": "Dynamic path parameter bound to {{active_position_id}}"
+                }
+              ]
+            },
+            "description": "## Add Fiscal Position Rule\n\nAppends a tax mapping rule (source -> destination or exemption) to a fiscal position.\n\n**Endpoint**: `POST {{base_url}}/api/v1/taxes/fiscal-positions/{position_id}/rules`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `position_id` | `path` | `string` | **Yes** | Fiscal position UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `source_tax_id` | `string` | **Yes** | Any valid string | Default line tax to be mapped |\n| `dest_tax_id` | `string` | No | Any valid string | Replacement tax (or None to make the line tax-exempt) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dest_tax_id\": \"b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e\",\n  \"source_tax_id\": \"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_rule_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Fiscal Position Rule",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/fiscal-positions/rules/:rule_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                "fiscal-positions",
+                "rules",
+                ":rule_id"
+              ],
+              "variable": [
+                {
+                  "key": "rule_id",
+                  "value": "{{active_rule_id}}",
+                  "description": "Dynamic path parameter bound to {{active_rule_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Fiscal Position Rule\n\nDeletes a specific tax mapping rule.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/taxes/fiscal-positions/rules/{rule_id}`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `rule_id` | `path` | `string` | **Yes** | Rule UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Compute Taxes for Document Lines",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxes/compute",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "taxes",
+                "compute"
+              ],
+              "variable": []
+            },
+            "description": "## Compute Taxes for Document Lines\n\nCalculates multi-line taxes, inclusive/exclusive bases, compounding, and fiscal position substitutions.\n\n**Endpoint**: `POST {{base_url}}/api/v1/taxes/compute`  \n**Tags**: `Tax Engine & Fiscal Positions, Tax Engine & Fiscal Positions`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `lines` | `array` | **Yes** | Any valid array | Order/Invoice lines to evaluate |\n| `fiscal_position_id` | `string` | No | Any valid string | Optional fiscal position mapping |\n| `currency_rounding` | `string` | No | Any valid string | Smallest currency fraction |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currency_rounding\": \"0.01\",\n  \"lines\": [\n    {\n      \"discount_percentage\": \"10.0\",\n      \"line_id\": \"line-1\",\n      \"price_unit\": \"100.00\",\n      \"quantity\": \"2.0\",\n      \"tax_ids\": [\n        \"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d\"\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_compute_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
