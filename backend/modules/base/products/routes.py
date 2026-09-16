@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
-from core.context import get_active_company_id
+from core.context import get_active_company_id, get_active_company_ids
 from core.exceptions import ValidationException
 from modules.base.identity_rbac.models import User
 from modules.base.identity_rbac.dependencies import get_current_user, require_permission
@@ -104,9 +104,11 @@ async def list_products(
     user: User = Depends(get_current_user),
 ) -> List[ProductDetailRead]:
     company_id = _resolve_company_id(user)
+    company_ids = get_active_company_ids() or [company_id]
     products = await ProductService.list_products(
         db,
-        company_id,
+        company_id=company_id,
+        company_ids=company_ids,
         search=search,
         product_type=product_type,
         category_id=category_id,

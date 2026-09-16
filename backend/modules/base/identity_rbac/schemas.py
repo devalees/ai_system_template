@@ -593,3 +593,36 @@ class CompanyRead(BaseModel):
     is_active: bool
     created_at: datetime
 
+
+class CompanyItemRead(BaseModel):
+    """Summarized company item for multi-company navigation."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    code: str
+    currency_id: Optional[str] = "USD"
+    is_default: bool = False
+    is_current: bool = False
+
+
+class UserCompanyAssignPayload(BaseModel):
+    """Payload to grant a user access to an additional company."""
+    company_id: uuid.UUID = Field(..., description="Target company UUID to grant access to")
+    is_default: bool = Field(False, description="Set as the user's primary/default company")
+
+
+class SwitchCompanyPayload(BaseModel):
+    """Payload to switch the active company context."""
+    company_id: uuid.UUID = Field(..., description="Company UUID to switch active context into")
+
+
+class SwitchCompanyResponse(BaseModel):
+    """Response returned upon switching active company context."""
+    access_token: str
+    token_type: str = "bearer"
+    active_company_id: uuid.UUID
+    active_company_name: str
+    active_company_code: str
+
+

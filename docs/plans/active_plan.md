@@ -2238,7 +2238,70 @@ Implement two essential enterprise architectural capabilities prior to Pillar 3 
 - *2026-09-16*: Full preservation of product and analytic cost center linkages across the entire document lifecycle (SO/PO -> Invoice/Bill -> General Ledger).
 
 ### 4. Current Focus
-Phase 47 is **100% COMPLETED**. All 4 foundational master data pillars and financial engines are ratified with 175 passing tests. Ready to proceed to Pillar 3: Frontend.
+Phase 47 is **100% COMPLETED**. All 4 foundational master data pillars and financial engines are ratified with 175 passing tests. Transitioned to Phase 48.
+
+---
+
+## Phase 48: Enterprise Multi-Company Architecture & Aggregated Query Engine
+
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-16 23:55:00+03:00
+
+### 1. Objective & Scope
+Implement the complete enterprise **Multi-Company Architecture** across all system layers:
+1. **User-Company Multi-Tenancy M:M Membership**:
+   - `UserCompanyLink` mapping users to permitted tenant organizations with `is_default` preference.
+   - Zero-downtime database migration creating `user_company_links` and backfilling existing platform users.
+   - Auto-creation of primary `UserCompanyLink(is_default=True)` upon user self-registration and administrator user creation.
+2. **Dual-Mode Context & Query Filtration Engine**:
+   - Write operations (`POST`, `PUT`, `DELETE`): Strictly bound to single primary active workspace (`X-Company-ID`).
+   - Read operations (`GET`): Automatic ORM query filtering injecting `WHERE company_id IN (:active_company_ids)` when `X-Company-IDs` is supplied for multi-company aggregated views.
+   - Dual-mode support integrated into `sales`, `purchases`, `accounting`, `products`, and `identity_rbac` modules.
+3. **Security Authorization Guards & Universal Superuser Bypass**:
+   - Regular users querying unauthorized companies (`X-Company-ID` or `X-Company-IDs`) receive `403 Forbidden`.
+   - Superusers enjoy universal bypass across all tenant boundaries.
+4. **Company Navigation & Switching APIs**:
+   - `GET /api/v1/identity_rbac/users/me/companies`: returns allowed companies with `is_default` and `is_current`.
+   - `POST /api/v1/identity_rbac/auth/switch-company`: switches active company session context and issues a refreshed JWT access token.
+   - `POST /api/v1/identity_rbac/users/{user_id}/companies`: assigns an existing user to an additional company.
+   - `DELETE /api/v1/identity_rbac/users/{user_id}/companies/{company_id}`: revokes user access to a company with sole-company protection.
+5. **Comprehensive Automated Testing & API Synchronization**:
+   - Authored `tests/test_multi_company.py` verifying headers, ORM filtration, security guards, company switching, and write isolation.
+   - Verified 100% test pass rate across the full platform test suite: **179 / 179 tests passing**.
+   - Synchronized OpenAPI (`docs/api/openapi.json`) and Postman (`docs/api/postman_collection.json`).
+
+### 2. Task Checklist & Progress
+- [x] **Stage 48.1: Database Migration & Schema Foundations** - COMPLETED
+  - Created `user_company_links` table with `id`, `company_id`, `user_id`, `target_company_id`, `is_default`, `version_id`, `created_at`, `updated_at`, `created_by_id`, `updated_by_id`, `custom_fields`, `deleted_at`, `deleted_by_id`, `is_active`.
+  - Backfilled 544 user-company link records for existing users.
+- [x] **Stage 48.2: Core Models & Schemas** - COMPLETED
+  - Defined `UserCompanyLink` model and `allowed_company_links` relationship on `User`.
+  - Created `CompanyItemRead`, `UserCompanyAssignPayload`, `SwitchCompanyPayload`, and `SwitchCompanyResponse` schemas.
+- [x] **Stage 48.3: Context Engine & ORM Query Filtration Engine** - COMPLETED
+  - Added `_active_company_ids` ContextVar, `get_active_company_ids()`, and `set_active_company_ids()`.
+  - Updated `MultiTenancyContextMiddleware` to parse `X-Company-ID` and comma-separated `X-Company-IDs`.
+  - Updated `_add_automatic_query_filtration` in `database.py` to inject `cls.company_id.in_(active_comps)` for aggregated read queries while strictly preserving single-company writes.
+- [x] **Stage 48.4: Authentication & Security Authorization Dependencies** - COMPLETED
+  - Added authorization check in `get_current_user` rejecting non-superuser requests targeting unauthorized companies with `403 Forbidden`.
+  - Populated both `set_active_company_id` and `set_active_company_ids` in request context.
+- [x] **Stage 48.5: Identity Routes & Module Query Alignment** - COMPLETED
+  - Implemented `GET /users/me/companies`, `POST /auth/switch-company`, `POST /users/{user_id}/companies`, `DELETE /users/{user_id}/companies/{company_id}`.
+  - Aligned list endpoints in `sales`, `purchases`, `accounting`, `products`, and `identity_rbac` to query across `active_comps`.
+  - Fixed relationship lazy-load in `compute_instance_diff` to strictly inspect column attributes.
+- [x] **Stage 48.6: Automated Testing & Verification** - COMPLETED
+  - Authored `tests/test_multi_company.py` with 4/4 passing tests.
+  - Verified full platform regression test suite: **179 / 179 tests passing 100% in Docker**.
+  - Synchronized OpenAPI (`docs/api/openapi.json`) and Postman (`docs/api/postman_collection.json`).
+
+### 3. Key Decisions & Architecture Invariants (Phase 48)
+- *2026-09-16*: Strict Write-Isolation Invariant: All mutations (`POST`, `PUT`, `DELETE`) are strictly single-tenant and bound to `X-Company-ID` (primary active company). Aggregated multi-company views (`X-Company-IDs`) only affect read (`GET`) operations.
+- *2026-09-16*: `UserCompanyLink` is a cross-tenant mapping entity and does not inherit `TenantMixin`, guaranteeing user allowed company links are never artificially restricted by the currently active workspace.
+- *2026-09-16*: Sole Company Membership Protection: A user must belong to at least one tenant company; attempts to revoke the user's sole remaining company return `400 Bad Request`.
+- *2026-09-16*: Universal Superuser Bypass: System Super Administrators retain global bypass across all tenant companies without needing explicit individual memberships.
+
+### 4. Current Focus
+Multi-Company Architecture is **100% COMPLETED** and verified with 179 passing tests. Ready for Pillar 3: The Frontend.
 
 
 

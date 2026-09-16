@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from core.database import get_db
-from core.context import get_active_company_id
+from core.context import get_active_company_id, get_active_company_ids
 from core.exceptions import NotFoundException
 from modules.base.identity_rbac.dependencies import get_current_user
 from modules.base.identity_rbac.models import User
@@ -27,11 +27,12 @@ async def list_orders(
     company_id: uuid.UUID = Depends(get_active_company_id),
     current_user: User = Depends(get_current_user),
 ):
-    """List all Purchase Orders and RFQs for the active company."""
+    """List all Purchase Orders and RFQs for the active company context."""
+    active_comps = get_active_company_ids() or [company_id]
     stmt = (
         select(PurchaseOrder)
         .options(selectinload(PurchaseOrder.lines))
-        .where(PurchaseOrder.company_id == company_id, PurchaseOrder.deleted_at.is_(None))
+        .where(PurchaseOrder.company_id.in_(active_comps), PurchaseOrder.deleted_at.is_(None))
         .order_by(PurchaseOrder.created_at.desc())
     )
     if state:
@@ -60,12 +61,13 @@ async def get_order(
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve a single Purchase Order by ID."""
+    active_comps = get_active_company_ids() or [company_id]
     stmt = (
         select(PurchaseOrder)
         .options(selectinload(PurchaseOrder.lines))
         .where(
             PurchaseOrder.id == order_id,
-            PurchaseOrder.company_id == company_id,
+            PurchaseOrder.company_id.in_(active_comps),
             PurchaseOrder.deleted_at.is_(None),
         )
     )

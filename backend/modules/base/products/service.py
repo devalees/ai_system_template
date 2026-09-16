@@ -196,7 +196,8 @@ class ProductService:
     @staticmethod
     async def list_products(
         db: AsyncSession,
-        company_id: uuid.UUID,
+        company_id: Optional[uuid.UUID] = None,
+        company_ids: Optional[List[uuid.UUID]] = None,
         search: Optional[str] = None,
         product_type: Optional[str] = None,
         category_id: Optional[uuid.UUID] = None,
@@ -209,12 +210,7 @@ class ProductService:
         """List products with optional search and filters."""
         stmt = (
             select(Product)
-            .where(
-                and_(
-                    Product.company_id == company_id,
-                    Product.deleted_at.is_(None),
-                )
-            )
+            .where(Product.deleted_at.is_(None))
             .options(
                 selectinload(Product.uom),
                 selectinload(Product.purchase_uom),
@@ -224,6 +220,11 @@ class ProductService:
             .offset(skip)
             .limit(limit)
         )
+
+        if company_ids:
+            stmt = stmt.where(Product.company_id.in_(company_ids))
+        elif company_id:
+            stmt = stmt.where(Product.company_id == company_id)
 
         if search:
             search_pattern = f"%{search.strip()}%"

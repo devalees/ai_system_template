@@ -5,11 +5,11 @@ import logging
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
-from core.context import get_active_company_id
+from core.context import get_active_company_id, get_active_company_ids
 from modules.base.identity_rbac.models import (
     User,
     Group,
@@ -18,6 +18,7 @@ from modules.base.identity_rbac.models import (
     GroupPermissionLink,
     UserPermissionLink,
     Company,
+    UserCompanyLink,
 )
 from modules.base.identity_rbac.flac_service import FLACService
 from modules.base.identity_rbac.schemas import (
@@ -49,6 +50,10 @@ from modules.base.identity_rbac.schemas import (
     CompanyCreate,
     CompanyUpdate,
     CompanyRead,
+    CompanyItemRead,
+    UserCompanyAssignPayload,
+    SwitchCompanyPayload,
+    SwitchCompanyResponse,
     UserPermissionOverrideCreate,
     UserPermissionOverrideRead,
     UserEffectivePermissionsResponse,
@@ -161,6 +166,17 @@ async def register_user(
         company_id=target_company_id,
     )
     db.add(new_user)
+    await db.flush()
+
+    # Automatically create primary default UserCompanyLink
+    user_company_link = UserCompanyLink(
+        company_id=target_company_id,
+        user_id=new_user.id,
+        target_company_id=target_company_id,
+        is_default=True,
+    )
+    db.add(user_company_link)
+
     await db.commit()
     await db.refresh(new_user)
 
@@ -223,7 +239,15 @@ async def login(
             mfa_token=mfa_token,
         )
 
-    token = create_access_token(user_id=user.id, company_id=user.company_id, user_type=user.user_type)
+    extra_claims = {
+        "allowed_company_ids": [str(cid) for cid in user.allowed_company_ids]
+    }
+    token = create_access_token(
+        user_id=user.id,
+        company_id=user.company_id,
+        user_type=user.user_type,
+        extra_claims=extra_claims,
+    )
 
     user_data = UserRead(
         id=user.id,
@@ -246,6 +270,50 @@ async def login(
         user=user_data,
         company_id=user.company_id,
         mfa_required=False,
+    )
+
+
+@router.post(
+    "/auth/switch-company",
+    response_model=SwitchCompanyResponse,
+    tags=["Authentication"],
+    summary="Switch Active Company Context",
+)
+async def switch_active_company(
+    payload: SwitchCompanyPayload,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SwitchCompanyResponse:
+    """Switch user's active company session context and receive a newly signed JWT access token."""
+    if not current_user.is_superuser and payload.company_id not in current_user.allowed_company_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access authorization to the specified company.",
+        )
+
+    stmt = select(Company).where(Company.id == payload.company_id, Company.deleted_at.is_(None))
+    target_comp = (await db.execute(stmt)).scalar_one_or_none()
+    if not target_comp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target company not found.")
+    if not target_comp.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Target company is deactivated.")
+
+    extra_claims = {
+        "allowed_company_ids": [str(cid) for cid in current_user.allowed_company_ids]
+    }
+    new_token = create_access_token(
+        user_id=current_user.id,
+        company_id=target_comp.id,
+        user_type=current_user.user_type,
+        extra_claims=extra_claims,
+    )
+
+    return SwitchCompanyResponse(
+        access_token=new_token,
+        token_type="bearer",
+        active_company_id=target_comp.id,
+        active_company_name=target_comp.name,
+        active_company_code=target_comp.code,
     )
 
 
@@ -294,6 +362,86 @@ async def get_me(
         groups=group_list,
         direct_permissions=direct_list,
     )
+
+
+@router.get(
+    "/users/me/companies",
+    response_model=List[CompanyItemRead],
+    tags=["Authentication"],
+    summary="Get Permitted Companies For Current User",
+)
+@router.get(
+    "/auth/me/companies",
+    response_model=List[CompanyItemRead],
+    tags=["Authentication"],
+    summary="Get Permitted Companies For Current User (Alias)",
+    include_in_schema=False,
+)
+async def get_my_companies(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[CompanyItemRead]:
+    """Retrieve all tenant companies the authenticated user is authorized to access."""
+    active_comp_id = get_active_company_id() or current_user.company_id
+
+    # Query all active company links for this user directly
+    stmt_links = select(UserCompanyLink).where(
+        UserCompanyLink.user_id == current_user.id,
+        UserCompanyLink.deleted_at.is_(None),
+    )
+    user_links = (await db.execute(stmt_links)).scalars().all()
+    link_map = {link.target_company_id: link for link in user_links}
+
+    if current_user.is_superuser:
+        stmt = (
+            select(Company)
+            .where(Company.is_active == True, Company.deleted_at.is_(None))
+            .order_by(Company.name.asc())
+        )
+        companies = (await db.execute(stmt)).scalars().all()
+
+        result = []
+        for c in companies:
+            is_def = link_map[c.id].is_default if c.id in link_map else (c.id == current_user.company_id)
+            is_curr = (c.id == active_comp_id)
+            result.append(
+                CompanyItemRead(
+                    id=c.id,
+                    name=c.name,
+                    code=c.code,
+                    currency_id=c.currency_id,
+                    is_default=is_def,
+                    is_current=is_curr,
+                )
+            )
+        return result
+
+    allowed_ids = list({current_user.company_id} | set(link_map.keys()))
+    if not allowed_ids:
+        return []
+
+    stmt = (
+        select(Company)
+        .where(Company.id.in_(allowed_ids), Company.is_active == True, Company.deleted_at.is_(None))
+        .order_by(Company.name.asc())
+    )
+    companies = (await db.execute(stmt)).scalars().all()
+
+    result = []
+    for c in companies:
+        is_def = link_map[c.id].is_default if c.id in link_map else (c.id == current_user.company_id)
+        is_curr = (c.id == active_comp_id)
+        result.append(
+            CompanyItemRead(
+                id=c.id,
+                name=c.name,
+                code=c.code,
+                currency_id=c.currency_id,
+                is_default=is_def,
+                is_current=is_curr,
+            )
+        )
+    return result
 
 
 @router.get(
@@ -788,6 +936,15 @@ async def create_user(
     db.add(new_user)
     await db.flush()
 
+    # Automatically create primary default UserCompanyLink
+    user_company_link = UserCompanyLink(
+        company_id=target_company_id,
+        user_id=new_user.id,
+        target_company_id=target_company_id,
+        is_default=True,
+    )
+    db.add(user_company_link)
+
     for gid in payload.group_ids:
         link = UserGroupLink(user_id=new_user.id, group_id=gid, company_id=target_company_id)
         db.add(link)
@@ -809,8 +966,13 @@ async def list_users(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[User]:
-    """List users within the caller's active company with optional search and filters."""
-    query = select(User).where(User.company_id == current_user.company_id, User.deleted_at.is_(None))
+    """List users within the caller's active company (or active companies) with optional search and filters."""
+    active_comps = get_active_company_ids() or [current_user.company_id]
+    query = select(User).where(User.deleted_at.is_(None))
+    if not current_user.is_superuser:
+        query = query.where(User.company_id.in_(active_comps))
+    elif active_comps:
+        query = query.where(User.company_id.in_(active_comps))
 
     if user_type:
         query = query.where(User.user_type == user_type)
@@ -836,9 +998,9 @@ async def get_user(
     db: AsyncSession = Depends(get_db),
 ) -> UserDetailRead:
     """Retrieve detailed user profile including assigned RBAC groups."""
-    stmt = select(User).where(User.id == user_id, User.deleted_at.is_(None))
+    stmt = select(User).where(User.id == user_id, User.deleted_at.is_(None)).execution_options(ignore_tenant=True)
     if not current_user.is_superuser:
-        stmt = stmt.where(User.company_id == current_user.company_id)
+        stmt = stmt.where(User.company_id.in_(current_user.allowed_company_ids))
 
     user = (await db.execute(stmt)).scalar_one_or_none()
     if not user:
@@ -1039,6 +1201,120 @@ async def delete_user(
     return {"status": "deleted", "id": str(user_id), "message": "User soft-deleted successfully."}
 
 
+@router.post(
+    "/users/{user_id}/companies",
+    response_model=AuthMessageResponse,
+    tags=["Identity Administration"],
+    summary="Assign User to Additional Company",
+)
+async def assign_user_to_company(
+    user_id: uuid.UUID,
+    payload: UserCompanyAssignPayload,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AuthMessageResponse:
+    """Assign an existing user to an additional company with optional default flag."""
+    if not current_user.is_superuser and payload.company_id not in current_user.allowed_company_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied. You cannot assign users to a company you do not have access to.",
+        )
+
+    stmt_user = select(User).where(User.id == user_id, User.deleted_at.is_(None)).execution_options(ignore_tenant=True)
+    target_user = (await db.execute(stmt_user)).scalar_one_or_none()
+    if not target_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    stmt_comp = select(Company).where(Company.id == payload.company_id, Company.deleted_at.is_(None))
+    target_comp = (await db.execute(stmt_comp)).scalar_one_or_none()
+    if not target_comp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target company not found.")
+    if not target_comp.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Target company is deactivated.")
+
+    stmt_link = select(UserCompanyLink).where(
+        UserCompanyLink.user_id == user_id,
+        UserCompanyLink.target_company_id == payload.company_id,
+    ).execution_options(ignore_tenant=True)
+    existing_link = (await db.execute(stmt_link)).scalar_one_or_none()
+
+    if payload.is_default:
+        await db.execute(
+            update(UserCompanyLink)
+            .where(UserCompanyLink.user_id == user_id)
+            .values(is_default=False)
+            .execution_options(ignore_tenant=True)
+        )
+
+    if existing_link:
+        if payload.is_default:
+            existing_link.is_default = True
+            await db.commit()
+        return AuthMessageResponse(success=True, message=f"User already has access to {target_comp.name}.")
+
+    new_link = UserCompanyLink(
+        company_id=payload.company_id,
+        user_id=user_id,
+        target_company_id=payload.company_id,
+        is_default=payload.is_default,
+    )
+    db.add(new_link)
+    await db.commit()
+
+    return AuthMessageResponse(success=True, message=f"User granted access to {target_comp.name} successfully.")
+
+
+@router.delete(
+    "/users/{user_id}/companies/{company_id}",
+    response_model=AuthMessageResponse,
+    tags=["Identity Administration"],
+    summary="Revoke User Access From Company",
+)
+async def remove_user_from_company(
+    user_id: uuid.UUID,
+    company_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AuthMessageResponse:
+    """Revoke user access to a specific company."""
+    if not current_user.is_superuser and company_id not in current_user.allowed_company_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied. You cannot revoke access from a company you do not manage.",
+        )
+
+    stmt_user = select(User).where(User.id == user_id, User.deleted_at.is_(None)).execution_options(ignore_tenant=True)
+    target_user = (await db.execute(stmt_user)).scalar_one_or_none()
+    if not target_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
+
+    stmt_links = select(UserCompanyLink).where(UserCompanyLink.user_id == user_id).execution_options(ignore_tenant=True)
+    links = (await db.execute(stmt_links)).scalars().all()
+
+    if len(links) <= 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot remove user's sole company membership. A user must belong to at least one company.",
+        )
+
+    link_to_remove = next((l for l in links if l.target_company_id == company_id), None)
+    if not link_to_remove:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not linked to this company.")
+
+    was_default = link_to_remove.is_default
+    await db.delete(link_to_remove)
+
+    remaining_links = [l for l in links if l.target_company_id != company_id]
+    if target_user.company_id == company_id:
+        target_user.company_id = remaining_links[0].target_company_id
+
+    if was_default:
+        remaining_links[0].is_default = True
+
+    await db.commit()
+    return AuthMessageResponse(success=True, message="User company access revoked successfully.")
+
+
 # =========================================================================
 # User Direct Permission Overrides (FLAC & Anti-Role-Explosion)
 # =========================================================================
@@ -1196,11 +1472,14 @@ async def list_companies(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[Company]:
-    """List tenant companies. Superusers view all tenants; regular users view their own tenant."""
+    """List tenant companies. Superusers view all tenants; regular users view their authorized tenants."""
     if current_user.is_superuser:
         stmt = select(Company).where(Company.deleted_at.is_(None)).order_by(Company.created_at.desc())
     else:
-        stmt = select(Company).where(Company.id == current_user.company_id, Company.deleted_at.is_(None))
+        stmt = select(Company).where(
+            Company.id.in_(current_user.allowed_company_ids),
+            Company.deleted_at.is_(None),
+        ).order_by(Company.name.asc())
     result = await db.execute(stmt)
     return list(result.scalars().all())
 
@@ -1216,7 +1495,7 @@ async def get_company(
     db: AsyncSession = Depends(get_db),
 ) -> Company:
     """Retrieve details for a specific tenant organization."""
-    if not current_user.is_superuser and current_user.company_id != company_id:
+    if not current_user.is_superuser and company_id not in current_user.allowed_company_ids:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to tenant organization.")
 
     stmt = select(Company).where(Company.id == company_id, Company.deleted_at.is_(None))

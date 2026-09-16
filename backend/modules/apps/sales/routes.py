@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from core.database import get_db
-from core.context import get_active_company_id
+from core.context import get_active_company_id, get_active_company_ids
 from core.exceptions import NotFoundException
 from modules.base.identity_rbac.dependencies import get_current_user
 from modules.base.identity_rbac.models import User
@@ -27,11 +27,12 @@ async def list_orders(
     company_id: uuid.UUID = Depends(get_active_company_id),
     current_user: User = Depends(get_current_user),
 ):
-    """List all Sales Quotations and Orders for the active company."""
+    """List all Sales Quotations and Orders for the active company context."""
+    active_comps = get_active_company_ids() or [company_id]
     stmt = (
         select(SaleOrder)
         .options(selectinload(SaleOrder.lines))
-        .where(SaleOrder.company_id == company_id, SaleOrder.deleted_at.is_(None))
+        .where(SaleOrder.company_id.in_(active_comps), SaleOrder.deleted_at.is_(None))
         .order_by(SaleOrder.created_at.desc())
     )
     if state:
@@ -60,12 +61,13 @@ async def get_order(
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve a single Sales Order by ID."""
+    active_comps = get_active_company_ids() or [company_id]
     stmt = (
         select(SaleOrder)
         .options(selectinload(SaleOrder.lines))
         .where(
             SaleOrder.id == order_id,
-            SaleOrder.company_id == company_id,
+            SaleOrder.company_id.in_(active_comps),
             SaleOrder.deleted_at.is_(None),
         )
     )

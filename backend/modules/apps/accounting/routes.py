@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from core.database import get_db
-from core.context import get_active_company_id
+from core.context import get_active_company_id, get_active_company_ids
 from modules.base.identity_rbac.dependencies import get_current_user
 from modules.base.identity_rbac.models import User
 from modules.apps.accounting.models import (
@@ -120,10 +120,11 @@ async def list_moves(
     current_user: User = Depends(get_current_user),
 ):
     """List Journal Entries, Invoices, and Vendor Bills."""
+    active_comps = get_active_company_ids() or [company_id]
     stmt = (
         select(AccountMove)
         .options(selectinload(AccountMove.lines))
-        .where(AccountMove.company_id == company_id, AccountMove.deleted_at.is_(None))
+        .where(AccountMove.company_id.in_(active_comps), AccountMove.deleted_at.is_(None))
         .order_by(AccountMove.date.desc(), AccountMove.created_at.desc())
     )
     if move_type:

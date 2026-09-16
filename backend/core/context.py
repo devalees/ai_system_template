@@ -2,7 +2,7 @@
 
 import uuid
 from contextvars import ContextVar
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, List
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from jose import jwt, JWTError
@@ -10,19 +10,34 @@ from core.config import settings
 
 # Thread-safe context variables for async request lifecycle
 _active_company_id: ContextVar[Optional[uuid.UUID]] = ContextVar("active_company_id", default=None)
+_active_company_ids: ContextVar[Optional[List[uuid.UUID]]] = ContextVar("active_company_ids", default=None)
 _current_user_id: ContextVar[Optional[uuid.UUID]] = ContextVar("current_user_id", default=None)
 _actor_type: ContextVar[str] = ContextVar("actor_type", default="anonymous")
 _active_locale: ContextVar[str] = ContextVar("active_locale", default="en")
 
 
 def get_active_company_id() -> Optional[uuid.UUID]:
-    """Retrieve the currently active tenant company ID from context."""
+    """Retrieve the currently active tenant company ID from context (primary company for writes)."""
     return _active_company_id.get()
 
 
 def set_active_company_id(company_id: Optional[uuid.UUID]) -> None:
     """Set the active tenant company ID in context."""
     _active_company_id.set(company_id)
+
+
+def get_active_company_ids() -> List[uuid.UUID]:
+    """Retrieve list of currently active company IDs for aggregated queries and views."""
+    comps = _active_company_ids.get()
+    if comps:
+        return list(comps)
+    single = _active_company_id.get()
+    return [single] if single else []
+
+
+def set_active_company_ids(company_ids: Optional[List[uuid.UUID]]) -> None:
+    """Set the list of active company IDs in context for cross-company aggregated queries."""
+    _active_company_ids.set(company_ids)
 
 
 def get_current_user_id() -> Optional[uuid.UUID]:
@@ -56,10 +71,11 @@ def set_active_locale(locale: str) -> None:
 
 
 class MultiTenancyContextMiddleware(BaseHTTPMiddleware):
-    """Middleware extracting tenant company ID and actor identity from HTTP headers and JWT tokens."""
+    """Middleware extracting tenant company IDs and actor identity from HTTP headers and JWT tokens."""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         token_company = None
+        token_companies: List[uuid.UUID] = []
         token_user = None
         token_actor = None
 
@@ -92,6 +108,23 @@ class MultiTenancyContextMiddleware(BaseHTTPMiddleware):
             if parsed_company:
                 token_company = parsed_company
 
+        # 2b. Extract X-Company-IDs header (comma-separated list for multi-company aggregated reads)
+        companies_header = request.headers.get("X-Company-IDs")
+        if companies_header:
+            parsed_list: List[uuid.UUID] = []
+            for item in companies_header.split(","):
+                p = _safe_parse_uuid(item.strip())
+                if p and p not in parsed_list:
+                    parsed_list.append(p)
+            if parsed_list:
+                token_companies = parsed_list
+
+        # Harmonize single vs multi-company selections
+        if not token_companies and token_company:
+            token_companies = [token_company]
+        if not token_company and token_companies:
+            token_company = token_companies[0]
+
         # 3. Extract X-Actor-Type header if provided (e.g. from internal services/FastMCP)
         actor_header = request.headers.get("X-Actor-Type")
         if actor_header:
@@ -111,6 +144,7 @@ class MultiTenancyContextMiddleware(BaseHTTPMiddleware):
 
         # 5. Set ContextVar tokens and ensure cleanup after request
         company_token = _active_company_id.set(token_company)
+        companies_token = _active_company_ids.set(token_companies if token_companies else None)
         user_token = _current_user_id.set(token_user)
         actor_token = _actor_type.set(token_actor or "anonymous")
         locale_token = _active_locale.set(req_locale)
@@ -120,9 +154,11 @@ class MultiTenancyContextMiddleware(BaseHTTPMiddleware):
             return response
         finally:
             _active_company_id.reset(company_token)
+            _active_company_ids.reset(companies_token)
             _current_user_id.reset(user_token)
             _actor_type.reset(actor_token)
             _active_locale.reset(locale_token)
+
 
 
 def _safe_parse_uuid(val: Any) -> Optional[uuid.UUID]:

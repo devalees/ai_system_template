@@ -1,7 +1,7 @@
 """Database engine, async session factory, and automatic multi-tenancy & soft-delete query filtration."""
 
 from typing import AsyncGenerator
-from sqlalchemy import event
+from sqlalchemy import event, true
 from sqlalchemy.orm import with_loader_criteria, Session
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from core.config import settings
-from core.context import get_active_company_id, get_current_user_id
+from core.context import get_active_company_id, get_active_company_ids, get_current_user_id
 from core.base_models import SoftDeleteMixin, TenantMixin
 
 engine: AsyncEngine = create_async_engine(
@@ -50,16 +50,26 @@ def _add_automatic_query_filtration(execute_state):
                 )
             )
 
-        # 2. Automatic Multi-Tenancy Isolation (WHERE company_id = :active_company_id)
-        active_comp = get_active_company_id()
-        if not ignore_tenant and active_comp is not None:
-            criteria.append(
-                with_loader_criteria(
-                    TenantMixin,
-                    lambda cls: cls.company_id == active_comp,
-                    include_aliases=True,
+        # 2. Automatic Multi-Tenancy Isolation (WHERE company_id = :comp OR company_id IN (:comps))
+        active_comps = get_active_company_ids()
+        if not ignore_tenant and active_comps:
+            if len(active_comps) == 1:
+                single_comp = active_comps[0]
+                criteria.append(
+                    with_loader_criteria(
+                        TenantMixin,
+                        lambda cls: cls.company_id == single_comp,
+                        include_aliases=True,
+                    )
                 )
-            )
+            else:
+                criteria.append(
+                    with_loader_criteria(
+                        TenantMixin,
+                        lambda cls: cls.company_id.in_(active_comps),
+                        include_aliases=True,
+                    )
+                )
 
         if criteria:
             execute_state.statement = execute_state.statement.options(*criteria)

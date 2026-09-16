@@ -2,7 +2,7 @@
 
 import uuid
 from typing import Optional, List
-from sqlalchemy import String, Boolean, ForeignKey
+from sqlalchemy import String, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -61,6 +61,24 @@ class User(BaseModel):
     preferred_language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     team_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), default=None, nullable=True)
 
+    allowed_company_links: Mapped[List["UserCompanyLink"]] = relationship(
+        "UserCompanyLink",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="[UserCompanyLink.user_id]",
+        lazy="selectin",
+    )
+
+    @property
+    def allowed_company_ids(self) -> List[uuid.UUID]:
+        """Convenience property collecting all permitted company UUIDs including primary."""
+        ids = {self.company_id}
+        if self.allowed_company_links:
+            for link in self.allowed_company_links:
+                ids.add(link.target_company_id)
+        return list(ids)
+
+
 
 class Group(BaseModel):
     """RBAC Role/Group collecting capabilities for users."""
@@ -108,4 +126,53 @@ class UserPermissionLink(BaseModel):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     permission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("permissions.id", ondelete="CASCADE"), nullable=False)
     is_granted: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class UserCompanyLink(
+    Base,
+    UUIDPrimaryKeyMixin,
+    TimestampMixin,
+    AuditActorMixin,
+    ExtensibleModelMixin,
+    SoftDeleteMixin,
+    ArchivableMixin,
+    OptimisticLockingMixin,
+):
+    """Associates users with permitted companies in a multi-company enterprise structure."""
+    __tablename__ = "user_company_links"
+    __table_args__ = (
+        UniqueConstraint("user_id", "target_company_id", name="uq_user_target_company"),
+    )
+
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    target_company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="allowed_company_links",
+        foreign_keys=[user_id],
+    )
+    target_company: Mapped["Company"] = relationship(
+        "Company",
+        foreign_keys=[target_company_id],
+        lazy="selectin",
+    )
+
 

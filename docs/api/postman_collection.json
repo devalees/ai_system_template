@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "4b647224-fbbf-499f-956f-f572b6f767e6",
+    "_postman_id": "4eac2652-dcc1-4a1e-bf90-be14bb16bcd4",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -4030,6 +4030,84 @@
               ]
             },
             {
+              "name": "Switch Active Company Context",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/identity_rbac/auth/switch-company",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "identity_rbac",
+                    "auth",
+                    "switch-company"
+                  ],
+                  "variable": []
+                },
+                "description": "## Switch Active Company Context\n\nSwitch user's active company session context and receive a newly signed JWT access token.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/auth/switch-company`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `company_id` | `string` | **Yes** | Any valid string | Company UUID to switch active context into |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": \"{{active_company_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_switch_company_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
               "name": "Get Current User Profile",
               "request": {
                 "method": "GET",
@@ -4060,6 +4138,41 @@
                   "variable": []
                 },
                 "description": "## Get Current User Profile\n\nReturn currently authenticated profile metadata including assigned RBAC groups.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/auth/me`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Permitted Companies For Current User",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/identity_rbac/users/me/companies",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "identity_rbac",
+                    "users",
+                    "me",
+                    "companies"
+                  ],
+                  "variable": []
+                },
+                "description": "## Get Permitted Companies For Current User\n\nRetrieve all tenant companies the authenticated user is authorized to access.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/users/me/companies`  \n**Tags**: `Identity & Contextual RBAC, Authentication`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
               },
               "response": []
             },
@@ -4746,7 +4859,7 @@
                   ],
                   "variable": []
                 },
-                "description": "## List Users\n\nList users within the caller's active company with optional search and filters.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/users`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_type` | `query` | `string` | No | Filter by actor type ('human' or 'ai_agent') |\n| `is_active` | `query` | `string` | No | Filter by active status |\n| `search` | `query` | `string` | No | Search by username, full name, or email |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+                "description": "## List Users\n\nList users within the caller's active company (or active companies) with optional search and filters.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/users`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_type` | `query` | `string` | No | Filter by actor type ('human' or 'ai_agent') |\n| `is_active` | `query` | `string` | No | Filter by active status |\n| `search` | `query` | `string` | No | Search by username, full name, or email |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
               },
               "response": []
             },
@@ -4958,6 +5071,138 @@
                   ]
                 },
                 "description": "## Delete User\n\nSoft-delete a user account.\n\nSecurity Guards:\n- Users cannot delete their own active authenticated account.\n- Primary system administrator is permanent and cannot be deleted by anyone.\n- Secondary superusers can only be deleted by the primary system administrator.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/users/{user_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+              },
+              "response": []
+            },
+            {
+              "name": "Assign User to Additional Company",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/identity_rbac/users/:user_id/companies",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "identity_rbac",
+                    "users",
+                    ":user_id",
+                    "companies"
+                  ],
+                  "variable": [
+                    {
+                      "key": "user_id",
+                      "value": "{{active_user_id}}",
+                      "description": "Dynamic path parameter bound to {{active_user_id}}"
+                    }
+                  ]
+                },
+                "description": "## Assign User to Additional Company\n\nAssign an existing user to an additional company with optional default flag.\n\n**Endpoint**: `POST {{base_url}}/api/v1/identity_rbac/users/{user_id}/companies`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `company_id` | `string` | **Yes** | Any valid string | Target company UUID to grant access to |\n| `is_default` | `boolean` | No | Any valid boolean | Set as the user's primary/default company |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": \"{{active_company_id}}\",\n  \"is_default\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                      "    var json = pm.response.json();",
+                      "    if (json) {",
+                      "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                      "        if (recId) {",
+                      "            pm.environment.set(\"active_company_id\", recId);",
+                      "            pm.environment.set(\"active_record_id\", recId);",
+                      "            pm.environment.set(\"active_id\", recId);",
+                      "        }",
+                      "        if (json.queue_id) {",
+                      "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                      "        }",
+                      "        if (json.notification_id) {",
+                      "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                      "        }",
+                      "        if (json.job_id) {",
+                      "            pm.environment.set(\"active_job_id\", json.job_id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Revoke User Access From Company",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Company-ID",
+                    "value": "{{active_company_id}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/identity_rbac/users/:user_id/companies/:company_id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "identity_rbac",
+                    "users",
+                    ":user_id",
+                    "companies",
+                    ":company_id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "user_id",
+                      "value": "{{active_user_id}}",
+                      "description": "Dynamic path parameter bound to {{active_user_id}}"
+                    },
+                    {
+                      "key": "company_id",
+                      "value": "{{active_company_id}}",
+                      "description": "Dynamic path parameter bound to {{active_company_id}}"
+                    }
+                  ]
+                },
+                "description": "## Revoke User Access From Company\n\nRevoke user access to a specific company.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/identity_rbac/users/{user_id}/companies/{company_id}`  \n**Tags**: `Identity & Contextual RBAC, Identity Administration`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `path` | `string` | **Yes** | - |\n| `company_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
               },
               "response": []
             },
@@ -5798,7 +6043,7 @@
                   ],
                   "variable": []
                 },
-                "description": "## List Companies\n\nList tenant companies. Superusers view all tenants; regular users view their own tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/companies`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+                "description": "## List Companies\n\nList tenant companies. Superusers view all tenants; regular users view their authorized tenants.\n\n**Endpoint**: `GET {{base_url}}/api/v1/identity_rbac/companies`  \n**Tags**: `Identity & Contextual RBAC, Tenant Administration`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
               },
               "response": []
             },
@@ -12872,7 +13117,7 @@
               ],
               "variable": []
             },
-            "description": "## List Orders\n\nList all Purchase Orders and RFQs for the active company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/purchases/orders`  \n**Tags**: `Purchases & Vendor Procurement, Purchases & Vendor Procurement`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `state` | `query` | `string` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+            "description": "## List Orders\n\nList all Purchase Orders and RFQs for the active company context.\n\n**Endpoint**: `GET {{base_url}}/api/v1/purchases/orders`  \n**Tags**: `Purchases & Vendor Procurement, Purchases & Vendor Procurement`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `state` | `query` | `string` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },
@@ -13706,7 +13951,7 @@
               ],
               "variable": []
             },
-            "description": "## List Orders\n\nList all Sales Quotations and Orders for the active company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/sales/orders`  \n**Tags**: `Sales & Customer Order Management, Sales & Customer Order Management`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `state` | `query` | `string` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+            "description": "## List Orders\n\nList all Sales Quotations and Orders for the active company context.\n\n**Endpoint**: `GET {{base_url}}/api/v1/sales/orders`  \n**Tags**: `Sales & Customer Order Management, Sales & Customer Order Management`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `state` | `query` | `string` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         },

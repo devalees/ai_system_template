@@ -24,7 +24,8 @@ def compute_instance_diff(instance: Any) -> Dict[str, Dict[str, Any]]:
     state = inspect(instance)
     changes: Dict[str, Dict[str, Any]] = {}
 
-    for attr in state.attrs:
+    for prop in state.mapper.column_attrs:
+        attr = state.attrs[prop.key]
         # Ignore security-sensitive or auto-managed audit timestamps
         if attr.key in ("hashed_password", "updated_at", "created_at"):
             continue

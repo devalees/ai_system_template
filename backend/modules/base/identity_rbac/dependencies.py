@@ -5,14 +5,22 @@ from typing import Callable, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt, JWTError
 
 from core.config import settings
 from core.database import get_db
-from core.context import set_current_user_id, set_active_company_id, set_actor_type
+from core.context import (
+    set_current_user_id,
+    get_active_company_id,
+    set_active_company_id,
+    get_active_company_ids,
+    set_active_company_ids,
+    set_actor_type,
+)
 from core.exceptions import PermissionDeniedException
-from modules.base.identity_rbac.models import User, Group, Permission, UserGroupLink, GroupPermissionLink
+from modules.base.identity_rbac.models import User, Group, Permission, UserGroupLink, GroupPermissionLink, UserCompanyLink
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/identity_rbac/auth/login", auto_error=False)
 
@@ -21,7 +29,7 @@ async def get_current_user(
     token: Optional[str] = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """Validate bearer token and resolve active User instance."""
+    """Validate bearer token and resolve active User instance with multi-company validation."""
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -36,7 +44,7 @@ async def get_current_user(
         if not user_id_str or not company_id_str:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload.")
         user_id = uuid.UUID(user_id_str)
-        company_id = uuid.UUID(company_id_str)
+        token_company_id = uuid.UUID(company_id_str)
     except (JWTError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -44,16 +52,50 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Fetch user from DB
-    stmt = select(User).where(User.id == user_id, User.company_id == company_id, User.is_active == True)
+    # Fetch user from DB (bypassing tenant filter to allow cross-company access)
+    stmt = (
+        select(User)
+        .where(User.id == user_id, User.is_active == True)
+        .execution_options(ignore_tenant=True)
+    )
     user = (await db.execute(stmt)).scalar_one_or_none()
 
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account not found or inactive.")
 
+    # Query all active company links for this user directly to ensure freshest permissions
+    stmt_links = select(UserCompanyLink).where(
+        UserCompanyLink.user_id == user.id,
+        UserCompanyLink.deleted_at.is_(None),
+    )
+    user_links = list((await db.execute(stmt_links)).scalars().all())
+    user.allowed_company_links = user_links
+
+    # Determine requested active company (from context set by middleware, or token)
+    req_company_id = get_active_company_id() or token_company_id
+    req_company_ids = get_active_company_ids()
+    if not req_company_ids:
+        req_company_ids = [req_company_id]
+
+    # Validate authorization against allowed companies
+    allowed_ids = {user.company_id} | {link.target_company_id for link in user_links}
+    if not user.is_superuser:
+        if req_company_id not in allowed_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"User is not authorized to access company '{req_company_id}'.",
+            )
+        unauthorized = [cid for cid in req_company_ids if cid not in allowed_ids]
+        if unauthorized:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"User is not authorized to access company '{unauthorized[0]}'.",
+            )
+
     # Populate request context
     set_current_user_id(user.id)
-    set_active_company_id(user.company_id)
+    set_active_company_id(req_company_id)
+    set_active_company_ids(req_company_ids)
     set_actor_type(user.user_type)
 
     return user

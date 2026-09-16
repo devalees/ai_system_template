@@ -958,6 +958,30 @@ To streamline managerial accounting and cost-center allocations without requirin
 - **Line-Level Override Precedence**: Any order or move line specifying its own `analytic_account_id` or explicit `analytic_distribution` overrides the header allocation.
 - **1-Click Billing & Invoicing Distribution Propagation**: In `create_invoice_from_order` and `create_bill_from_order`, the invoice/bill header inherits `analytic_account_id` from the source order, and each document line propagates both `product_id` and line-level `analytic_distribution` into the generated journal items (`AccountMoveLine`), ensuring gapless analytics upon posting.
 
+---
+
+### 6.17 Enterprise Multi-Company Architecture & Aggregated Query Engine
+
+#### 6.17.1 Architecture & Multi-Tenancy Invariants
+The Sovereign Platform implements a comprehensive, enterprise-grade multi-company structure allowing users to belong to multiple operating companies simultaneously while enforcing strict transaction isolation:
+1. **User-Company Multi-Tenancy M:M Membership (`UserCompanyLink`)**:
+   - `UserCompanyLink` maps users to permitted tenant organizations with an `is_default: bool` preference.
+   - Self-registration and admin provisioning automatically initialize primary default company links.
+   - Sole Company Protection: Users cannot have their sole company membership revoked (`400 Bad Request`).
+2. **Dual-Mode Context & Query Filtration Engine**:
+   - **Write Isolation Invariant (`POST`, `PUT`, `DELETE`)**: Strictly bound to a single primary active workspace identified by `X-Company-ID`. New records and state modifications always belong to exactly one company.
+   - **Read Aggregated Queries (`GET`)**: Query across multiple active companies simultaneously (`WHERE company_id IN (:active_company_ids)`) when the client supplies `X-Company-IDs: comp1,comp2`.
+   - **Harmonized Middleware**: `MultiTenancyContextMiddleware` extracts both single and comma-separated company headers, storing `active_company_id` and `active_company_ids` in request ContextVars.
+3. **Cross-Tenant Security Authorization Guard**:
+   - Authentication dependency `get_current_user` rejects non-superuser requests targeting unauthorized company IDs with `403 Forbidden`.
+   - Universal Superuser Bypass: Platform Super Administrators retain global access across all tenant organizations.
+4. **Company Navigation & Context Switching APIs**:
+   - `GET /api/v1/identity_rbac/users/me/companies`: Lists user's permitted companies with `is_default` and `is_current` indicators.
+   - `POST /api/v1/identity_rbac/auth/switch-company`: Switches active company session context and issues a refreshed JWT access token.
+   - `POST /api/v1/identity_rbac/users/{user_id}/companies`: Grants user access to an additional company (Admin/Superuser).
+   - `DELETE /api/v1/identity_rbac/users/{user_id}/companies/{company_id}`: Revokes company access.
+
+
 
 
 

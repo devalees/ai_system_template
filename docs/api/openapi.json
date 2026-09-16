@@ -92,6 +92,54 @@
         }
       }
     },
+    "/api/v1/identity_rbac/auth/switch-company": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Switch Active Company Context",
+        "description": "Switch user's active company session context and receive a newly signed JWT access token.",
+        "operationId": "switch_active_company_api_v1_identity_rbac_auth_switch_company_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchCompanyPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwitchCompanyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/identity_rbac/auth/me": {
       "get": {
         "tags": [
@@ -108,6 +156,38 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserDetailRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/identity_rbac/users/me/companies": {
+      "get": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Authentication"
+        ],
+        "summary": "Get Permitted Companies For Current User",
+        "description": "Retrieve all tenant companies the authenticated user is authorized to access.",
+        "operationId": "get_my_companies_api_v1_identity_rbac_users_me_companies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CompanyItemRead"
+                  },
+                  "type": "array",
+                  "title": "Response Get My Companies Api V1 Identity Rbac Users Me Companies Get"
                 }
               }
             }
@@ -545,7 +625,7 @@
           "Identity Administration"
         ],
         "summary": "List Users",
-        "description": "List users within the caller's active company with optional search and filters.",
+        "description": "List users within the caller's active company (or active companies) with optional search and filters.",
         "operationId": "list_users_api_v1_identity_rbac_users_get",
         "security": [
           {
@@ -793,6 +873,126 @@
         }
       }
     },
+    "/api/v1/identity_rbac/users/{user_id}/companies": {
+      "post": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Assign User to Additional Company",
+        "description": "Assign an existing user to an additional company with optional default flag.",
+        "operationId": "assign_user_to_company_api_v1_identity_rbac_users__user_id__companies_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCompanyAssignPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/identity_rbac/users/{user_id}/companies/{company_id}": {
+      "delete": {
+        "tags": [
+          "Identity & Contextual RBAC",
+          "Identity Administration"
+        ],
+        "summary": "Revoke User Access From Company",
+        "description": "Revoke user access to a specific company.",
+        "operationId": "remove_user_from_company_api_v1_identity_rbac_users__user_id__companies__company_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/identity_rbac/users/{user_id}/permissions": {
       "get": {
         "tags": [
@@ -969,7 +1169,7 @@
           "Tenant Administration"
         ],
         "summary": "List Companies",
-        "description": "List tenant companies. Superusers view all tenants; regular users view their own tenant.",
+        "description": "List tenant companies. Superusers view all tenants; regular users view their authorized tenants.",
         "operationId": "list_companies_api_v1_identity_rbac_companies_get",
         "responses": {
           "200": {
@@ -19024,7 +19224,7 @@
           "Sales & Customer Order Management"
         ],
         "summary": "List Orders",
-        "description": "List all Sales Quotations and Orders for the active company.",
+        "description": "List all Sales Quotations and Orders for the active company context.",
         "operationId": "list_orders_api_v1_sales_orders_get",
         "security": [
           {
@@ -19280,7 +19480,7 @@
           "Purchases & Vendor Procurement"
         ],
         "summary": "List Orders",
-        "description": "List all Purchase Orders and RFQs for the active company.",
+        "description": "List all Purchase Orders and RFQs for the active company context.",
         "operationId": "list_orders_api_v1_purchases_orders_get",
         "security": [
           {
@@ -25616,6 +25816,53 @@
           "email_domain": "sovereign.local",
           "name": "Sovereign Enterprise System"
         }
+      },
+      "CompanyItemRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "default": "USD"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "default": false
+          },
+          "is_current": {
+            "type": "boolean",
+            "title": "Is Current",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "code"
+        ],
+        "title": "CompanyItemRead",
+        "description": "Summarized company item for multi-company navigation."
       },
       "CompanyRead": {
         "properties": {
@@ -37715,6 +37962,57 @@
         ],
         "title": "StageTransitionRequest"
       },
+      "SwitchCompanyPayload": {
+        "properties": {
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id",
+            "description": "Company UUID to switch active context into"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_id"
+        ],
+        "title": "SwitchCompanyPayload",
+        "description": "Payload to switch the active company context."
+      },
+      "SwitchCompanyResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "active_company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Active Company Id"
+          },
+          "active_company_name": {
+            "type": "string",
+            "title": "Active Company Name"
+          },
+          "active_company_code": {
+            "type": "string",
+            "title": "Active Company Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "active_company_id",
+          "active_company_name",
+          "active_company_code"
+        ],
+        "title": "SwitchCompanyResponse",
+        "description": "Response returned upon switching active company context."
+      },
       "TagCreate": {
         "properties": {
           "name": {
@@ -40051,6 +40349,28 @@
           "name": "Kilograms (Metric)",
           "rounding_precision": 0.001
         }
+      },
+      "UserCompanyAssignPayload": {
+        "properties": {
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id",
+            "description": "Target company UUID to grant access to"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "Set as the user's primary/default company",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_id"
+        ],
+        "title": "UserCompanyAssignPayload",
+        "description": "Payload to grant a user access to an additional company."
       },
       "UserCreate": {
         "properties": {
