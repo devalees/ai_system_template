@@ -820,6 +820,17 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
 - **Collision Detection Engine**:
   - `ResourceService.check_availability()` evaluates overlapping active bookings (`start_time < candidate_end AND end_time > candidate_start`) to prevent double-booking conflicts unless explicitly overridden (`allow_overbooking=True`).
 
+#### 6.13.16 Universal Work Items, Tasks & Dependencies (`work_items`)
+- **Package**: `backend/modules/base/work_items/`
+- **Models (`WorkItemStage`, `WorkItem`, `WorkItemDependency`)**:
+  - `WorkItemStage`: Pipeline stages (`name`, `code`, `sequence`, `is_closed`, `color`).
+  - `WorkItem`: Cross-entity task record (`item_number`, `title`, `description`, `res_model`, `res_id`, `parent_id`, `priority`, `stage_id`, `assigned_to_id`, `estimated_hours`, `spent_hours`, `due_date`, `is_closed`).
+  - `WorkItemDependency`: Directed dependency graph edge (`predecessor_id`, `successor_id`, `dependency_type`: finish_to_start, start_to_start, finish_to_finish, start_to_finish).
+- **DAG Cycle Prevention & Hierarchy**:
+  - `WorkItemService.add_dependency()` executes BFS cycle detection on the dependency graph, rejecting self-loops and circular task dependencies.
+  - `WorkItemService.get_subtask_tree()` builds recursive hierarchical task trees.
+
+
 
 
 

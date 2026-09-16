@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "cb8e5e7e-29bc-4443-ba7d-7e808e6b772c",
+    "_postman_id": "ea39fb04-450e-4711-9575-c9edfaa24556",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15067,6 +15067,714 @@
             "description": "## Download generated export file\n\nStream exported CSV, Excel, or JSON file to client.\n\n**Endpoint**: `GET {{base_url}}/api/v1/import_export/jobs/{job_id}/download`  \n**Tags**: `Universal Streaming Import & Export, Import/Export Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `job_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Universal Work Items, Tasks & Dependencies",
+      "item": [
+        {
+          "name": "List Stages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/stages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                "stages"
+              ],
+              "variable": []
+            },
+            "description": "## List Stages\n\nLists workflow stages ordered by pipeline sequence.\n\n**Endpoint**: `GET {{base_url}}/api/v1/work_items/stages`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Stage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/stages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                "stages"
+              ],
+              "variable": []
+            },
+            "description": "## Create Stage\n\nRegisters a new workflow pipeline stage.\n\n**Endpoint**: `POST {{base_url}}/api/v1/work_items/stages`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Stage display title |\n| `code` | `string` | **Yes** | Any valid string | Unique reference code |\n| `sequence` | `integer` | No | Any valid integer | Pipeline sequence order |\n| `is_closed` | `boolean` | No | Any valid boolean | Whether this stage represents a terminal closed state |\n| `color` | `string` | No | Any valid string | Hex color badge |\n| `description` | `string` | No | Any valid string | Operational guidance for this stage |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"IN_DEV\",\n  \"color\": \"#eab308\",\n  \"description\": \"Active implementation\",\n  \"is_closed\": false,\n  \"name\": \"In Development\",\n  \"sequence\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_stage_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Stage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/stages/:stage_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                "stages",
+                ":stage_id"
+              ],
+              "variable": [
+                {
+                  "key": "stage_id",
+                  "value": "{{active_stage_id}}",
+                  "description": "Dynamic path parameter bound to {{active_stage_id}}"
+                }
+              ]
+            },
+            "description": "## Get Stage\n\nFetch single stage by UUID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/work_items/stages/{stage_id}`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `stage_id` | `path` | `string` | **Yes** | Stage UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Stage",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/stages/:stage_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                "stages",
+                ":stage_id"
+              ],
+              "variable": [
+                {
+                  "key": "stage_id",
+                  "value": "{{active_stage_id}}",
+                  "description": "Dynamic path parameter bound to {{active_stage_id}}"
+                }
+              ]
+            },
+            "description": "## Update Stage\n\nUpdate stage properties or ordering.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/work_items/stages/{stage_id}`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `stage_id` | `path` | `string` | **Yes** | Stage UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `sequence` | `integer` | No | Any valid integer | sequence attribute |\n| `is_closed` | `boolean` | No | Any valid boolean | is_closed attribute |\n| `color` | `string` | No | Any valid string | color attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Stage",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/stages/:stage_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                "stages",
+                ":stage_id"
+              ],
+              "variable": [
+                {
+                  "key": "stage_id",
+                  "value": "{{active_stage_id}}",
+                  "description": "Dynamic path parameter bound to {{active_stage_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Stage\n\nSoft-deletes a workflow stage.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/work_items/stages/{stage_id}`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `stage_id` | `path` | `string` | **Yes** | Stage UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Work Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items"
+              ],
+              "variable": []
+            },
+            "description": "## List Work Items\n\nLists work items for active company with flexible filtering.\n\n**Endpoint**: `GET {{base_url}}/api/v1/work_items`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `stage_id` | `query` | `string` | No | Filter by stage UUID |\n| `assigned_to_id` | `query` | `string` | No | Filter by assigned user UUID |\n| `priority` | `query` | `string` | No | Filter by priority |\n| `is_closed` | `query` | `string` | No | Filter by completion status |\n| `res_model` | `query` | `string` | No | Filter by parent model |\n| `res_id` | `query` | `string` | No | Filter by parent record UUID |\n| `parent_id` | `query` | `string` | No | Filter by parent task UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Work Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items"
+              ],
+              "variable": []
+            },
+            "description": "## Create Work Item\n\nCreates a new task or sub-task.\n\n**Endpoint**: `POST {{base_url}}/api/v1/work_items`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `title` | `string` | **Yes** | Any valid string | Task headline or title |\n| `description` | `string` | No | Any valid string | Detailed requirements or markdown specifications |\n| `res_model` | `string` | No | Any valid string | Parent entity model (e.g. 'projects') |\n| `res_id` | `string` | No | Any valid string | Parent entity UUID |\n| `parent_id` | `string` | No | Any valid string | Parent task UUID for sub-task hierarchies |\n| `priority` | `string` | No | Any valid string | Priority level |\n| `stage_id` | `string` | No | Any valid string | Current workflow stage UUID |\n| `assigned_to_id` | `string` | No | Any valid string | Assigned user account UUID |\n| `estimated_hours` | `string` | No | Any valid string | Estimated work hours |\n| `spent_hours` | `string` | No | Any valid string | Logged work hours |\n| `due_date` | `string` | No | Any valid string | Target completion deadline |\n| `item_number` | `string` | No | Any valid string | Optional custom task sequence number |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Implement inclusive vs exclusive rate extraction and compound rules.\",\n  \"estimated_hours\": \"16.00\",\n  \"item_number\": \"TASK-2026-001\",\n  \"priority\": \"high\",\n  \"title\": \"Build Multi-Jurisdiction Tax Calculation Matrix\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_work_item_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Work Item",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/:item_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                ":item_id"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Get Work Item\n\nFetch single work item with stage and dependencies.\n\n**Endpoint**: `GET {{base_url}}/api/v1/work_items/{item_id}`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Work Item UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Work Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/:item_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                ":item_id"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Update Work Item\n\nUpdate work item properties or status.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/work_items/{item_id}`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Work Item UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `title` | `string` | No | Any valid string | title attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `parent_id` | `string` | No | Any valid string | parent_id attribute |\n| `priority` | `string` | No | Any valid string | priority attribute |\n| `stage_id` | `string` | No | Any valid string | stage_id attribute |\n| `assigned_to_id` | `string` | No | Any valid string | assigned_to_id attribute |\n| `estimated_hours` | `string` | No | Any valid string | estimated_hours attribute |\n| `spent_hours` | `string` | No | Any valid string | spent_hours attribute |\n| `due_date` | `string` | No | Any valid string | due_date attribute |\n| `is_closed` | `boolean` | No | Any valid boolean | is_closed attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Work Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/:item_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                ":item_id"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Work Item\n\nSoft-deletes a work item and cascades to child sub-tasks.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/work_items/{item_id}`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Work Item UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sub-task Tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/:item_id/tree",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                ":item_id",
+                "tree"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Get Sub-task Tree\n\nFetches recursive hierarchical sub-task tree rooted at this work item.\n\n**Endpoint**: `GET {{base_url}}/api/v1/work_items/{item_id}/tree`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Root Work Item UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Task Dependency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/:item_id/dependencies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                ":item_id",
+                "dependencies"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Add Task Dependency\n\nAppends a predecessor requirement to this work item with cycle prevention.\n\n**Endpoint**: `POST {{base_url}}/api/v1/work_items/{item_id}/dependencies`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Successor Work Item UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `predecessor_id` | `string` | **Yes** | Any valid string | Predecessor task UUID that must be completed first |\n| `dependency_type` | `string` | No | Any valid string | Dependency relationship type |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dependency_type\": \"finish_to_start\",\n  \"predecessor_id\": \"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_dependency_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Dependency",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/dependencies/:dependency_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                "dependencies",
+                ":dependency_id"
+              ],
+              "variable": [
+                {
+                  "key": "dependency_id",
+                  "value": "{{active_dependency_id}}",
+                  "description": "Dynamic path parameter bound to {{active_dependency_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Dependency\n\nRemoves a dependency constraint edge.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/work_items/dependencies/{dependency_id}`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `dependency_id` | `path` | `string` | **Yes** | Dependency UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Transition Stage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/work_items/:item_id/stage",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "work_items",
+                ":item_id",
+                "stage"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Transition Stage\n\nMoves work item to a new Kanban stage and automatically marks closed if terminal.\n\n**Endpoint**: `POST {{base_url}}/api/v1/work_items/{item_id}/stage`  \n**Tags**: `Universal Work Items, Tasks & Dependencies, Universal Work Items, Tasks & Dependencies`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Work Item UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `stage_id` | `string` | **Yes** | Any valid string | Destination stage UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stage_id\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_stage_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },

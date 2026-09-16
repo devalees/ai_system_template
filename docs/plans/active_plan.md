@@ -2003,7 +2003,7 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Service: `PaymentTermsService.compute_due_dates()` generating cash flow installment schedules with end-of-month calendar logic and fractional balance allocation.
   - REST API: 13 endpoints (`/api/v1/payments/*`) covering payment method CRUD, payment terms management, installment schedule calculation (`/terms/compute-schedule`), and transaction lifecycle transitions (`/clear`, `/reconcile`, `/cancel`).
   - Automated tests: 3/3 passing in `test_payments.py` (full test suite 140/140 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [x] **Sub-stage 43.3.5: Resource Scheduling & Capacity Allocation (`resources`)** - COMPLETED
+- [x] **Sub-stage 43.3.5: Resource Scheduling & Capacity Allocation (`resources`)** - COMPLETED (Commit: `d7b0eeb`)
   - Package: `backend/modules/base/resources/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
   - Models: `Resource` (`name`, `code`, `resource_type: human|equipment|vehicle|space`, `capacity_per_day`, `cost_per_hour`, `user_id`, `is_active`), `ResourceAllocation` (`resource_id`, `res_model`, `res_id`, `start_time`, `end_time`, `hours_allocated`, `status: planned|confirmed|completed|cancelled`, `notes`).
   - Service: `ResourceService.check_availability()` detecting overlapping bookings (`start_time < candidate_end AND end_time > candidate_start`) with double-booking prevention.
@@ -2011,10 +2011,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Automated tests: 3/3 passing in `test_resources.py` (full test suite 143/143 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 
 #### **Stage 43.4: Execution, Commitments & Operations (P3)**
-- [ ] **Sub-stage 43.4.1: Universal Work Items & Tasks (`work_items`)**
-  - Package: `backend/modules/base/work_items/`
-  - Models: `WorkItem` (`title`, `description`, `res_model`, `res_id`, `parent_id`, `priority`, `stage_id`, `assigned_to_id`, `estimated_hours`, `spent_hours`, `due_date`, `is_closed`), `WorkItemDependency` (`predecessor_id`, `successor_id`, `dependency_type`).
-  - REST API: Task CRUD, sub-task hierarchy tree, and Kanban stage update endpoints.
+- [x] **Sub-stage 43.4.1: Universal Work Items & Tasks (`work_items`)** - COMPLETED
+  - Package: `backend/modules/base/work_items/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+  - Models: `WorkItemStage` (`name`, `code`, `sequence`, `is_closed`, `color`), `WorkItem` (`item_number`, `title`, `description`, `res_model`, `res_id`, `parent_id`, `priority`, `stage_id`, `assigned_to_id`, `estimated_hours`, `spent_hours`, `due_date`, `is_closed`), `WorkItemDependency` (`predecessor_id`, `successor_id`, `dependency_type: finish_to_start|start_to_start|finish_to_finish|start_to_finish`).
+  - Service: `WorkItemService` supporting recursive sub-task hierarchy trees (`get_subtask_tree`), BFS cycle prevention rejecting circular task dependencies, and Kanban pipeline stage transitions.
+  - REST API: 11 endpoints (`/api/v1/work_items/*`) covering stages CRUD, task management, hierarchical trees (`/{id}/tree`), dependency links, and stage transitions (`/{id}/stage`).
+  - Automated tests: 4/4 passing in `test_work_items.py` (full test suite 147/147 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 - [ ] **Sub-stage 43.4.2: Contracts, Agreements & Subscriptions (`contracts`)**
   - Package: `backend/modules/base/contracts/`
   - Models: `Contract` (`sequence_number`, `title`, `party_id`, `contract_type: customer|vendor|employment|lease`, `start_date`, `end_date`, `billing_frequency: one_off|monthly|quarterly|annual`, `amount`, `currency_id`, `state`).
@@ -2052,20 +2054,17 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Enforced strict dependency DAG: Stage 43.1 (Infrastructure/Invariants) $\rightarrow$ Stage 43.2 (Parties & Workflows) $\rightarrow$ Stage 43.3 (Commercial Rules) $\rightarrow$ Stage 43.4 (Execution & Contracts) $\rightarrow$ Stage 43.5 (AI Agent Bridge).
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 - *2026-09-16*: Stage 43.2 (Universal Parties, Workflows, Approvals & Calendar) 100% completed.
-- *2026-09-16*: Stage 43.3 (Commercial Rules & Operational Engines - P2) 100% completed across all 5 sub-stages:
-  - Sub-stage 43.3.1 (`uom`): Intra-category reference normalization & explicit cross-category rules.
-  - Sub-stage 43.3.2 (`pricing`): Multi-tier price lists, volume breaks, and promotional validity windows.
-  - Sub-stage 43.3.3 (`taxes`): Multi-jurisdiction tax engine, fiscal position substitutions, and compound/inclusive taxes.
-  - Sub-stage 43.3.4 (`payments`): Payment methods, cash flow installment calculations, and transaction lifecycle.
-  - Sub-stage 43.3.5 (`resources`): Capacity calendars, booking allocations, and collision prevention.
+- *2026-09-16*: Stage 43.3 (Commercial Rules & Operational Engines - P2) 100% completed across all 5 sub-stages (`uom`, `pricing`, `taxes`, `payments`, `resources`).
+- *2026-09-16*: Sub-stage 43.4.1 (Universal Work Items & Tasks) completed with DAG dependency cycle prevention and recursive sub-task trees.
 
 ### 4. Current Focus
-Stage 43.3 (Commercial Rules & Operational Engines - P2) is 100% COMPLETED.
-Immediate focus: **Stage 43.4: Execution, Commitments & Operations (P3)** $\rightarrow$ **Sub-stage 43.4.1: Universal Work Items & Tasks (`work_items`)**.
-- Create `backend/modules/base/work_items/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `WorkItem` (`title`, `description`, `res_model`, `res_id`, `parent_id`, `priority`, `stage_id`, `assigned_to_id`, `estimated_hours`, `spent_hours`, `due_date`, `is_closed`) and `WorkItemDependency` (`predecessor_id`, `successor_id`, `dependency_type: finish_to_start|start_to_start|finish_to_finish|start_to_finish`).
-- Implement `WorkItemService` supporting hierarchical sub-task trees, dependency cycle detection, and Kanban stage transitions.
-- Add unit tests in `backend/tests/test_work_items.py`.
+Sub-stage 43.4.1 (`work_items`) is COMPLETED.
+Immediate focus: **Sub-stage 43.4.2: Contracts, Agreements & Subscriptions (`contracts`)** (Stage 43.4: Execution, Commitments & Operations - P3).
+- Create `backend/modules/base/contracts/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `Contract` (`sequence_number`, `title`, `party_id`, `contract_type: customer|vendor|employment|lease`, `start_date`, `end_date`, `billing_frequency: one_off|monthly|quarterly|annual`, `amount`, `currency_id`, `auto_renew`, `notice_days`, `state: draft|active|expired|terminated|cancelled`).
+- Implement `ContractService` managing state transitions, renewal schedules, and expiry tracking.
+- Add unit tests in `backend/tests/test_contracts.py`.
+
 
 
 

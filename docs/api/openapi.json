@@ -10342,6 +10342,835 @@
         }
       }
     },
+    "/api/v1/work_items/stages": {
+      "get": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "List Stages",
+        "description": "Lists workflow stages ordered by pipeline sequence.",
+        "operationId": "list_stages_api_v1_work_items_stages_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkItemStageResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Stages Api V1 Work Items Stages Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Create Stage",
+        "description": "Registers a new workflow pipeline stage.",
+        "operationId": "create_stage_api_v1_work_items_stages_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkItemStageCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemStageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/work_items/stages/{stage_id}": {
+      "get": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Get Stage",
+        "description": "Fetch single stage by UUID.",
+        "operationId": "get_stage_api_v1_work_items_stages__stage_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "stage_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stage UUID",
+              "title": "Stage Id"
+            },
+            "description": "Stage UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemStageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Update Stage",
+        "description": "Update stage properties or ordering.",
+        "operationId": "update_stage_api_v1_work_items_stages__stage_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "stage_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stage UUID",
+              "title": "Stage Id"
+            },
+            "description": "Stage UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkItemStageUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemStageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Delete Stage",
+        "description": "Soft-deletes a workflow stage.",
+        "operationId": "delete_stage_api_v1_work_items_stages__stage_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "stage_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stage UUID",
+              "title": "Stage Id"
+            },
+            "description": "Stage UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work_items": {
+      "post": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Create Work Item",
+        "description": "Creates a new task or sub-task.",
+        "operationId": "create_work_item_api_v1_work_items_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkItemCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "List Work Items",
+        "description": "Lists work items for active company with flexible filtering.",
+        "operationId": "list_work_items_api_v1_work_items_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "stage_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by stage UUID",
+              "title": "Stage Id"
+            },
+            "description": "Filter by stage UUID"
+          },
+          {
+            "name": "assigned_to_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by assigned user UUID",
+              "title": "Assigned To Id"
+            },
+            "description": "Filter by assigned user UUID"
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by priority",
+              "title": "Priority"
+            },
+            "description": "Filter by priority"
+          },
+          {
+            "name": "is_closed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by completion status",
+              "title": "Is Closed"
+            },
+            "description": "Filter by completion status"
+          },
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by parent model",
+              "title": "Res Model"
+            },
+            "description": "Filter by parent model"
+          },
+          {
+            "name": "res_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by parent record UUID",
+              "title": "Res Id"
+            },
+            "description": "Filter by parent record UUID"
+          },
+          {
+            "name": "parent_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by parent task UUID",
+              "title": "Parent Id"
+            },
+            "description": "Filter by parent task UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkItemResponse"
+                  },
+                  "title": "Response List Work Items Api V1 Work Items Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work_items/{item_id}": {
+      "get": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Get Work Item",
+        "description": "Fetch single work item with stage and dependencies.",
+        "operationId": "get_work_item_api_v1_work_items__item_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Work Item UUID",
+              "title": "Item Id"
+            },
+            "description": "Work Item UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Update Work Item",
+        "description": "Update work item properties or status.",
+        "operationId": "update_work_item_api_v1_work_items__item_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Work Item UUID",
+              "title": "Item Id"
+            },
+            "description": "Work Item UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkItemUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Delete Work Item",
+        "description": "Soft-deletes a work item and cascades to child sub-tasks.",
+        "operationId": "delete_work_item_api_v1_work_items__item_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Work Item UUID",
+              "title": "Item Id"
+            },
+            "description": "Work Item UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work_items/{item_id}/tree": {
+      "get": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Get Sub-task Tree",
+        "description": "Fetches recursive hierarchical sub-task tree rooted at this work item.",
+        "operationId": "get_subtask_tree_api_v1_work_items__item_id__tree_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Root Work Item UUID",
+              "title": "Item Id"
+            },
+            "description": "Root Work Item UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemTreeNode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work_items/{item_id}/dependencies": {
+      "post": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Add Task Dependency",
+        "description": "Appends a predecessor requirement to this work item with cycle prevention.",
+        "operationId": "add_dependency_api_v1_work_items__item_id__dependencies_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Successor Work Item UUID",
+              "title": "Item Id"
+            },
+            "description": "Successor Work Item UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkItemDependencyCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemDependencyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work_items/dependencies/{dependency_id}": {
+      "delete": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Delete Dependency",
+        "description": "Removes a dependency constraint edge.",
+        "operationId": "delete_dependency_api_v1_work_items_dependencies__dependency_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dependency_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Dependency UUID",
+              "title": "Dependency Id"
+            },
+            "description": "Dependency UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work_items/{item_id}/stage": {
+      "post": {
+        "tags": [
+          "Universal Work Items, Tasks & Dependencies",
+          "Universal Work Items, Tasks & Dependencies"
+        ],
+        "summary": "Transition Stage",
+        "description": "Moves work item to a new Kanban stage and automatically marks closed if terminal.",
+        "operationId": "transition_stage_api_v1_work_items__item_id__stage_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Work Item UUID",
+              "title": "Item Id"
+            },
+            "description": "Work Item UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StageTransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/backup/create": {
       "post": {
         "tags": [
@@ -30295,6 +31124,21 @@
         "title": "SettingOption",
         "description": "Select option specification for choice-based settings."
       },
+      "StageTransitionRequest": {
+        "properties": {
+          "stage_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stage Id",
+            "description": "Destination stage UUID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage_id"
+        ],
+        "title": "StageTransitionRequest"
+      },
       "TagCreate": {
         "properties": {
           "name": {
@@ -33154,6 +33998,818 @@
         "example": {
           "token": "em_1a2b3c4d5e6f_sample_token"
         }
+      },
+      "WorkItemCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Task headline or title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed requirements or markdown specifications"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Parent entity model (e.g. 'projects')"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Parent entity UUID"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "Parent task UUID for sub-task hierarchies"
+          },
+          "priority": {
+            "type": "string",
+            "pattern": "^(low|medium|high|urgent)$",
+            "title": "Priority",
+            "description": "Priority level",
+            "default": "medium"
+          },
+          "stage_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Id",
+            "description": "Current workflow stage UUID"
+          },
+          "assigned_to_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Id",
+            "description": "Assigned user account UUID"
+          },
+          "estimated_hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Estimated Hours",
+            "description": "Estimated work hours",
+            "default": "0.00"
+          },
+          "spent_hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Spent Hours",
+            "description": "Logged work hours",
+            "default": "0.00"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date",
+            "description": "Target completion deadline"
+          },
+          "item_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Number",
+            "description": "Optional custom task sequence number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "WorkItemCreate",
+        "example": {
+          "description": "Implement inclusive vs exclusive rate extraction and compound rules.",
+          "estimated_hours": "16.00",
+          "item_number": "TASK-2026-001",
+          "priority": "high",
+          "title": "Build Multi-Jurisdiction Tax Calculation Matrix"
+        }
+      },
+      "WorkItemDependencyCreate": {
+        "properties": {
+          "predecessor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Predecessor Id",
+            "description": "Predecessor task UUID that must be completed first"
+          },
+          "dependency_type": {
+            "type": "string",
+            "pattern": "^(finish_to_start|start_to_start|finish_to_finish|start_to_finish)$",
+            "title": "Dependency Type",
+            "description": "Dependency relationship type",
+            "default": "finish_to_start"
+          }
+        },
+        "type": "object",
+        "required": [
+          "predecessor_id"
+        ],
+        "title": "WorkItemDependencyCreate",
+        "example": {
+          "dependency_type": "finish_to_start",
+          "predecessor_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+        }
+      },
+      "WorkItemDependencyResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "predecessor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Predecessor Id"
+          },
+          "successor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Successor Id"
+          },
+          "dependency_type": {
+            "type": "string",
+            "title": "Dependency Type"
+          },
+          "predecessor_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predecessor Title"
+          },
+          "successor_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Successor Title"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "predecessor_id",
+          "successor_id",
+          "dependency_type",
+          "created_at"
+        ],
+        "title": "WorkItemDependencyResponse"
+      },
+      "WorkItemResponse": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Task headline or title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed requirements or markdown specifications"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Parent entity model (e.g. 'projects')"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Parent entity UUID"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "Parent task UUID for sub-task hierarchies"
+          },
+          "priority": {
+            "type": "string",
+            "pattern": "^(low|medium|high|urgent)$",
+            "title": "Priority",
+            "description": "Priority level",
+            "default": "medium"
+          },
+          "stage_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Id",
+            "description": "Current workflow stage UUID"
+          },
+          "assigned_to_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Id",
+            "description": "Assigned user account UUID"
+          },
+          "estimated_hours": {
+            "type": "string",
+            "title": "Estimated Hours",
+            "description": "Estimated work hours",
+            "default": "0.00"
+          },
+          "spent_hours": {
+            "type": "string",
+            "title": "Spent Hours",
+            "description": "Logged work hours",
+            "default": "0.00"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date",
+            "description": "Target completion deadline"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "item_number": {
+            "type": "string",
+            "title": "Item Number"
+          },
+          "is_closed": {
+            "type": "boolean",
+            "title": "Is Closed"
+          },
+          "stage_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Name"
+          },
+          "dependencies": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItemDependencyResponse"
+            },
+            "type": "array",
+            "title": "Dependencies",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "id",
+          "company_id",
+          "item_number",
+          "is_closed",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkItemResponse"
+      },
+      "WorkItemStageCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Stage display title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Pipeline sequence order",
+            "default": 10
+          },
+          "is_closed": {
+            "type": "boolean",
+            "title": "Is Closed",
+            "description": "Whether this stage represents a terminal closed state",
+            "default": false
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Color",
+            "description": "Hex color badge",
+            "default": "#3b82f6"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational guidance for this stage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "WorkItemStageCreate",
+        "example": {
+          "code": "IN_DEV",
+          "color": "#eab308",
+          "description": "Active implementation",
+          "is_closed": false,
+          "name": "In Development",
+          "sequence": 20
+        }
+      },
+      "WorkItemStageResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Stage display title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Pipeline sequence order",
+            "default": 10
+          },
+          "is_closed": {
+            "type": "boolean",
+            "title": "Is Closed",
+            "description": "Whether this stage represents a terminal closed state",
+            "default": false
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Color",
+            "description": "Hex color badge",
+            "default": "#3b82f6"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational guidance for this stage"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkItemStageResponse"
+      },
+      "WorkItemStageUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "is_closed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Closed"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "title": "WorkItemStageUpdate"
+      },
+      "WorkItemTreeNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "item_number": {
+            "type": "string",
+            "title": "Item Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority"
+          },
+          "is_closed": {
+            "type": "boolean",
+            "title": "Is Closed"
+          },
+          "stage_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Name"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItemTreeNode"
+            },
+            "type": "array",
+            "title": "Children"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "item_number",
+          "title",
+          "priority",
+          "is_closed"
+        ],
+        "title": "WorkItemTreeNode"
+      },
+      "WorkItemUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(low|medium|high|urgent)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "stage_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Id"
+          },
+          "assigned_to_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Id"
+          },
+          "estimated_hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Hours"
+          },
+          "spent_hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Hours"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "is_closed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Closed"
+          }
+        },
+        "type": "object",
+        "title": "WorkItemUpdate"
       },
       "WorkflowDefinitionCreate": {
         "properties": {
