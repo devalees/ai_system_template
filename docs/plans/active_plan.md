@@ -2410,7 +2410,106 @@ Implement the **Dual-Level Multi-Template & Theming Engine**:
 - *2026-09-17*: Isolation Invariant: Template switching automatically resets previous layout/split overrides to ensure the new template layout displays with pristine defaults.
 
 ### 4. Current Focus
-Phase 50 completed and verified with 187/187 tests passing. Ready for commit and user next milestone direction.
+Phase 50 completed and verified with 187/187 tests passing. Transitioned to Phase 51: Sovereign Frontend Platform Foundation, Master Shell & Dynamic UI Engine.
+
+---
+
+## Phase 51: Sovereign Frontend Platform Foundation, Master Shell & Dynamic UI Engine
+
+- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-17 02:25:00+03:00
+
+### 1. Objective & Scope
+Construct the **Sovereign Frontend Platform** from the ground up as a zero-bloat, metadata-driven single-page application (SPA) using React 19, Vite, TypeScript, and pure Vanilla CSS design tokens. Symmetrically mirror the backend Kernel architecture, implement the unified **"1 Invariant Shell + 4 Polymorphic Canvases"** paradigm, and adhere strictly to the **Mandatory Wireframe-First Protocol** ("Lines & Labels" structural agreement before visual styling) across all milestones.
+
+### 2. Task Checklist & Progress
+
+#### Milestone 51.1: Platform Foundation & Zero-Bloat Tooling
+- [ ] **Stage 51.1.1: Project Scaffolding & Minimalist Tooling Setup** - PENDING
+  - Initialize `frontend/` directory with Vite, React 19, TypeScript.
+  - Configure minimalist `package.json` maintaining strict direct runtime dependency cap under 5–7 packages (`react`, `react-dom`, `lucide-react`).
+  - Configure `tsconfig.json` with strict type checking and clean path aliases (`@kernel/*`, `@ui/*`, `@modules/*`).
+  - Configure `vite.config.ts` with development proxy routing `/api` to FastAPI on `:8000`.
+  - Establish `src/index.css` foundational CSS custom properties (`:root` tokens) and zero-margin reset.
+  - Verify live development server startup (`npm run dev` / `http://localhost:5173`) with zero errors.
+
+#### Milestone 51.2: The Invariant Master Shell (Wireframe-First & Theming)
+- [ ] **Stage 51.2.1: Master Shell Structural Wireframe (Lines & Labels Agreement)** - PENDING
+  - Build pure HTML bordered skeleton (`border: 1px dashed/solid`) for the outer application shell.
+  - Explicitly demarcate and label structural zones:
+    - Top 48px Header: `[App Switcher Drawer]`, `[Active Company Context]`, `[Cmd+K Universal Search]`, `[User Profile & Theme Toggle]`.
+    - Contextual Sub-Navigation: Horizontal module menu bar (`Orders`, `Invoicing`, `Reporting`, `Configuration`).
+    - Control Bar: `[Hierarchical Breadcrumbs]`, `[Action Buttons: New, Confirm, Print]`, `[Universal Search & Filter Box]`, `[View Switcher: List, Kanban, Pivot]`.
+    - Polymorphic Viewport Canvas Placeholder.
+  - Launch live on `http://localhost:5173` and obtain User Visual Sign-Off before styling.
+- [ ] **Stage 51.2.2: Master Shell Styling, Theming & Interactive Navigation** - PENDING
+  - Apply pure Vanilla CSS design tokens supporting `sovereign-dark` and `enterprise-light` dynamically via `:root` attributes.
+  * Implement interactive App Launcher modal drawer switching between Sales, Accounting, Purchases, and Settings.
+  * Implement Company Switcher dropdown displaying active company badge.
+  * Implement instant Theme Switcher toggling CSS variables live with zero reload.
+
+#### Milestone 51.3: Kernel Core Services & Multi-Company Protocol
+- [ ] **Stage 51.3.1: Native Typed Fetch API Client (`src/kernel/api/`)** - PENDING
+  - Implement zero-dependency typed API client wrapping `window.fetch`.
+  - Automate `Authorization: Bearer <jwt>` injection.
+  - Enforce dual-header multi-company routing: `X-Company-ID` for state-changing mutations (`POST`, `PUT`, `DELETE`), `X-Company-IDs` for aggregated read queries (`GET`).
+  - Implement 401 interception with automated silent token refresh before session expiry.
+- [ ] **Stage 51.3.2: Authentication & 2FA State Machine (`src/kernel/auth/`)** - PENDING
+  - Build authentication state management using native React Context + `useSyncExternalStore`.
+  - Implement Login screen and intermediate 2FA challenge modal handling TOTP codes and emergency recovery codes.
+
+#### Milestone 51.4: Canvas 1 (Explorer Canvas — Data Grid & Kanban)
+- [ ] **Stage 51.4.1: Explorer Canvas Wireframe Skeleton (Lines & Labels Agreement)** - PENDING
+  - Render pure bordered skeleton for tabular data grid: column headers, sort indicators, filter chips, selection checkboxes, and pagination footer.
+  - Render skeleton for Kanban stage columns and draggable cards.
+  - Present live on `http://localhost:5173` for User Visual Sign-Off.
+- [ ] **Stage 51.4.2: Explorer Canvas Component Implementation** - PENDING
+  - Build `DynamicGrid` consuming backend `ListViewSchema`: dense rows, click-to-sort, draggable column borders for pixel resizing, row checkboxes for bulk actions.
+  - Build `DynamicKanban` consuming backend `KanbanViewSchema`: native HTML5 Drag and Drop card transitions across stages.
+
+#### Milestone 51.5: Canvas 2 (Document Canvas & Fluid Resizable Splitter)
+- [ ] **Stage 51.5.1: Document Canvas Wireframe Skeleton (Lines & Labels Agreement)** - PENDING
+  - Render pure bordered skeleton for single record view:
+    - Status progression ribbon (`Draft` -> `Sent` -> `Confirmed` -> `Done`).
+    - Document action bar (`Confirm`, `Send Email`, `Cancel`).
+    - Standardized Document Sheet: header fields + tabbed notebook (`Order Lines`, `Accounting`, `Notes`).
+    - Docked Sidebar placeholder for Chatter and Activity feed.
+    - Native vertical splitter line dividing the Sheet and the Dock.
+  - Present live on `http://localhost:5173` for User Visual Sign-Off.
+- [ ] **Stage 51.5.2: Document Canvas & Fluid Splitter Implementation** - PENDING
+  - Build `DynamicForm` consuming backend `FormViewSchema`: status bar ribbon, responsive 2-column header fields, tabbed child line grids.
+  - Build native Pointer Events fluid splitter (35% to 100% bounds, collapsible dock).
+  - Integrate docked Chatter feed (`src/modules/base/chatter/`).
+  - Persist user dragged splitter ratio via backend `PUT /api/v1/ui/preferences/{res_model}/{view_type}`.
+
+#### Milestone 51.6: Canvas 3 (Reporting) & Canvas 4 (Settings Hub)
+- [ ] **Stage 51.6.1: Financial Reporting & Analytics Canvas** - PENDING
+  - Wireframe skeleton agreement -> Component implementation: multi-column hierarchical financial ledgers (Trial Balance, P&L, Balance Sheet) and period comparison selectors.
+- [ ] **Stage 51.6.2: Settings & Configuration Hub Canvas** - PENDING
+  - Wireframe skeleton agreement -> Component implementation: left-hand category index + right-hand cards dynamically rendering Section 6.7 typed `ModuleSettings`.
+
+#### Milestone 51.7: End-to-End Integration, Verification & Production Packaging
+- [ ] **Stage 51.7.1: Live Backend End-to-End Data Binding** - PENDING
+  - Connect Explorer and Document canvases to live FastAPI endpoints (`SaleOrder`, `AccountMove`, `ui_schema`).
+- [ ] **Stage 51.7.2: Zero Console Error & Strict TypeScript Certification** - PENDING
+  - Complete regression audit: zero console warnings, zero React key errors, strict TypeScript passing.
+- [ ] **Stage 51.7.3: Alpine Nginx Production Docker Packaging** - PENDING
+  - Create multi-stage `frontend/Dockerfile` and `frontend/nginx.conf`.
+  - Add `frontend` service to root `docker-compose.yml` on port `3000`.
+- [ ] **Stage 51.7.4: Architecture Wiki & Task State Synchronization** - PENDING
+  - Synchronize [`docs/ai_wiki/frontend_architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/frontend_architecture.md) and finalize Phase 51 in active plan.
+
+### 3. Key Decisions & Architecture Invariants (Phase 51)
+- *2026-09-17*: Wireframe-First Invariant: No visual styling, CSS decorations, or component logic can be implemented for any screen before the bordered HTML skeleton ("Lines & Labels") is visually agreed upon.
+- *2026-09-17*: Unified Layout Invariant: The entire application strictly follows the "1 Invariant Shell + 4 Polymorphic Canvases" architecture.
+- *2026-09-17*: Zero-Bloat Invariant: Maximum 5–7 runtime dependencies in `package.json`; all interactions (drag & drop, splitter, form state, HTTP) use native browser standards.
+- *2026-09-17*: Pure Vanilla CSS Invariant: All design tokens declared as CSS custom properties on `:root` matching backend `UIThemeSettings`; zero Tailwind and zero CSS-in-JS.
+- *2026-09-17*: Real-Time Synchronization: `docs/plans/active_plan.md` and `docs/ai_wiki/frontend_architecture.md` must be updated continuously after each verified sub-task.
+
+### 4. Current Focus
+Milestone 51.1: Project Scaffolding & Minimalist Tooling Setup in `frontend/`.
+
 
 
 
