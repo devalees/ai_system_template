@@ -5,7 +5,8 @@ A production-grade, 100% sovereign, and portable autonomous AI agent platform po
 - **Repository**: `devalees/ai_system_template`
 - **Active Branch**: `main`
 - **Active Implementation Plan**: [`docs/plans/active_plan.md`](file:///home/ehab/Desktop/economy_editor/docs/plans/active_plan.md)
-- **Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
+- **Backend Architecture Reference**: [`docs/ai_wiki/architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/architecture.md)
+- **Frontend Architecture Reference**: [`docs/ai_wiki/frontend_architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/frontend_architecture.md)
 - **Agent Team Reference**: [`docs/agent_team.md`](file:///home/ehab/Desktop/economy_editor/docs/agent_team.md)
 - **Status**: Phase 40 Human-in-the-Loop (HITL) Feedback & Best Practice Distillation Engine COMPLETED across all Pillars (72/72 Golden Benchmark Evals Passing in 2.98s).
 

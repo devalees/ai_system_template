@@ -110,3 +110,6 @@ Frontend development strictly adheres to the same operational discipline as the 
 3. **Atomic Git Commits After Every Sub-Task**:
    * Execute `git add` and `git commit` immediately after completing each distinct, working sub-task.
    * Follow conventional commits: `feat(frontend-...)`, `fix(frontend-...)`, `docs(frontend-...)`, `refactor(frontend-...)`.
+4. **Continuous Architecture Synchronization (`docs/ai_wiki/frontend_architecture.md`)**:
+   * Just like `architecture.md` for backend, the agent MUST continuously maintain and update [`docs/ai_wiki/frontend_architecture.md`](file:///home/ehab/Desktop/economy_editor/docs/ai_wiki/frontend_architecture.md).
+   * Any change in frontend structure, layouts, design tokens, API protocols, or core state management MUST be documented immediately in `frontend_architecture.md` in tandem with `active_plan.md`.
