@@ -994,13 +994,20 @@ The `ui_schema` base module (`backend/modules/base/ui_schema/`) provides the met
 1. **`ViewDefinition` (`ui_views`)**:
    - Stores declarative view configurations for resource models (`res_model`) and view types (`form`, `list`, `kanban`, `pivot`, `calendar`, `dashboard`).
    - `company_id`: Optional UUID (NULL for global system defaults, non-null for tenant-specific customizations).
+   - `template_code`: String code identifying layout variants (`standard`, `quick_entry`, `executive`, `simplified_invoice`, `quick_product`).
+   - `description`: Human-readable summary of when to utilize the template variant.
+   - `target_role_ids`: Optional list of RBAC group/role IDs for role-based auto-routing.
    - `layout_template`: Screen layout archetype (`"split_chatter_right"`, `"full_width"`, `"master_detail"`).
    - `default_split_ratio`: Primary panel percentage width (default 65.0%).
    - `priority`: Weight governing resolution precedence (higher values override lower values).
+   - `is_default`: Flag indicating if this view is the designated default for model and view type.
    - `is_system`: Boolean identifying immutable platform seeds vs tenant studio customizations.
    - `schema`: JSONB containing complete declarative specifications (tabs, sections, columns, widgets, rules).
 2. **`UserViewPreference` (`ui_user_view_preferences`)**:
    - Persists individual personal user workspace adjustments:
+   - `active_template_code`: User's currently active layout template variant code.
+   - `theme_override`: User's personal visual theme override (`sovereign-dark`, `enterprise-light`, `high-density-erp`, `nordic-minimal`).
+   - `density_override`: User's table/form density preference (`comfortable`, `compact`).
    - `preferred_split_ratio`: User's custom dragged panel split percentage (e.g. 72.5%).
    - `preferred_layout`: User's preferred layout archetype override.
    - `visible_columns`: Selected visible columns for data grids.
@@ -1008,20 +1015,49 @@ The `ui_schema` base module (`backend/modules/base/ui_schema/`) provides the met
    - `column_widths`: Persisted pixel widths (`{"name": 250, "amount_total": 140}`).
    - `kanban_collapsed_lanes`: List of folded Kanban stage lanes.
 
-#### 6.18.3 Multi-Tier View Resolution Precedence
+#### 6.18.3 Multi-Tier Template Resolution Hierarchy
 When resolving an active view for a user and model (`UISchemaService.get_resolved_view_schema`):
-1. **User Personal Preference** (`UserViewPreference`): Overlays user's dragged split ratio, column widths, order, and folded lanes.
-2. **Tenant Custom View** (`ViewDefinition` with `company_id == active_company_id`): Overlays system defaults if customized in Studio.
-3. **Global System View** (`ViewDefinition` with `is_system == True`): Built-in high-fidelity platform fixtures.
-4. **Dynamic Introspection Fallback**: Auto-generates full Form, List, or Kanban layouts directly from ORM column and relationship metadata.
-5. **Security Pruning (FLAC)**: Final filter purges unauthorized fields before schema delivery to the frontend client.
+1. **Explicit Request or User Personal Selection**:
+   - Matches specific `template_code` explicitly requested or saved as user's `active_template_code` (Tenant custom template first, falling back to System preset).
+2. **Role-Based Assignment (`target_role_ids`)**:
+   - Automatically routes callers to role-tailored view templates based on assigned user groups/roles.
+3. **Tenant Default View**:
+   - Highest-priority view with `company_id == active_company_id` and `is_default == True`.
+4. **Platform System Default View**:
+   - Highest-priority immutable platform fixture with `is_system == True` and `is_default == True`.
+5. **Any Available View Fallback**:
+   - Matches any active tenant or system view for the model and view type.
+6. **Dynamic Introspection Fallback**:
+   - Auto-generates full Form, List, or Kanban layouts directly from ORM column and relationship metadata.
+7. **Security Pruning (FLAC)**:
+   - Final egress filter purges unauthorized fields before schema delivery to the client.
 
-#### 6.18.4 REST API Surface (`/api/v1/ui/*`)
+#### 6.18.4 Global Visual Theming & Application Shell Subsystem
+Compliant with Section 6.7 (`ModuleSettings`), global UI appearance is declared via typed `UIThemeSettings` under the `ui_schema` namespace:
+- **Visual Theme Presets**:
+  - `sovereign-dark`: Glassmorphic dark aesthetic with subtle borders and glowing accent rings.
+  - `enterprise-light`: High-legibility, clean corporate light mode.
+  - `high-density-erp`: Compact accounting theme optimized for data grids and rapid numeric entry.
+  - `nordic-minimal`: Soft-contrast modern dark mode.
+- **Application Shell Archetypes**:
+  - `collapsible_sidebar`: Modern icon sidebar expanding on hover or toggle.
+  - `top_navbar`: Traditional enterprise top navigation bar with dropdown menus.
+  - `master_detail`: Split master-detail navigation with left list pane and right content viewport.
+- **User Personal Overrides**:
+  - When permitted by tenant settings (`allow_user_theme_override == True`), individual users can toggle themes and density modes independently via `/api/v1/ui/theme/preference`.
+
+#### 6.18.5 REST API Surface (`/api/v1/ui/*`)
 - `GET /api/v1/ui/models`: Lists all introspectable models and supported view types for dynamic navigation.
 - `GET /api/v1/ui/views/{res_model}`: Fetches complete view bundle (Form, List, Kanban) with user preferences for a resource.
-- `GET /api/v1/ui/views/{res_model}/{view_type}`: Returns single resolved schema for a specific view type.
+- `GET /api/v1/ui/views/{res_model}/{view_type}`: Returns single resolved schema for a specific view type (supports `?template_code=`).
+- `GET /api/v1/ui/views/{res_model}/{view_type}/templates`: Lists available template descriptors for template switcher dropdowns.
+- `GET /api/v1/ui/views/{res_model}/{view_type}/templates/{template_code}`: Fetches specific layout template schema.
 - `POST /api/v1/ui/views`: Persists a customized view definition (Studio Mode).
+- `POST /api/v1/ui/views/{view_id}/clone`: Clones an existing template into a new custom variant with unique code.
 - `PUT /api/v1/ui/views/{view_id}`: Updates field layout, docked sidebar properties, or default split ratio.
 - `DELETE /api/v1/ui/views/{view_id}`: Reverts custom layout back to platform default.
 - `GET /api/v1/ui/preferences/{res_model}/{view_type}`: Retrieves caller's personal workspace view preferences.
 - `PUT /api/v1/ui/preferences/{res_model}/{view_type}`: Saves user's dragged panel split ratio, column ordering, or widths.
+- `PUT /api/v1/ui/preferences/{res_model}/{view_type}/switch-template`: 1-Click runtime template switcher for the authenticated user.
+- `GET /api/v1/ui/theme`: Delivers resolved global theme, application shell archetype, and density settings to frontend clients.
+- `PUT /api/v1/ui/theme/preference`: Updates individual user personal theme mode or table density preference.

@@ -33,6 +33,7 @@ class ViewDefinition(
     __tablename__ = "ui_views"
     __table_args__ = (
         Index("ix_ui_views_model_type", "company_id", "res_model", "view_type"),
+        Index("ix_ui_views_model_template", "company_id", "res_model", "view_type", "template_code"),
     )
 
     company_id: Mapped[Optional[uuid.UUID]] = mapped_column(
@@ -53,10 +54,29 @@ class ViewDefinition(
         index=True,
         doc="View classification: 'form', 'list', 'kanban', 'pivot', 'calendar', 'dashboard'",
     )
+    template_code: Mapped[str] = mapped_column(
+        String(50),
+        default="standard",
+        nullable=False,
+        index=True,
+        doc="Unique identifier for template variant, e.g. 'standard', 'quick_entry', 'executive'",
+    )
     name: Mapped[str] = mapped_column(
         String(150),
         nullable=False,
         doc="Human-readable title for this view (e.g. 'Default Sales Order Form')",
+    )
+    description: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        default=None,
+        nullable=True,
+        doc="Short explanation of when to use this template variant",
+    )
+    target_role_ids: Mapped[Optional[List[uuid.UUID]]] = mapped_column(
+        JSONB,
+        default=None,
+        nullable=True,
+        doc="Optional list of RBAC group/role IDs for role-based auto-routing",
     )
     layout_template: Mapped[str] = mapped_column(
         String(50),
@@ -157,4 +177,22 @@ class UserViewPreference(BaseModel):
         default=None,
         nullable=True,
         doc="List of Kanban lane identifiers collapsed by the user",
+    )
+    active_template_code: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        default=None,
+        nullable=True,
+        doc="User's currently selected active template variant",
+    )
+    theme_override: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        default=None,
+        nullable=True,
+        doc="User personal visual theme override ('sovereign-dark', 'enterprise-light', 'high-density-erp')",
+    )
+    density_override: Mapped[Optional[str]] = mapped_column(
+        String(20),
+        default=None,
+        nullable=True,
+        doc="User table/form density preference ('compact', 'comfortable')",
     )

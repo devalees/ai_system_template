@@ -15172,6 +15172,24 @@
               "title": "View Type"
             },
             "description": "View type, e.g. 'form', 'list', 'kanban'"
+          },
+          {
+            "name": "template_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional specific template variant code",
+              "title": "Template Code"
+            },
+            "description": "Optional specific template variant code"
           }
         ],
         "responses": {
@@ -15182,6 +15200,208 @@
                 "schema": {
                   "type": "object",
                   "title": "Response Get Single Resolved View Api V1 Ui Schema Views  Res Model   View Type  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui_schema/views/{res_model}/{view_type}/templates": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "List available view layout templates for a model and view type",
+        "description": "List all available layout templates for a screen accessible by the caller.",
+        "operationId": "list_model_templates_api_v1_ui_schema_views__res_model___view_type__templates_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name, e.g. 'SaleOrder'",
+              "title": "Res Model"
+            },
+            "description": "Target model name, e.g. 'SaleOrder'"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type, e.g. 'form', 'list', 'kanban'",
+              "title": "View Type"
+            },
+            "description": "View type, e.g. 'form', 'list', 'kanban'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateSummaryRead"
+                  },
+                  "title": "Response List Model Templates Api V1 Ui Schema Views  Res Model   View Type  Templates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui_schema/views/{res_model}/{view_type}/templates/{template_code}": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch specific view layout template schema",
+        "description": "Fetch specific layout template variant applying FLAC pruning and personal preferences.",
+        "operationId": "get_specific_template_view_api_v1_ui_schema_views__res_model___view_type__templates__template_code__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name, e.g. 'SaleOrder'",
+              "title": "Res Model"
+            },
+            "description": "Target model name, e.g. 'SaleOrder'"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type, e.g. 'form', 'list', 'kanban'",
+              "title": "View Type"
+            },
+            "description": "View type, e.g. 'form', 'list', 'kanban'"
+          },
+          {
+            "name": "template_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Template variant code, e.g. 'quick_entry', 'executive'",
+              "title": "Template Code"
+            },
+            "description": "Template variant code, e.g. 'quick_entry', 'executive'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Specific Template View Api V1 Ui Schema Views  Res Model   View Type  Templates  Template Code  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui_schema/views/{view_id}/clone": {
+      "post": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Clone view template into a new custom template (Studio Mode)",
+        "description": "Clone an existing template into a customized preset with a new unique template code.",
+        "operationId": "clone_custom_view_template_api_v1_ui_schema_views__view_id__clone_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Source view definition ID to clone",
+              "title": "View Id"
+            },
+            "description": "Source view definition ID to clone"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloneTemplatePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewDefinitionRead"
                 }
               }
             }
@@ -15494,6 +15714,157 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/ui_schema/preferences/{res_model}/{view_type}/switch-template": {
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "1-Click runtime template switcher",
+        "description": "Persist active template selection for the current user and model view.",
+        "operationId": "switch_user_active_template_api_v1_ui_schema_preferences__res_model___view_type__switch_template_put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name",
+              "title": "Res Model"
+            },
+            "description": "Target model name"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type",
+              "title": "View Type"
+            },
+            "description": "View type"
+          },
+          {
+            "name": "template_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 50,
+              "description": "Template variant code",
+              "title": "Template Code"
+            },
+            "description": "Template variant code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserViewPreferenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui_schema/theme": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch resolved visual theme, shell archetype, and density settings",
+        "description": "Deliver resolved global appearance tokens, active shell archetype, and density mode.",
+        "operationId": "get_resolved_theme_api_v1_ui_schema_theme_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserThemePreferenceRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ui_schema/theme/preference": {
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Save user personal visual theme or density override",
+        "description": "Update user personal visual theme mode (dark/light) or table density preference.",
+        "operationId": "save_user_theme_preference_api_v1_ui_schema_theme_preference_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserThemePreferencePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserThemePreferenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/v1/workflows/definitions": {
@@ -20382,6 +20753,24 @@
               "title": "View Type"
             },
             "description": "View type, e.g. 'form', 'list', 'kanban'"
+          },
+          {
+            "name": "template_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional specific template variant code",
+              "title": "Template Code"
+            },
+            "description": "Optional specific template variant code"
           }
         ],
         "responses": {
@@ -20392,6 +20781,208 @@
                 "schema": {
                   "type": "object",
                   "title": "Response Get Single Resolved View Api V1 Ui Views  Res Model   View Type  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui/views/{res_model}/{view_type}/templates": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "List available view layout templates for a model and view type",
+        "description": "List all available layout templates for a screen accessible by the caller.",
+        "operationId": "list_model_templates_api_v1_ui_views__res_model___view_type__templates_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name, e.g. 'SaleOrder'",
+              "title": "Res Model"
+            },
+            "description": "Target model name, e.g. 'SaleOrder'"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type, e.g. 'form', 'list', 'kanban'",
+              "title": "View Type"
+            },
+            "description": "View type, e.g. 'form', 'list', 'kanban'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateSummaryRead"
+                  },
+                  "title": "Response List Model Templates Api V1 Ui Views  Res Model   View Type  Templates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui/views/{res_model}/{view_type}/templates/{template_code}": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch specific view layout template schema",
+        "description": "Fetch specific layout template variant applying FLAC pruning and personal preferences.",
+        "operationId": "get_specific_template_view_api_v1_ui_views__res_model___view_type__templates__template_code__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name, e.g. 'SaleOrder'",
+              "title": "Res Model"
+            },
+            "description": "Target model name, e.g. 'SaleOrder'"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type, e.g. 'form', 'list', 'kanban'",
+              "title": "View Type"
+            },
+            "description": "View type, e.g. 'form', 'list', 'kanban'"
+          },
+          {
+            "name": "template_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Template variant code, e.g. 'quick_entry', 'executive'",
+              "title": "Template Code"
+            },
+            "description": "Template variant code, e.g. 'quick_entry', 'executive'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Specific Template View Api V1 Ui Views  Res Model   View Type  Templates  Template Code  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui/views/{view_id}/clone": {
+      "post": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Clone view template into a new custom template (Studio Mode)",
+        "description": "Clone an existing template into a customized preset with a new unique template code.",
+        "operationId": "clone_custom_view_template_api_v1_ui_views__view_id__clone_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Source view definition ID to clone",
+              "title": "View Id"
+            },
+            "description": "Source view definition ID to clone"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloneTemplatePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewDefinitionRead"
                 }
               }
             }
@@ -20704,6 +21295,157 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/ui/preferences/{res_model}/{view_type}/switch-template": {
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "1-Click runtime template switcher",
+        "description": "Persist active template selection for the current user and model view.",
+        "operationId": "switch_user_active_template_api_v1_ui_preferences__res_model___view_type__switch_template_put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name",
+              "title": "Res Model"
+            },
+            "description": "Target model name"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type",
+              "title": "View Type"
+            },
+            "description": "View type"
+          },
+          {
+            "name": "template_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 50,
+              "description": "Template variant code",
+              "title": "Template Code"
+            },
+            "description": "Template variant code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserViewPreferenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui/theme": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch resolved visual theme, shell archetype, and density settings",
+        "description": "Deliver resolved global appearance tokens, active shell archetype, and density mode.",
+        "operationId": "get_resolved_theme_api_v1_ui_theme_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserThemePreferenceRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ui/theme/preference": {
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Save user personal visual theme or density override",
+        "description": "Update user personal visual theme mode (dark/light) or table density preference.",
+        "operationId": "save_user_theme_preference_api_v1_ui_theme_preference_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserThemePreferencePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserThemePreferenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/v1/kernel/modules": {
@@ -26644,6 +27386,41 @@
           "name": "New York City",
           "postal_code": "10002"
         }
+      },
+      "CloneTemplatePayload": {
+        "properties": {
+          "new_template_code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "New Template Code"
+          },
+          "new_name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "New Name"
+          },
+          "new_description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_template_code",
+          "new_name"
+        ],
+        "title": "CloneTemplatePayload",
+        "description": "Payload to clone an existing template into a new custom preset."
       },
       "CompanyCreate": {
         "properties": {
@@ -39891,6 +40668,87 @@
         "type": "object",
         "title": "TaxUpdate"
       },
+      "TemplateSummaryRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "view_type": {
+            "type": "string",
+            "title": "View Type"
+          },
+          "template_code": {
+            "type": "string",
+            "title": "Template Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "layout_template": {
+            "type": "string",
+            "title": "Layout Template"
+          },
+          "default_split_ratio": {
+            "type": "number",
+            "title": "Default Split Ratio"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System"
+          },
+          "target_role_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "res_model",
+          "view_type",
+          "template_code",
+          "name",
+          "layout_template",
+          "default_split_ratio",
+          "is_default",
+          "is_system"
+        ],
+        "title": "TemplateSummaryRead",
+        "description": "Lightweight descriptor for template switching menus."
+      },
       "TokenResponse": {
         "properties": {
           "access_token": {
@@ -41735,6 +42593,76 @@
         "title": "UserSummary",
         "description": "Compact summary of an assigned user."
       },
+      "UserThemePreferencePayload": {
+        "properties": {
+          "theme_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme Override",
+            "description": "'sovereign-dark', 'enterprise-light', 'high-density-erp'"
+          },
+          "density_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Density Override",
+            "description": "'compact', 'comfortable'"
+          }
+        },
+        "type": "object",
+        "title": "UserThemePreferencePayload",
+        "description": "Payload for user to toggle personal theme or density."
+      },
+      "UserThemePreferenceRead": {
+        "properties": {
+          "active_theme": {
+            "type": "string",
+            "title": "Active Theme"
+          },
+          "active_shell": {
+            "type": "string",
+            "title": "Active Shell"
+          },
+          "density": {
+            "type": "string",
+            "title": "Density"
+          },
+          "primary_brand_color": {
+            "type": "string",
+            "title": "Primary Brand Color"
+          },
+          "font_family": {
+            "type": "string",
+            "title": "Font Family"
+          },
+          "allow_user_override": {
+            "type": "boolean",
+            "title": "Allow User Override"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active_theme",
+          "active_shell",
+          "density",
+          "primary_brand_color",
+          "font_family",
+          "allow_user_override"
+        ],
+        "title": "UserThemePreferenceRead",
+        "description": "Resolved visual presentation settings delivered to the frontend client."
+      },
       "UserUpdate": {
         "properties": {
           "full_name": {
@@ -41899,7 +42827,7 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 90.0,
+                "maximum": 100.0,
                 "minimum": 20.0
               },
               {
@@ -41921,6 +42849,39 @@
               }
             ],
             "title": "Kanban Collapsed Lanes"
+          },
+          "active_template_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Template Code"
+          },
+          "theme_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme Override"
+          },
+          "density_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Density Override"
           }
         },
         "type": "object",
@@ -42029,6 +42990,39 @@
               }
             ],
             "title": "Kanban Collapsed Lanes"
+          },
+          "active_template_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Template Code"
+          },
+          "theme_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme Override"
+          },
+          "density_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Density Override"
           }
         },
         "type": "object",
@@ -42107,11 +43101,45 @@
             "minLength": 2,
             "title": "View Type"
           },
+          "template_code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Template Code",
+            "default": "standard"
+          },
           "name": {
             "type": "string",
             "maxLength": 150,
             "minLength": 2,
             "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "target_role_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role Ids"
           },
           "layout_template": {
             "type": "string",
@@ -42179,9 +43207,40 @@
             "type": "string",
             "title": "View Type"
           },
+          "template_code": {
+            "type": "string",
+            "title": "Template Code",
+            "default": "standard"
+          },
           "name": {
             "type": "string",
             "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "target_role_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role Ids"
           },
           "layout_template": {
             "type": "string",
@@ -42249,6 +43308,46 @@
               }
             ],
             "title": "Name"
+          },
+          "template_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "target_role_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role Ids"
           },
           "layout_template": {
             "anyOf": [

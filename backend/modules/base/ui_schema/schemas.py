@@ -184,7 +184,10 @@ class ViewDefinitionCreate(BaseModel):
 
     res_model: str = Field(..., min_length=2, max_length=100)
     view_type: str = Field(..., min_length=2, max_length=30)
+    template_code: str = Field("standard", min_length=2, max_length=50)
     name: str = Field(..., min_length=2, max_length=150)
+    description: Optional[str] = Field(None, max_length=255)
+    target_role_ids: Optional[List[uuid.UUID]] = None
     layout_template: str = Field("split_chatter_right", max_length=50)
     default_split_ratio: float = Field(65.0, ge=20.0, le=100.0)
     priority: int = Field(10, ge=1, le=100)
@@ -201,6 +204,9 @@ class ViewDefinitionUpdate(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
     name: Optional[str] = Field(None, min_length=2, max_length=150)
+    template_code: Optional[str] = Field(None, min_length=2, max_length=50)
+    description: Optional[str] = Field(None, max_length=255)
+    target_role_ids: Optional[List[uuid.UUID]] = None
     layout_template: Optional[str] = Field(None, max_length=50)
     default_split_ratio: Optional[float] = Field(None, ge=20.0, le=100.0)
     priority: Optional[int] = Field(None, ge=1, le=100)
@@ -220,7 +226,10 @@ class ViewDefinitionRead(BaseModel):
     company_id: Optional[uuid.UUID] = None
     res_model: str
     view_type: str
+    template_code: str = "standard"
     name: str
+    description: Optional[str] = None
+    target_role_ids: Optional[List[uuid.UUID]] = None
     layout_template: str
     default_split_ratio: float
     priority: int
@@ -235,8 +244,32 @@ class ViewDefinitionRead(BaseModel):
         return self.schema_definition
 
 
+class TemplateSummaryRead(BaseModel):
+    """Lightweight descriptor for template switching menus."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    res_model: str
+    view_type: str
+    template_code: str
+    name: str
+    description: Optional[str] = None
+    layout_template: str
+    default_split_ratio: float
+    is_default: bool
+    is_system: bool
+    target_role_ids: Optional[List[uuid.UUID]] = None
+
+
+class CloneTemplatePayload(BaseModel):
+    """Payload to clone an existing template into a new custom preset."""
+    new_template_code: str = Field(..., min_length=2, max_length=50)
+    new_name: str = Field(..., min_length=2, max_length=150)
+    new_description: Optional[str] = Field(None, max_length=255)
+
+
 # ============================================================================
-# 6. User Personal View Preferences
+# 6. User Personal View Preferences & Visual Theming
 # ============================================================================
 
 class UserViewPreferencePayload(BaseModel):
@@ -245,8 +278,11 @@ class UserViewPreferencePayload(BaseModel):
     column_order: Optional[List[str]] = None
     column_widths: Optional[Dict[str, int]] = None
     preferred_layout: Optional[str] = None
-    preferred_split_ratio: Optional[float] = Field(None, ge=20.0, le=90.0)
+    preferred_split_ratio: Optional[float] = Field(None, ge=20.0, le=100.0)
     kanban_collapsed_lanes: Optional[List[str]] = None
+    active_template_code: Optional[str] = None
+    theme_override: Optional[str] = None
+    density_override: Optional[str] = None
 
 
 class UserViewPreferenceRead(BaseModel):
@@ -264,6 +300,34 @@ class UserViewPreferenceRead(BaseModel):
     preferred_layout: Optional[str] = None
     preferred_split_ratio: Optional[float] = None
     kanban_collapsed_lanes: Optional[List[str]] = None
+    active_template_code: Optional[str] = None
+    theme_override: Optional[str] = None
+    density_override: Optional[str] = None
+
+
+class UIThemeSettingsSchema(BaseModel):
+    """Company-level theme and branding configuration."""
+    default_visual_theme: str = Field("sovereign-dark", description="Visual theme preset: sovereign-dark, enterprise-light, high-density-erp, nordic-minimal")
+    default_shell_archetype: str = Field("collapsible_sidebar", description="Shell layout: collapsible_sidebar, top_navbar, master_detail")
+    primary_brand_color: str = Field("#0ea5e9", description="Primary brand accent color hex")
+    font_family: str = Field("Inter, system-ui, sans-serif", description="Application typography")
+    allow_user_theme_override: bool = Field(True, description="Allow individual users to choose personal light/dark/density mode")
+
+
+class UserThemePreferencePayload(BaseModel):
+    """Payload for user to toggle personal theme or density."""
+    theme_override: Optional[str] = Field(None, description="'sovereign-dark', 'enterprise-light', 'high-density-erp'")
+    density_override: Optional[str] = Field(None, description="'compact', 'comfortable'")
+
+
+class UserThemePreferenceRead(BaseModel):
+    """Resolved visual presentation settings delivered to the frontend client."""
+    active_theme: str
+    active_shell: str
+    density: str
+    primary_brand_color: str
+    font_family: str
+    allow_user_override: bool
 
 
 # ============================================================================

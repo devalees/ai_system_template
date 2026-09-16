@@ -539,6 +539,198 @@ DEFAULT_SYSTEM_VIEWS: List[Dict[str, Any]] = [
             ],
         ).model_dump(),
     },
+
+    # ------------------------------------------------------------------------
+    # Multi-Template Screen Presets
+    # ------------------------------------------------------------------------
+    {
+        "res_model": "SaleOrder",
+        "view_type": "form",
+        "template_code": "quick_entry",
+        "name": "POS Quick Counter Entry",
+        "description": "Streamlined full-width layout for high-throughput retail and counter sales",
+        "layout_template": "full_width",
+        "default_split_ratio": 100.0,
+        "priority": 5,
+        "is_default": False,
+        "is_system": True,
+        "schema": FormViewSchema(
+            title_field="name",
+            subtitle_field="partner_id",
+            status_bar=StatusBarSchema(
+                field_name="state",
+                stages=[
+                    {"value": "draft", "label": "Draft"},
+                    {"value": "sale", "label": "Completed"},
+                ],
+                clickable=False,
+            ),
+            header_actions=[
+                HeaderActionSchema(id="quick_pay", label="Quick Pay & Validate", action_type="api_call", endpoint="/api/v1/sales/orders/{id}/confirm", method="POST", variant="primary"),
+            ],
+            tabs=[
+                FormTabSchema(
+                    id="lines_tab",
+                    label="Cart Items",
+                    subgrid_relationship="lines",
+                    subgrid_columns=[
+                        FieldWidgetSchema(field_name="product_id", label="Item", widget_type="many2one_select", target_model="Product", required=True),
+                        FieldWidgetSchema(field_name="quantity", label="Qty", widget_type="number", required=True),
+                        FieldWidgetSchema(field_name="unit_price", label="Price", widget_type="currency", required=True),
+                        FieldWidgetSchema(field_name="price_subtotal", label="Subtotal", widget_type="currency", readonly=True),
+                    ],
+                ),
+                FormTabSchema(
+                    id="quick_customer",
+                    label="Customer & Register",
+                    sections=[
+                        FormSectionSchema(
+                            title="Customer Info",
+                            rows=[
+                                FormRowSchema(fields=[
+                                    FieldWidgetSchema(field_name="partner_id", label="Customer", widget_type="many2one_select", target_model="Party", required=True),
+                                    FieldWidgetSchema(field_name="date_order", label="Date", widget_type="datetime", required=True),
+                                ]),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+        ).model_dump(),
+    },
+    {
+        "res_model": "SaleOrder",
+        "view_type": "form",
+        "template_code": "executive",
+        "name": "Executive Sales Overview",
+        "description": "High-level summary view focusing on financial margins, customer credit, and approval metrics",
+        "layout_template": "split_chatter_right",
+        "default_split_ratio": 60.0,
+        "priority": 5,
+        "is_default": False,
+        "is_system": True,
+        "schema": FormViewSchema(
+            title_field="name",
+            subtitle_field="state",
+            status_bar=StatusBarSchema(
+                field_name="state",
+                stages=[
+                    {"value": "draft", "label": "Quotation"},
+                    {"value": "sale", "label": "Confirmed"},
+                    {"value": "done", "label": "Locked"},
+                ],
+                clickable=False,
+            ),
+            header_actions=[
+                HeaderActionSchema(id="exec_approve", label="Executive Approval", action_type="api_call", endpoint="/api/v1/sales/orders/{id}/confirm", method="POST", variant="primary"),
+            ],
+            tabs=[
+                FormTabSchema(
+                    id="exec_summary",
+                    label="Financial Metrics",
+                    sections=[
+                        FormSectionSchema(
+                            title="Key Performance Indicators",
+                            rows=[
+                                FormRowSchema(fields=[
+                                    FieldWidgetSchema(field_name="partner_id", label="Client Account", widget_type="many2one_select", target_model="Party", readonly=True),
+                                    FieldWidgetSchema(field_name="amount_total", label="Total Value", widget_type="currency", readonly=True),
+                                ]),
+                                FormRowSchema(fields=[
+                                    FieldWidgetSchema(field_name="date_order", label="Booking Date", widget_type="datetime", readonly=True),
+                                    FieldWidgetSchema(field_name="analytic_account_id", label="Cost Center", widget_type="many2one_select", target_model="AnalyticAccount", readonly=True),
+                                ]),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            sidebar=SidebarConfigSchema(
+                chatter_enabled=True,
+                activities_enabled=True,
+                audit_trail_enabled=True,
+                dock_position="right",
+                min_split_ratio=40.0,
+                max_split_ratio=80.0,
+            ),
+        ).model_dump(),
+    },
+    {
+        "res_model": "AccountMove",
+        "view_type": "form",
+        "template_code": "simplified_invoice",
+        "name": "Simplified Retail Tax Invoice",
+        "description": "Streamlined invoice presentation for retail, cash receipts, and simplified tax documents",
+        "layout_template": "full_width",
+        "default_split_ratio": 100.0,
+        "priority": 5,
+        "is_default": False,
+        "is_system": True,
+        "schema": FormViewSchema(
+            title_field="name",
+            subtitle_field="move_type",
+            status_bar=StatusBarSchema(
+                field_name="state",
+                stages=[
+                    {"value": "draft", "label": "Draft Receipt"},
+                    {"value": "posted", "label": "Posted Tax Invoice"},
+                ],
+                clickable=False,
+            ),
+            header_actions=[
+                HeaderActionSchema(id="post_quick_invoice", label="Post Tax Invoice", action_type="api_call", endpoint="/api/v1/accounting/moves/{id}/post", method="POST", variant="primary"),
+            ],
+            tabs=[
+                FormTabSchema(
+                    id="invoice_items",
+                    label="Items & Charges",
+                    subgrid_relationship="lines",
+                    subgrid_columns=[
+                        FieldWidgetSchema(field_name="account_id", label="Revenue Account", widget_type="many2one_select", target_model="Account", required=True),
+                        FieldWidgetSchema(field_name="name", label="Label", widget_type="text", required=True),
+                        FieldWidgetSchema(field_name="credit", label="Amount", widget_type="currency", required=True),
+                    ],
+                ),
+            ],
+        ).model_dump(),
+    },
+    {
+        "res_model": "Product",
+        "view_type": "form",
+        "template_code": "quick_product",
+        "name": "Fast Item & SKU Creator",
+        "description": "Compact card for rapid product, SKU, barcode, and pricing setup",
+        "layout_template": "full_width",
+        "default_split_ratio": 100.0,
+        "priority": 5,
+        "is_default": False,
+        "is_system": True,
+        "schema": FormViewSchema(
+            title_field="name",
+            subtitle_field="default_code",
+            tabs=[
+                FormTabSchema(
+                    id="quick_info",
+                    label="Essential Product Data",
+                    sections=[
+                        FormSectionSchema(
+                            title="Identity & Pricing",
+                            rows=[
+                                FormRowSchema(fields=[
+                                    FieldWidgetSchema(field_name="name", label="Item Name", widget_type="text", required=True),
+                                    FieldWidgetSchema(field_name="default_code", label="Internal Reference / SKU", widget_type="text"),
+                                ]),
+                                FormRowSchema(fields=[
+                                    FieldWidgetSchema(field_name="list_price", label="Sale Price", widget_type="currency", required=True),
+                                    FieldWidgetSchema(field_name="standard_price", label="Cost Price", widget_type="currency"),
+                                ]),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+        ).model_dump(),
+    },
 ]
 
 
@@ -546,9 +738,11 @@ async def seed_system_default_views(db: AsyncSession) -> int:
     """Idempotently seed default system ViewDefinition records."""
     seeded_count = 0
     for data in DEFAULT_SYSTEM_VIEWS:
+        tpl_code = data.get("template_code", "standard")
         stmt = select(ViewDefinition).where(
             ViewDefinition.res_model == data["res_model"],
             ViewDefinition.view_type == data["view_type"],
+            ViewDefinition.template_code == tpl_code,
             ViewDefinition.is_system == True,
             ViewDefinition.deleted_at.is_(None),
         )
@@ -558,7 +752,10 @@ async def seed_system_default_views(db: AsyncSession) -> int:
                 company_id=None,
                 res_model=data["res_model"],
                 view_type=data["view_type"],
+                template_code=tpl_code,
                 name=data["name"],
+                description=data.get("description"),
+                target_role_ids=data.get("target_role_ids"),
                 layout_template=data.get("layout_template", "split_chatter_right"),
                 default_split_ratio=data.get("default_split_ratio", 65.0),
                 priority=data.get("priority", 10),

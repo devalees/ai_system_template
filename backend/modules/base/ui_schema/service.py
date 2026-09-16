@@ -8,8 +8,10 @@ from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.context import get_active_company_id
-from modules.base.identity_rbac.models import User
+from modules.base.identity_rbac.models import User, UserGroupLink
 from modules.base.identity_rbac.flac_service import FLACService, get_guarded_fields
+from modules.base.settings.service import SettingsService
+from modules.base.ui_schema.settings import UIThemeSettings
 from modules.base.automated_actions.introspection import (
     find_model_class,
     get_model_fields,
@@ -36,8 +38,14 @@ from modules.base.ui_schema.schemas import (
     KanbanViewSchema,
     ViewDefinitionCreate,
     ViewDefinitionUpdate,
+    ViewDefinitionRead,
+    TemplateSummaryRead,
+    CloneTemplatePayload,
     UserViewPreferencePayload,
     UserViewPreferenceRead,
+    UIThemeSettingsSchema,
+    UserThemePreferencePayload,
+    UserThemePreferenceRead,
     ResolvedModelViewBundle,
 )
 
@@ -424,59 +432,21 @@ class UISchemaService:
         user: User,
         db: AsyncSession,
         company_id: Optional[uuid.UUID] = None,
+        template_code: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Resolve active view layout applying multi-tier resolution, user preferences, and FLAC."""
+        """Resolve active view layout applying multi-tier resolution hierarchy, user preferences, and FLAC.
+
+        Resolution Hierarchy:
+        1. Explicitly requested or User Personal active_template_code (Tenant -> System).
+        2. Role-based matching (target_role_ids overlapping with caller's assigned roles).
+        3. Tenant default view (company_id == target_company_id, is_default == True).
+        4. Platform system default view (is_system == True, is_default == True).
+        5. Any available matching view (Tenant -> System).
+        6. Dynamic Introspection Fallback.
+        """
         target_company_id = company_id or get_active_company_id()
 
-        # Step 1: Query tenant-specific view override
-        custom_view: Optional[ViewDefinition] = None
-        if target_company_id:
-            stmt_custom = (
-                select(ViewDefinition)
-                .where(
-                    ViewDefinition.res_model.ilike(res_model),
-                    ViewDefinition.view_type == view_type,
-                    ViewDefinition.company_id == target_company_id,
-                    ViewDefinition.deleted_at.is_(None),
-                )
-                .order_by(ViewDefinition.priority.desc())
-            )
-            custom_view = (await db.execute(stmt_custom)).scalar_one_or_none()
-
-        # Step 2: Query system default view fixture
-        if not custom_view:
-            stmt_sys = (
-                select(ViewDefinition)
-                .where(
-                    ViewDefinition.res_model.ilike(res_model),
-                    ViewDefinition.view_type == view_type,
-                    ViewDefinition.is_system == True,
-                    ViewDefinition.deleted_at.is_(None),
-                )
-                .order_by(ViewDefinition.priority.desc())
-            )
-            custom_view = (await db.execute(stmt_sys)).scalar_one_or_none()
-
-        # Step 3: Determine raw schema & layout properties
-        if custom_view:
-            raw_schema = copy.deepcopy(custom_view.schema)
-            layout_template = custom_view.layout_template
-            split_ratio = custom_view.default_split_ratio
-            view_id = str(custom_view.id)
-            is_system = custom_view.is_system
-            view_name = custom_view.name
-        else:
-            raw_schema = cls.generate_dynamic_default_schema(res_model, view_type)
-            layout_template = "split_chatter_right" if view_type == "form" else "full_width"
-            split_ratio = 65.0
-            view_id = None
-            is_system = True
-            view_name = f"Default {res_model} {_humanize_name(view_type)}"
-
-        # Step 4: Apply FLAC security pruning
-        secure_schema = await cls.apply_flac_to_schema(raw_schema, res_model, user, db)
-
-        # Step 5: Query user personal preference
+        # Step 0: Query user personal preference
         user_pref = None
         if target_company_id:
             stmt_pref = select(UserViewPreference).where(
@@ -488,9 +458,142 @@ class UISchemaService:
             )
             user_pref = (await db.execute(stmt_pref)).scalar_one_or_none()
 
-        # Step 6: Overlay user preferences onto layout and schema
-        if user_pref:
-            if user_pref.preferred_split_ratio is not None:
+        desired_template = template_code or (user_pref.active_template_code if user_pref else None)
+
+        custom_view: Optional[ViewDefinition] = None
+
+        # Tier 1: Explicit Template Code (Tenant override -> System preset)
+        if desired_template:
+            if target_company_id:
+                stmt_tpl_custom = (
+                    select(ViewDefinition)
+                    .where(
+                        ViewDefinition.res_model.ilike(res_model),
+                        ViewDefinition.view_type == view_type,
+                        ViewDefinition.template_code == desired_template,
+                        ViewDefinition.company_id == target_company_id,
+                        ViewDefinition.deleted_at.is_(None),
+                    )
+                    .order_by(ViewDefinition.priority.desc())
+                )
+                custom_view = (await db.execute(stmt_tpl_custom)).scalar_one_or_none()
+
+            if not custom_view:
+                stmt_tpl_sys = (
+                    select(ViewDefinition)
+                    .where(
+                        ViewDefinition.res_model.ilike(res_model),
+                        ViewDefinition.view_type == view_type,
+                        ViewDefinition.template_code == desired_template,
+                        ViewDefinition.is_system == True,
+                        ViewDefinition.deleted_at.is_(None),
+                    )
+                    .order_by(ViewDefinition.priority.desc())
+                )
+                custom_view = (await db.execute(stmt_tpl_sys)).scalar_one_or_none()
+
+        # Tier 2: Role-Based Assignment (target_role_ids)
+        if not custom_view:
+            user_group_ids: Set[str] = set()
+            if not user.is_superuser:
+                stmt_groups = select(UserGroupLink.group_id).where(UserGroupLink.user_id == user.id).execution_options(ignore_tenant=True)
+                user_group_ids = {str(gid) for gid in (await db.execute(stmt_groups)).scalars().all()}
+
+            if user_group_ids:
+                stmt_roles = (
+                    select(ViewDefinition)
+                    .where(
+                        ViewDefinition.res_model.ilike(res_model),
+                        ViewDefinition.view_type == view_type,
+                        ViewDefinition.target_role_ids.is_not(None),
+                        ViewDefinition.deleted_at.is_(None),
+                        (ViewDefinition.company_id == target_company_id) | (ViewDefinition.is_system == True),
+                    )
+                    .order_by(ViewDefinition.priority.desc())
+                )
+                role_candidates = (await db.execute(stmt_roles)).scalars().all()
+                for rc in role_candidates:
+                    if rc.target_role_ids:
+                        rc_role_strs = {str(rid) for rid in rc.target_role_ids}
+                        if rc_role_strs.intersection(user_group_ids):
+                            custom_view = rc
+                            break
+
+        # Tier 3: Tenant Default View
+        if not custom_view and target_company_id:
+            stmt_tenant_def = (
+                select(ViewDefinition)
+                .where(
+                    ViewDefinition.res_model.ilike(res_model),
+                    ViewDefinition.view_type == view_type,
+                    ViewDefinition.company_id == target_company_id,
+                    ViewDefinition.is_default == True,
+                    ViewDefinition.deleted_at.is_(None),
+                )
+                .order_by(ViewDefinition.priority.desc())
+            )
+            custom_view = (await db.execute(stmt_tenant_def)).scalar_one_or_none()
+
+        # Tier 4: System Default View
+        if not custom_view:
+            stmt_sys_def = (
+                select(ViewDefinition)
+                .where(
+                    ViewDefinition.res_model.ilike(res_model),
+                    ViewDefinition.view_type == view_type,
+                    ViewDefinition.is_system == True,
+                    ViewDefinition.is_default == True,
+                    ViewDefinition.deleted_at.is_(None),
+                )
+                .order_by(ViewDefinition.priority.desc())
+            )
+            custom_view = (await db.execute(stmt_sys_def)).scalar_one_or_none()
+
+        # Tier 5: Any Available View (fallback before introspection)
+        if not custom_view:
+            stmt_any = (
+                select(ViewDefinition)
+                .where(
+                    ViewDefinition.res_model.ilike(res_model),
+                    ViewDefinition.view_type == view_type,
+                    ViewDefinition.deleted_at.is_(None),
+                    (ViewDefinition.company_id == target_company_id) | (ViewDefinition.is_system == True),
+                )
+                .order_by(ViewDefinition.priority.desc())
+            )
+            custom_view = (await db.execute(stmt_any)).scalars().first()
+
+        # Step 3: Determine raw schema & layout properties
+        if custom_view:
+            raw_schema = copy.deepcopy(custom_view.schema)
+            layout_template = custom_view.layout_template
+            split_ratio = custom_view.default_split_ratio
+            view_id = str(custom_view.id)
+            is_system = custom_view.is_system
+            view_name = custom_view.name
+            view_description = custom_view.description
+            resolved_template_code = custom_view.template_code
+        else:
+            raw_schema = cls.generate_dynamic_default_schema(res_model, view_type)
+            layout_template = "split_chatter_right" if view_type == "form" else "full_width"
+            split_ratio = 65.0
+            view_id = None
+            is_system = True
+            view_name = f"Default {res_model} {_humanize_name(view_type)}"
+            view_description = None
+            resolved_template_code = "standard"
+
+        # Step 4: Apply FLAC security pruning
+        secure_schema = await cls.apply_flac_to_schema(raw_schema, res_model, user, db)
+
+        # Step 5: Overlay user preferences onto layout and schema
+        is_inspecting_alternate_template = (
+            template_code is not None
+            and (user_pref is None or (user_pref.active_template_code or "standard") != template_code)
+        )
+
+        if user_pref and not is_inspecting_alternate_template:
+            if user_pref.preferred_split_ratio is not None and layout_template != "full_width":
                 split_ratio = user_pref.preferred_split_ratio
             if user_pref.preferred_layout is not None:
                 layout_template = user_pref.preferred_layout
@@ -527,7 +630,9 @@ class UISchemaService:
             "view_id": view_id,
             "res_model": res_model,
             "view_type": view_type,
+            "template_code": resolved_template_code,
             "name": view_name,
+            "description": view_description,
             "layout_template": layout_template,
             "default_split_ratio": split_ratio,
             "is_system": is_system,
@@ -581,8 +686,106 @@ class UISchemaService:
         )
 
     # ========================================================================
-    # 4. View Definition CRUD (Drag & Drop Studio Persistence)
+    # 4. View Definition CRUD & Multi-Template Management
     # ========================================================================
+
+    @classmethod
+    async def list_available_templates(
+        cls,
+        res_model: str,
+        view_type: str,
+        user: User,
+        db: AsyncSession,
+        company_id: Optional[uuid.UUID] = None,
+    ) -> List[TemplateSummaryRead]:
+        """List all available layout templates for a screen accessible by the caller."""
+        target_company_id = company_id or get_active_company_id()
+
+        user_group_ids: Set[str] = set()
+        if not user.is_superuser:
+            stmt_groups = (
+                select(UserGroupLink.group_id)
+                .where(UserGroupLink.user_id == user.id)
+                .execution_options(ignore_tenant=True)
+            )
+            user_group_ids = {str(gid) for gid in (await db.execute(stmt_groups)).scalars().all()}
+
+        stmt = (
+            select(ViewDefinition)
+            .where(
+                ViewDefinition.res_model.ilike(res_model),
+                ViewDefinition.view_type == view_type,
+                ViewDefinition.deleted_at.is_(None),
+                (ViewDefinition.company_id == target_company_id) | (ViewDefinition.is_system == True),
+            )
+            .order_by(ViewDefinition.priority.desc(), ViewDefinition.created_at.desc())
+        )
+        all_views = (await db.execute(stmt)).scalars().all()
+
+        # Deduplicate by template_code: tenant custom views override system presets
+        seen_codes: Dict[str, ViewDefinition] = {}
+        for v in all_views:
+            # Check role-based targeting
+            if v.target_role_ids and not user.is_superuser:
+                role_ids = {str(r) for r in v.target_role_ids}
+                if not role_ids.intersection(user_group_ids):
+                    continue
+
+            if v.template_code not in seen_codes:
+                seen_codes[v.template_code] = v
+            elif not seen_codes[v.template_code].company_id and v.company_id:
+                seen_codes[v.template_code] = v
+
+        return [TemplateSummaryRead.model_validate(v) for v in seen_codes.values()]
+
+    @classmethod
+    async def clone_template(
+        cls,
+        view_id: uuid.UUID,
+        payload: CloneTemplatePayload,
+        user: User,
+        db: AsyncSession,
+        company_id: Optional[uuid.UUID] = None,
+    ) -> ViewDefinition:
+        """Clone an existing view definition into a new custom template variant for Studio."""
+        target_company_id = company_id or get_active_company_id()
+        stmt = select(ViewDefinition).where(ViewDefinition.id == view_id, ViewDefinition.deleted_at.is_(None))
+        source = (await db.execute(stmt)).scalar_one_or_none()
+        if not source:
+            raise ValueError(f"Source view definition '{view_id}' not found.")
+
+        # Ensure new_template_code uniqueness for this model & view_type in the tenant
+        stmt_check = select(ViewDefinition).where(
+            ViewDefinition.res_model.ilike(source.res_model),
+            ViewDefinition.view_type == source.view_type,
+            ViewDefinition.template_code == payload.new_template_code,
+            ViewDefinition.company_id == target_company_id,
+            ViewDefinition.deleted_at.is_(None),
+        )
+        existing = (await db.execute(stmt_check)).scalar_one_or_none()
+        if existing:
+            raise ValueError(
+                f"Template code '{payload.new_template_code}' already exists for {source.res_model} {source.view_type}."
+            )
+
+        cloned = ViewDefinition(
+            company_id=target_company_id,
+            res_model=source.res_model,
+            view_type=source.view_type,
+            template_code=payload.new_template_code,
+            name=payload.new_name,
+            description=payload.new_description or f"Cloned from {source.name}",
+            layout_template=source.layout_template,
+            default_split_ratio=source.default_split_ratio,
+            priority=20,
+            is_default=False,
+            is_system=False,
+            schema=copy.deepcopy(source.schema),
+        )
+        db.add(cloned)
+        await db.commit()
+        await db.refresh(cloned)
+        return cloned
 
     @classmethod
     async def create_view_definition(
@@ -598,7 +801,10 @@ class UISchemaService:
             company_id=None if is_system else target_company_id,
             res_model=payload.res_model,
             view_type=payload.view_type,
+            template_code=payload.template_code,
             name=payload.name,
+            description=payload.description,
+            target_role_ids=payload.target_role_ids,
             layout_template=payload.layout_template,
             default_split_ratio=payload.default_split_ratio,
             priority=payload.priority,
@@ -626,6 +832,12 @@ class UISchemaService:
 
         if payload.name is not None:
             view.name = payload.name
+        if payload.template_code is not None:
+            view.template_code = payload.template_code
+        if payload.description is not None:
+            view.description = payload.description
+        if payload.target_role_ids is not None:
+            view.target_role_ids = payload.target_role_ids
         if payload.layout_template is not None:
             view.layout_template = payload.layout_template
         if payload.default_split_ratio is not None:
@@ -653,8 +865,43 @@ class UISchemaService:
         return True
 
     # ========================================================================
-    # 5. User Personal View Preferences
+    # 5. User Personal View Preferences & Template Switcher
     # ========================================================================
+
+    @classmethod
+    async def switch_user_template(
+        cls,
+        user_id: uuid.UUID,
+        res_model: str,
+        view_type: str,
+        template_code: str,
+        company_id: uuid.UUID,
+        db: AsyncSession,
+    ) -> UserViewPreference:
+        """Switch user's active template variant for a specific view."""
+        stmt = select(UserViewPreference).where(
+            UserViewPreference.user_id == user_id,
+            UserViewPreference.res_model.ilike(res_model),
+            UserViewPreference.view_type == view_type,
+            UserViewPreference.company_id == company_id,
+            UserViewPreference.deleted_at.is_(None),
+        )
+        pref = (await db.execute(stmt)).scalar_one_or_none()
+        if not pref:
+            pref = UserViewPreference(
+                user_id=user_id,
+                res_model=res_model,
+                view_type=view_type,
+                company_id=company_id,
+            )
+            db.add(pref)
+
+        pref.active_template_code = template_code
+        pref.preferred_layout = None
+        pref.preferred_split_ratio = None
+        await db.commit()
+        await db.refresh(pref)
+        return pref
 
     @classmethod
     async def save_user_preference(
@@ -697,7 +944,117 @@ class UISchemaService:
             pref.preferred_split_ratio = payload.preferred_split_ratio
         if payload.kanban_collapsed_lanes is not None:
             pref.kanban_collapsed_lanes = payload.kanban_collapsed_lanes
+        if payload.active_template_code is not None:
+            pref.active_template_code = payload.active_template_code
+        if payload.theme_override is not None:
+            pref.theme_override = payload.theme_override
+        if payload.density_override is not None:
+            pref.density_override = payload.density_override
 
         await db.commit()
         await db.refresh(pref)
         return pref
+
+    # ========================================================================
+    # 6. Global Visual Theming & Application Shell Settings
+    # ========================================================================
+
+    @classmethod
+    async def get_resolved_theme(
+        cls,
+        user: User,
+        db: AsyncSession,
+        company_id: Optional[uuid.UUID] = None,
+    ) -> UserThemePreferenceRead:
+        """Resolve global visual styling, theme preset, and shell archetype for the client."""
+        target_company_id = company_id or get_active_company_id()
+
+        # 1. Retrieve company-level ModuleSettings
+        settings_dict: Dict[str, Any] = {}
+        if target_company_id:
+            try:
+                settings_dict = await SettingsService.get_settings(
+                    db=db,
+                    module_name="ui_schema",
+                    company_id=target_company_id,
+                )
+            except Exception as exc:
+                logger.warning(f"Could not load UI theme settings: {exc}")
+
+        if not settings_dict:
+            settings_dict = SettingsService.get_default_settings("ui_schema")
+
+        default_theme = settings_dict.get("default_visual_theme", "sovereign-dark")
+        default_shell = settings_dict.get("default_shell_archetype", "collapsible_sidebar")
+        default_density = settings_dict.get("default_density", "comfortable")
+        brand_color = settings_dict.get("primary_brand_color", "#0ea5e9")
+        font_family = settings_dict.get("font_family", "Inter, system-ui, sans-serif")
+        allow_override = settings_dict.get("allow_user_theme_override", True)
+
+        active_theme = default_theme
+        active_density = default_density
+
+        # 2. Check personal user preference override
+        if allow_override and target_company_id:
+            stmt_pref = select(UserViewPreference).where(
+                UserViewPreference.user_id == user.id,
+                UserViewPreference.res_model == "__global__",
+                UserViewPreference.view_type == "__global__",
+                UserViewPreference.company_id == target_company_id,
+                UserViewPreference.deleted_at.is_(None),
+            )
+            user_pref = (await db.execute(stmt_pref)).scalar_one_or_none()
+            if user_pref:
+                if user_pref.theme_override:
+                    active_theme = user_pref.theme_override
+                if user_pref.density_override:
+                    active_density = user_pref.density_override
+
+        return UserThemePreferenceRead(
+            active_theme=active_theme,
+            active_shell=default_shell,
+            density=active_density,
+            primary_brand_color=brand_color,
+            font_family=font_family,
+            allow_user_override=allow_override,
+        )
+
+    @classmethod
+    async def save_user_theme_preference(
+        cls,
+        user_id: uuid.UUID,
+        payload: UserThemePreferencePayload,
+        db: AsyncSession,
+        company_id: uuid.UUID,
+    ) -> UserThemePreferenceRead:
+        """Save user personal theme or density mode preference."""
+        stmt = select(UserViewPreference).where(
+            UserViewPreference.user_id == user_id,
+            UserViewPreference.res_model == "__global__",
+            UserViewPreference.view_type == "__global__",
+            UserViewPreference.company_id == company_id,
+            UserViewPreference.deleted_at.is_(None),
+        )
+        pref = (await db.execute(stmt)).scalar_one_or_none()
+        if not pref:
+            pref = UserViewPreference(
+                user_id=user_id,
+                res_model="__global__",
+                view_type="__global__",
+                company_id=company_id,
+            )
+            db.add(pref)
+
+        if payload.theme_override is not None:
+            pref.theme_override = payload.theme_override
+        if payload.density_override is not None:
+            pref.density_override = payload.density_override
+
+        await db.commit()
+        await db.refresh(pref)
+
+        # Retrieve user object to return resolved theme
+        user_stmt = select(User).where(User.id == user_id)
+        user = (await db.execute(user_stmt)).scalar_one()
+        return await cls.get_resolved_theme(user=user, db=db, company_id=company_id)
+

@@ -16,6 +16,8 @@ from modules.base.ui_schema.schemas import (
     ViewDefinitionCreate,
     ViewDefinitionUpdate,
     UserViewPreferencePayload,
+    CloneTemplatePayload,
+    UserThemePreferencePayload,
 )
 from modules.base.ui_schema.fixtures import seed_system_default_views
 
@@ -398,3 +400,174 @@ async def test_ui_schema_rest_api_endpoints(db_session: AsyncSession):
         del_res = await client.delete(f"/api/v1/ui/views/{view_id}", headers=headers)
         assert del_res.status_code == 200
         assert del_res.json()["status"] == "success"
+
+        # 9. GET /api/v1/ui/views/SaleOrder/form/templates
+        templates_res = await client.get("/api/v1/ui/views/SaleOrder/form/templates", headers=headers)
+        assert templates_res.status_code == 200
+        tpl_list = templates_res.json()
+        assert len(tpl_list) >= 2
+        tpl_codes = [t["template_code"] for t in tpl_list]
+        assert "standard" in tpl_codes
+        assert "quick_entry" in tpl_codes
+
+        # 10. GET /api/v1/ui/views/SaleOrder/form/templates/quick_entry
+        qe_res = await client.get("/api/v1/ui/views/SaleOrder/form/templates/quick_entry", headers=headers)
+        assert qe_res.status_code == 200
+        assert qe_res.json()["template_code"] == "quick_entry"
+        assert qe_res.json()["layout_template"] == "full_width"
+
+        # 11. PUT /api/v1/ui/preferences/SaleOrder/form/switch-template
+        switch_res = await client.put(
+            "/api/v1/ui/preferences/SaleOrder/form/switch-template?template_code=executive",
+            headers=headers,
+        )
+        assert switch_res.status_code == 200
+        assert switch_res.json()["active_template_code"] == "executive"
+
+        # 12. POST /api/v1/ui/views/{view_id}/clone
+        std_tpl = next(t for t in tpl_list if t["template_code"] == "standard")
+        clone_res = await client.post(
+            f"/api/v1/ui/views/{std_tpl['id']}/clone",
+            headers=headers,
+            json={
+                "new_template_code": f"cloned_{uuid.uuid4().hex[:6]}",
+                "new_name": "API Cloned Order Template",
+                "new_description": "Cloned via REST API",
+            },
+        )
+        assert clone_res.status_code == 201
+        assert clone_res.json()["name"] == "API Cloned Order Template"
+
+        # 13. GET /api/v1/ui/theme
+        theme_res = await client.get("/api/v1/ui/theme", headers=headers)
+        assert theme_res.status_code == 200
+        assert theme_res.json()["active_theme"] == "sovereign-dark"
+
+        # 14. PUT /api/v1/ui/theme/preference
+        theme_pref_res = await client.put(
+            "/api/v1/ui/theme/preference",
+            headers=headers,
+            json={"theme_override": "enterprise-light", "density_override": "compact"},
+        )
+        assert theme_pref_res.status_code == 200
+        assert theme_pref_res.json()["active_theme"] == "enterprise-light"
+        assert theme_pref_res.json()["density"] == "compact"
+
+
+@pytest.mark.asyncio
+async def test_multi_template_discovery_and_cloning(db_session: AsyncSession):
+    """Verify listing available templates, cloning templates, and resolution hierarchy."""
+    await seed_system_default_views(db_session)
+
+    comp_id = uuid.uuid4()
+    company = Company(id=comp_id, name="Template Test Corp", code=f"TPL_{comp_id.hex[:4]}")
+    user = User(
+        id=uuid.uuid4(),
+        company_id=comp_id,
+        username=f"tpl_user_{uuid.uuid4().hex[:6]}",
+        email=f"tpl_user_{uuid.uuid4().hex[:6]}@test.com",
+        full_name="Template User",
+        hashed_password="fake_hashed_password",
+        is_superuser=True,
+    )
+    db_session.add(company)
+    db_session.add(user)
+    await db_session.commit()
+
+    # 1. List available templates
+    templates = await UISchemaService.list_available_templates("SaleOrder", "form", user, db_session, comp_id)
+    codes = [t.template_code for t in templates]
+    assert "standard" in codes
+    assert "quick_entry" in codes
+    assert "executive" in codes
+
+    # 2. Resolve specific template
+    resolved_qe = await UISchemaService.get_resolved_view_schema(
+        "SaleOrder", "form", user, db_session, comp_id, template_code="quick_entry"
+    )
+    assert resolved_qe["template_code"] == "quick_entry"
+    assert resolved_qe["layout_template"] == "full_width"
+    assert resolved_qe["default_split_ratio"] == 100.0
+
+    # 3. Clone template in Studio
+    source_view = next(t for t in templates if t.template_code == "standard")
+    cloned = await UISchemaService.clone_template(
+        view_id=source_view.id,
+        payload=CloneTemplatePayload(
+            new_template_code=f"pos_{uuid.uuid4().hex[:6]}",
+            new_name="POS Counter Order Form",
+            new_description="Counter sales variation",
+        ),
+        user=user,
+        db=db_session,
+        company_id=comp_id,
+    )
+    assert "pos_" in cloned.template_code
+    assert cloned.company_id == comp_id
+    assert cloned.is_system is False
+
+    # 4. Attempting duplicate clone throws error
+    with pytest.raises(ValueError, match="already exists"):
+        await UISchemaService.clone_template(
+            view_id=source_view.id,
+            payload=CloneTemplatePayload(
+                new_template_code=cloned.template_code,
+                new_name="Duplicate Code Clone",
+            ),
+            user=user,
+            db=db_session,
+            company_id=comp_id,
+        )
+
+
+@pytest.mark.asyncio
+async def test_user_template_switching_and_theming(db_session: AsyncSession):
+    """Verify runtime template switching and company/user theme resolution."""
+    await seed_system_default_views(db_session)
+
+    comp_id = uuid.uuid4()
+    company = Company(id=comp_id, name="Theme Test Corp", code=f"THM_{comp_id.hex[:4]}")
+    user = User(
+        id=uuid.uuid4(),
+        company_id=comp_id,
+        username=f"thm_user_{uuid.uuid4().hex[:6]}",
+        email=f"thm_user_{uuid.uuid4().hex[:6]}@test.com",
+        full_name="Theme User",
+        hashed_password="fake_hashed_password",
+        is_superuser=True,
+    )
+    db_session.add(company)
+    db_session.add(user)
+    await db_session.commit()
+
+    # 1. Switch user active template to executive
+    pref = await UISchemaService.switch_user_template(
+        user_id=user.id,
+        res_model="SaleOrder",
+        view_type="form",
+        template_code="executive",
+        company_id=comp_id,
+        db=db_session,
+    )
+    assert pref.active_template_code == "executive"
+
+    # 2. Resolve view without explicit template - should pick user's active template
+    resolved = await UISchemaService.get_resolved_view_schema("SaleOrder", "form", user, db_session, comp_id)
+    assert resolved["template_code"] == "executive"
+    assert resolved["default_split_ratio"] == 60.0
+
+    # 3. Global theming defaults
+    theme_info = await UISchemaService.get_resolved_theme(user, db_session, comp_id)
+    assert theme_info.active_theme == "sovereign-dark"
+    assert theme_info.active_shell == "collapsible_sidebar"
+    assert theme_info.density == "comfortable"
+
+    # 4. Save personal user theme override
+    saved_theme = await UISchemaService.save_user_theme_preference(
+        user_id=user.id,
+        payload=UserThemePreferencePayload(theme_override="nordic-minimal", density_override="compact"),
+        db=db_session,
+        company_id=comp_id,
+    )
+    assert saved_theme.active_theme == "nordic-minimal"
+    assert saved_theme.density == "compact"

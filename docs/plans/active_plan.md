@@ -2360,9 +2360,57 @@ Implement the complete backend subsystem for the **Metadata-Driven Dynamic UI En
 - *2026-09-17*: Symmetric FLAC Enforcement: Field access policies apply to UI schema delivery identically to data serialization, preventing unauthorized field exposure in studio or runtime.
 
 ### 4. Current Focus
-Phase 49 Dynamic UI Engine Backend Foundation is **100% COMPLETED** with 185 passing tests. Preparing Implementation Plan for Multi-Template System & Global Themes.
+Phase 49 Dynamic UI Engine Backend Foundation is **100% COMPLETED** with 185 passing tests. Transitioned to Phase 50.
 
+---
 
+## Phase 50: Dual-Level Multi-Template & Global Theming Engine
+
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-17 01:25:00+03:00
+
+### 1. Objective & Scope
+Implement the **Dual-Level Multi-Template & Theming Engine**:
+1. **Screen-Level View Templates (Micro Level)**:
+   - Allow models to maintain multiple distinct view layouts (e.g., `SaleOrder` having `standard`, `quick_entry`, and `executive` templates).
+   - Support Drag & Drop Studio 1-click template cloning (`POST /api/v1/ui/views/{id}/clone`).
+   - Implement multi-tier resolution hierarchy: User active template -> Role assigned template -> Company default -> System default.
+2. **Global UI Shell & Visual Theme Presets (Macro Level)**:
+   - Visual Themes: `sovereign-dark` (glassmorphic dark mode), `enterprise-light` (Linear/Stripe style), `high-density-erp` (compact numerical rows), `nordic-minimal`.
+   - Shell Layout Archetypes: `collapsible_sidebar`, `top_navbar`, `master_detail`.
+   - Typed `UIThemeSettings` module configuration (Section 6.7 in `architecture.md`) with personal user overrides in `UserViewPreference`.
+3. **Automated Testing & API Synchronization**:
+   - Comprehensive test suite in `tests/test_ui_schema.py` verifying template listing, cloning, switching, and theme resolution.
+   - Synchronize OpenAPI specs and Postman collections.
+
+### 2. Task Checklist & Progress
+- [x] **Stage 50.1: Model & Schema Extensions (`backend/modules/base/ui_schema/`)** - COMPLETED
+  - Added `template_code`, `description`, `target_role_ids` to `ViewDefinition`.
+  - Added `active_template_code`, `theme_override`, `density_override` to `UserViewPreference`.
+  - Added Pydantic schemas: `TemplateSummaryRead`, `CloneTemplatePayload`, `UIThemeSettingsSchema`, `UserThemePreferencePayload`, `UserThemePreferenceRead`.
+- [x] **Stage 50.2: Typed Theme Settings (`settings.py`)** - COMPLETED
+  - Implemented `UIThemeSettings` adhering to Section 6.7 in `architecture.md`.
+- [x] **Stage 50.3: Multi-Template Resolution & Studio Cloning (`service.py`)** - COMPLETED
+  - Implemented multi-tier template resolution hierarchy, `list_available_templates`, `clone_template`, `switch_user_template`, `get_resolved_theme`, and `save_user_theme_preference`.
+- [x] **Stage 50.4: Multi-Template System Fixtures (`fixtures.py`)** - COMPLETED
+  - Seeded multiple layout templates for `SaleOrder` (`standard`, `quick_entry`, `executive`), `AccountMove` (`standard`, `simplified_invoice`), and `Product` (`standard`, `quick_product`).
+- [x] **Stage 50.5: REST API Routes (`routes.py`)** - COMPLETED
+  - Implemented endpoints for template listing, specific template retrieval, cloning, runtime template switcher, and theme preferences.
+- [x] **Stage 50.6: Database Migration & Verification** - COMPLETED
+  - Added new columns to `ui_views` and `ui_user_view_preferences` in PostgreSQL.
+- [x] **Stage 50.7: Automated Testing & Full Regression** - COMPLETED
+  - Verified 187/187 passing platform tests (100% pass rate).
+  - Synchronized OpenAPI (`docs/api/openapi.json`) and Postman collection (`docs/api/postman_collection.json`).
+
+### 3. Key Decisions & Architecture Invariants (Phase 50)
+- *2026-09-17*: Dual-Level Architectural Split: Distinguishes between Screen View Templates (micro-level layout variants per model) and Global Visual Themes / Shell Archetypes (macro-level styling and navigation).
+- *2026-09-17*: Resolution Hierarchy Invariant: User Selection > Role Default > Company Default > Global System Default > Introspection Fallback.
+- *2026-09-17*: Section 6.7 Compliance: Global themes and shell defaults declared via typed `ModuleSettings` (`UIThemeSettings`).
+- *2026-09-17*: Isolation Invariant: Template switching automatically resets previous layout/split overrides to ensure the new template layout displays with pristine defaults.
+
+### 4. Current Focus
+Phase 50 completed and verified with 187/187 tests passing. Ready for commit and user next milestone direction.
 
 
 
