@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "602afcca-dc23-4175-8af5-422d84bcf75d",
+    "_postman_id": "2f5f3516-964f-42de-be9a-c41647f28297",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -9326,6 +9326,520 @@
               "response": []
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Universal Party & Contact Engine",
+      "item": [
+        {
+          "name": "List Parties",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties"
+              ],
+              "variable": []
+            },
+            "description": "## List Parties\n\nQuery parties with optional role filters (is_customer, is_vendor), parent holding filter, and name search.\n\n**Endpoint**: `GET {{base_url}}/api/v1/parties/`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `is_customer` | `query` | `string` | No | Filter for customers |\n| `is_vendor` | `query` | `string` | No | Filter for vendors / suppliers |\n| `parent_id` | `query` | `string` | No | Filter by parent holding company ID |\n| `search` | `query` | `string` | No | Search party name case-insensitively |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Party",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties"
+              ],
+              "variable": []
+            },
+            "description": "## Create Party\n\nRegister a new unified partner (customer, vendor, or internal affiliate) with optional initial contacts.\n\n**Endpoint**: `POST {{base_url}}/api/v1/parties/`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Commercial name of the party. |\n| `legal_name` | `string` | No | Any valid string | Registered statutory legal name. |\n| `is_company` | `boolean` | No | Any valid boolean | True for corporate organizations, False for individual persons. |\n| `parent_id` | `string` | No | Any valid string | Parent holding company UUID for corporate hierarchies. |\n| `is_customer` | `boolean` | No | Any valid boolean | Designates client / customer commercial role. |\n| `is_vendor` | `boolean` | No | Any valid boolean | Designates supplier / vendor commercial role. |\n| `is_employee` | `boolean` | No | Any valid boolean | Designates internal employee status. |\n| `tax_id` | `string` | No | Any valid string | VAT or Tax Identification Number. |\n| `commercial_reg_no` | `string` | No | Any valid string | Commercial Registry (CR) number. |\n| `currency_id` | `string` | No | Any valid string | Default billing currency ID. |\n| `credit_limit` | `string` | No | Any valid string | Maximum credit threshold allowed. |\n| `linked_company_id` | `string` | No | Any valid string | Internal company ID for inter-company netting. |\n| `email` | `string` | No | Any valid string | Primary organization email address. |\n| `phone` | `string` | No | Any valid string | General telephone switchboard. |\n| `website` | `string` | No | Any valid string | Official website URL. |\n| `contacts` | `array` | No | Any valid array | Initial contacts to attach upon creation. |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"commercial_reg_no\": \"CR-104928\",\n  \"contacts\": [\n    {\n      \"email\": \"sarah@acmeglobal.com\",\n      \"is_primary\": true,\n      \"job_title\": \"Procurement Lead\",\n      \"name\": \"Sarah Jenkins\"\n    }\n  ],\n  \"credit_limit\": 50000.0,\n  \"email\": \"info@acmeglobal.com\",\n  \"is_company\": true,\n  \"is_customer\": true,\n  \"is_vendor\": true,\n  \"legal_name\": \"Acme Global Industries LLC\",\n  \"name\": \"Acme Global Industries\",\n  \"tax_id\": \"TAX-99887766\",\n  \"website\": \"https://www.acmeglobal.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_party_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Party by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties/:party_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties",
+                ":party_id"
+              ],
+              "variable": [
+                {
+                  "key": "party_id",
+                  "value": "{{active_party_id}}",
+                  "description": "Dynamic path parameter bound to {{active_party_id}}"
+                }
+              ]
+            },
+            "description": "## Get Party by ID\n\nRetrieve full party profile including commercial terms and child contacts.\n\n**Endpoint**: `GET {{base_url}}/api/v1/parties/{party_id}`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Party",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties/:party_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties",
+                ":party_id"
+              ],
+              "variable": [
+                {
+                  "key": "party_id",
+                  "value": "{{active_party_id}}",
+                  "description": "Dynamic path parameter bound to {{active_party_id}}"
+                }
+              ]
+            },
+            "description": "## Update Party\n\nUpdate party attributes, credit limits, or hierarchy parent (with cyclic hierarchy protection).\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/parties/{party_id}`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `legal_name` | `string` | No | Any valid string | legal_name attribute |\n| `is_company` | `boolean` | No | Any valid boolean | is_company attribute |\n| `parent_id` | `string` | No | Any valid string | parent_id attribute |\n| `is_customer` | `boolean` | No | Any valid boolean | is_customer attribute |\n| `is_vendor` | `boolean` | No | Any valid boolean | is_vendor attribute |\n| `is_employee` | `boolean` | No | Any valid boolean | is_employee attribute |\n| `tax_id` | `string` | No | Any valid string | tax_id attribute |\n| `commercial_reg_no` | `string` | No | Any valid string | commercial_reg_no attribute |\n| `currency_id` | `string` | No | Any valid string | currency_id attribute |\n| `credit_limit` | `string` | No | Any valid string | credit_limit attribute |\n| `linked_company_id` | `string` | No | Any valid string | linked_company_id attribute |\n| `email` | `string` | No | Any valid string | email attribute |\n| `phone` | `string` | No | Any valid string | phone attribute |\n| `website` | `string` | No | Any valid string | website attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credit_limit\": 75000.0,\n  \"is_customer\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Party",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties/:party_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties",
+                ":party_id"
+              ],
+              "variable": [
+                {
+                  "key": "party_id",
+                  "value": "{{active_party_id}}",
+                  "description": "Dynamic path parameter bound to {{active_party_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Party\n\nSoft-delete a party record.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/parties/{party_id}`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Party Corporate Hierarchy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties/:party_id/hierarchy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties",
+                ":party_id",
+                "hierarchy"
+              ],
+              "variable": [
+                {
+                  "key": "party_id",
+                  "value": "{{active_party_id}}",
+                  "description": "Dynamic path parameter bound to {{active_party_id}}"
+                }
+              ]
+            },
+            "description": "## Get Party Corporate Hierarchy\n\nRetrieve recursive descendant hierarchy tree of holding companies, subsidiaries, and branches.\n\n**Endpoint**: `GET {{base_url}}/api/v1/parties/{party_id}/hierarchy`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Party Contacts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties/:party_id/contacts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties",
+                ":party_id",
+                "contacts"
+              ],
+              "variable": [
+                {
+                  "key": "party_id",
+                  "value": "{{active_party_id}}",
+                  "description": "Dynamic path parameter bound to {{active_party_id}}"
+                }
+              ]
+            },
+            "description": "## List Party Contacts\n\nList all contact persons attached to a party, ordered with primary contact first.\n\n**Endpoint**: `GET {{base_url}}/api/v1/parties/{party_id}/contacts`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Party Contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties/:party_id/contacts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties",
+                ":party_id",
+                "contacts"
+              ],
+              "variable": [
+                {
+                  "key": "party_id",
+                  "value": "{{active_party_id}}",
+                  "description": "Dynamic path parameter bound to {{active_party_id}}"
+                }
+              ]
+            },
+            "description": "## Add Party Contact\n\nAdd an individual representative contact to a party with single-primary enforcement.\n\n**Endpoint**: `POST {{base_url}}/api/v1/parties/{party_id}/contacts`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Full name of the contact person. |\n| `job_title` | `string` | No | Any valid string | Job position or title (e.g. 'Procurement Director'). |\n| `email` | `string` | No | Any valid string | Direct email address. |\n| `phone` | `string` | No | Any valid string | Office telephone number. |\n| `mobile` | `string` | No | Any valid string | Direct mobile phone number. |\n| `is_primary` | `boolean` | No | Any valid boolean | Designates the primary contact person for this party. |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sarah.jenkins@acme.com\",\n  \"is_primary\": true,\n  \"job_title\": \"Head of Accounts Payable\",\n  \"name\": \"Sarah Jenkins\",\n  \"phone\": \"+1-555-0199\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_contact_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Party Contact",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties/:party_id/contacts/:contact_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties",
+                ":party_id",
+                "contacts",
+                ":contact_id"
+              ],
+              "variable": [
+                {
+                  "key": "party_id",
+                  "value": "{{active_party_id}}",
+                  "description": "Dynamic path parameter bound to {{active_party_id}}"
+                },
+                {
+                  "key": "contact_id",
+                  "value": "{{active_contact_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contact_id}}"
+                }
+              ]
+            },
+            "description": "## Update Party Contact\n\nUpdate an individual contact person's details or promote to primary contact.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/parties/{party_id}/contacts/{contact_id}`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `path` | `string` | **Yes** | - |\n| `contact_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `job_title` | `string` | No | Any valid string | job_title attribute |\n| `email` | `string` | No | Any valid string | email attribute |\n| `phone` | `string` | No | Any valid string | phone attribute |\n| `mobile` | `string` | No | Any valid string | mobile attribute |\n| `is_primary` | `boolean` | No | Any valid boolean | is_primary attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_primary\": true,\n  \"job_title\": \"Chief Financial Officer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Party Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/parties/:party_id/contacts/:contact_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "parties",
+                ":party_id",
+                "contacts",
+                ":contact_id"
+              ],
+              "variable": [
+                {
+                  "key": "party_id",
+                  "value": "{{active_party_id}}",
+                  "description": "Dynamic path parameter bound to {{active_party_id}}"
+                },
+                {
+                  "key": "contact_id",
+                  "value": "{{active_contact_id}}",
+                  "description": "Dynamic path parameter bound to {{active_contact_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Party Contact\n\nSoft-delete an individual contact person.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/parties/{party_id}/contacts/{contact_id}`  \n**Tags**: `Universal Party & Contact Engine, Universal Party & Contact Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `party_id` | `path` | `string` | **Yes** | - |\n| `contact_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
         }
       ]
     },

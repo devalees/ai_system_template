@@ -1952,11 +1952,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Automated tests: 3/3 passing in `test_fx_engine.py` (total test suite 111/111 passing in Docker).
 
 #### **Stage 43.2: Universal Parties, Workflows & Approvals (P1 Core)**
-- [ ] **Sub-stage 43.2.1: Universal Party & Contact Engine (`parties`)**
-  - Package: `backend/modules/base/parties/`
-  - Models: `Party` (`name`, `legal_name`, `is_company: bool`, `parent_id` self-referential FK for corporate hierarchies, `is_customer: bool`, `is_vendor: bool`, `tax_id`, `commercial_reg_no`, `currency_id`, `credit_limit`), `PartyContact` (`party_id`, `name`, `job_title`, `email`, `phone`, `is_primary`).
-  - Inter-Company Linkage: Connects internal `Company` records to corresponding `Partner` identities for automated inter-company transactions.
-  - REST API: Unified Partner CRUD, hierarchy tree endpoint, customer/vendor filtered views, and child contacts management.
+- [x] **Sub-stage 43.2.1: Universal Party & Contact Engine (`parties`)** - COMPLETED
+  - Package: `backend/modules/base/parties/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+  - Models: `Party` (`name`, `legal_name`, `is_company: bool`, `parent_id` self-referential FK for corporate hierarchies, `is_customer: bool`, `is_vendor: bool`, `is_employee: bool`, `tax_id`, `commercial_reg_no`, `currency_id`, `credit_limit`, `linked_company_id`), `PartyContact` (`party_id`, `name`, `job_title`, `email`, `phone`, `mobile`, `is_primary`).
+  - Service: `PartyService` with cyclic hierarchy detection, self-parenting prevention, single-primary contact enforcement, and bidirectional inter-company linkage.
+  - REST API: 10 REST endpoints (`/api/v1/parties/*`) covering partner CRUD, contacts management, corporate hierarchy tree generation, customer/vendor filtering, and inter-company linkage resolution.
+  - Automated tests: 4/4 passing in `test_parties.py` (full suite 115/115 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 - [ ] **Sub-stage 43.2.2: Declarative Workflow State Machine & Record Freeze (`workflows`)**
   - Package: `backend/modules/base/workflows/`
   - Models: `WorkflowDefinition` (`res_model`, `initial_state`, `states`), `WorkflowTransition` (`trigger_name`, `from_state`, `to_state`, `required_permission`, `guard_condition`, `freeze_record: bool`).
@@ -2042,13 +2043,14 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Stage 43.1 (Transactional Infrastructure & Invariants) is 100% COMPLETED.
-Immediate focus: **Sub-stage 43.2.1: Universal Party & Contact Engine (`parties`)** (Stage 43.2: Universal Parties, Workflows & Approvals).
-- Create `backend/modules/base/parties/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement Unified `Party` model (`name`, `legal_name`, `is_company: bool`, `parent_id` self-referential FK for corporate hierarchies, `is_customer: bool`, `is_vendor: bool`, `tax_id`, `commercial_reg_no`, `currency_id`, `credit_limit`).
-- Implement child `PartyContact` model (`party_id`, `name`, `job_title`, `email`, `phone`, `is_primary`).
-- Implement inter-company linkage connecting internal `Company` tenants to their external `Partner` counterpart.
-- Add unit tests in `backend/tests/test_parties.py`.
+Sub-stage 43.2.1 (`parties`) is COMPLETED.
+Immediate focus: **Sub-stage 43.2.2: Declarative Workflow State Machine & Record Freeze (`workflows`)** (Stage 43.2: Universal Parties, Workflows & Approvals).
+- Create `backend/modules/base/workflows/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `interceptors.py`, `routes.py`, `__init__.py`).
+- Implement `WorkflowDefinition` (`res_model`, `initial_state`, `states`), `WorkflowTransition` (`trigger_name`, `from_state`, `to_state`, `required_permission`, `guard_condition`, `freeze_record: bool`).
+- Implement `RecordLockInterceptor`: SQLAlchemy session listener preventing `UPDATE` and `DELETE` on frozen records at the database level.
+- Implement `WorkflowEngine` executing AST condition guards, validating RBAC permissions, and triggering state transitions.
+- Add unit tests in `backend/tests/test_workflows.py`.
+
 
 
 
