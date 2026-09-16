@@ -1985,11 +1985,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Service: `UOMService.convert(quantity, from_uom, to_uom)` with category reference normalization (`from_uom -> ref -> to_uom`), inverse rule resolution, and discrete precision rounding intervals.
   - REST API: 14 endpoints (`/api/v1/uom/*`) covering category CRUD, unit CRUD, conversion rules management, and conversion execution (`/convert`).
   - Automated tests: 3/3 passing in `test_uom.py` (full test suite 131/131 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [ ] **Sub-stage 43.3.2: Pricing Engine & Price Lists (`pricing`)**
-  - Package: `backend/modules/base/pricing/`
-  - Models: `PriceList` (`name`, `currency_id`, `is_active`), `PriceListItem` (`price_list_id`, `res_model`, `res_id`, `min_quantity`, `pricing_mode: fixed|percentage_discount|formula`, `fixed_price`, `discount_percentage`, `valid_from`, `valid_to`).
-  - Service: `PricingService.get_price(product_id, price_list_id, quantity, date)` calculating tiered and promotional prices.
-  - REST API: Price list CRUD, item rules management, and price evaluation endpoint.
+- [x] **Sub-stage 43.3.2: Pricing Engine & Price Lists (`pricing`)** - COMPLETED
+  - Package: `backend/modules/base/pricing/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+  - Models: `PriceList` (`name`, `code`, `currency_id`, `description`, `is_active`), `PriceListItem` (`price_list_id`, `applied_on: all|category|product`, `res_model`, `res_id`, `min_quantity`, `pricing_mode: fixed|percentage_discount|formula`, `fixed_price`, `discount_percentage`, `formula_markup_percentage`, `formula_surcharge`, `valid_from`, `valid_to`, `sequence`).
+  - Engine: `PricingService.evaluate_price()` resolving tiered volume breaks, promotional date windows, and scope precedence hierarchy (Product > Category > Global) with discrete currency rounding.
+  - REST API: 10 endpoints (`/api/v1/pricing/*`) covering price list CRUD, item rules management, and price evaluation (`/evaluate`).
+  - Automated tests: 3/3 passing in `test_pricing.py` (full test suite 134/134 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 - [ ] **Sub-stage 43.3.3: Tax Engine & Fiscal Positions (`taxes`)**
   - Package: `backend/modules/base/taxes/`
   - Models: `TaxFiscalPosition` (`name`, `company_id`), `TaxFiscalPositionRule` (`position_id`, `source_tax_id`, `dest_tax_id`).
@@ -2046,18 +2047,16 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Enforced strict dependency DAG: Stage 43.1 (Infrastructure/Invariants) $\rightarrow$ Stage 43.2 (Parties & Workflows) $\rightarrow$ Stage 43.3 (Commercial Rules) $\rightarrow$ Stage 43.4 (Execution & Contracts) $\rightarrow$ Stage 43.5 (AI Agent Bridge).
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 - *2026-09-16*: Stage 43.2 (Universal Parties, Workflows, Approvals & Calendar) 100% completed.
-- *2026-09-16*: Sub-stage 43.3.1 (UOM Conversion Ratio Matrix) completed with intra-category reference normalization and cross-category explicit rules.
+- *2026-09-16*: Sub-stage 43.3.1 (UOM Conversion Ratio Matrix) completed.
+- *2026-09-16*: Sub-stage 43.3.2 (Pricing Engine & Multi-Tier Price Lists) completed with volume breaks and promotional validity.
 
 ### 4. Current Focus
-Sub-stage 43.3.1 (`uom`) is COMPLETED.
-Immediate focus: **Sub-stage 43.3.2: Pricing Engine & Multi-Tier Price Lists (`pricing`)** (Stage 43.3: Commercial Rules & Operational Engines - P2).
-- Create `backend/modules/base/pricing/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `PriceList` (`name`, `currency_id`, `is_active`) and `PriceListItem` (`price_list_id`, `res_model`, `res_id`, `min_quantity`, `pricing_mode: fixed|percentage_discount|formula`, `fixed_price`, `discount_percentage`, `valid_from`, `valid_to`).
-- Implement `PricingService.get_price(product_id, price_list_id, quantity, date)` calculating tiered and promotional prices.
-- Add unit tests in `backend/tests/test_pricing.py`.
-
-
-
+Sub-stages 43.3.1 (`uom`) and 43.3.2 (`pricing`) are COMPLETED.
+Immediate focus: **Sub-stage 43.3.3: Multi-Jurisdiction Tax Engine & Fiscal Positions (`taxes`)** (Stage 43.3: Commercial Rules & Operational Engines - P2).
+- Create `backend/modules/base/taxes/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `TaxFiscalPosition` (`name`, `company_id`, `is_active`) and `TaxFiscalPositionRule` (`position_id`, `source_tax_id`, `dest_tax_id`).
+- Implement `TaxService.compute_taxes(lines, fiscal_position_id)` calculating multi-line inclusive/exclusive taxes, compound taxes, and VAT breakdowns.
+- Add unit tests in `backend/tests/test_taxes.py`.
 
 
 

@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "4e265f81-c78c-4585-aced-c7f32633c197",
+    "_postman_id": "bae6f268-5a19-4504-8ef2-98fe5b26b7dd",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -9407,6 +9407,523 @@
                   }
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pricing Engine & Multi-Tier Price Lists",
+      "item": [
+        {
+          "name": "List Price Lists",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/lists",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "lists"
+              ],
+              "variable": []
+            },
+            "description": "## List Price Lists\n\nLists price list catalogs for the current company tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/pricing/lists`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `is_active` | `query` | `string` | No | Filter by active status |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Price List",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/lists",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "lists"
+              ],
+              "variable": []
+            },
+            "description": "## Create Price List\n\nRegisters a new commercial price list catalog with optional currency association.\n\n**Endpoint**: `POST {{base_url}}/api/v1/pricing/lists`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Price list display title |\n| `code` | `string` | **Yes** | Any valid string | Unique reference code |\n| `description` | `string` | No | Any valid string | Operational notes or scope |\n| `currency_id` | `string` | No | Any valid string | Anchor currency ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PL_WHOLESALE_USD\",\n  \"description\": \"Bulk purchase price list for wholesale distributors.\",\n  \"name\": \"Wholesale USD Tier 1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_list_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Price List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/lists/:price_list_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "lists",
+                ":price_list_id"
+              ],
+              "variable": [
+                {
+                  "key": "price_list_id",
+                  "value": "{{active_price_list_id}}",
+                  "description": "Dynamic path parameter bound to {{active_price_list_id}}"
+                }
+              ]
+            },
+            "description": "## Get Price List\n\nRetrieves a specific price list along with its defined pricing rules and tiers.\n\n**Endpoint**: `GET {{base_url}}/api/v1/pricing/lists/{price_list_id}`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `price_list_id` | `path` | `string` | **Yes** | Price List ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Price List",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/lists/:price_list_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "lists",
+                ":price_list_id"
+              ],
+              "variable": [
+                {
+                  "key": "price_list_id",
+                  "value": "{{active_price_list_id}}",
+                  "description": "Dynamic path parameter bound to {{active_price_list_id}}"
+                }
+              ]
+            },
+            "description": "## Update Price List\n\nUpdates name, description, currency, or operational state of a price list.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/pricing/lists/{price_list_id}`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `price_list_id` | `path` | `string` | **Yes** | Price List ID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `currency_id` | `string` | No | Any valid string | currency_id attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Price List",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/lists/:price_list_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "lists",
+                ":price_list_id"
+              ],
+              "variable": [
+                {
+                  "key": "price_list_id",
+                  "value": "{{active_price_list_id}}",
+                  "description": "Dynamic path parameter bound to {{active_price_list_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Price List\n\nDeletes a price list catalog and all child rule items.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/pricing/lists/{price_list_id}`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `price_list_id` | `path` | `string` | **Yes** | Price List ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Price List Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/lists/:price_list_id/items",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "lists",
+                ":price_list_id",
+                "items"
+              ],
+              "variable": [
+                {
+                  "key": "price_list_id",
+                  "value": "{{active_price_list_id}}",
+                  "description": "Dynamic path parameter bound to {{active_price_list_id}}"
+                }
+              ]
+            },
+            "description": "## Add Price List Item\n\nAdds a new tiered volume break, fixed price, or discount rule to a price list.\n\n**Endpoint**: `POST {{base_url}}/api/v1/pricing/lists/{price_list_id}/items`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `price_list_id` | `path` | `string` | **Yes** | Price List ID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `applied_on` | `string` | No | Any valid string | Scope: all, category, or product |\n| `res_model` | `string` | No | Any valid string | Target entity model (e.g. 'products') |\n| `res_id` | `string` | No | Any valid string | Target entity ID (product ID or category ID) |\n| `min_quantity` | `string` | No | Any valid string | Minimum order quantity threshold |\n| `pricing_mode` | `string` | No | Any valid string | Calculation method: fixed, percentage_discount, or formula |\n| `fixed_price` | `string` | No | Any valid string | Fixed unit price if mode is 'fixed' |\n| `discount_percentage` | `string` | No | Any valid string | Discount % (e.g. 15.0 for 15% off) |\n| `formula_markup_percentage` | `string` | No | Any valid string | Markup % applied before surcharge |\n| `formula_surcharge` | `string` | No | Any valid string | Fixed surcharge amount added after markup |\n| `valid_from` | `string` | No | Any valid string | Promotional start datetime |\n| `valid_to` | `string` | No | Any valid string | Promotional end datetime |\n| `sequence` | `integer` | No | Any valid integer | Evaluation precedence order (lower executes first) |\n| `price_list_id` | `string` | No | Any valid string | Parent price list ID if not in path |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applied_on\": \"all\",\n  \"discount_percentage\": 15.0,\n  \"min_quantity\": 100.0,\n  \"pricing_mode\": \"percentage_discount\",\n  \"sequence\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_item_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Price List Item",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/items/:item_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "items",
+                ":item_id"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Get Price List Item\n\nRetrieves a specific pricing rule item by ID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/pricing/items/{item_id}`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Price List Item ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Price List Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/items/:item_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "items",
+                ":item_id"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Update Price List Item\n\nUpdates parameters, discounts, quantities, or dates of a pricing rule item.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/pricing/items/{item_id}`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Price List Item ID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `applied_on` | `string` | No | Any valid string | applied_on attribute |\n| `res_model` | `string` | No | Any valid string | res_model attribute |\n| `res_id` | `string` | No | Any valid string | res_id attribute |\n| `min_quantity` | `string` | No | Any valid string | min_quantity attribute |\n| `pricing_mode` | `string` | No | Any valid string | pricing_mode attribute |\n| `fixed_price` | `string` | No | Any valid string | fixed_price attribute |\n| `discount_percentage` | `string` | No | Any valid string | discount_percentage attribute |\n| `formula_markup_percentage` | `string` | No | Any valid string | formula_markup_percentage attribute |\n| `formula_surcharge` | `string` | No | Any valid string | formula_surcharge attribute |\n| `valid_from` | `string` | No | Any valid string | valid_from attribute |\n| `valid_to` | `string` | No | Any valid string | valid_to attribute |\n| `sequence` | `integer` | No | Any valid integer | sequence attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Price List Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/items/:item_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "items",
+                ":item_id"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "{{active_item_id}}",
+                  "description": "Dynamic path parameter bound to {{active_item_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Price List Item\n\nDeletes a pricing rule item.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/pricing/items/{item_id}`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `item_id` | `path` | `string` | **Yes** | Price List Item ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Evaluate Commercial Price",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pricing/evaluate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pricing",
+                "evaluate"
+              ],
+              "variable": []
+            },
+            "description": "## Evaluate Commercial Price\n\nComputes the net unit price, applicable discount, and total amount for a product line.\n\n**Endpoint**: `POST {{base_url}}/api/v1/pricing/evaluate`  \n**Tags**: `Pricing Engine & Multi-Tier Price Lists, Pricing Engine & Multi-Tier Price Lists`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `price_list_id` | `string` | **Yes** | Any valid string | Target price list ID |\n| `base_price` | `string` | **Yes** | Any valid string | Standard catalog base price |\n| `quantity` | `string` | No | Any valid string | Purchase quantity |\n| `res_model` | `string` | No | Any valid string | Item model name (e.g. 'products') |\n| `res_id` | `string` | No | Any valid string | Item ID |\n| `category_id` | `string` | No | Any valid string | Item Category ID |\n| `evaluation_date` | `string` | No | Any valid string | Date for promotional validity (default: now) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"base_price\": 200.0,\n  \"price_list_id\": \"00000000-0000-0000-0000-000000000001\",\n  \"quantity\": 150.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_evaluate_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
           ]
         }

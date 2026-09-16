@@ -784,6 +784,16 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
 - **Mathematical Conversion Engine**:
   - `UOMService.convert(quantity, from_uom, to_uom)` applies intra-category reference normalization (`from_uom -> category_ref -> to_uom`) or explicit rule lookup with precision rounding using discrete interval steps (`(val / precision).quantize(1) * precision`).
 
+#### 6.13.12 Commercial Pricing Engine & Multi-Tier Price Lists (`pricing`)
+- **Package**: `backend/modules/base/pricing/`
+- **Models (`PriceList`, `PriceListItem`)**:
+  - `PriceList`: Commercial catalog holding pricing rules, volume discount schedules, and currency linkage (`name`, `code`, `currency_id`, `is_active`).
+  - `PriceListItem`: Specific rule line defining scope (`applied_on`: `all`, `category`, `product`), target entity linkage (`res_model`, `res_id`), minimum quantity break threshold (`min_quantity`), calculation mode (`pricing_mode`: `fixed`, `percentage_discount`, `formula`), promotional validity dates (`valid_from`, `valid_to`), and evaluation sequence.
+- **Rule Resolution & Specificity Hierarchy**:
+  - `PricingService.evaluate_price()` matches eligible rules by quantity threshold (`min_quantity <= qty`) and time-window validity (`valid_from <= now <= valid_to`).
+  - Precedence hierarchy: Product-specific rule (Score 3) > Category-specific rule (Score 2) > Global catalog rule (Score 1), with tie-breaking by highest volume tier break (`min_quantity.desc()`) and execution sequence (`sequence.asc()`).
+
+
 
 
 

@@ -8673,6 +8673,534 @@
         ]
       }
     },
+    "/api/v1/pricing/lists": {
+      "post": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Create Price List",
+        "description": "Registers a new commercial price list catalog with optional currency association.",
+        "operationId": "create_price_list_api_v1_pricing_lists_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceListCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "List Price Lists",
+        "description": "Lists price list catalogs for the current company tenant.",
+        "operationId": "list_price_lists_api_v1_pricing_lists_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceListResponse"
+                  },
+                  "title": "Response List Price Lists Api V1 Pricing Lists Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pricing/lists/{price_list_id}": {
+      "get": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Get Price List",
+        "description": "Retrieves a specific price list along with its defined pricing rules and tiers.",
+        "operationId": "get_price_list_api_v1_pricing_lists__price_list_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "price_list_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Price List ID",
+              "title": "Price List Id"
+            },
+            "description": "Price List ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Update Price List",
+        "description": "Updates name, description, currency, or operational state of a price list.",
+        "operationId": "update_price_list_api_v1_pricing_lists__price_list_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "price_list_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Price List ID",
+              "title": "Price List Id"
+            },
+            "description": "Price List ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceListUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Delete Price List",
+        "description": "Deletes a price list catalog and all child rule items.",
+        "operationId": "delete_price_list_api_v1_pricing_lists__price_list_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "price_list_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Price List ID",
+              "title": "Price List Id"
+            },
+            "description": "Price List ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pricing/lists/{price_list_id}/items": {
+      "post": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Add Price List Item",
+        "description": "Adds a new tiered volume break, fixed price, or discount rule to a price list.",
+        "operationId": "add_price_list_item_api_v1_pricing_lists__price_list_id__items_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "price_list_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Price List ID",
+              "title": "Price List Id"
+            },
+            "description": "Price List ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceListItemCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceListItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pricing/items/{item_id}": {
+      "get": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Get Price List Item",
+        "description": "Retrieves a specific pricing rule item by ID.",
+        "operationId": "get_price_list_item_api_v1_pricing_items__item_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Price List Item ID",
+              "title": "Item Id"
+            },
+            "description": "Price List Item ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceListItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Update Price List Item",
+        "description": "Updates parameters, discounts, quantities, or dates of a pricing rule item.",
+        "operationId": "update_price_list_item_api_v1_pricing_items__item_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Price List Item ID",
+              "title": "Item Id"
+            },
+            "description": "Price List Item ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceListItemUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceListItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Delete Price List Item",
+        "description": "Deletes a pricing rule item.",
+        "operationId": "delete_price_list_item_api_v1_pricing_items__item_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Price List Item ID",
+              "title": "Item Id"
+            },
+            "description": "Price List Item ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pricing/evaluate": {
+      "post": {
+        "tags": [
+          "Pricing Engine & Multi-Tier Price Lists",
+          "Pricing Engine & Multi-Tier Price Lists"
+        ],
+        "summary": "Evaluate Commercial Price",
+        "description": "Computes the net unit price, applicable discount, and total amount for a product line.",
+        "operationId": "evaluate_price_api_v1_pricing_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceEvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceEvaluateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/addresses/": {
       "post": {
         "tags": [
@@ -22347,6 +22875,872 @@
         "type": "object",
         "title": "PermissionUpdate",
         "description": "Schema for modifying an existing permission's title or ownership scope."
+      },
+      "PriceEvaluateRequest": {
+        "properties": {
+          "price_list_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Price List Id",
+            "description": "Target price list ID"
+          },
+          "base_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Base Price",
+            "description": "Standard catalog base price"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity",
+            "description": "Purchase quantity",
+            "default": "1.0"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Item model name (e.g. 'products')"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Item ID"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id",
+            "description": "Item Category ID"
+          },
+          "evaluation_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Date",
+            "description": "Date for promotional validity (default: now)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price_list_id",
+          "base_price"
+        ],
+        "title": "PriceEvaluateRequest",
+        "example": {
+          "base_price": 200.0,
+          "price_list_id": "00000000-0000-0000-0000-000000000001",
+          "quantity": 150.0
+        }
+      },
+      "PriceEvaluateResponse": {
+        "properties": {
+          "price_list_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Price List Id"
+          },
+          "base_price": {
+            "type": "string",
+            "title": "Base Price"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price"
+          },
+          "total_amount": {
+            "type": "string",
+            "title": "Total Amount"
+          },
+          "discount_amount": {
+            "type": "string",
+            "title": "Discount Amount"
+          },
+          "discount_percentage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Percentage"
+          },
+          "applied_rule_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Rule Id"
+          },
+          "applied_mode": {
+            "type": "string",
+            "title": "Applied Mode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price_list_id",
+          "base_price",
+          "quantity",
+          "unit_price",
+          "total_amount",
+          "discount_amount",
+          "applied_mode"
+        ],
+        "title": "PriceEvaluateResponse",
+        "example": {
+          "applied_mode": "percentage_discount",
+          "base_price": 200.0,
+          "discount_amount": 30.0,
+          "discount_percentage": 15.0,
+          "price_list_id": "00000000-0000-0000-0000-000000000001",
+          "quantity": 150.0,
+          "total_amount": 25500.0,
+          "unit_price": 170.0
+        }
+      },
+      "PriceListCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Price list display title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational notes or scope"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "description": "Anchor currency ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "PriceListCreate",
+        "example": {
+          "code": "PL_WHOLESALE_USD",
+          "description": "Bulk purchase price list for wholesale distributors.",
+          "name": "Wholesale USD Tier 1"
+        }
+      },
+      "PriceListItemCreate": {
+        "properties": {
+          "applied_on": {
+            "type": "string",
+            "pattern": "^(all|category|product)$",
+            "title": "Applied On",
+            "description": "Scope: all, category, or product",
+            "default": "all"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target entity model (e.g. 'products')"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Target entity ID (product ID or category ID)"
+          },
+          "min_quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Min Quantity",
+            "description": "Minimum order quantity threshold",
+            "default": "1.0"
+          },
+          "pricing_mode": {
+            "type": "string",
+            "pattern": "^(fixed|percentage_discount|formula)$",
+            "title": "Pricing Mode",
+            "description": "Calculation method: fixed, percentage_discount, or formula",
+            "default": "percentage_discount"
+          },
+          "fixed_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed Price",
+            "description": "Fixed unit price if mode is 'fixed'"
+          },
+          "discount_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Percentage",
+            "description": "Discount % (e.g. 15.0 for 15% off)"
+          },
+          "formula_markup_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formula Markup Percentage",
+            "description": "Markup % applied before surcharge"
+          },
+          "formula_surcharge": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formula Surcharge",
+            "description": "Fixed surcharge amount added after markup"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From",
+            "description": "Promotional start datetime"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To",
+            "description": "Promotional end datetime"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Evaluation precedence order (lower executes first)",
+            "default": 10
+          },
+          "price_list_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price List Id",
+            "description": "Parent price list ID if not in path"
+          }
+        },
+        "type": "object",
+        "title": "PriceListItemCreate",
+        "example": {
+          "applied_on": "all",
+          "discount_percentage": 15.0,
+          "min_quantity": 100.0,
+          "pricing_mode": "percentage_discount",
+          "sequence": 10
+        }
+      },
+      "PriceListItemResponse": {
+        "properties": {
+          "applied_on": {
+            "type": "string",
+            "pattern": "^(all|category|product)$",
+            "title": "Applied On",
+            "description": "Scope: all, category, or product",
+            "default": "all"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target entity model (e.g. 'products')"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Target entity ID (product ID or category ID)"
+          },
+          "min_quantity": {
+            "type": "string",
+            "title": "Min Quantity",
+            "description": "Minimum order quantity threshold",
+            "default": "1.0"
+          },
+          "pricing_mode": {
+            "type": "string",
+            "pattern": "^(fixed|percentage_discount|formula)$",
+            "title": "Pricing Mode",
+            "description": "Calculation method: fixed, percentage_discount, or formula",
+            "default": "percentage_discount"
+          },
+          "fixed_price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed Price",
+            "description": "Fixed unit price if mode is 'fixed'"
+          },
+          "discount_percentage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Percentage",
+            "description": "Discount % (e.g. 15.0 for 15% off)"
+          },
+          "formula_markup_percentage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formula Markup Percentage",
+            "description": "Markup % applied before surcharge"
+          },
+          "formula_surcharge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formula Surcharge",
+            "description": "Fixed surcharge amount added after markup"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From",
+            "description": "Promotional start datetime"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To",
+            "description": "Promotional end datetime"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Evaluation precedence order (lower executes first)",
+            "default": 10
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "price_list_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Price List Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "price_list_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PriceListItemResponse"
+      },
+      "PriceListItemUpdate": {
+        "properties": {
+          "applied_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(all|category|product)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied On"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id"
+          },
+          "min_quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Quantity"
+          },
+          "pricing_mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(fixed|percentage_discount|formula)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pricing Mode"
+          },
+          "fixed_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed Price"
+          },
+          "discount_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Percentage"
+          },
+          "formula_markup_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formula Markup Percentage"
+          },
+          "formula_surcharge": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formula Surcharge"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          }
+        },
+        "type": "object",
+        "title": "PriceListItemUpdate"
+      },
+      "PriceListResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Price list display title"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational notes or scope"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "description": "Anchor currency ID"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PriceListItemResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PriceListResponse"
+      },
+      "PriceListUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "PriceListUpdate"
       },
       "PushSubscriptionCreate": {
         "properties": {
