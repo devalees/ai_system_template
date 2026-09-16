@@ -152,6 +152,11 @@ class Kernel:
                 if manifest.module_dir and (manifest.module_dir / "models.py").exists():
                     models_mod = importlib.import_module(f"{pkg_prefix}.models")
 
+                # Import module extensions if exists
+                if manifest.module_dir and (manifest.module_dir / "extensions.py").exists():
+                    importlib.import_module(f"{pkg_prefix}.extensions")
+                    logger.debug(f"Loaded extensions for '{module_name}'")
+
                 # Import module settings schema if exists
                 if manifest.module_dir and (manifest.module_dir / "settings.py").exists():
                     importlib.import_module(f"{pkg_prefix}.settings")
@@ -164,6 +169,15 @@ class Kernel:
                     message=f"Failed loading package for module '{module_name}': {str(exc)}",
                     details={"module": module_name, "error": str(exc)},
                 )
+
+        # Apply registered in-place model extensions across loaded modules
+        try:
+            from core.extensions import model_extension_registry
+            applied_count = model_extension_registry.apply_extensions()
+            if applied_count:
+                logger.info(f"Kernel applied {applied_count} in-place model extensions")
+        except Exception as exc:
+            logger.error(f"Failed applying model extensions: {exc}", exc_info=True)
 
     async def migrate(self) -> None:
         """Phase 3: Execute programmatic module schema migrations."""
@@ -182,8 +196,14 @@ class Kernel:
                         END LOOP; 
                     END $$;
                 """))
+
+                # Programmatic DDL schema evolution for in-place model extensions
+                from core.extensions import model_extension_registry
+                migrated_ddl = await model_extension_registry.execute_migrations(conn)
+                if migrated_ddl:
+                    logger.info(f"Kernel executed {len(migrated_ddl)} extension DDL migrations")
         except Exception as exc:
-            logger.warning(f"Kernel migration warning (version_id verification): {exc}")
+            logger.warning(f"Kernel migration warning: {exc}")
 
     async def bootstrap(self, db_session: Optional[Any] = None) -> None:
         """Phase 4: Run module bootstrap hooks and automated capability harvesting."""
