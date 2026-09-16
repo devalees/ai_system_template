@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "48b08eda-ea4a-4d23-9b99-50616d85234a",
+    "_postman_id": "aea3f3e9-94bf-4b68-a4c8-2f729788f08e",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -737,6 +737,524 @@
                 "description": "## List Action Execution Logs\n\nRetrieve historical action execution telemetry logs for the active tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/automated_actions/logs`  \n**Tags**: `Event-Driven Automated Actions & TCA Engine, Automated Actions - Logs`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `action_id` | `query` | `string` | No | Filter logs by automated action ID |\n| `target_model` | `query` | `string` | No | Filter logs by target model name |\n| `status` | `query` | `string` | No | Filter logs by status ('success', 'failed', 'skipped') |\n| `limit` | `query` | `integer` | No | Max log rows to return |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
               },
               "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Fiscal Calendar & Period Locking Engine",
+      "item": [
+        {
+          "name": "List Fiscal Years",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/years",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "years"
+              ],
+              "variable": []
+            },
+            "description": "## List Fiscal Years\n\nList all fiscal years registered for the current company.\n\n**Endpoint**: `GET {{base_url}}/api/v1/fiscal_calendar/years`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Fiscal Year",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/years",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "years"
+              ],
+              "variable": []
+            },
+            "description": "## Create Fiscal Year\n\nCreate a new fiscal year and optionally auto-generate monthly or quarterly periods.\n\n**Endpoint**: `POST {{base_url}}/api/v1/fiscal_calendar/years`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Descriptive name of the fiscal year (e.g. 'Fiscal Year 2026'). |\n| `code` | `string` | **Yes** | Any valid string | Unique code of the fiscal year (e.g. 'FY2026'). |\n| `date_from` | `string` | **Yes** | Any valid string | Start date of the fiscal year. |\n| `date_to` | `string` | **Yes** | Any valid string | End date of the fiscal year. |\n| `auto_generate_periods` | `boolean` | No | Any valid boolean | Automatically generate monthly or quarterly periods. |\n| `period_type` | `string` | No | Any valid string | Period subdivision: 'month' or 'quarter'. |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auto_generate_periods\": true,\n  \"code\": \"FY2026\",\n  \"date_from\": \"2026-01-01\",\n  \"date_to\": \"2026-12-31\",\n  \"name\": \"Fiscal Year 2026\",\n  \"period_type\": \"month\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_year_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Fiscal Year by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/years/:year_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "years",
+                ":year_id"
+              ],
+              "variable": [
+                {
+                  "key": "year_id",
+                  "value": "{{active_year_id}}",
+                  "description": "Dynamic path parameter bound to {{active_year_id}}"
+                }
+              ]
+            },
+            "description": "## Get Fiscal Year by ID\n\nRetrieve full details and child periods for a specific fiscal year.\n\n**Endpoint**: `GET {{base_url}}/api/v1/fiscal_calendar/years/{year_id}`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `year_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Close Fiscal Year",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/years/:year_id/close",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "years",
+                ":year_id",
+                "close"
+              ],
+              "variable": [
+                {
+                  "key": "year_id",
+                  "value": "{{active_year_id}}",
+                  "description": "Dynamic path parameter bound to {{active_year_id}}"
+                }
+              ]
+            },
+            "description": "## Close Fiscal Year\n\nOfficially close a fiscal year and permanently lock all its child periods.\n\n**Endpoint**: `POST {{base_url}}/api/v1/fiscal_calendar/years/{year_id}/close`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `year_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_close_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Fiscal Periods",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/periods",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "periods"
+              ],
+              "variable": []
+            },
+            "description": "## List Fiscal Periods\n\nQuery fiscal periods with optional filtering by parent year or state (open, closing, locked).\n\n**Endpoint**: `GET {{base_url}}/api/v1/fiscal_calendar/periods`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `year_id` | `query` | `string` | No | Filter by parent fiscal year ID |\n| `state` | `query` | `string` | No | Filter by state ('open', 'closing', 'locked') |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Fiscal Period by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/periods/:period_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "periods",
+                ":period_id"
+              ],
+              "variable": [
+                {
+                  "key": "period_id",
+                  "value": "{{active_period_id}}",
+                  "description": "Dynamic path parameter bound to {{active_period_id}}"
+                }
+              ]
+            },
+            "description": "## Get Fiscal Period by ID\n\nRetrieve details for a single fiscal period.\n\n**Endpoint**: `GET {{base_url}}/api/v1/fiscal_calendar/periods/{period_id}`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `period_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Lock Fiscal Period",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/periods/:period_id/lock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "periods",
+                ":period_id",
+                "lock"
+              ],
+              "variable": [
+                {
+                  "key": "period_id",
+                  "value": "{{active_period_id}}",
+                  "description": "Dynamic path parameter bound to {{active_period_id}}"
+                }
+              ]
+            },
+            "description": "## Lock Fiscal Period\n\nLock a fiscal period to prevent further backdated journal entries or mutations.\n\n**Endpoint**: `POST {{base_url}}/api/v1/fiscal_calendar/periods/{period_id}/lock`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `period_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_lock_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reopen Fiscal Period",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/periods/:period_id/reopen",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "periods",
+                ":period_id",
+                "reopen"
+              ],
+              "variable": [
+                {
+                  "key": "period_id",
+                  "value": "{{active_period_id}}",
+                  "description": "Dynamic path parameter bound to {{active_period_id}}"
+                }
+              ]
+            },
+            "description": "## Reopen Fiscal Period\n\nReopen a previously locked period (allowed only if parent fiscal year is still open).\n\n**Endpoint**: `POST {{base_url}}/api/v1/fiscal_calendar/periods/{period_id}/reopen`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `period_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_reopen_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validate Transaction Posting Date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fiscal_calendar/validate-date",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fiscal_calendar",
+                "validate-date"
+              ],
+              "variable": []
+            },
+            "description": "## Validate Transaction Posting Date\n\nVerify whether a target transaction date falls into an active, open fiscal period.\n\n**Endpoint**: `POST {{base_url}}/api/v1/fiscal_calendar/validate-date`  \n**Tags**: `Fiscal Calendar & Period Locking Engine, Fiscal Calendar & Period Locking Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `target_date` | `string` | **Yes** | Any valid string | The transaction posting date to validate. |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_date\": \"2026-03-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_validate_date_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
           ]
         }

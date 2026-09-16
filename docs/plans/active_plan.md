@@ -1932,11 +1932,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - `assert_version_match`: Helper in `backend/core/concurrency.py` validating client-expected version invariants against lost updates.
   - `IdempotencyMiddleware`: Intercepts `Idempotency-Key` headers on mutating HTTP verbs (`POST`/`PUT`/`PATCH`/`DELETE`), enforcing 60s distributed in-flight lock, 24h Redis response caching (`X-Idempotency-Status: HIT`), multi-tenant isolation, and automatic release on 5xx errors.
   - Automated tests: 4/4 passing in `test_concurrency_and_idempotency.py` (total test suite 101/101 passing in Docker).
-- [ ] **Sub-stage 43.1.3: Fiscal Calendar & Period Locking Engine (`fiscal_calendar`)**
+- [x] **Sub-stage 43.1.3: Fiscal Calendar & Period Locking Engine (`fiscal_calendar`)** - COMPLETED
   - Package: `backend/modules/base/fiscal_calendar/`
-  - Models: `FiscalYear` (`code`, `name`, `date_from`, `date_to`, `is_closed`), `FiscalPeriod` (`fiscal_year_id`, `code`, `name`, `date_from`, `date_to`, `period_type`, `state: open|closing|locked`).
-  - Service: `FiscalPeriodService.assert_period_open(company_id, target_date)` blocking backdated mutations in closed accounting periods (`400 Bad Request`).
-  - REST API: Period management, year closing, and active period query endpoints.
+  - Models: `FiscalYear` (`code`, `name`, `date_from`, `date_to`, `is_closed`), `FiscalPeriod` (`fiscal_year_id`, `code`, `name`, `date_from`, `date_to`, `period_type: month|quarter`, `state: open|closing|locked`).
+  - Service: `FiscalCalendarService.assert_period_open(company_id, target_date)` blocking backdated mutations in closed/locked periods (`FiscalPeriodClosedException`), automatic monthly/quarterly period generation, period lock/reopen state transitions, and year closing cascades.
+  - REST API: Full CRUD on `/years` and `/periods`, `/years/{id}/close`, `/periods/{id}/lock`, `/periods/{id}/reopen`, and diagnostic date validation (`POST /validate-date`).
+  - Automated tests: 4/4 passing in `test_fiscal_calendar.py` (total test suite 105/105 passing in Docker).
 - [ ] **Sub-stage 43.1.4: Composite Addresses & Geographic Locations (`addresses`)**
   - Package: `backend/modules/base/addresses/`
   - Model: `Address` (`address_type: billing|shipping|branch|warehouse|contact`, `res_model`, `res_id`, `street1`, `street2`, `city_id`, `country_id`, `postal_code`, `state_province`, `geo_lat`, `geo_lng`, `is_default`).
@@ -2039,11 +2040,11 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Immediate focus: **Sub-stage 43.1.3: Fiscal Calendar & Period Locking Engine (`fiscal_calendar`)**.
-- Create `backend/modules/base/fiscal_calendar/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `FiscalYear` and `FiscalPeriod` models with states (`open`, `closing`, `locked`).
-- Implement `FiscalPeriodService.assert_period_open(company_id, target_date)` blocking backdated mutations in closed accounting periods.
-- Add unit tests in `backend/tests/test_fiscal_calendar.py`.
+Immediate focus: **Sub-stage 43.1.4: Composite Addresses & Geographic Locations (`addresses`)**.
+- Create `backend/modules/base/addresses/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `Address` polymorphic model (`address_type: billing|shipping|branch|warehouse|contact`, `res_model`, `res_id`, `street1`, `street2`, `city_id`, `country_id`, `postal_code`, `state_province`, `geo_lat`, `geo_lng`, `is_default`).
+- Implement `AddressService` with default address resolution and address validation.
+- Add unit tests in `backend/tests/test_addresses.py`.
 
 
 

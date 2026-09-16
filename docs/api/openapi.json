@@ -4471,6 +4471,463 @@
         }
       }
     },
+    "/api/v1/fiscal_calendar/years": {
+      "get": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "List Fiscal Years",
+        "description": "List all fiscal years registered for the current company.",
+        "operationId": "list_fiscal_years_api_v1_fiscal_calendar_years_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FiscalYearRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Fiscal Years Api V1 Fiscal Calendar Years Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "Create Fiscal Year",
+        "description": "Create a new fiscal year and optionally auto-generate monthly or quarterly periods.",
+        "operationId": "create_fiscal_year_api_v1_fiscal_calendar_years_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FiscalYearCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalYearRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fiscal_calendar/years/{year_id}": {
+      "get": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "Get Fiscal Year by ID",
+        "description": "Retrieve full details and child periods for a specific fiscal year.",
+        "operationId": "get_fiscal_year_api_v1_fiscal_calendar_years__year_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Year Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalYearRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fiscal_calendar/years/{year_id}/close": {
+      "post": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "Close Fiscal Year",
+        "description": "Officially close a fiscal year and permanently lock all its child periods.",
+        "operationId": "close_fiscal_year_api_v1_fiscal_calendar_years__year_id__close_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Year Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalYearRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fiscal_calendar/periods": {
+      "get": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "List Fiscal Periods",
+        "description": "Query fiscal periods with optional filtering by parent year or state (open, closing, locked).",
+        "operationId": "list_fiscal_periods_api_v1_fiscal_calendar_periods_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by parent fiscal year ID",
+              "title": "Year Id"
+            },
+            "description": "Filter by parent fiscal year ID"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by state ('open', 'closing', 'locked')",
+              "title": "State"
+            },
+            "description": "Filter by state ('open', 'closing', 'locked')"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FiscalPeriodRead"
+                  },
+                  "title": "Response List Fiscal Periods Api V1 Fiscal Calendar Periods Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fiscal_calendar/periods/{period_id}": {
+      "get": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "Get Fiscal Period by ID",
+        "description": "Retrieve details for a single fiscal period.",
+        "operationId": "get_fiscal_period_api_v1_fiscal_calendar_periods__period_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Period Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalPeriodRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fiscal_calendar/periods/{period_id}/lock": {
+      "post": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "Lock Fiscal Period",
+        "description": "Lock a fiscal period to prevent further backdated journal entries or mutations.",
+        "operationId": "lock_period_api_v1_fiscal_calendar_periods__period_id__lock_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Period Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalPeriodRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fiscal_calendar/periods/{period_id}/reopen": {
+      "post": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "Reopen Fiscal Period",
+        "description": "Reopen a previously locked period (allowed only if parent fiscal year is still open).",
+        "operationId": "reopen_period_api_v1_fiscal_calendar_periods__period_id__reopen_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Period Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalPeriodRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fiscal_calendar/validate-date": {
+      "post": {
+        "tags": [
+          "Fiscal Calendar & Period Locking Engine",
+          "Fiscal Calendar & Period Locking Engine"
+        ],
+        "summary": "Validate Transaction Posting Date",
+        "description": "Verify whether a target transaction date falls into an active, open fiscal period.",
+        "operationId": "validate_posting_date_api_v1_fiscal_calendar_validate_date_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DateValidationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DateValidationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/lookups/seed": {
       "post": {
         "tags": [
@@ -11408,6 +11865,104 @@
           "symbol": "$"
         }
       },
+      "DateValidationRequest": {
+        "properties": {
+          "target_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Target Date",
+            "description": "The transaction posting date to validate."
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_date"
+        ],
+        "title": "DateValidationRequest",
+        "description": "Request validating whether a target date is open for posting transactions.",
+        "example": {
+          "target_date": "2026-03-15"
+        }
+      },
+      "DateValidationResponse": {
+        "properties": {
+          "is_open": {
+            "type": "boolean",
+            "title": "Is Open"
+          },
+          "target_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Target Date"
+          },
+          "period_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Id"
+          },
+          "period_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Code"
+          },
+          "period_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period State"
+          },
+          "year_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_open",
+          "target_date",
+          "message"
+        ],
+        "title": "DateValidationResponse",
+        "description": "Result of validating a transaction posting date against the fiscal calendar.",
+        "example": {
+          "is_open": true,
+          "message": "Period '2026-03' is open for transactions.",
+          "period_code": "2026-03",
+          "period_id": "00000000-0000-0000-0000-000000000000",
+          "period_state": "open",
+          "target_date": "2026-03-15",
+          "year_code": "FY2026"
+        }
+      },
       "DocumentAttachmentRead": {
         "properties": {
           "id": {
@@ -11723,6 +12278,229 @@
         ],
         "title": "FieldIntrospectionItem",
         "description": "Detailed metadata for a single model field/column."
+      },
+      "FiscalPeriodRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Descriptive name of the period (e.g. 'January 2026')."
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique period code (e.g. '2026-01')."
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Date From",
+            "description": "Start date of the fiscal period."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Date To",
+            "description": "End date of the fiscal period."
+          },
+          "period_type": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Period Type",
+            "description": "Period division type: 'month', 'quarter', 'opening', 'closing'.",
+            "default": "month"
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "State",
+            "description": "Operational lock state: 'open', 'closing', 'locked'.",
+            "default": "open"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "fiscal_year_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fiscal Year Id"
+          },
+          "version_id": {
+            "type": "integer",
+            "title": "Version Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "date_from",
+          "date_to",
+          "id",
+          "company_id",
+          "fiscal_year_id",
+          "version_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "FiscalPeriodRead",
+        "description": "Serialized representation of a fiscal period."
+      },
+      "FiscalYearCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Descriptive name of the fiscal year (e.g. 'Fiscal Year 2026')."
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique code of the fiscal year (e.g. 'FY2026')."
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Date From",
+            "description": "Start date of the fiscal year."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Date To",
+            "description": "End date of the fiscal year."
+          },
+          "auto_generate_periods": {
+            "type": "boolean",
+            "title": "Auto Generate Periods",
+            "description": "Automatically generate monthly or quarterly periods.",
+            "default": true
+          },
+          "period_type": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Period Type",
+            "description": "Period subdivision: 'month' or 'quarter'.",
+            "default": "month"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "date_from",
+          "date_to"
+        ],
+        "title": "FiscalYearCreate",
+        "description": "Payload for creating a fiscal year with optional period auto-generation.",
+        "example": {
+          "auto_generate_periods": true,
+          "code": "FY2026",
+          "date_from": "2026-01-01",
+          "date_to": "2026-12-31",
+          "name": "Fiscal Year 2026",
+          "period_type": "month"
+        }
+      },
+      "FiscalYearRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "Descriptive name of the fiscal year (e.g. 'Fiscal Year 2026')."
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Code",
+            "description": "Unique code of the fiscal year (e.g. 'FY2026')."
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Date From",
+            "description": "Start date of the fiscal year."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Date To",
+            "description": "End date of the fiscal year."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_closed": {
+            "type": "boolean",
+            "title": "Is Closed"
+          },
+          "version_id": {
+            "type": "integer",
+            "title": "Version Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/FiscalPeriodRead"
+            },
+            "type": "array",
+            "title": "Periods",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "date_from",
+          "date_to",
+          "id",
+          "company_id",
+          "is_closed",
+          "version_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "FiscalYearRead",
+        "description": "Serialized representation of a fiscal year with child periods."
       },
       "ForgotPasswordRequest": {
         "properties": {
