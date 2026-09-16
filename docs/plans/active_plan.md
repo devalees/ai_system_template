@@ -1971,7 +1971,7 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Engine: `ApprovalService` evaluating AST condition criteria against target records via `ASTConditionEvaluator`, assigning multi-tier approval gates, routing to specific approver inboxes, enforcing strict sign-off authorization (user, group membership, or superuser), and broadcasting lifecycle events on `EventBus`.
   - REST API: 11 endpoints (`/api/v1/approvals/*`) covering approval rules CRUD, approval request submission, approver personal inbox, ticket detail retrieval, approve/reject decision execution, and entity approval history logs.
   - Automated tests: 4/4 passing in `test_approvals.py` (full suite 123/123 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [x] **Sub-stage 43.2.4: Company-Wide Calendar & Recurring Events (`calendar`)** - COMPLETED
+- [x] **Sub-stage 43.2.4: Company-Wide Calendar & Recurring Events (`calendar`)** - COMPLETED (Commit: `da96184`)
   - Package: `backend/modules/base/calendar/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
   - Models: `CalendarEvent` (`title`, `description`, `start_time`, `end_time`, `is_all_day`, `recurrence_rule` RRULE, `res_model`, `res_id`, `organizer_id`, `location`, `status`, `color`), `EventAttendee` (`event_id`, `user_id`, `party_contact_id`, `name`, `email`, `status: needs_action|accepted|declined|tentative`, `notes`).
   - Engine: `CalendarService` featuring in-memory dynamic RFC 5545 RRULE recurrence expansion into occurrences via `dateutil.rrule`, attendee RSVP state transitions, bidirectional RFC 5545 iCalendar (`.ics`) file export and stream import, and asynchronous `EventBus` notifications.
