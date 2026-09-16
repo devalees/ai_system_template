@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "aec12af6-2d3c-40da-b0d2-c4365a0e2f33",
+    "_postman_id": "4e265f81-c78c-4585-aced-c7f32633c197",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -9754,6 +9754,698 @@
                   "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
                   "        if (recId) {",
                   "            pm.environment.set(\"active_verify_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Unit of Measure & Conversion Matrix",
+      "item": [
+        {
+          "name": "List UOM Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "categories"
+              ],
+              "variable": []
+            },
+            "description": "## List UOM Categories\n\nLists all measurement categories for the active company tenant.\n\n**Endpoint**: `GET {{base_url}}/api/v1/uom/categories`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create UOM Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "categories"
+              ],
+              "variable": []
+            },
+            "description": "## Create UOM Category\n\nRegisters a new measurement category (e.g. Weight, Volume, Length, Count, Time).\n\n**Endpoint**: `POST {{base_url}}/api/v1/uom/categories`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Category name (e.g. Weight, Volume, Length) |\n| `description` | `string` | No | Any valid string | Detailed category description |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Mass and weight measurements (Kilograms, Grams, Tons).\",\n  \"name\": \"Weight\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_category_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get UOM Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/categories/:category_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "categories",
+                ":category_id"
+              ],
+              "variable": [
+                {
+                  "key": "category_id",
+                  "value": "{{active_category_id}}",
+                  "description": "Dynamic path parameter bound to {{active_category_id}}"
+                }
+              ]
+            },
+            "description": "## Get UOM Category\n\nRetrieves a specific UOM Category by ID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/uom/categories/{category_id}`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `category_id` | `path` | `string` | **Yes** | Category ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update UOM Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/categories/:category_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "categories",
+                ":category_id"
+              ],
+              "variable": [
+                {
+                  "key": "category_id",
+                  "value": "{{active_category_id}}",
+                  "description": "Dynamic path parameter bound to {{active_category_id}}"
+                }
+              ]
+            },
+            "description": "## Update UOM Category\n\nUpdates name or description of a UOM Category.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/uom/categories/{category_id}`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `category_id` | `path` | `string` | **Yes** | Category ID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete UOM Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/categories/:category_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "categories",
+                ":category_id"
+              ],
+              "variable": [
+                {
+                  "key": "category_id",
+                  "value": "{{active_category_id}}",
+                  "description": "Dynamic path parameter bound to {{active_category_id}}"
+                }
+              ]
+            },
+            "description": "## Delete UOM Category\n\nDeletes a UOM Category and all associated units.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/uom/categories/{category_id}`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `category_id` | `path` | `string` | **Yes** | Category ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Units of Measure",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/units",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "units"
+              ],
+              "variable": []
+            },
+            "description": "## List Units of Measure\n\nLists units of measure for the company tenant, with optional category filter.\n\n**Endpoint**: `GET {{base_url}}/api/v1/uom/units`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `category_id` | `query` | `string` | No | Filter units by parent category |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Unit of Measure",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/units",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "units"
+              ],
+              "variable": []
+            },
+            "description": "## Create Unit of Measure\n\nRegisters a new unit of measure relative to its category reference unit.\n\n**Endpoint**: `POST {{base_url}}/api/v1/uom/units`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Unit name (e.g. Kilogram) |\n| `code` | `string` | **Yes** | Any valid string | Unique unit code (e.g. kg) |\n| `symbol` | `string` | No | Any valid string | Measurement symbol (e.g. kg) |\n| `uom_type` | `string` | No | Any valid string | Type relative to category reference |\n| `ratio` | `string` | No | Any valid string | Conversion ratio relative to reference unit |\n| `rounding_precision` | `string` | No | Any valid string | Rounding precision |\n| `category_id` | `string` | **Yes** | Any valid string | Parent UOM Category ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"code\": \"t\",\n  \"name\": \"Metric Ton\",\n  \"ratio\": 1000.0,\n  \"rounding_precision\": 0.001,\n  \"symbol\": \"t\",\n  \"uom_type\": \"bigger\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_unit_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Unit of Measure",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/units/:unit_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "units",
+                ":unit_id"
+              ],
+              "variable": [
+                {
+                  "key": "unit_id",
+                  "value": "{{active_unit_id}}",
+                  "description": "Dynamic path parameter bound to {{active_unit_id}}"
+                }
+              ]
+            },
+            "description": "## Get Unit of Measure\n\nRetrieves a specific unit of measure by ID.\n\n**Endpoint**: `GET {{base_url}}/api/v1/uom/units/{unit_id}`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `unit_id` | `path` | `string` | **Yes** | Unit ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Unit of Measure",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/units/:unit_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "units",
+                ":unit_id"
+              ],
+              "variable": [
+                {
+                  "key": "unit_id",
+                  "value": "{{active_unit_id}}",
+                  "description": "Dynamic path parameter bound to {{active_unit_id}}"
+                }
+              ]
+            },
+            "description": "## Update Unit of Measure\n\nUpdates name, ratio, precision, or operational state of a unit.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/uom/units/{unit_id}`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `unit_id` | `path` | `string` | **Yes** | Unit ID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `symbol` | `string` | No | Any valid string | symbol attribute |\n| `uom_type` | `string` | No | Any valid string | uom_type attribute |\n| `ratio` | `string` | No | Any valid string | ratio attribute |\n| `rounding_precision` | `string` | No | Any valid string | rounding_precision attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Unit of Measure",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/units/:unit_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "units",
+                ":unit_id"
+              ],
+              "variable": [
+                {
+                  "key": "unit_id",
+                  "value": "{{active_unit_id}}",
+                  "description": "Dynamic path parameter bound to {{active_unit_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Unit of Measure\n\nDeletes a unit of measure from the system.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/uom/units/{unit_id}`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `unit_id` | `path` | `string` | **Yes** | Unit ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Conversion Rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/conversion-rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "conversion-rules"
+              ],
+              "variable": []
+            },
+            "description": "## List Conversion Rules\n\nLists explicit conversion rules with optional product or entity filtering.\n\n**Endpoint**: `GET {{base_url}}/api/v1/uom/conversion-rules`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `query` | `string` | No | Filter by attached record model |\n| `res_id` | `query` | `string` | No | Filter by attached record ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Conversion Rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/conversion-rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "conversion-rules"
+              ],
+              "variable": []
+            },
+            "description": "## Create Conversion Rule\n\nRegisters an explicit or cross-category unit conversion rule (e.g. 1 Liter Olive Oil = 0.92 kg).\n\n**Endpoint**: `POST {{base_url}}/api/v1/uom/conversion-rules`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `from_uom_id` | `string` | **Yes** | Any valid string | Source unit ID |\n| `to_uom_id` | `string` | **Yes** | Any valid string | Target unit ID |\n| `ratio` | `string` | **Yes** | Any valid string | Conversion multiplier: 1 from_uom = ratio * to_uom |\n| `res_model` | `string` | No | Any valid string | Optional entity model (e.g. product) |\n| `res_id` | `string` | No | Any valid string | Optional entity record ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from_uom_id\": \"00000000-0000-0000-0000-000000000001\",\n  \"ratio\": 0.92,\n  \"res_model\": \"{{active_model_name}}\",\n  \"to_uom_id\": \"00000000-0000-0000-0000-000000000002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_conversion_rule_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Conversion Rule",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/conversion-rules/:rule_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "conversion-rules",
+                ":rule_id"
+              ],
+              "variable": [
+                {
+                  "key": "rule_id",
+                  "value": "{{active_rule_id}}",
+                  "description": "Dynamic path parameter bound to {{active_rule_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Conversion Rule\n\nRemoves an explicit conversion rule.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/uom/conversion-rules/{rule_id}`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `rule_id` | `path` | `string` | **Yes** | Conversion rule ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Convert Quantity Between UOMs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/uom/convert",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uom",
+                "convert"
+              ],
+              "variable": []
+            },
+            "description": "## Convert Quantity Between UOMs\n\nConverts a quantity between units using intra-category reference ratios or explicit cross-category rules.\n\n**Endpoint**: `POST {{base_url}}/api/v1/uom/convert`  \n**Tags**: `Unit of Measure & Conversion Matrix, Unit of Measure & Conversion Matrix`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `quantity` | `string` | **Yes** | Any valid string | Quantity to convert |\n| `from_uom_id` | `string` | No | Any valid string | Source unit ID (or use code) |\n| `from_uom_code` | `string` | No | Any valid string | Source unit code (e.g. 'kg') |\n| `to_uom_id` | `string` | No | Any valid string | Target unit ID (or use code) |\n| `to_uom_code` | `string` | No | Any valid string | Target unit code (e.g. 'g') |\n| `res_model` | `string` | No | Any valid string | Optional item model for item-specific rules |\n| `res_id` | `string` | No | Any valid string | Optional item record ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from_uom_code\": \"t\",\n  \"quantity\": 2.5,\n  \"to_uom_code\": \"kg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_convert_id\", recId);",
                   "            pm.environment.set(\"active_record_id\", recId);",
                   "            pm.environment.set(\"active_id\", recId);",
                   "        }",

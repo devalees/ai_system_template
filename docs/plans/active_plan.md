@@ -1979,11 +1979,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Automated tests: 5/5 passing in `test_calendar.py`. Continuous OpenAPI and Postman synchronization verified.
 
 #### **Stage 43.3: Commercial Rules & Operational Engines (P2)**
-- [ ] **Sub-stage 43.3.1: UOM Conversion Ratio Matrix (`uom`)**
-  - Package: `backend/modules/base/uom/`
-  - Models: `UOMCategory` (`name`: Weight, Volume, Length, Count, Time), extends `UnitOfMeasure` with `category_id`, `uom_type: reference|bigger|smaller`, and `ratio: float`.
-  - Service: `UOMService.convert(quantity, from_uom, to_uom)` with category matching and ratio math.
-  - REST API: UOM category CRUD, conversion matrix management, and unit conversion endpoint.
+- [x] **Sub-stage 43.3.1: UOM Conversion Ratio Matrix (`uom`)** - COMPLETED
+  - Package: `backend/modules/base/uom/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+  - Models: `UOMCategory` (`name`, `description`), `UOMUnit` (`category_id`, `name`, `code`, `symbol`, `uom_type: reference|bigger|smaller`, `ratio: Decimal`, `rounding_precision: Decimal`), `UOMConversionRule` (`from_uom_id`, `to_uom_id`, `ratio: Decimal`, `res_model`, `res_id`).
+  - Service: `UOMService.convert(quantity, from_uom, to_uom)` with category reference normalization (`from_uom -> ref -> to_uom`), inverse rule resolution, and discrete precision rounding intervals.
+  - REST API: 14 endpoints (`/api/v1/uom/*`) covering category CRUD, unit CRUD, conversion rules management, and conversion execution (`/convert`).
+  - Automated tests: 3/3 passing in `test_uom.py` (full test suite 131/131 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
 - [ ] **Sub-stage 43.3.2: Pricing Engine & Price Lists (`pricing`)**
   - Package: `backend/modules/base/pricing/`
   - Models: `PriceList` (`name`, `currency_id`, `is_active`), `PriceListItem` (`price_list_id`, `res_model`, `res_id`, `min_quantity`, `pricing_mode: fixed|percentage_discount|formula`, `fixed_price`, `discount_percentage`, `valid_from`, `valid_to`).
@@ -2045,14 +2046,16 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Enforced strict dependency DAG: Stage 43.1 (Infrastructure/Invariants) $\rightarrow$ Stage 43.2 (Parties & Workflows) $\rightarrow$ Stage 43.3 (Commercial Rules) $\rightarrow$ Stage 43.4 (Execution & Contracts) $\rightarrow$ Stage 43.5 (AI Agent Bridge).
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 - *2026-09-16*: Stage 43.2 (Universal Parties, Workflows, Approvals & Calendar) 100% completed.
+- *2026-09-16*: Sub-stage 43.3.1 (UOM Conversion Ratio Matrix) completed with intra-category reference normalization and cross-category explicit rules.
 
 ### 4. Current Focus
-Stage 43.1 (Infrastructure) and Stage 43.2 (Core Entities & Processes) are 100% COMPLETED.
-Immediate focus: **Sub-stage 43.3.1: UOM Conversion Ratio Matrix (`uom`)** (Stage 43.3: Commercial Rules & Operational Engines - P2).
-- Create `backend/modules/base/uom/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `UOMCategory` (`name`: Unit, Weight, Volume, Length, Time) and `UnitOfMeasure` with `category_id`, `uom_type: reference|bigger|smaller`, and `ratio: Decimal`.
-- Implement `UOMService.convert(quantity, from_uom, to_uom)` conversion math.
-- Add unit tests in `backend/tests/test_uom.py`.
+Sub-stage 43.3.1 (`uom`) is COMPLETED.
+Immediate focus: **Sub-stage 43.3.2: Pricing Engine & Multi-Tier Price Lists (`pricing`)** (Stage 43.3: Commercial Rules & Operational Engines - P2).
+- Create `backend/modules/base/pricing/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `PriceList` (`name`, `currency_id`, `is_active`) and `PriceListItem` (`price_list_id`, `res_model`, `res_id`, `min_quantity`, `pricing_mode: fixed|percentage_discount|formula`, `fixed_price`, `discount_percentage`, `valid_from`, `valid_to`).
+- Implement `PricingService.get_price(product_id, price_list_id, quantity, date)` calculating tiered and promotional prices.
+- Add unit tests in `backend/tests/test_pricing.py`.
+
 
 
 

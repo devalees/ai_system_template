@@ -775,6 +775,16 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
   - `export_ics(event)` produces RFC 5545 compliant `.ics` calendar streams for export to Google Calendar, Microsoft Outlook, and Apple Calendar.
   - `import_ics(content)` parses incoming `.ics` streams to reconstruct events, recurrence rules, and attendee rosters natively.
 
+#### 6.13.11 Unit of Measure & Conversion Matrix (`uom`)
+- **Package**: `backend/modules/base/uom/`
+- **Models (`UOMCategory`, `UOMUnit`, `UOMConversionRule`)**:
+  - `UOMCategory`: Categorical classification of units (`name`: Weight, Volume, Length, Count/Unit, Time).
+  - `UOMUnit`: Normalized measurement unit with type relative to category reference (`uom_type`: `reference`, `bigger`, `smaller`), ratio multiplier relative to reference (`ratio`), and discrete rounding precision (`rounding_precision`).
+  - `UOMConversionRule`: Explicit cross-category conversion multipliers (e.g. 1 L = 0.92 kg) with optional product/item entity specificity (`res_model`, `res_id`).
+- **Mathematical Conversion Engine**:
+  - `UOMService.convert(quantity, from_uom, to_uom)` applies intra-category reference normalization (`from_uom -> category_ref -> to_uom`) or explicit rule lookup with precision rounding using discrete interval steps (`(val / precision).quantize(1) * precision`).
+
+
 
 
 

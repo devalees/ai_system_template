@@ -4928,6 +4928,723 @@
         ]
       }
     },
+    "/api/v1/uom/categories": {
+      "get": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "List UOM Categories",
+        "description": "Lists all measurement categories for the active company tenant.",
+        "operationId": "list_categories_api_v1_uom_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UOMCategoryResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Categories Api V1 Uom Categories Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Create UOM Category",
+        "description": "Registers a new measurement category (e.g. Weight, Volume, Length, Count, Time).",
+        "operationId": "create_category_api_v1_uom_categories_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UOMCategoryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UOMCategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/uom/categories/{category_id}": {
+      "get": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Get UOM Category",
+        "description": "Retrieves a specific UOM Category by ID.",
+        "operationId": "get_category_api_v1_uom_categories__category_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Category ID",
+              "title": "Category Id"
+            },
+            "description": "Category ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UOMCategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Update UOM Category",
+        "description": "Updates name or description of a UOM Category.",
+        "operationId": "update_category_api_v1_uom_categories__category_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Category ID",
+              "title": "Category Id"
+            },
+            "description": "Category ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UOMCategoryUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UOMCategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Delete UOM Category",
+        "description": "Deletes a UOM Category and all associated units.",
+        "operationId": "delete_category_api_v1_uom_categories__category_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Category ID",
+              "title": "Category Id"
+            },
+            "description": "Category ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uom/units": {
+      "post": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Create Unit of Measure",
+        "description": "Registers a new unit of measure relative to its category reference unit.",
+        "operationId": "create_unit_api_v1_uom_units_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UOMUnitCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UOMUnitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "List Units of Measure",
+        "description": "Lists units of measure for the company tenant, with optional category filter.",
+        "operationId": "list_units_api_v1_uom_units_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter units by parent category",
+              "title": "Category Id"
+            },
+            "description": "Filter units by parent category"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UOMUnitResponse"
+                  },
+                  "title": "Response List Units Api V1 Uom Units Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uom/units/{unit_id}": {
+      "get": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Get Unit of Measure",
+        "description": "Retrieves a specific unit of measure by ID.",
+        "operationId": "get_unit_api_v1_uom_units__unit_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Unit ID",
+              "title": "Unit Id"
+            },
+            "description": "Unit ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UOMUnitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Update Unit of Measure",
+        "description": "Updates name, ratio, precision, or operational state of a unit.",
+        "operationId": "update_unit_api_v1_uom_units__unit_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Unit ID",
+              "title": "Unit Id"
+            },
+            "description": "Unit ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UOMUnitUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UOMUnitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Delete Unit of Measure",
+        "description": "Deletes a unit of measure from the system.",
+        "operationId": "delete_unit_api_v1_uom_units__unit_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Unit ID",
+              "title": "Unit Id"
+            },
+            "description": "Unit ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uom/conversion-rules": {
+      "post": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Create Conversion Rule",
+        "description": "Registers an explicit or cross-category unit conversion rule (e.g. 1 Liter Olive Oil = 0.92 kg).",
+        "operationId": "create_conversion_rule_api_v1_uom_conversion_rules_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UOMConversionRuleCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UOMConversionRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "List Conversion Rules",
+        "description": "Lists explicit conversion rules with optional product or entity filtering.",
+        "operationId": "list_conversion_rules_api_v1_uom_conversion_rules_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by attached record model",
+              "title": "Res Model"
+            },
+            "description": "Filter by attached record model"
+          },
+          {
+            "name": "res_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by attached record ID",
+              "title": "Res Id"
+            },
+            "description": "Filter by attached record ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UOMConversionRuleResponse"
+                  },
+                  "title": "Response List Conversion Rules Api V1 Uom Conversion Rules Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uom/conversion-rules/{rule_id}": {
+      "delete": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Delete Conversion Rule",
+        "description": "Removes an explicit conversion rule.",
+        "operationId": "delete_conversion_rule_api_v1_uom_conversion_rules__rule_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Conversion rule ID",
+              "title": "Rule Id"
+            },
+            "description": "Conversion rule ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uom/convert": {
+      "post": {
+        "tags": [
+          "Unit of Measure & Conversion Matrix",
+          "Unit of Measure & Conversion Matrix"
+        ],
+        "summary": "Convert Quantity Between UOMs",
+        "description": "Converts a quantity between units using intra-category reference ratios or explicit cross-category rules.",
+        "operationId": "convert_quantity_api_v1_uom_convert_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UOMConvertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UOMConvertResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/lookups/seed": {
       "post": {
         "tags": [
@@ -24583,6 +25300,680 @@
           "code": "123456",
           "mfa_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         }
+      },
+      "UOMCategoryCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Category name (e.g. Weight, Volume, Length)"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed category description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "UOMCategoryCreate",
+        "example": {
+          "description": "Mass and weight measurements (Kilograms, Grams, Tons).",
+          "name": "Weight"
+        }
+      },
+      "UOMCategoryResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Category name (e.g. Weight, Volume, Length)"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed category description"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "company_id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UOMCategoryResponse"
+      },
+      "UOMCategoryUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "UOMCategoryUpdate"
+      },
+      "UOMConversionRuleCreate": {
+        "properties": {
+          "from_uom_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From Uom Id",
+            "description": "Source unit ID"
+          },
+          "to_uom_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Uom Id",
+            "description": "Target unit ID"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Ratio",
+            "description": "Conversion multiplier: 1 from_uom = ratio * to_uom"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Optional entity model (e.g. product)"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Optional entity record ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_uom_id",
+          "to_uom_id",
+          "ratio"
+        ],
+        "title": "UOMConversionRuleCreate",
+        "example": {
+          "from_uom_id": "00000000-0000-0000-0000-000000000001",
+          "ratio": 0.92,
+          "res_model": "product",
+          "to_uom_id": "00000000-0000-0000-0000-000000000002"
+        }
+      },
+      "UOMConversionRuleResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "from_uom_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From Uom Id"
+          },
+          "to_uom_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Uom Id"
+          },
+          "ratio": {
+            "type": "string",
+            "title": "Ratio"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "from_uom_id",
+          "to_uom_id",
+          "ratio",
+          "created_at"
+        ],
+        "title": "UOMConversionRuleResponse"
+      },
+      "UOMConvertRequest": {
+        "properties": {
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity",
+            "description": "Quantity to convert"
+          },
+          "from_uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Uom Id",
+            "description": "Source unit ID (or use code)"
+          },
+          "from_uom_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Uom Code",
+            "description": "Source unit code (e.g. 'kg')"
+          },
+          "to_uom_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Uom Id",
+            "description": "Target unit ID (or use code)"
+          },
+          "to_uom_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Uom Code",
+            "description": "Target unit code (e.g. 'g')"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Optional item model for item-specific rules"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Optional item record ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quantity"
+        ],
+        "title": "UOMConvertRequest",
+        "example": {
+          "from_uom_code": "t",
+          "quantity": 2.5,
+          "to_uom_code": "kg"
+        }
+      },
+      "UOMConvertResponse": {
+        "properties": {
+          "original_quantity": {
+            "type": "string",
+            "title": "Original Quantity"
+          },
+          "from_uom_code": {
+            "type": "string",
+            "title": "From Uom Code"
+          },
+          "converted_quantity": {
+            "type": "string",
+            "title": "Converted Quantity"
+          },
+          "to_uom_code": {
+            "type": "string",
+            "title": "To Uom Code"
+          },
+          "conversion_factor": {
+            "type": "string",
+            "title": "Conversion Factor"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          }
+        },
+        "type": "object",
+        "required": [
+          "original_quantity",
+          "from_uom_code",
+          "converted_quantity",
+          "to_uom_code",
+          "conversion_factor",
+          "method"
+        ],
+        "title": "UOMConvertResponse",
+        "example": {
+          "conversion_factor": 1000.0,
+          "converted_quantity": 2500.0,
+          "from_uom_code": "t",
+          "method": "intra_category",
+          "original_quantity": 2.5,
+          "to_uom_code": "kg"
+        }
+      },
+      "UOMUnitCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Unit name (e.g. Kilogram)"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique unit code (e.g. kg)"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol",
+            "description": "Measurement symbol (e.g. kg)"
+          },
+          "uom_type": {
+            "type": "string",
+            "pattern": "^(reference|bigger|smaller)$",
+            "title": "Uom Type",
+            "description": "Type relative to category reference",
+            "default": "reference"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Ratio",
+            "description": "Conversion ratio relative to reference unit",
+            "default": "1.0"
+          },
+          "rounding_precision": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Rounding Precision",
+            "description": "Rounding precision",
+            "default": "0.01"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id",
+            "description": "Parent UOM Category ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "category_id"
+        ],
+        "title": "UOMUnitCreate",
+        "example": {
+          "category_id": "00000000-0000-0000-0000-000000000000",
+          "code": "t",
+          "name": "Metric Ton",
+          "ratio": 1000.0,
+          "rounding_precision": 0.001,
+          "symbol": "t",
+          "uom_type": "bigger"
+        }
+      },
+      "UOMUnitResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Unit name (e.g. Kilogram)"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique unit code (e.g. kg)"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol",
+            "description": "Measurement symbol (e.g. kg)"
+          },
+          "uom_type": {
+            "type": "string",
+            "pattern": "^(reference|bigger|smaller)$",
+            "title": "Uom Type",
+            "description": "Type relative to category reference",
+            "default": "reference"
+          },
+          "ratio": {
+            "type": "string",
+            "title": "Ratio",
+            "description": "Conversion ratio relative to reference unit",
+            "default": "1.0"
+          },
+          "rounding_precision": {
+            "type": "string",
+            "title": "Rounding Precision",
+            "description": "Rounding precision",
+            "default": "0.01"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "category_id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UOMUnitResponse"
+      },
+      "UOMUnitUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          },
+          "uom_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(reference|bigger|smaller)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uom Type"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio"
+          },
+          "rounding_precision": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rounding Precision"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "UOMUnitUpdate"
       },
       "UnitOfMeasureCreate": {
         "properties": {
