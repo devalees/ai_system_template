@@ -2017,7 +2017,7 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Service: `WorkItemService` supporting recursive sub-task hierarchy trees (`get_subtask_tree`), BFS cycle prevention rejecting circular task dependencies, and Kanban pipeline stage transitions.
   - REST API: 11 endpoints (`/api/v1/work_items/*`) covering stages CRUD, task management, hierarchical trees (`/{id}/tree`), dependency links, and stage transitions (`/{id}/stage`).
   - Automated tests: 4/4 passing in `test_work_items.py` (full test suite 147/147 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [x] **Sub-stage 43.4.2: Contracts, Agreements & Subscriptions (`contracts`)** - COMPLETED
+- [x] **Sub-stage 43.4.2: Contracts, Agreements & Subscriptions (`contracts`)** - COMPLETED (Commit: `e7052a6`)
   - Package: `backend/modules/base/contracts/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
   - Models: `Contract` (`sequence_number`, `title`, `party_id`, `contract_type: customer|vendor|employment|lease|nda|service|partnership|other`, `start_date`, `end_date`, `billing_frequency: one_off|monthly|quarterly|semi_annual|annual`, `amount`, `currency_id`, `auto_renew`, `notice_days`, `state: draft|active|expired|terminated|cancelled`), `ContractLine` (`contract_id`, `name`, `quantity`, `unit_price`, `subtotal`, `notes`).
   - Service: `ContractService` supporting auto-line subtotal computation, dynamic expiring contract queries (`get_expiring_contracts`), state transitions (`activate`, `renew`, `terminate`, `cancel`), renewal tracking with previous contract linkage, and `EventBus` state mutation dispatches.
