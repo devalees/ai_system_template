@@ -2348,7 +2348,7 @@ Implement the complete backend subsystem for the **Metadata-Driven Dynamic UI En
   - Wired into `Kernel.bootstrap()` and `Kernel.migrate()`.
 - [x] **Stage 49.6: REST API Routes & Dual Mounting (`routes.py`, `core/app.py`)** - COMPLETED
   - Mounted `/api/v1/ui/*` and `/api/v1/ui_schema/*` covering models catalog, bundles, single views, custom studio CRUD, and preferences.
-- [x] **Stage 49.7: Automated Testing & Full Regression Verification** - COMPLETED
+- [x] **Stage 49.7: Automated Testing & Full Regression Verification** - COMPLETED (Commit: `225cfa7`)
   - Authored `tests/test_ui_schema.py` (6/6 tests passing).
   - Verified full platform regression test suite: **185 / 185 tests passing 100% in Docker**.
   - Synchronized OpenAPI (`docs/api/openapi.json`) and Postman (`docs/api/postman_collection.json`).
