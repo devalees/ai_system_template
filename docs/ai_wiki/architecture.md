@@ -802,6 +802,17 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
 - **Computational Tax Engine**:
   - `TaxService.compute_taxes()` dynamically evaluates document order lines, applies fiscal position substitutions, handles inclusive gross extractions (`base = gross / (1 + R_inc)`), and evaluates cascading compound taxes sorted by sequence.
 
+#### 6.13.14 Payment Terms, Methods & Transactions (`payments`)
+- **Package**: `backend/modules/base/payments/`
+- **Models (`PaymentMethod`, `PaymentTerms`, `PaymentTermsLine`, `PaymentTransaction`)**:
+  - `PaymentMethod`: Supported financial instruments (`name`, `code`, `method_type`: manual, electronic, bank, cash).
+  - `PaymentTerms`: Installment schedule definitions (`name`, `code`, `lines`).
+  - `PaymentTermsLine`: Installment calculation rules (`sequence`, `value_type`: percent, fixed, balance, `value`, `days`, `option`: days_after_invoice, end_of_month, days_after_end_of_month).
+  - `PaymentTransaction`: Audited financial transaction records with lifecycle states (`payment_number`, `res_model`, `res_id`, `party_id`, `payment_method_id`, `transaction_type`: inbound, outbound, `amount`, `status`: draft, cleared, reconciled, cancelled).
+- **Cash Flow Due Date Calculation**:
+  - `PaymentTermsService.compute_due_dates()` allocates invoice totals across installment lines, computes end-of-month calendar dates, and ensures zero fractional penny leakage.
+
+
 
 
 

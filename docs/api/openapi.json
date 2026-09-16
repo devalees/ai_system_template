@@ -11977,6 +11977,1012 @@
         }
       }
     },
+    "/api/v1/payments/methods": {
+      "post": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Create Payment Method",
+        "description": "Registers a new payment instrument (e.g. Bank Transfer, Credit Card, Cash).",
+        "operationId": "create_payment_method_api_v1_payments_methods_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentMethodCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "List Payment Methods",
+        "description": "Lists all payment instruments registered for active tenant company.",
+        "operationId": "list_payment_methods_api_v1_payments_methods_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentMethodResponse"
+                  },
+                  "title": "Response List Payment Methods Api V1 Payments Methods Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/methods/{method_id}": {
+      "get": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Get Payment Method",
+        "description": "Fetch single payment method details by UUID.",
+        "operationId": "get_payment_method_api_v1_payments_methods__method_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "method_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Payment Method UUID",
+              "title": "Method Id"
+            },
+            "description": "Payment Method UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Update Payment Method",
+        "description": "Update payment method parameters or active state.",
+        "operationId": "update_payment_method_api_v1_payments_methods__method_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "method_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Payment Method UUID",
+              "title": "Method Id"
+            },
+            "description": "Payment Method UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentMethodUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Delete Payment Method",
+        "description": "Soft-deletes a payment method instrument.",
+        "operationId": "delete_payment_method_api_v1_payments_methods__method_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "method_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Payment Method UUID",
+              "title": "Method Id"
+            },
+            "description": "Payment Method UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/terms": {
+      "post": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Create Payment Terms",
+        "description": "Registers a new payment term schedule and its installment lines.",
+        "operationId": "create_payment_terms_api_v1_payments_terms_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentTermsCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTermsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "List Payment Terms",
+        "description": "Lists all payment term schedules for active tenant company.",
+        "operationId": "list_payment_terms_api_v1_payments_terms_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentTermsResponse"
+                  },
+                  "title": "Response List Payment Terms Api V1 Payments Terms Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/terms/{terms_id}": {
+      "get": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Get Payment Terms",
+        "description": "Fetch single payment term schedule with all installment rules.",
+        "operationId": "get_payment_terms_api_v1_payments_terms__terms_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "terms_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Payment Terms UUID",
+              "title": "Terms Id"
+            },
+            "description": "Payment Terms UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTermsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Update Payment Terms",
+        "description": "Update payment terms header or active status.",
+        "operationId": "update_payment_terms_api_v1_payments_terms__terms_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "terms_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Payment Terms UUID",
+              "title": "Terms Id"
+            },
+            "description": "Payment Terms UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentTermsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTermsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Delete Payment Terms",
+        "description": "Soft-deletes a payment term schedule.",
+        "operationId": "delete_payment_terms_api_v1_payments_terms__terms_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "terms_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Payment Terms UUID",
+              "title": "Terms Id"
+            },
+            "description": "Payment Terms UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/terms/compute-schedule": {
+      "post": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Compute Due Dates & Installments",
+        "description": "Calculates due dates and installment breakdowns for a given invoice amount and payment terms.",
+        "operationId": "compute_due_dates_api_v1_payments_terms_compute_schedule_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComputePaymentScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputePaymentScheduleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/transactions": {
+      "post": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Create Payment Transaction",
+        "description": "Registers an inbound or outbound payment transaction in draft state.",
+        "operationId": "create_transaction_api_v1_payments_transactions_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentTransactionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTransactionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "List Payment Transactions",
+        "description": "Lists payment transactions for active tenant company with optional filters.",
+        "operationId": "list_transactions_api_v1_payments_transactions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status (draft, cleared, reconciled, cancelled)",
+              "title": "Status"
+            },
+            "description": "Filter by status (draft, cleared, reconciled, cancelled)"
+          },
+          {
+            "name": "party_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by customer or vendor party UUID",
+              "title": "Party Id"
+            },
+            "description": "Filter by customer or vendor party UUID"
+          },
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target model",
+              "title": "Res Model"
+            },
+            "description": "Filter by target model"
+          },
+          {
+            "name": "res_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target record UUID",
+              "title": "Res Id"
+            },
+            "description": "Filter by target record UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentTransactionResponse"
+                  },
+                  "title": "Response List Transactions Api V1 Payments Transactions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/transactions/{transaction_id}": {
+      "get": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Get Payment Transaction",
+        "description": "Fetch single payment transaction details by UUID.",
+        "operationId": "get_transaction_api_v1_payments_transactions__transaction_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Transaction UUID",
+              "title": "Transaction Id"
+            },
+            "description": "Transaction UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTransactionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Update Payment Transaction",
+        "description": "Update reference or internal notes for an un-reconciled transaction.",
+        "operationId": "update_transaction_api_v1_payments_transactions__transaction_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Transaction UUID",
+              "title": "Transaction Id"
+            },
+            "description": "Transaction UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentTransactionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTransactionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/transactions/{transaction_id}/clear": {
+      "post": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Clear Payment Transaction",
+        "description": "Transitions a draft payment transaction to cleared (bank confirmed).",
+        "operationId": "clear_transaction_api_v1_payments_transactions__transaction_id__clear_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Transaction UUID",
+              "title": "Transaction Id"
+            },
+            "description": "Transaction UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTransactionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/transactions/{transaction_id}/reconcile": {
+      "post": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Reconcile Payment Transaction",
+        "description": "Transitions a cleared payment transaction to reconciled.",
+        "operationId": "reconcile_transaction_api_v1_payments_transactions__transaction_id__reconcile_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Transaction UUID",
+              "title": "Transaction Id"
+            },
+            "description": "Transaction UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTransactionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/transactions/{transaction_id}/cancel": {
+      "post": {
+        "tags": [
+          "Payment Terms, Methods & Transactions",
+          "Payment Terms, Methods & Transactions"
+        ],
+        "summary": "Cancel Payment Transaction",
+        "description": "Cancels an un-reconciled payment transaction.",
+        "operationId": "cancel_transaction_api_v1_payments_transactions__transaction_id__cancel_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Transaction UUID",
+              "title": "Transaction Id"
+            },
+            "description": "Transaction UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTransactionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/parties/": {
       "post": {
         "tags": [
@@ -18717,6 +19723,119 @@
         "title": "CompanyUpdate",
         "description": "Schema for updating tenant configuration."
       },
+      "ComputePaymentScheduleRequest": {
+        "properties": {
+          "total_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Total Amount",
+            "description": "Document gross amount to allocate"
+          },
+          "terms_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Terms Id",
+            "description": "Payment terms UUID"
+          },
+          "invoice_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Date",
+            "description": "Base invoice date (defaults to today)"
+          },
+          "currency_rounding": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Currency Rounding",
+            "description": "Rounding increment",
+            "default": "0.01"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_amount",
+          "terms_id"
+        ],
+        "title": "ComputePaymentScheduleRequest",
+        "example": {
+          "currency_rounding": "0.01",
+          "invoice_date": "2026-09-16",
+          "terms_id": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+          "total_amount": "1000.00"
+        }
+      },
+      "ComputePaymentScheduleResponse": {
+        "properties": {
+          "terms_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Terms Id"
+          },
+          "terms_name": {
+            "type": "string",
+            "title": "Terms Name"
+          },
+          "total_amount": {
+            "type": "string",
+            "title": "Total Amount"
+          },
+          "installments": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentInstallment"
+            },
+            "type": "array",
+            "title": "Installments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terms_id",
+          "terms_name",
+          "total_amount",
+          "installments"
+        ],
+        "title": "ComputePaymentScheduleResponse",
+        "example": {
+          "installments": [
+            {
+              "amount": "300.00",
+              "due_date": "2026-09-16",
+              "installment_number": 1,
+              "percentage": "30.00"
+            },
+            {
+              "amount": "700.00",
+              "due_date": "2026-10-16",
+              "installment_number": 2,
+              "percentage": "70.00"
+            }
+          ],
+          "terms_id": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+          "terms_name": "30% Advance, Balance 30 Days",
+          "total_amount": "1000.00"
+        }
+      },
       "ConditionTestRequest": {
         "properties": {
           "target_model": {
@@ -23781,6 +24900,829 @@
           "credit_limit": 75000.0,
           "is_customer": true
         }
+      },
+      "PaymentInstallment": {
+        "properties": {
+          "installment_number": {
+            "type": "integer",
+            "title": "Installment Number"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "percentage": {
+            "type": "string",
+            "title": "Percentage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "installment_number",
+          "due_date",
+          "amount",
+          "percentage"
+        ],
+        "title": "PaymentInstallment"
+      },
+      "PaymentMethodCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Display name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "method_type": {
+            "type": "string",
+            "pattern": "^(manual|electronic|bank|cash)$",
+            "title": "Method Type",
+            "description": "Type of instrument",
+            "default": "manual"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "PaymentMethodCreate",
+        "example": {
+          "code": "BANK_WIRE",
+          "description": "Direct bank wire deposit",
+          "method_type": "bank",
+          "name": "Wire Bank Transfer"
+        }
+      },
+      "PaymentMethodResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Display name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "method_type": {
+            "type": "string",
+            "pattern": "^(manual|electronic|bank|cash)$",
+            "title": "Method Type",
+            "description": "Type of instrument",
+            "default": "manual"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Operational notes"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentMethodResponse"
+      },
+      "PaymentMethodUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "method_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(manual|electronic|bank|cash)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method Type"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "title": "PaymentMethodUpdate"
+      },
+      "PaymentTermsCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Terms name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Commercial summary"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentTermsLineCreate"
+            },
+            "type": "array",
+            "title": "Lines",
+            "description": "Installment breakdown rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "PaymentTermsCreate",
+        "example": {
+          "code": "30_ADV_30_NET",
+          "description": "30% immediate advance, remaining balance within 30 days.",
+          "lines": [
+            {
+              "days": 0,
+              "option": "days_after_invoice",
+              "sequence": 10,
+              "value": "30.0000",
+              "value_type": "percent"
+            },
+            {
+              "days": 30,
+              "option": "days_after_invoice",
+              "sequence": 20,
+              "value": "0.0000",
+              "value_type": "balance"
+            }
+          ],
+          "name": "30% Advance, Balance in 30 Days"
+        }
+      },
+      "PaymentTermsLineCreate": {
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Order of installment allocation",
+            "default": 10
+          },
+          "value_type": {
+            "type": "string",
+            "pattern": "^(percent|fixed|balance)$",
+            "title": "Value Type",
+            "description": "percent, fixed, or balance",
+            "default": "balance"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Value",
+            "description": "Percentage (e.g. 30.0) or fixed amount",
+            "default": "0.0000"
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Days",
+            "description": "Days offset",
+            "default": 0
+          },
+          "option": {
+            "type": "string",
+            "pattern": "^(days_after_invoice|end_of_month|days_after_end_of_month)$",
+            "title": "Option",
+            "description": "Calculation mode for due date",
+            "default": "days_after_invoice"
+          }
+        },
+        "type": "object",
+        "title": "PaymentTermsLineCreate"
+      },
+      "PaymentTermsLineResponse": {
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Order of installment allocation",
+            "default": 10
+          },
+          "value_type": {
+            "type": "string",
+            "pattern": "^(percent|fixed|balance)$",
+            "title": "Value Type",
+            "description": "percent, fixed, or balance",
+            "default": "balance"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "Percentage (e.g. 30.0) or fixed amount",
+            "default": "0.0000"
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Days",
+            "description": "Days offset",
+            "default": 0
+          },
+          "option": {
+            "type": "string",
+            "pattern": "^(days_after_invoice|end_of_month|days_after_end_of_month)$",
+            "title": "Option",
+            "description": "Calculation mode for due date",
+            "default": "days_after_invoice"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "terms_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Terms Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "terms_id",
+          "created_at"
+        ],
+        "title": "PaymentTermsLineResponse"
+      },
+      "PaymentTermsResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Terms name"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code",
+            "description": "Unique reference code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Commercial summary"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentTermsLineResponse"
+            },
+            "type": "array",
+            "title": "Lines",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "id",
+          "company_id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentTermsResponse"
+      },
+      "PaymentTermsUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "PaymentTermsUpdate"
+      },
+      "PaymentTransactionCreate": {
+        "properties": {
+          "payment_number": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Payment Number",
+            "description": "Unique transaction number"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target entity model (e.g. invoices)"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Target entity UUID"
+          },
+          "party_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Id",
+            "description": "Customer or vendor party UUID"
+          },
+          "payment_method_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Payment Method Id",
+            "description": "Payment method instrument UUID"
+          },
+          "transaction_type": {
+            "type": "string",
+            "pattern": "^(inbound|outbound)$",
+            "title": "Transaction Type",
+            "description": "inbound or outbound",
+            "default": "inbound"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount",
+            "description": "Transaction monetary amount"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "description": "Currency UUID"
+          },
+          "payment_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Date",
+            "description": "Transaction datetime"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference",
+            "description": "External transaction or gateway reference"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Internal remarks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_number",
+          "payment_method_id",
+          "amount"
+        ],
+        "title": "PaymentTransactionCreate",
+        "example": {
+          "amount": "1500.00",
+          "notes": "Payment for invoice INV-2026-0089",
+          "payment_method_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+          "payment_number": "PAY-2026-0001",
+          "reference": "WIRE-TXN-98421",
+          "res_model": "invoices",
+          "transaction_type": "inbound"
+        }
+      },
+      "PaymentTransactionResponse": {
+        "properties": {
+          "payment_number": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Payment Number",
+            "description": "Unique transaction number"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target entity model (e.g. invoices)"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Target entity UUID"
+          },
+          "party_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Id",
+            "description": "Customer or vendor party UUID"
+          },
+          "payment_method_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Payment Method Id",
+            "description": "Payment method instrument UUID"
+          },
+          "transaction_type": {
+            "type": "string",
+            "pattern": "^(inbound|outbound)$",
+            "title": "Transaction Type",
+            "description": "inbound or outbound",
+            "default": "inbound"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Transaction monetary amount"
+          },
+          "currency_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Id",
+            "description": "Currency UUID"
+          },
+          "payment_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Date",
+            "description": "Transaction datetime"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference",
+            "description": "External transaction or gateway reference"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Internal remarks"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "payment_method_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_number",
+          "payment_method_id",
+          "amount",
+          "id",
+          "company_id",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentTransactionResponse"
+      },
+      "PaymentTransactionUpdate": {
+        "properties": {
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "title": "PaymentTransactionUpdate"
       },
       "PermissionCreate": {
         "properties": {
