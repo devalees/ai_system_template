@@ -11306,6 +11306,764 @@
         }
       }
     },
+    "/api/v1/calendar/events": {
+      "post": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Create Calendar Event",
+        "description": "Creates a new calendar event, appointment, or recurring meeting with optional initial invitees.",
+        "operationId": "create_event_api_v1_calendar_events_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarEventCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "List Calendar Events",
+        "description": "Lists calendar events matching optional date range, entity link, or organizer criteria.",
+        "operationId": "list_events_api_v1_calendar_events_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter events ending on or after this timestamp",
+              "title": "Start Date"
+            },
+            "description": "Filter events ending on or after this timestamp"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter events starting on or before this timestamp",
+              "title": "End Date"
+            },
+            "description": "Filter events starting on or before this timestamp"
+          },
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by attached record entity model",
+              "title": "Res Model"
+            },
+            "description": "Filter by attached record entity model"
+          },
+          {
+            "name": "res_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by attached record entity ID",
+              "title": "Res Id"
+            },
+            "description": "Filter by attached record entity ID"
+          },
+          {
+            "name": "organizer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by event organizer",
+              "title": "Organizer Id"
+            },
+            "description": "Filter by event organizer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarEventResponse"
+                  },
+                  "title": "Response List Events Api V1 Calendar Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/occurrences": {
+      "get": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Expand Calendar Occurrences",
+        "description": "Expands recurring and non-recurring events into concrete instances within a specified time window.",
+        "operationId": "list_occurrences_api_v1_calendar_occurrences_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start of occurrence search window",
+              "title": "Start Date"
+            },
+            "description": "Start of occurrence search window"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End of occurrence search window",
+              "title": "End Date"
+            },
+            "description": "End of occurrence search window"
+          },
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by attached record model",
+              "title": "Res Model"
+            },
+            "description": "Filter by attached record model"
+          },
+          {
+            "name": "res_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by attached record ID",
+              "title": "Res Id"
+            },
+            "description": "Filter by attached record ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarOccurrenceResponse"
+                  },
+                  "title": "Response List Occurrences Api V1 Calendar Occurrences Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/events/{event_id}": {
+      "get": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Get Calendar Event Details",
+        "description": "Retrieves a specific calendar event along with attendee list.",
+        "operationId": "get_event_api_v1_calendar_events__event_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Calendar event ID",
+              "title": "Event Id"
+            },
+            "description": "Calendar event ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Update Calendar Event",
+        "description": "Updates details, schedule, or recurrence rule of an existing event.",
+        "operationId": "update_event_api_v1_calendar_events__event_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Calendar event ID",
+              "title": "Event Id"
+            },
+            "description": "Calendar event ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarEventUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Delete Calendar Event",
+        "description": "Deletes a calendar event and its attendee invites.",
+        "operationId": "delete_event_api_v1_calendar_events__event_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Calendar event ID",
+              "title": "Event Id"
+            },
+            "description": "Calendar event ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/events/{event_id}/attendees": {
+      "post": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Add Event Attendee",
+        "description": "Adds a user, party contact, or external participant to an event.",
+        "operationId": "add_attendee_api_v1_calendar_events__event_id__attendees_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Calendar event ID",
+              "title": "Event Id"
+            },
+            "description": "Calendar event ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendeeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendeeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/events/{event_id}/attendees/{attendee_id}/rsvp": {
+      "put": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Update Attendee RSVP Status",
+        "description": "Updates RSVP response (accepted, declined, tentative, needs_action) and optional notes.",
+        "operationId": "update_attendee_rsvp_api_v1_calendar_events__event_id__attendees__attendee_id__rsvp_put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Calendar event ID",
+              "title": "Event Id"
+            },
+            "description": "Calendar event ID"
+          },
+          {
+            "name": "attendee_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Attendee record ID",
+              "title": "Attendee Id"
+            },
+            "description": "Attendee record ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendeeRSVPUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendeeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/events/{event_id}/attendees/{attendee_id}": {
+      "delete": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Remove Event Attendee",
+        "description": "Removes an attendee from an event.",
+        "operationId": "remove_attendee_api_v1_calendar_events__event_id__attendees__attendee_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Calendar event ID",
+              "title": "Event Id"
+            },
+            "description": "Calendar event ID"
+          },
+          {
+            "name": "attendee_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Attendee record ID",
+              "title": "Attendee Id"
+            },
+            "description": "Attendee record ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/events/{event_id}/export.ics": {
+      "get": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Export Event as iCalendar (.ics)",
+        "description": "Generates and downloads standard RFC 5545 iCalendar format file for Outlook, Google Calendar, or Apple Calendar.",
+        "operationId": "export_event_ics_api_v1_calendar_events__event_id__export_ics_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Calendar event ID",
+              "title": "Event Id"
+            },
+            "description": "Calendar event ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/events/import-ics": {
+      "post": {
+        "tags": [
+          "Company Calendar & Events",
+          "Company Calendar & Events"
+        ],
+        "summary": "Import iCalendar (.ics) Event",
+        "description": "Parses RFC 5545 iCalendar data and creates an event with recurrence and invitees.",
+        "operationId": "import_event_ics_api_v1_calendar_events_import_ics_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarImportICSRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/approvals/rules": {
       "post": {
         "tags": [
@@ -13484,6 +14242,234 @@
           "tier": 2
         }
       },
+      "AttendeeCreate": {
+        "properties": {
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "Internal system user ID"
+          },
+          "party_contact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Contact Id",
+            "description": "External party representative contact ID"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Attendee display name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "Attendee email address"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "RSVP status (needs_action, accepted, declined, tentative)",
+            "default": "needs_action"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional RSVP message or notes"
+          }
+        },
+        "type": "object",
+        "title": "AttendeeCreate",
+        "example": {
+          "email": "sarah@cyberdyne.com",
+          "name": "Sarah Connor",
+          "status": "needs_action"
+        }
+      },
+      "AttendeeRSVPUpdate": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "pattern": "^(needs_action|accepted|declined|tentative)$",
+            "title": "Status",
+            "description": "Updated RSVP status"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "RSVP note or decline reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "AttendeeRSVPUpdate",
+        "example": {
+          "notes": "Will attend in person.",
+          "status": "accepted"
+        }
+      },
+      "AttendeeResponse": {
+        "properties": {
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "Internal system user ID"
+          },
+          "party_contact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Contact Id",
+            "description": "External party representative contact ID"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Attendee display name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "Attendee email address"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "RSVP status (needs_action, accepted, declined, tentative)",
+            "default": "needs_action"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional RSVP message or notes"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "event_id",
+          "created_at"
+        ],
+        "title": "AttendeeResponse"
+      },
       "AuditLogRead": {
         "properties": {
           "id": {
@@ -14275,6 +15261,618 @@
           "file"
         ],
         "title": "Body_upload_attachment_api_v1_documents_upload_post"
+      },
+      "CalendarEventCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Event title or subject"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed agenda or notes"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time",
+            "description": "Event start timestamp (with timezone)"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time",
+            "description": "Event end timestamp (with timezone)"
+          },
+          "is_all_day": {
+            "type": "boolean",
+            "title": "Is All Day",
+            "description": "Whether event spans full day",
+            "default": false
+          },
+          "recurrence_rule": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurrence Rule",
+            "description": "RFC 5545 RRULE string (e.g. 'FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10')"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Linked entity model name (e.g. 'parties')"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Linked entity record ID"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location",
+            "description": "Meeting location or URL"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "confirmed, tentative, cancelled",
+            "default": "confirmed"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "UI calendar display color",
+            "default": "#3B82F6"
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields"
+          },
+          "attendees": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AttendeeCreate"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attendees",
+            "description": "Initial invitees"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "start_time",
+          "end_time"
+        ],
+        "title": "CalendarEventCreate",
+        "example": {
+          "attendees": [
+            {
+              "email": "ehab@sovereign.io",
+              "name": "Ehab CEO",
+              "status": "accepted"
+            }
+          ],
+          "color": "#10B981",
+          "description": "Executive review of Q3 financials and roadmap.",
+          "end_time": "2026-10-01T11:00:00Z",
+          "is_all_day": false,
+          "location": "Boardroom A & Google Meet",
+          "recurrence_rule": "FREQ=MONTHLY;INTERVAL=3;COUNT=4",
+          "start_time": "2026-10-01T09:00:00Z",
+          "status": "confirmed",
+          "title": "Quarterly Business Review"
+        }
+      },
+      "CalendarEventResponse": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Event title or subject"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed agenda or notes"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time",
+            "description": "Event start timestamp (with timezone)"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time",
+            "description": "Event end timestamp (with timezone)"
+          },
+          "is_all_day": {
+            "type": "boolean",
+            "title": "Is All Day",
+            "description": "Whether event spans full day",
+            "default": false
+          },
+          "recurrence_rule": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurrence Rule",
+            "description": "RFC 5545 RRULE string (e.g. 'FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10')"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Linked entity model name (e.g. 'parties')"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Linked entity record ID"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location",
+            "description": "Meeting location or URL"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "confirmed, tentative, cancelled",
+            "default": "confirmed"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "UI calendar display color",
+            "default": "#3B82F6"
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "organizer_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organizer Id"
+          },
+          "attendees": {
+            "items": {
+              "$ref": "#/components/schemas/AttendeeResponse"
+            },
+            "type": "array",
+            "title": "Attendees",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "start_time",
+          "end_time",
+          "id",
+          "company_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CalendarEventResponse"
+      },
+      "CalendarEventUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "is_all_day": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is All Day"
+          },
+          "recurrence_rule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurrence Rule"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields"
+          }
+        },
+        "type": "object",
+        "title": "CalendarEventUpdate"
+      },
+      "CalendarImportICSRequest": {
+        "properties": {
+          "ics_content": {
+            "type": "string",
+            "title": "Ics Content",
+            "description": "Raw RFC 5545 iCalendar (.ics) string data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ics_content"
+        ],
+        "title": "CalendarImportICSRequest",
+        "example": {
+          "ics_content": "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:Board Meeting\nDTSTART:20261001T090000Z\nDTEND:20261001T100000Z\nEND:VEVENT\nEND:VCALENDAR"
+        }
+      },
+      "CalendarOccurrenceResponse": {
+        "properties": {
+          "occurrence_id": {
+            "type": "string",
+            "title": "Occurrence Id"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "is_all_day": {
+            "type": "boolean",
+            "title": "Is All Day"
+          },
+          "is_recurring_instance": {
+            "type": "boolean",
+            "title": "Is Recurring Instance",
+            "default": false
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "organizer_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organizer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "occurrence_id",
+          "event_id",
+          "title",
+          "start_time",
+          "end_time",
+          "is_all_day",
+          "status"
+        ],
+        "title": "CalendarOccurrenceResponse",
+        "description": "Represents a computed single occurrence of a recurring or single event."
       },
       "CatalogResponse": {
         "properties": {

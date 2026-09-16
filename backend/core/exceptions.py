@@ -160,7 +160,8 @@ async def platform_exception_handler(request: Request, exc: PlatformException) -
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     """FastAPI exception handler formatting Pydantic validation errors into standard envelopes."""
-    details = {"errors": exc.errors()}
+    from fastapi.encoders import jsonable_encoder
+    details = {"errors": jsonable_encoder(exc.errors())}
     envelope = {
         "error": {
             "code": "VALIDATION_ERROR",

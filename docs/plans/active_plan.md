@@ -1965,17 +1965,18 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Record Lock Interceptor: `RecordLockInterceptor` hooking into SQLAlchemy `before_flush` session events, physically blocking unauthorized `UPDATE` or `DELETE` on frozen records at the database level with `422 Unprocessable Entity` (`RECORD_FROZEN`).
   - REST API: 11 endpoints (`/api/v1/workflows/*`) covering workflow definitions CRUD, transition rules management, available transitions introspection for records, transition trigger execution, administrative unfreeze override, and audit history queries.
   - Automated tests: 4/4 passing in `test_workflows.py` (full suite 119/119 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [x] **Sub-stage 43.2.3: Multi-Level Governance & Approval Engine (`approvals`)** - COMPLETED
+- [x] **Sub-stage 43.2.3: Multi-Level Governance & Approval Engine (`approvals`)** - COMPLETED (Commit: `4fd2cd0`)
   - Package: `backend/modules/base/approvals/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
   - Models: `ApprovalRule` (`name`, `code`, `res_model`, `tier`, `condition` AST, `approver_group_id`, `approver_user_id`, `is_active`), `ApprovalRequest` (`rule_id`, `res_model`, `res_id`, `requested_by_id`, `approver_group_id`, `approver_user_id`, `tier`, `state: pending|approved|rejected|cancelled`, `summary`, `target_snapshot`), `ApprovalAction` (`request_id`, `actor_id`, `action: approve|reject|cancel`, `comments`).
   - Engine: `ApprovalService` evaluating AST condition criteria against target records via `ASTConditionEvaluator`, assigning multi-tier approval gates, routing to specific approver inboxes, enforcing strict sign-off authorization (user, group membership, or superuser), and broadcasting lifecycle events on `EventBus`.
   - REST API: 11 endpoints (`/api/v1/approvals/*`) covering approval rules CRUD, approval request submission, approver personal inbox, ticket detail retrieval, approve/reject decision execution, and entity approval history logs.
   - Automated tests: 4/4 passing in `test_approvals.py` (full suite 123/123 passing in Docker). Continuous OpenAPI and Postman synchronization verified.
-- [ ] **Sub-stage 43.2.4: Company-Wide Calendar & Recurring Events (`calendar`)**
-  - Package: `backend/modules/base/calendar/`
-  - Models: `CalendarEvent` (`title`, `description`, `start_time`, `end_time`, `is_all_day`, `recurrence_rule` RRULE, `res_model`, `res_id`), `EventAttendee` (`event_id`, `user_id`, `party_contact_id`, `status: accepted|declined|tentative`).
-  - Engine: RFC 5545 iCalendar generation/parsing, recurrence calculation, and attendee invite notifications.
-  - REST API: Event CRUD, date range query, and attendee RSVP endpoints.
+- [x] **Sub-stage 43.2.4: Company-Wide Calendar & Recurring Events (`calendar`)** - COMPLETED
+  - Package: `backend/modules/base/calendar/` (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+  - Models: `CalendarEvent` (`title`, `description`, `start_time`, `end_time`, `is_all_day`, `recurrence_rule` RRULE, `res_model`, `res_id`, `organizer_id`, `location`, `status`, `color`), `EventAttendee` (`event_id`, `user_id`, `party_contact_id`, `name`, `email`, `status: needs_action|accepted|declined|tentative`, `notes`).
+  - Engine: `CalendarService` featuring in-memory dynamic RFC 5545 RRULE recurrence expansion into occurrences via `dateutil.rrule`, attendee RSVP state transitions, bidirectional RFC 5545 iCalendar (`.ics`) file export and stream import, and asynchronous `EventBus` notifications.
+  - REST API: 11 endpoints (`/api/v1/calendar/*`) covering event CRUD, range queries, occurrence expansion (`/occurrences`), attendee management and RSVP updates, `.ics` file download (`/export.ics`), and raw `.ics` import (`/import-ics`).
+  - Automated tests: 5/5 passing in `test_calendar.py`. Continuous OpenAPI and Postman synchronization verified.
 
 #### **Stage 43.3: Commercial Rules & Operational Engines (P2)**
 - [ ] **Sub-stage 43.3.1: UOM Conversion Ratio Matrix (`uom`)**
@@ -2043,15 +2044,16 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Explicitly excluded existing 13 operational base modules from new scope, building upon them without regression.
 - *2026-09-16*: Enforced strict dependency DAG: Stage 43.1 (Infrastructure/Invariants) $\rightarrow$ Stage 43.2 (Parties & Workflows) $\rightarrow$ Stage 43.3 (Commercial Rules) $\rightarrow$ Stage 43.4 (Execution & Contracts) $\rightarrow$ Stage 43.5 (AI Agent Bridge).
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
+- *2026-09-16*: Stage 43.2 (Universal Parties, Workflows, Approvals & Calendar) 100% completed.
 
 ### 4. Current Focus
-Sub-stages 43.2.1 (`parties`), 43.2.2 (`workflows`), and 43.2.3 (`approvals`) are COMPLETED.
-Immediate focus: **Sub-stage 43.2.4: Company-Wide Calendar & Recurring Events (`calendar`)** (Stage 43.2: Universal Parties, Workflows & Approvals).
-- Create `backend/modules/base/calendar/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `CalendarEvent` (`title`, `description`, `start_time`, `end_time`, `is_all_day`, `recurrence_rule` RRULE, `res_model`, `res_id`, `organizer_id`, `location`).
-- Implement `EventAttendee` (`event_id`, `user_id`, `party_contact_id`, `status: accepted|declined|tentative`, `notes`).
-- Implement RRULE recurrence calculation and RFC 5545 iCalendar generation/parsing.
-- Add unit tests in `backend/tests/test_calendar.py`.
+Stage 43.1 (Infrastructure) and Stage 43.2 (Core Entities & Processes) are 100% COMPLETED.
+Immediate focus: **Sub-stage 43.3.1: UOM Conversion Ratio Matrix (`uom`)** (Stage 43.3: Commercial Rules & Operational Engines - P2).
+- Create `backend/modules/base/uom/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `UOMCategory` (`name`: Unit, Weight, Volume, Length, Time) and `UnitOfMeasure` with `category_id`, `uom_type: reference|bigger|smaller`, and `ratio: Decimal`.
+- Implement `UOMService.convert(quantity, from_uom, to_uom)` conversion math.
+- Add unit tests in `backend/tests/test_uom.py`.
+
 
 
 

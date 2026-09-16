@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "ea21f2fb-fa8c-44b7-aea5-07c33f22996a",
+    "_postman_id": "aec12af6-2d3c-40da-b0d2-c4365a0e2f33",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -16,6 +16,587 @@
     ]
   },
   "item": [
+    {
+      "name": "Company Calendar & Events",
+      "item": [
+        {
+          "name": "List Calendar Events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events"
+              ],
+              "variable": []
+            },
+            "description": "## List Calendar Events\n\nLists calendar events matching optional date range, entity link, or organizer criteria.\n\n**Endpoint**: `GET {{base_url}}/api/v1/calendar/events`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `start_date` | `query` | `string` | No | Filter events ending on or after this timestamp |\n| `end_date` | `query` | `string` | No | Filter events starting on or before this timestamp |\n| `res_model` | `query` | `string` | No | Filter by attached record entity model |\n| `res_id` | `query` | `string` | No | Filter by attached record entity ID |\n| `organizer_id` | `query` | `string` | No | Filter by event organizer |\n| `limit` | `query` | `integer` | No | - |\n| `offset` | `query` | `integer` | No | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Calendar Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events"
+              ],
+              "variable": []
+            },
+            "description": "## Create Calendar Event\n\nCreates a new calendar event, appointment, or recurring meeting with optional initial invitees.\n\n**Endpoint**: `POST {{base_url}}/api/v1/calendar/events`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `title` | `string` | **Yes** | Any valid string | Event title or subject |\n| `description` | `string` | No | Any valid string | Detailed agenda or notes |\n| `start_time` | `string` | **Yes** | Any valid string | Event start timestamp (with timezone) |\n| `end_time` | `string` | **Yes** | Any valid string | Event end timestamp (with timezone) |\n| `is_all_day` | `boolean` | No | Any valid boolean | Whether event spans full day |\n| `recurrence_rule` | `string` | No | Any valid string | RFC 5545 RRULE string (e.g. 'FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10') |\n| `res_model` | `string` | No | Any valid string | Linked entity model name (e.g. 'parties') |\n| `res_id` | `string` | No | Any valid string | Linked entity record ID |\n| `location` | `string` | No | Any valid string | Meeting location or URL |\n| `status` | `string` | No | Any valid string | confirmed, tentative, cancelled |\n| `color` | `string` | No | Any valid string | UI calendar display color |\n| `custom_fields` | `object` | No | Any valid object | custom_fields attribute |\n| `attendees` | `array` | No | Any valid array | Initial invitees |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendees\": [\n    {\n      \"email\": \"ehab@sovereign.io\",\n      \"name\": \"Ehab CEO\",\n      \"status\": \"accepted\"\n    }\n  ],\n  \"color\": \"#10B981\",\n  \"description\": \"Executive review of Q3 financials and roadmap.\",\n  \"end_time\": \"2026-10-01T11:00:00Z\",\n  \"is_all_day\": false,\n  \"location\": \"Boardroom A & Google Meet\",\n  \"recurrence_rule\": \"FREQ=MONTHLY;INTERVAL=3;COUNT=4\",\n  \"start_time\": \"2026-10-01T09:00:00Z\",\n  \"status\": \"confirmed\",\n  \"title\": \"Quarterly Business Review\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_event_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Expand Calendar Occurrences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/occurrences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "occurrences"
+              ],
+              "variable": []
+            },
+            "description": "## Expand Calendar Occurrences\n\nExpands recurring and non-recurring events into concrete instances within a specified time window.\n\n**Endpoint**: `GET {{base_url}}/api/v1/calendar/occurrences`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `start_date` | `query` | `string` | **Yes** | Start of occurrence search window |\n| `end_date` | `query` | `string` | **Yes** | End of occurrence search window |\n| `res_model` | `query` | `string` | No | Filter by attached record model |\n| `res_id` | `query` | `string` | No | Filter by attached record ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Calendar Event Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events/:event_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events",
+                ":event_id"
+              ],
+              "variable": [
+                {
+                  "key": "event_id",
+                  "value": "{{active_event_id}}",
+                  "description": "Dynamic path parameter bound to {{active_event_id}}"
+                }
+              ]
+            },
+            "description": "## Get Calendar Event Details\n\nRetrieves a specific calendar event along with attendee list.\n\n**Endpoint**: `GET {{base_url}}/api/v1/calendar/events/{event_id}`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `event_id` | `path` | `string` | **Yes** | Calendar event ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Calendar Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events/:event_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events",
+                ":event_id"
+              ],
+              "variable": [
+                {
+                  "key": "event_id",
+                  "value": "{{active_event_id}}",
+                  "description": "Dynamic path parameter bound to {{active_event_id}}"
+                }
+              ]
+            },
+            "description": "## Update Calendar Event\n\nUpdates details, schedule, or recurrence rule of an existing event.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/calendar/events/{event_id}`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `event_id` | `path` | `string` | **Yes** | Calendar event ID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `title` | `string` | No | Any valid string | title attribute |\n| `description` | `string` | No | Any valid string | description attribute |\n| `start_time` | `string` | No | Any valid string | start_time attribute |\n| `end_time` | `string` | No | Any valid string | end_time attribute |\n| `is_all_day` | `boolean` | No | Any valid boolean | is_all_day attribute |\n| `recurrence_rule` | `string` | No | Any valid string | recurrence_rule attribute |\n| `res_model` | `string` | No | Any valid string | res_model attribute |\n| `res_id` | `string` | No | Any valid string | res_id attribute |\n| `location` | `string` | No | Any valid string | location attribute |\n| `status` | `string` | No | Any valid string | status attribute |\n| `color` | `string` | No | Any valid string | color attribute |\n| `custom_fields` | `object` | No | Any valid object | custom_fields attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Calendar Event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events/:event_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events",
+                ":event_id"
+              ],
+              "variable": [
+                {
+                  "key": "event_id",
+                  "value": "{{active_event_id}}",
+                  "description": "Dynamic path parameter bound to {{active_event_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Calendar Event\n\nDeletes a calendar event and its attendee invites.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/calendar/events/{event_id}`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `event_id` | `path` | `string` | **Yes** | Calendar event ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Event Attendee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events/:event_id/attendees",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events",
+                ":event_id",
+                "attendees"
+              ],
+              "variable": [
+                {
+                  "key": "event_id",
+                  "value": "{{active_event_id}}",
+                  "description": "Dynamic path parameter bound to {{active_event_id}}"
+                }
+              ]
+            },
+            "description": "## Add Event Attendee\n\nAdds a user, party contact, or external participant to an event.\n\n**Endpoint**: `POST {{base_url}}/api/v1/calendar/events/{event_id}/attendees`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `event_id` | `path` | `string` | **Yes** | Calendar event ID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `user_id` | `string` | No | Any valid string | Internal system user ID |\n| `party_contact_id` | `string` | No | Any valid string | External party representative contact ID |\n| `name` | `string` | No | Any valid string | Attendee display name |\n| `email` | `string` | No | Any valid string | Attendee email address |\n| `status` | `string` | No | Any valid string | RSVP status (needs_action, accepted, declined, tentative) |\n| `notes` | `string` | No | Any valid string | Optional RSVP message or notes |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sarah@cyberdyne.com\",\n  \"name\": \"Sarah Connor\",\n  \"status\": \"needs_action\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_attendee_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Attendee RSVP Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events/:event_id/attendees/:attendee_id/rsvp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events",
+                ":event_id",
+                "attendees",
+                ":attendee_id",
+                "rsvp"
+              ],
+              "variable": [
+                {
+                  "key": "event_id",
+                  "value": "{{active_event_id}}",
+                  "description": "Dynamic path parameter bound to {{active_event_id}}"
+                },
+                {
+                  "key": "attendee_id",
+                  "value": "{{active_attendee_id}}",
+                  "description": "Dynamic path parameter bound to {{active_attendee_id}}"
+                }
+              ]
+            },
+            "description": "## Update Attendee RSVP Status\n\nUpdates RSVP response (accepted, declined, tentative, needs_action) and optional notes.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/calendar/events/{event_id}/attendees/{attendee_id}/rsvp`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `event_id` | `path` | `string` | **Yes** | Calendar event ID |\n| `attendee_id` | `path` | `string` | **Yes** | Attendee record ID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `status` | `string` | **Yes** | Any valid string | Updated RSVP status |\n| `notes` | `string` | No | Any valid string | RSVP note or decline reason |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Will attend in person.\",\n  \"status\": \"accepted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Event Attendee",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events/:event_id/attendees/:attendee_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events",
+                ":event_id",
+                "attendees",
+                ":attendee_id"
+              ],
+              "variable": [
+                {
+                  "key": "event_id",
+                  "value": "{{active_event_id}}",
+                  "description": "Dynamic path parameter bound to {{active_event_id}}"
+                },
+                {
+                  "key": "attendee_id",
+                  "value": "{{active_attendee_id}}",
+                  "description": "Dynamic path parameter bound to {{active_attendee_id}}"
+                }
+              ]
+            },
+            "description": "## Remove Event Attendee\n\nRemoves an attendee from an event.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/calendar/events/{event_id}/attendees/{attendee_id}`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `event_id` | `path` | `string` | **Yes** | Calendar event ID |\n| `attendee_id` | `path` | `string` | **Yes** | Attendee record ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Export Event as iCalendar (.ics)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events/:event_id/export.ics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events",
+                ":event_id",
+                "export.ics"
+              ],
+              "variable": [
+                {
+                  "key": "event_id",
+                  "value": "{{active_event_id}}",
+                  "description": "Dynamic path parameter bound to {{active_event_id}}"
+                }
+              ]
+            },
+            "description": "## Export Event as iCalendar (.ics)\n\nGenerates and downloads standard RFC 5545 iCalendar format file for Outlook, Google Calendar, or Apple Calendar.\n\n**Endpoint**: `GET {{base_url}}/api/v1/calendar/events/{event_id}/export.ics`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `event_id` | `path` | `string` | **Yes** | Calendar event ID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Import iCalendar (.ics) Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/calendar/events/import-ics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "calendar",
+                "events",
+                "import-ics"
+              ],
+              "variable": []
+            },
+            "description": "## Import iCalendar (.ics) Event\n\nParses RFC 5545 iCalendar data and creates an event with recurrence and invitees.\n\n**Endpoint**: `POST {{base_url}}/api/v1/calendar/events/import-ics`  \n**Tags**: `Company Calendar & Events, Company Calendar & Events`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `ics_content` | `string` | **Yes** | Any valid string | Raw RFC 5545 iCalendar (.ics) string data |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ics_content\": \"BEGIN:VCALENDAR\\nVERSION:2.0\\nBEGIN:VEVENT\\nSUMMARY:Board Meeting\\nDTSTART:20261001T090000Z\\nDTEND:20261001T100000Z\\nEND:VEVENT\\nEND:VCALENDAR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_import_ic_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "Composite Addresses & Geographic Locations",
       "item": [

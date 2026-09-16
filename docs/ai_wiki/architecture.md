@@ -763,6 +763,19 @@ The Sovereign Platform eliminates Role Explosion through a dual-mechanism securi
   - User inbox endpoint (`GET /api/v1/approvals/inbox`) filters pending tickets specifically actionable by the current user based on direct user assignment, RBAC group membership, or administrative superuser scope.
   - Unauthorized sign-off attempts are strictly rejected with `HTTP 403 Forbidden` (`PERMISSION_DENIED`).
 
+#### 6.13.10 Company-Wide Calendar & Recurring Events (`calendar`)
+- **Package**: `backend/modules/base/calendar/`
+- **Models (`CalendarEvent`, `EventAttendee`)**:
+  - `CalendarEvent`: Full scheduling entity with `title`, `description`, `start_time`, `end_time`, `is_all_day`, RFC 5545 recurrence rule string (`recurrence_rule`), polymorphic business record linkage (`res_model`, `res_id`), organizer attribution (`organizer_id` FK to `users.id`), `location`, `status` (`confirmed`, `tentative`, `cancelled`), and UI display color (`color`).
+  - `EventAttendee`: Participant invitation entity supporting internal system users (`user_id`), external party representatives (`party_contact_id`), direct external email participants (`email`, `name`), and trackable RSVP response state (`status`: `needs_action`, `accepted`, `declined`, `tentative`) with accompanying notes.
+- **RFC 5545 RRULE Recurrence Expansion**:
+  - `CalendarService.expand_occurrences(events, start_window, end_window)` uses Python `dateutil.rrule` to dynamically project repeating events into discrete occurrence instances without polluting the database with unbounded future rows.
+  - Generates deterministic compound occurrence keys (`{event_id}_{timestamp}`) and preserves duration, title, and metadata across all projected instances.
+- **iCalendar Interoperability (RFC 5545)**:
+  - `export_ics(event)` produces RFC 5545 compliant `.ics` calendar streams for export to Google Calendar, Microsoft Outlook, and Apple Calendar.
+  - `import_ics(content)` parses incoming `.ics` streams to reconstruct events, recurrence rules, and attendee rosters natively.
+
+
 
 
 
