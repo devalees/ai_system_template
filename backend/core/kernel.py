@@ -184,8 +184,12 @@ class Kernel:
         logger.info("Executing Kernel Phase 3: Module Schema Migrations (Alembic / DDL)")
         try:
             from core.database import engine
+            from core.base_models import Base
             from sqlalchemy import text
             async with engine.begin() as conn:
+                # Ensure all registered ORM model tables exist
+                await conn.run_sync(Base.metadata.create_all)
+
                 await conn.execute(text("""
                     DO $$ 
                     DECLARE 
@@ -244,6 +248,18 @@ class Kernel:
                     await seed_default_report_templates(session)
         except Exception as exc:
             logger.warning(f"Report templates seeding skipped during bootstrap: {exc}")
+
+        # Seed system default view definitions
+        try:
+            from modules.base.ui_schema.fixtures import seed_system_default_views
+            from core.database import AsyncSessionLocal
+            if db_session:
+                await seed_system_default_views(db_session)
+            else:
+                async with AsyncSessionLocal() as session:
+                    await seed_system_default_views(session)
+        except Exception as exc:
+            logger.warning(f"UI default views seeding skipped during bootstrap: {exc}")
 
         self._booted = True
 

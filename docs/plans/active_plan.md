@@ -2301,7 +2301,67 @@ Implement the complete enterprise **Multi-Company Architecture** across all syst
 - *2026-09-16*: Universal Superuser Bypass: System Super Administrators retain global bypass across all tenant companies without needing explicit individual memberships.
 
 ### 4. Current Focus
-Multi-Company Architecture is **100% COMPLETED** and verified with 179 passing tests. Ready for Pillar 3: The Frontend.
+Multi-Company Architecture is **100% COMPLETED** and verified with 179 passing tests. Transitioned to Phase 49.
+
+---
+
+## Phase 49: Metadata-Driven Dynamic UI Engine & View Registry (`ui_schema`)
+
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-17 00:35:00+03:00
+
+### 1. Objective & Scope
+Implement the complete backend subsystem for the **Metadata-Driven Dynamic UI Engine & View Registry (`ui_schema`)**:
+1. **Dynamic Schema Generation & Introspection Fallback**:
+   - Models without manual layout definitions automatically generate responsive Form, List, and Kanban views on-the-fly using `introspection.py` metadata.
+   - Smart field mapping: string/text -> text, money keywords -> currency, booleans -> switches, choices -> badges/selects, 1:M relationships -> nested tabs and child grids.
+2. **Fluid Resizable Split-Panel Sidebar Engine**:
+   - Replaced static layout percentages with dynamic bounds (`default_split_ratio: 65.0`, `min: 35.0`, `max: 100.0`, `collapsible: True`).
+   - Personal user-dragged divider positions persisted in `UserViewPreference.preferred_split_ratio`.
+3. **Field-Level Access Control (FLAC) Dynamic Schema Pruning**:
+   - Dynamic schema delivery sanitizes layout schemas against caller's effective permissions: restricted fields are completely pruned (read denial) or marked `readonly: true` (write denial).
+4. **Multi-Tier View Resolution**:
+   - `UserViewPreference` -> `ViewDefinition (Tenant Custom)` -> `ViewDefinition (Global System Seed)` -> `generate_dynamic_default_schema`.
+5. **System Fixtures & Kernel Lifecycle Auto-Seeding**:
+   - Default high-fidelity schemas seeded for `SaleOrder`, `PurchaseOrder`, `AccountMove`, `Product`, `Party`.
+   - Kernel `migrate()` ensures `Base.metadata.create_all` initializes new tables, and `bootstrap()` executes idempotent seeding.
+6. **REST API & Specification Synchronization**:
+   - Full CRUD endpoints under `/api/v1/ui/*` and `/api/v1/ui_schema/*`.
+   - OpenAPI specifications and Postman collections synchronized via `backend/core/exporter.py`.
+
+### 2. Task Checklist & Progress
+- [x] **Stage 49.1: Module Architecture & Models (`backend/modules/base/ui_schema/models.py`)** - COMPLETED
+  - Created `ViewDefinition` (`ui_views`) with nullable `company_id` for global templates, `res_model`, `view_type`, `layout_template`, `default_split_ratio`, `priority`, `is_system`, `schema`.
+  - Created `UserViewPreference` (`ui_user_view_preferences`) with `user_id`, `company_id`, `preferred_split_ratio`, `preferred_layout`, `visible_columns`, `column_order`, `column_widths`, `kanban_collapsed_lanes`.
+- [x] **Stage 49.2: Declarative UI Grammar (`backend/modules/base/ui_schema/schemas.py`)** - COMPLETED
+  - Defined Pydantic v2 schemas: `FieldWidgetSchema`, `FormSectionSchema`, `FormTabSchema`, `StatusBarSchema`, `HeaderActionSchema`, `SidebarConfigSchema`, `FormViewSchema`, `ListColumnSchema`, `ListViewSchema`, `KanbanViewSchema`, `ViewDefinitionCreate`, `ViewDefinitionUpdate`, `ViewDefinitionRead`, `UserViewPreferencePayload`, `UserViewPreferenceRead`, `ResolvedModelViewBundle`.
+- [x] **Stage 49.3: Dynamic Introspection Engine & FLAC Pruning (`service.py`)** - COMPLETED
+  - Built `UISchemaService.generate_dynamic_default_schema` for Form, List, and Kanban.
+  - Built `UISchemaService.apply_flac_to_schema` purging or marking readonly on guarded attributes according to effective permissions.
+- [x] **Stage 49.4: View Resolution Engine & Preferences Persistence (`service.py`)** - COMPLETED
+  - Built `get_resolved_view_schema` with multi-tier resolution and user preferences overlay.
+  - Built `get_resolved_view_bundle` resolving all active views for a model in a single request.
+  - Built view CRUD and user preferences save/retrieve methods.
+- [x] **Stage 49.5: Built-In High-Fidelity System Fixtures (`fixtures.py`)** - COMPLETED
+  - Seeded built-in views for `SaleOrder`, `PurchaseOrder`, `AccountMove`, `Product`, `Party`.
+  - Wired into `Kernel.bootstrap()` and `Kernel.migrate()`.
+- [x] **Stage 49.6: REST API Routes & Dual Mounting (`routes.py`, `core/app.py`)** - COMPLETED
+  - Mounted `/api/v1/ui/*` and `/api/v1/ui_schema/*` covering models catalog, bundles, single views, custom studio CRUD, and preferences.
+- [x] **Stage 49.7: Automated Testing & Full Regression Verification** - COMPLETED
+  - Authored `tests/test_ui_schema.py` (6/6 tests passing).
+  - Verified full platform regression test suite: **185 / 185 tests passing 100% in Docker**.
+  - Synchronized OpenAPI (`docs/api/openapi.json`) and Postman (`docs/api/postman_collection.json`).
+
+### 3. Key Decisions & Architecture Invariants (Phase 49)
+- *2026-09-17*: Zero Frontend Hardcoding: Backend provides pure declarative JSON schemas specifying widget types and resizable constraints; rendering is fully decoupled.
+- *2026-09-17*: Dynamic Introspection Fallback: Any model registered in the ORM can render instantaneously without manual view definitions.
+- *2026-09-17*: Fluid Splitter Architecture: Splitters are not hardcoded static percentages; backend defines min/max bounds (`35.0` to `100.0`), and user-dragged ratios persist in `UserViewPreference`.
+- *2026-09-17*: Symmetric FLAC Enforcement: Field access policies apply to UI schema delivery identically to data serialization, preventing unauthorized field exposure in studio or runtime.
+
+### 4. Current Focus
+Phase 49 Dynamic UI Engine Backend Foundation is **100% COMPLETED** with 185 passing tests. Preparing Implementation Plan for Multi-Template System & Global Themes.
+
 
 
 

@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "4eac2652-dcc1-4a1e-bf90-be14bb16bcd4",
+    "_postman_id": "f8da458a-08e2-4310-aa61-11b71a476ebf",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -1745,6 +1745,747 @@
               ]
             },
             "description": "## List all attachments attached to a business entity\n\nList all attachments associated with a specific entity record.\n\n**Endpoint**: `GET {{base_url}}/api/v1/documents/entity/{res_model}/{res_id}`  \n**Tags**: `Document & Blob Storage Engine, Document Attachments`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dynamic UI Schema & View Engine",
+      "item": [
+        {
+          "name": "List introspectable models with supported UI views",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/models",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "models"
+              ],
+              "variable": []
+            },
+            "description": "## List introspectable models with supported UI views\n\nList all registered ORM business entities with UI rendering support.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui_schema/models`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch all active view schemas (bundle) for a model",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/views/:res_model",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "views",
+                ":res_model"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                }
+              ]
+            },
+            "description": "## Fetch all active view schemas (bundle) for a model\n\nFetch complete resolved views (Form, List, Kanban) and preferences for a resource model.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui_schema/views/{res_model}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name, e.g. 'SaleOrder' |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch single resolved view schema for a model and view type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/views/:res_model/:view_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "views",
+                ":res_model",
+                ":view_type"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "view_type",
+                  "value": "{{active_view_type}}",
+                  "description": "Dynamic path parameter bound to {{active_view_type}}"
+                }
+              ]
+            },
+            "description": "## Fetch single resolved view schema for a model and view type\n\nFetch resolved schema with FLAC security pruning and personal preference overlays.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui_schema/views/{res_model}/{view_type}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name, e.g. 'SaleOrder' |\n| `view_type` | `path` | `string` | **Yes** | View type, e.g. 'form', 'list', 'kanban' |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create custom view definition (Studio Mode)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/views",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "views"
+              ],
+              "variable": []
+            },
+            "description": "## Create custom view definition (Studio Mode)\n\nPersist a customized layout definition for a model in the active company.\n\n**Endpoint**: `POST {{base_url}}/api/v1/ui_schema/views`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `string` | **Yes** | Any valid string | res_model attribute |\n| `view_type` | `string` | **Yes** | Any valid string | view_type attribute |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `layout_template` | `string` | No | Any valid string | layout_template attribute |\n| `default_split_ratio` | `number` | No | Any valid number | default_split_ratio attribute |\n| `priority` | `integer` | No | Any valid integer | priority attribute |\n| `is_default` | `boolean` | No | Any valid boolean | is_default attribute |\n| `schema` | `object` | No | Any valid object | schema attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"res_model\": \"{{active_model_name}}\",\n  \"view_type\": \"string\",\n  \"name\": \"string\",\n  \"layout_template\": \"string\",\n  \"priority\": 0,\n  \"is_default\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_view_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update custom view definition",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/views/:view_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "views",
+                ":view_id"
+              ],
+              "variable": [
+                {
+                  "key": "view_id",
+                  "value": "{{active_view_id}}",
+                  "description": "Dynamic path parameter bound to {{active_view_id}}"
+                }
+              ]
+            },
+            "description": "## Update custom view definition\n\nUpdate field arrangement, sidebar docked settings, or split ratios on a view layout.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/ui_schema/views/{view_id}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `view_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `layout_template` | `string` | No | Any valid string | layout_template attribute |\n| `default_split_ratio` | `number` | No | Any valid number | default_split_ratio attribute |\n| `priority` | `integer` | No | Any valid integer | priority attribute |\n| `is_default` | `boolean` | No | Any valid boolean | is_default attribute |\n| `schema` | `object` | No | Any valid object | schema attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete custom view definition (revert to default)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/views/:view_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "views",
+                ":view_id"
+              ],
+              "variable": [
+                {
+                  "key": "view_id",
+                  "value": "{{active_view_id}}",
+                  "description": "Dynamic path parameter bound to {{active_view_id}}"
+                }
+              ]
+            },
+            "description": "## Delete custom view definition (revert to default)\n\nSoft-delete a customized view layout to restore platform default layout.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/ui_schema/views/{view_id}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `view_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get user personal workspace view preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/preferences/:res_model/:view_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "preferences",
+                ":res_model",
+                ":view_type"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "view_type",
+                  "value": "{{active_view_type}}",
+                  "description": "Dynamic path parameter bound to {{active_view_type}}"
+                }
+              ]
+            },
+            "description": "## Get user personal workspace view preferences\n\nRetrieve caller's saved column widths, sequence, collapsed lanes, or panel split ratio.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui_schema/preferences/{res_model}/{view_type}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name |\n| `view_type` | `path` | `string` | **Yes** | View type |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Save user personal workspace view preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/preferences/:res_model/:view_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "preferences",
+                ":res_model",
+                ":view_type"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "view_type",
+                  "value": "{{active_view_type}}",
+                  "description": "Dynamic path parameter bound to {{active_view_type}}"
+                }
+              ]
+            },
+            "description": "## Save user personal workspace view preferences\n\nSave dragged panel split ratio, column ordering, or widths for the authenticated user.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/ui_schema/preferences/{res_model}/{view_type}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name |\n| `view_type` | `path` | `string` | **Yes** | View type |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `visible_columns` | `array` | No | Any valid array | visible_columns attribute |\n| `column_order` | `array` | No | Any valid array | column_order attribute |\n| `column_widths` | `object` | No | Any valid object | column_widths attribute |\n| `preferred_layout` | `string` | No | Any valid string | preferred_layout attribute |\n| `preferred_split_ratio` | `number` | No | Any valid number | preferred_split_ratio attribute |\n| `kanban_collapsed_lanes` | `array` | No | Any valid array | kanban_collapsed_lanes attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List introspectable models with supported UI views",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/models",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "models"
+              ],
+              "variable": []
+            },
+            "description": "## List introspectable models with supported UI views\n\nList all registered ORM business entities with UI rendering support.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui/models`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch all active view schemas (bundle) for a model",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/views/:res_model",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "views",
+                ":res_model"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                }
+              ]
+            },
+            "description": "## Fetch all active view schemas (bundle) for a model\n\nFetch complete resolved views (Form, List, Kanban) and preferences for a resource model.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui/views/{res_model}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name, e.g. 'SaleOrder' |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch single resolved view schema for a model and view type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/views/:res_model/:view_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "views",
+                ":res_model",
+                ":view_type"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "view_type",
+                  "value": "{{active_view_type}}",
+                  "description": "Dynamic path parameter bound to {{active_view_type}}"
+                }
+              ]
+            },
+            "description": "## Fetch single resolved view schema for a model and view type\n\nFetch resolved schema with FLAC security pruning and personal preference overlays.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui/views/{res_model}/{view_type}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name, e.g. 'SaleOrder' |\n| `view_type` | `path` | `string` | **Yes** | View type, e.g. 'form', 'list', 'kanban' |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create custom view definition (Studio Mode)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/views",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "views"
+              ],
+              "variable": []
+            },
+            "description": "## Create custom view definition (Studio Mode)\n\nPersist a customized layout definition for a model in the active company.\n\n**Endpoint**: `POST {{base_url}}/api/v1/ui/views`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `string` | **Yes** | Any valid string | res_model attribute |\n| `view_type` | `string` | **Yes** | Any valid string | view_type attribute |\n| `name` | `string` | **Yes** | Any valid string | name attribute |\n| `layout_template` | `string` | No | Any valid string | layout_template attribute |\n| `default_split_ratio` | `number` | No | Any valid number | default_split_ratio attribute |\n| `priority` | `integer` | No | Any valid integer | priority attribute |\n| `is_default` | `boolean` | No | Any valid boolean | is_default attribute |\n| `schema` | `object` | No | Any valid object | schema attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"res_model\": \"{{active_model_name}}\",\n  \"view_type\": \"string\",\n  \"name\": \"string\",\n  \"layout_template\": \"string\",\n  \"priority\": 0,\n  \"is_default\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_view_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update custom view definition",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/views/:view_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "views",
+                ":view_id"
+              ],
+              "variable": [
+                {
+                  "key": "view_id",
+                  "value": "{{active_view_id}}",
+                  "description": "Dynamic path parameter bound to {{active_view_id}}"
+                }
+              ]
+            },
+            "description": "## Update custom view definition\n\nUpdate field arrangement, sidebar docked settings, or split ratios on a view layout.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/ui/views/{view_id}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `view_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `layout_template` | `string` | No | Any valid string | layout_template attribute |\n| `default_split_ratio` | `number` | No | Any valid number | default_split_ratio attribute |\n| `priority` | `integer` | No | Any valid integer | priority attribute |\n| `is_default` | `boolean` | No | Any valid boolean | is_default attribute |\n| `schema` | `object` | No | Any valid object | schema attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete custom view definition (revert to default)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/views/:view_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "views",
+                ":view_id"
+              ],
+              "variable": [
+                {
+                  "key": "view_id",
+                  "value": "{{active_view_id}}",
+                  "description": "Dynamic path parameter bound to {{active_view_id}}"
+                }
+              ]
+            },
+            "description": "## Delete custom view definition (revert to default)\n\nSoft-delete a customized view layout to restore platform default layout.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/ui/views/{view_id}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `view_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get user personal workspace view preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/preferences/:res_model/:view_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "preferences",
+                ":res_model",
+                ":view_type"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "view_type",
+                  "value": "{{active_view_type}}",
+                  "description": "Dynamic path parameter bound to {{active_view_type}}"
+                }
+              ]
+            },
+            "description": "## Get user personal workspace view preferences\n\nRetrieve caller's saved column widths, sequence, collapsed lanes, or panel split ratio.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui/preferences/{res_model}/{view_type}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name |\n| `view_type` | `path` | `string` | **Yes** | View type |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Save user personal workspace view preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/preferences/:res_model/:view_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "preferences",
+                ":res_model",
+                ":view_type"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "view_type",
+                  "value": "{{active_view_type}}",
+                  "description": "Dynamic path parameter bound to {{active_view_type}}"
+                }
+              ]
+            },
+            "description": "## Save user personal workspace view preferences\n\nSave dragged panel split ratio, column ordering, or widths for the authenticated user.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/ui/preferences/{res_model}/{view_type}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | Target model name |\n| `view_type` | `path` | `string` | **Yes** | View type |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `visible_columns` | `array` | No | Any valid array | visible_columns attribute |\n| `column_order` | `array` | No | Any valid array | column_order attribute |\n| `column_widths` | `object` | No | Any valid object | column_widths attribute |\n| `preferred_layout` | `string` | No | Any valid string | preferred_layout attribute |\n| `preferred_split_ratio` | `number` | No | Any valid number | preferred_split_ratio attribute |\n| `kanban_collapsed_lanes` | `array` | No | Any valid array | kanban_collapsed_lanes attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }

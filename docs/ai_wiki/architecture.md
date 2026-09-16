@@ -981,7 +981,47 @@ The Sovereign Platform implements a comprehensive, enterprise-grade multi-compan
    - `POST /api/v1/identity_rbac/users/{user_id}/companies`: Grants user access to an additional company (Admin/Superuser).
    - `DELETE /api/v1/identity_rbac/users/{user_id}/companies/{company_id}`: Revokes company access.
 
+### 6.18 Metadata-Driven Dynamic UI Engine & View Registry (`ui_schema`)
 
+#### 6.18.1 Architecture & Declarative View Philosophy
+The `ui_schema` base module (`backend/modules/base/ui_schema/`) provides the metadata-driven UI engine powering the modular Sovereign frontend:
+- **Zero Frontend Hardcoding in Backend**: The backend serves pure declarative JSON layout schemas specifying widget types, sections, tabs, status bars, and docking configurations.
+- **Dynamic Introspection Fallback**: Any model registered in the ORM without manual view definitions can automatically render Forms, Lists, and Kanban boards on-the-fly using `introspection.py` metadata.
+- **Fluid Resizable Split-Panels**: Form views specify resizable split sidebar constraints (`default_split_ratio: 65.0`, `min: 35.0`, `max: 85.0`) allowing pixel-by-pixel splitter adjustments for docked Chatter and Activity feeds.
+- **Field-Level Access Control (FLAC) Pruning**: Views are dynamically sanitized on egress against the caller's effective permissions; restricted fields are either completely purged (read denial) or stamped `readonly: true` (write denial).
 
+#### 6.18.2 Core Data Models
+1. **`ViewDefinition` (`ui_views`)**:
+   - Stores declarative view configurations for resource models (`res_model`) and view types (`form`, `list`, `kanban`, `pivot`, `calendar`, `dashboard`).
+   - `company_id`: Optional UUID (NULL for global system defaults, non-null for tenant-specific customizations).
+   - `layout_template`: Screen layout archetype (`"split_chatter_right"`, `"full_width"`, `"master_detail"`).
+   - `default_split_ratio`: Primary panel percentage width (default 65.0%).
+   - `priority`: Weight governing resolution precedence (higher values override lower values).
+   - `is_system`: Boolean identifying immutable platform seeds vs tenant studio customizations.
+   - `schema`: JSONB containing complete declarative specifications (tabs, sections, columns, widgets, rules).
+2. **`UserViewPreference` (`ui_user_view_preferences`)**:
+   - Persists individual personal user workspace adjustments:
+   - `preferred_split_ratio`: User's custom dragged panel split percentage (e.g. 72.5%).
+   - `preferred_layout`: User's preferred layout archetype override.
+   - `visible_columns`: Selected visible columns for data grids.
+   - `column_order`: User-customized column sequence order.
+   - `column_widths`: Persisted pixel widths (`{"name": 250, "amount_total": 140}`).
+   - `kanban_collapsed_lanes`: List of folded Kanban stage lanes.
 
+#### 6.18.3 Multi-Tier View Resolution Precedence
+When resolving an active view for a user and model (`UISchemaService.get_resolved_view_schema`):
+1. **User Personal Preference** (`UserViewPreference`): Overlays user's dragged split ratio, column widths, order, and folded lanes.
+2. **Tenant Custom View** (`ViewDefinition` with `company_id == active_company_id`): Overlays system defaults if customized in Studio.
+3. **Global System View** (`ViewDefinition` with `is_system == True`): Built-in high-fidelity platform fixtures.
+4. **Dynamic Introspection Fallback**: Auto-generates full Form, List, or Kanban layouts directly from ORM column and relationship metadata.
+5. **Security Pruning (FLAC)**: Final filter purges unauthorized fields before schema delivery to the frontend client.
 
+#### 6.18.4 REST API Surface (`/api/v1/ui/*`)
+- `GET /api/v1/ui/models`: Lists all introspectable models and supported view types for dynamic navigation.
+- `GET /api/v1/ui/views/{res_model}`: Fetches complete view bundle (Form, List, Kanban) with user preferences for a resource.
+- `GET /api/v1/ui/views/{res_model}/{view_type}`: Returns single resolved schema for a specific view type.
+- `POST /api/v1/ui/views`: Persists a customized view definition (Studio Mode).
+- `PUT /api/v1/ui/views/{view_id}`: Updates field layout, docked sidebar properties, or default split ratio.
+- `DELETE /api/v1/ui/views/{view_id}`: Reverts custom layout back to platform default.
+- `GET /api/v1/ui/preferences/{res_model}/{view_type}`: Retrieves caller's personal workspace view preferences.
+- `PUT /api/v1/ui/preferences/{res_model}/{view_type}`: Saves user's dragged panel split ratio, column ordering, or widths.

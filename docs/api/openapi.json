@@ -15053,6 +15053,449 @@
         }
       }
     },
+    "/api/v1/ui_schema/models": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "List introspectable models with supported UI views",
+        "description": "List all registered ORM business entities with UI rendering support.",
+        "operationId": "list_ui_models_api_v1_ui_schema_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Ui Models Api V1 Ui Schema Models Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ui_schema/views/{res_model}": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch all active view schemas (bundle) for a model",
+        "description": "Fetch complete resolved views (Form, List, Kanban) and preferences for a resource model.",
+        "operationId": "get_model_view_bundle_api_v1_ui_schema_views__res_model__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name, e.g. 'SaleOrder'",
+              "title": "Res Model"
+            },
+            "description": "Target model name, e.g. 'SaleOrder'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolvedModelViewBundle"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui_schema/views/{res_model}/{view_type}": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch single resolved view schema for a model and view type",
+        "description": "Fetch resolved schema with FLAC security pruning and personal preference overlays.",
+        "operationId": "get_single_resolved_view_api_v1_ui_schema_views__res_model___view_type__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name, e.g. 'SaleOrder'",
+              "title": "Res Model"
+            },
+            "description": "Target model name, e.g. 'SaleOrder'"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type, e.g. 'form', 'list', 'kanban'",
+              "title": "View Type"
+            },
+            "description": "View type, e.g. 'form', 'list', 'kanban'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Single Resolved View Api V1 Ui Schema Views  Res Model   View Type  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui_schema/views": {
+      "post": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Create custom view definition (Studio Mode)",
+        "description": "Persist a customized layout definition for a model in the active company.",
+        "operationId": "create_custom_view_api_v1_ui_schema_views_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ViewDefinitionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewDefinitionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ui_schema/views/{view_id}": {
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Update custom view definition",
+        "description": "Update field arrangement, sidebar docked settings, or split ratios on a view layout.",
+        "operationId": "update_custom_view_api_v1_ui_schema_views__view_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "View Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ViewDefinitionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewDefinitionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Delete custom view definition (revert to default)",
+        "description": "Soft-delete a customized view layout to restore platform default layout.",
+        "operationId": "delete_custom_view_api_v1_ui_schema_views__view_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "View Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Delete Custom View Api V1 Ui Schema Views  View Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui_schema/preferences/{res_model}/{view_type}": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Get user personal workspace view preferences",
+        "description": "Retrieve caller's saved column widths, sequence, collapsed lanes, or panel split ratio.",
+        "operationId": "get_user_preference_api_v1_ui_schema_preferences__res_model___view_type__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name",
+              "title": "Res Model"
+            },
+            "description": "Target model name"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type",
+              "title": "View Type"
+            },
+            "description": "View type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UserViewPreferenceRead"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get User Preference Api V1 Ui Schema Preferences  Res Model   View Type  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Save user personal workspace view preferences",
+        "description": "Save dragged panel split ratio, column ordering, or widths for the authenticated user.",
+        "operationId": "save_user_preference_api_v1_ui_schema_preferences__res_model___view_type__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name",
+              "title": "Res Model"
+            },
+            "description": "Target model name"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type",
+              "title": "View Type"
+            },
+            "description": "View type"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserViewPreferencePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserViewPreferenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/workflows/definitions": {
       "post": {
         "tags": [
@@ -19813,6 +20256,449 @@
                 "schema": {
                   "type": "object",
                   "title": "Response Get Mcp Status Api V1 Mcp Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui/models": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "List introspectable models with supported UI views",
+        "description": "List all registered ORM business entities with UI rendering support.",
+        "operationId": "list_ui_models_api_v1_ui_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Ui Models Api V1 Ui Models Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ui/views/{res_model}": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch all active view schemas (bundle) for a model",
+        "description": "Fetch complete resolved views (Form, List, Kanban) and preferences for a resource model.",
+        "operationId": "get_model_view_bundle_api_v1_ui_views__res_model__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name, e.g. 'SaleOrder'",
+              "title": "Res Model"
+            },
+            "description": "Target model name, e.g. 'SaleOrder'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolvedModelViewBundle"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui/views/{res_model}/{view_type}": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch single resolved view schema for a model and view type",
+        "description": "Fetch resolved schema with FLAC security pruning and personal preference overlays.",
+        "operationId": "get_single_resolved_view_api_v1_ui_views__res_model___view_type__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name, e.g. 'SaleOrder'",
+              "title": "Res Model"
+            },
+            "description": "Target model name, e.g. 'SaleOrder'"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type, e.g. 'form', 'list', 'kanban'",
+              "title": "View Type"
+            },
+            "description": "View type, e.g. 'form', 'list', 'kanban'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Single Resolved View Api V1 Ui Views  Res Model   View Type  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui/views": {
+      "post": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Create custom view definition (Studio Mode)",
+        "description": "Persist a customized layout definition for a model in the active company.",
+        "operationId": "create_custom_view_api_v1_ui_views_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ViewDefinitionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewDefinitionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ui/views/{view_id}": {
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Update custom view definition",
+        "description": "Update field arrangement, sidebar docked settings, or split ratios on a view layout.",
+        "operationId": "update_custom_view_api_v1_ui_views__view_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "View Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ViewDefinitionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewDefinitionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Delete custom view definition (revert to default)",
+        "description": "Soft-delete a customized view layout to restore platform default layout.",
+        "operationId": "delete_custom_view_api_v1_ui_views__view_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "View Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Delete Custom View Api V1 Ui Views  View Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui/preferences/{res_model}/{view_type}": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Get user personal workspace view preferences",
+        "description": "Retrieve caller's saved column widths, sequence, collapsed lanes, or panel split ratio.",
+        "operationId": "get_user_preference_api_v1_ui_preferences__res_model___view_type__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name",
+              "title": "Res Model"
+            },
+            "description": "Target model name"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type",
+              "title": "View Type"
+            },
+            "description": "View type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UserViewPreferenceRead"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get User Preference Api V1 Ui Preferences  Res Model   View Type  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Save user personal workspace view preferences",
+        "description": "Save dragged panel split ratio, column ordering, or widths for the authenticated user.",
+        "operationId": "save_user_preference_api_v1_ui_preferences__res_model___view_type__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target model name",
+              "title": "Res Model"
+            },
+            "description": "Target model name"
+          },
+          {
+            "name": "view_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "View type",
+              "title": "View Type"
+            },
+            "description": "View type"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserViewPreferencePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserViewPreferenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -36207,6 +37093,53 @@
           "token": "pr_9f8d7c6b5a4321_sample_token"
         }
       },
+      "ResolvedModelViewBundle": {
+        "properties": {
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "model_title": {
+            "type": "string",
+            "title": "Model Title"
+          },
+          "default_view_type": {
+            "type": "string",
+            "title": "Default View Type"
+          },
+          "available_view_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available View Types"
+          },
+          "views": {
+            "type": "object",
+            "title": "Views",
+            "description": "Map of view_type -> resolved schema dictionary"
+          },
+          "user_preferences": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserViewPreferenceRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "res_model",
+          "model_title",
+          "default_view_type",
+          "available_view_types"
+        ],
+        "title": "ResolvedModelViewBundle",
+        "description": "Complete bundle returned to the frontend containing all available views and user preferences."
+      },
       "ResourceAllocationCreate": {
         "properties": {
           "resource_id": {
@@ -40907,6 +41840,208 @@
           "preferred_language": "en"
         }
       },
+      "UserViewPreferencePayload": {
+        "properties": {
+          "visible_columns": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visible Columns"
+          },
+          "column_order": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column Order"
+          },
+          "column_widths": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column Widths"
+          },
+          "preferred_layout": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Layout"
+          },
+          "preferred_split_ratio": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": 20.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Split Ratio"
+          },
+          "kanban_collapsed_lanes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kanban Collapsed Lanes"
+          }
+        },
+        "type": "object",
+        "title": "UserViewPreferencePayload",
+        "description": "Payload to save individual user view settings."
+      },
+      "UserViewPreferenceRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "view_type": {
+            "type": "string",
+            "title": "View Type"
+          },
+          "visible_columns": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visible Columns"
+          },
+          "column_order": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column Order"
+          },
+          "column_widths": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column Widths"
+          },
+          "preferred_layout": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Layout"
+          },
+          "preferred_split_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Split Ratio"
+          },
+          "kanban_collapsed_lanes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kanban Collapsed Lanes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "company_id",
+          "res_model",
+          "view_type"
+        ],
+        "title": "UserViewPreferenceRead",
+        "description": "Serialized user workspace preference."
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -40957,6 +42092,228 @@
         "example": {
           "token": "em_1a2b3c4d5e6f_sample_token"
         }
+      },
+      "ViewDefinitionCreate": {
+        "properties": {
+          "res_model": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Res Model"
+          },
+          "view_type": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 2,
+            "title": "View Type"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "layout_template": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Layout Template",
+            "default": "split_chatter_right"
+          },
+          "default_split_ratio": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 20.0,
+            "title": "Default Split Ratio",
+            "default": 65.0
+          },
+          "priority": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "default": 10
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "default": false
+          },
+          "schema": {
+            "type": "object",
+            "title": "Schema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "res_model",
+          "view_type",
+          "name"
+        ],
+        "title": "ViewDefinitionCreate",
+        "description": "Schema to create a new UI view layout."
+      },
+      "ViewDefinitionRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id"
+          },
+          "res_model": {
+            "type": "string",
+            "title": "Res Model"
+          },
+          "view_type": {
+            "type": "string",
+            "title": "View Type"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "layout_template": {
+            "type": "string",
+            "title": "Layout Template"
+          },
+          "default_split_ratio": {
+            "type": "number",
+            "title": "Default Split Ratio"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System"
+          },
+          "schema": {
+            "type": "object",
+            "title": "Schema"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "res_model",
+          "view_type",
+          "name",
+          "layout_template",
+          "default_split_ratio",
+          "priority",
+          "is_default",
+          "is_system",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ViewDefinitionRead",
+        "description": "Serialized representation of a stored UI view."
+      },
+      "ViewDefinitionUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "layout_template": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Layout Template"
+          },
+          "default_split_ratio": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 20.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Split Ratio"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default"
+          },
+          "schema": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema"
+          }
+        },
+        "type": "object",
+        "title": "ViewDefinitionUpdate",
+        "description": "Schema to update an existing UI view layout (Studio save)."
       },
       "WorkItemCreate": {
         "properties": {

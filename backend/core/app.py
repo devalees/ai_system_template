@@ -78,6 +78,10 @@ def create_app() -> FastAPI:
     from core.mcp_bridge.routes import router as mcp_router
     app.include_router(mcp_router, prefix="/api/v1/mcp")
 
+    # 4.2. Mount Sovereign Dynamic UI Engine & View Registry
+    from modules.base.ui_schema.routes import router as ui_router
+    app.include_router(ui_router, prefix="/api/v1/ui", tags=["Dynamic UI Schema & View Engine"])
+
 
     # 5. Micro-Kernel Registry Diagnostics Endpoint
     @app.get("/api/v1/kernel/modules", tags=["Kernel Diagnostics"])
