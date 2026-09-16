@@ -7631,6 +7631,448 @@
         }
       }
     },
+    "/api/v1/addresses/": {
+      "post": {
+        "tags": [
+          "Composite Addresses & Geographic Locations",
+          "Composite Addresses & Geographic Locations"
+        ],
+        "summary": "Create Address",
+        "description": "Create a new address record and link it polymorphically to an entity.",
+        "operationId": "create_address_api_v1_addresses__post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Composite Addresses & Geographic Locations",
+          "Composite Addresses & Geographic Locations"
+        ],
+        "summary": "List Addresses",
+        "description": "Query addresses with optional filtering by entity model, entity ID, and address type.",
+        "operationId": "list_addresses_api_v1_addresses__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target model name (e.g. 'Party')",
+              "title": "Res Model"
+            },
+            "description": "Filter by target model name (e.g. 'Party')"
+          },
+          {
+            "name": "res_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target record ID",
+              "title": "Res Id"
+            },
+            "description": "Filter by target record ID"
+          },
+          {
+            "name": "address_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by address type ('billing', 'shipping', etc.)",
+              "title": "Address Type"
+            },
+            "description": "Filter by address type ('billing', 'shipping', etc.)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AddressRead"
+                  },
+                  "title": "Response List Addresses Api V1 Addresses  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/addresses/{address_id}": {
+      "get": {
+        "tags": [
+          "Composite Addresses & Geographic Locations",
+          "Composite Addresses & Geographic Locations"
+        ],
+        "summary": "Get Address by ID",
+        "description": "Retrieve details for a specific address record.",
+        "operationId": "get_address_api_v1_addresses__address_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "address_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Address Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Composite Addresses & Geographic Locations",
+          "Composite Addresses & Geographic Locations"
+        ],
+        "summary": "Update Address",
+        "description": "Update address attributes or toggle the default address flag.",
+        "operationId": "update_address_api_v1_addresses__address_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "address_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Address Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Composite Addresses & Geographic Locations",
+          "Composite Addresses & Geographic Locations"
+        ],
+        "summary": "Delete Address",
+        "description": "Soft-delete an address record.",
+        "operationId": "delete_address_api_v1_addresses__address_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "address_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Address Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/addresses/entity/{res_model}/{res_id}": {
+      "get": {
+        "tags": [
+          "Composite Addresses & Geographic Locations",
+          "Composite Addresses & Geographic Locations"
+        ],
+        "summary": "List Entity Addresses",
+        "description": "Retrieve all addresses linked to a specific entity record.",
+        "operationId": "list_entity_addresses_api_v1_addresses_entity__res_model___res_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Res Model"
+            }
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Res Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AddressRead"
+                  },
+                  "title": "Response List Entity Addresses Api V1 Addresses Entity  Res Model   Res Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/addresses/entity/{res_model}/{res_id}/default": {
+      "get": {
+        "tags": [
+          "Composite Addresses & Geographic Locations",
+          "Composite Addresses & Geographic Locations"
+        ],
+        "summary": "Get Default Entity Address",
+        "description": "Retrieve the designated default address for an entity (optionally filtered by address type).",
+        "operationId": "get_default_entity_address_api_v1_addresses_entity__res_model___res_id__default_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "res_model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Res Model"
+            }
+          },
+          {
+            "name": "res_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Res Id"
+            }
+          },
+          {
+            "name": "address_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Address type to look for (e.g. 'billing', 'shipping')",
+              "title": "Address Type"
+            },
+            "description": "Address type to look for (e.g. 'billing', 'shipping')"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/AddressRead"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Default Entity Address Api V1 Addresses Entity  Res Model   Res Id  Default Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/backup/create": {
       "post": {
         "tags": [
@@ -9626,6 +10068,537 @@
           "created_at"
         ],
         "title": "ActivityRead"
+      },
+      "AddressCreate": {
+        "properties": {
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target model name (e.g. 'Party', 'Company', 'Warehouse')."
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Target entity primary key UUID."
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Address label (e.g. 'Headquarters', 'Warehouse #3').",
+            "default": ""
+          },
+          "address_type": {
+            "type": "string",
+            "maxLength": 30,
+            "title": "Address Type",
+            "description": "Address purpose: 'billing', 'shipping', 'branch', 'warehouse', 'contact', 'headquarters', 'other'.",
+            "default": "billing"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "Whether this is the primary/default address for this address_type.",
+            "default": false
+          },
+          "street1": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Street1",
+            "description": "Primary street address line."
+          },
+          "street2": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street2",
+            "description": "Secondary address line (suite, building, floor)."
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code",
+            "description": "Postal code or ZIP."
+          },
+          "state_province": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Province",
+            "description": "State, province, or governorate."
+          },
+          "city_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Id",
+            "description": "Normalized foreign key to lookup_cities."
+          },
+          "country_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Id",
+            "description": "Normalized foreign key to lookup_countries."
+          },
+          "geo_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geo Lat",
+            "description": "Geographic latitude coordinate (-90 to 90)."
+          },
+          "geo_lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geo Lng",
+            "description": "Geographic longitude coordinate (-180 to 180)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "street1"
+        ],
+        "title": "AddressCreate",
+        "description": "Payload for creating a new address record.",
+        "example": {
+          "address_type": "headquarters",
+          "geo_lat": 30.0131,
+          "geo_lng": 31.4289,
+          "is_default": true,
+          "postal_code": "11835",
+          "res_id": "00000000-0000-0000-0000-000000000000",
+          "res_model": "Company",
+          "state_province": "Cairo",
+          "street1": "90th Street, Fifth Settlement",
+          "street2": "Building 45, Floor 3",
+          "title": "Cairo Headquarters"
+        }
+      },
+      "AddressRead": {
+        "properties": {
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target model name (e.g. 'Party', 'Company', 'Warehouse')."
+          },
+          "res_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Id",
+            "description": "Target entity primary key UUID."
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Address label (e.g. 'Headquarters', 'Warehouse #3').",
+            "default": ""
+          },
+          "address_type": {
+            "type": "string",
+            "maxLength": 30,
+            "title": "Address Type",
+            "description": "Address purpose: 'billing', 'shipping', 'branch', 'warehouse', 'contact', 'headquarters', 'other'.",
+            "default": "billing"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "Whether this is the primary/default address for this address_type.",
+            "default": false
+          },
+          "street1": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Street1",
+            "description": "Primary street address line."
+          },
+          "street2": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street2",
+            "description": "Secondary address line (suite, building, floor)."
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code",
+            "description": "Postal code or ZIP."
+          },
+          "state_province": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Province",
+            "description": "State, province, or governorate."
+          },
+          "city_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Id",
+            "description": "Normalized foreign key to lookup_cities."
+          },
+          "country_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Id",
+            "description": "Normalized foreign key to lookup_countries."
+          },
+          "geo_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geo Lat",
+            "description": "Geographic latitude coordinate (-90 to 90)."
+          },
+          "geo_lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geo Lng",
+            "description": "Geographic longitude coordinate (-180 to 180)."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "version_id": {
+            "type": "integer",
+            "title": "Version Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "formatted_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formatted Address"
+          },
+          "city_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Name"
+          },
+          "country_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "street1",
+          "id",
+          "company_id",
+          "version_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AddressRead",
+        "description": "Serialized address response."
+      },
+      "AddressUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "address_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Type"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default"
+          },
+          "street1": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street1"
+          },
+          "street2": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street2"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "state_province": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Province"
+          },
+          "city_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Id"
+          },
+          "country_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Id"
+          },
+          "geo_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geo Lat"
+          },
+          "geo_lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geo Lng"
+          }
+        },
+        "type": "object",
+        "title": "AddressUpdate",
+        "description": "Payload for updating an existing address record.",
+        "example": {
+          "is_default": true,
+          "street2": "Building 45, Floor 4 (Expanded)"
+        }
       },
       "AuditLogRead": {
         "properties": {

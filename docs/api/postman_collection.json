@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "aea3f3e9-94bf-4b68-a4c8-2f729788f08e",
+    "_postman_id": "c8ecfd72-74b7-4186-a59b-15b1522b2de4",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -16,6 +16,343 @@
     ]
   },
   "item": [
+    {
+      "name": "Composite Addresses & Geographic Locations",
+      "item": [
+        {
+          "name": "List Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses"
+              ],
+              "variable": []
+            },
+            "description": "## List Addresses\n\nQuery addresses with optional filtering by entity model, entity ID, and address type.\n\n**Endpoint**: `GET {{base_url}}/api/v1/addresses/`  \n**Tags**: `Composite Addresses & Geographic Locations, Composite Addresses & Geographic Locations`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `query` | `string` | No | Filter by target model name (e.g. 'Party') |\n| `res_id` | `query` | `string` | No | Filter by target record ID |\n| `address_type` | `query` | `string` | No | Filter by address type ('billing', 'shipping', etc.) |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses"
+              ],
+              "variable": []
+            },
+            "description": "## Create Address\n\nCreate a new address record and link it polymorphically to an entity.\n\n**Endpoint**: `POST {{base_url}}/api/v1/addresses/`  \n**Tags**: `Composite Addresses & Geographic Locations, Composite Addresses & Geographic Locations`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `string` | No | Any valid string | Target model name (e.g. 'Party', 'Company', 'Warehouse'). |\n| `res_id` | `string` | No | Any valid string | Target entity primary key UUID. |\n| `title` | `string` | No | Any valid string | Address label (e.g. 'Headquarters', 'Warehouse #3'). |\n| `address_type` | `string` | No | Any valid string | Address purpose: 'billing', 'shipping', 'branch', 'warehouse', 'contact', 'headquarters', 'other'. |\n| `is_default` | `boolean` | No | Any valid boolean | Whether this is the primary/default address for this address_type. |\n| `street1` | `string` | **Yes** | Any valid string | Primary street address line. |\n| `street2` | `string` | No | Any valid string | Secondary address line (suite, building, floor). |\n| `postal_code` | `string` | No | Any valid string | Postal code or ZIP. |\n| `state_province` | `string` | No | Any valid string | State, province, or governorate. |\n| `city_id` | `string` | No | Any valid string | Normalized foreign key to lookup_cities. |\n| `country_id` | `string` | No | Any valid string | Normalized foreign key to lookup_countries. |\n| `geo_lat` | `number` | No | Any valid number | Geographic latitude coordinate (-90 to 90). |\n| `geo_lng` | `number` | No | Any valid number | Geographic longitude coordinate (-180 to 180). |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address_type\": \"headquarters\",\n  \"geo_lat\": 30.0131,\n  \"geo_lng\": 31.4289,\n  \"is_default\": true,\n  \"postal_code\": \"11835\",\n  \"res_id\": \"{{active_record_id}}\",\n  \"res_model\": \"{{active_model_name}}\",\n  \"state_province\": \"Cairo\",\n  \"street1\": \"90th Street, Fifth Settlement\",\n  \"street2\": \"Building 45, Floor 3\",\n  \"title\": \"Cairo Headquarters\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_address_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Address by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses/:address_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                ":address_id"
+              ],
+              "variable": [
+                {
+                  "key": "address_id",
+                  "value": "{{active_address_id}}",
+                  "description": "Dynamic path parameter bound to {{active_address_id}}"
+                }
+              ]
+            },
+            "description": "## Get Address by ID\n\nRetrieve details for a specific address record.\n\n**Endpoint**: `GET {{base_url}}/api/v1/addresses/{address_id}`  \n**Tags**: `Composite Addresses & Geographic Locations, Composite Addresses & Geographic Locations`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `address_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses/:address_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                ":address_id"
+              ],
+              "variable": [
+                {
+                  "key": "address_id",
+                  "value": "{{active_address_id}}",
+                  "description": "Dynamic path parameter bound to {{active_address_id}}"
+                }
+              ]
+            },
+            "description": "## Update Address\n\nUpdate address attributes or toggle the default address flag.\n\n**Endpoint**: `PATCH {{base_url}}/api/v1/addresses/{address_id}`  \n**Tags**: `Composite Addresses & Geographic Locations, Composite Addresses & Geographic Locations`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `address_id` | `path` | `string` | **Yes** | - |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `title` | `string` | No | Any valid string | title attribute |\n| `address_type` | `string` | No | Any valid string | address_type attribute |\n| `is_default` | `boolean` | No | Any valid boolean | is_default attribute |\n| `street1` | `string` | No | Any valid string | street1 attribute |\n| `street2` | `string` | No | Any valid string | street2 attribute |\n| `postal_code` | `string` | No | Any valid string | postal_code attribute |\n| `state_province` | `string` | No | Any valid string | state_province attribute |\n| `city_id` | `string` | No | Any valid string | city_id attribute |\n| `country_id` | `string` | No | Any valid string | country_id attribute |\n| `geo_lat` | `number` | No | Any valid number | geo_lat attribute |\n| `geo_lng` | `number` | No | Any valid number | geo_lng attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_default\": true,\n  \"street2\": \"Building 45, Floor 4 (Expanded)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses/:address_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                ":address_id"
+              ],
+              "variable": [
+                {
+                  "key": "address_id",
+                  "value": "{{active_address_id}}",
+                  "description": "Dynamic path parameter bound to {{active_address_id}}"
+                }
+              ]
+            },
+            "description": "## Delete Address\n\nSoft-delete an address record.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/addresses/{address_id}`  \n**Tags**: `Composite Addresses & Geographic Locations, Composite Addresses & Geographic Locations`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `address_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `204` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "List Entity Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses/entity/:res_model/:res_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                "entity",
+                ":res_model",
+                ":res_id"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "res_id",
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
+                }
+              ]
+            },
+            "description": "## List Entity Addresses\n\nRetrieve all addresses linked to a specific entity record.\n\n**Endpoint**: `GET {{base_url}}/api/v1/addresses/entity/{res_model}/{res_id}`  \n**Tags**: `Composite Addresses & Geographic Locations, Composite Addresses & Geographic Locations`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Default Entity Address",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses/entity/:res_model/:res_id/default",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                "entity",
+                ":res_model",
+                ":res_id",
+                "default"
+              ],
+              "variable": [
+                {
+                  "key": "res_model",
+                  "value": "{{active_model_name}}",
+                  "description": "Dynamic path parameter bound to {{active_model_name}}"
+                },
+                {
+                  "key": "res_id",
+                  "value": "{{active_record_id}}",
+                  "description": "Dynamic path parameter bound to {{active_record_id}}"
+                }
+              ]
+            },
+            "description": "## Get Default Entity Address\n\nRetrieve the designated default address for an entity (optionally filtered by address type).\n\n**Endpoint**: `GET {{base_url}}/api/v1/addresses/entity/{res_model}/{res_id}/default`  \n**Tags**: `Composite Addresses & Geographic Locations, Composite Addresses & Geographic Locations`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `res_model` | `path` | `string` | **Yes** | - |\n| `res_id` | `path` | `string` | **Yes** | - |\n| `address_type` | `query` | `string` | No | Address type to look for (e.g. 'billing', 'shipping') |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "Document & Blob Storage Engine",
       "item": [

@@ -1938,11 +1938,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Service: `FiscalCalendarService.assert_period_open(company_id, target_date)` blocking backdated mutations in closed/locked periods (`FiscalPeriodClosedException`), automatic monthly/quarterly period generation, period lock/reopen state transitions, and year closing cascades.
   - REST API: Full CRUD on `/years` and `/periods`, `/years/{id}/close`, `/periods/{id}/lock`, `/periods/{id}/reopen`, and diagnostic date validation (`POST /validate-date`).
   - Automated tests: 4/4 passing in `test_fiscal_calendar.py` (total test suite 105/105 passing in Docker).
-- [ ] **Sub-stage 43.1.4: Composite Addresses & Geographic Locations (`addresses`)**
+- [x] **Sub-stage 43.1.4: Composite Addresses & Geographic Locations (`addresses`)** - COMPLETED
   - Package: `backend/modules/base/addresses/`
-  - Model: `Address` (`address_type: billing|shipping|branch|warehouse|contact`, `res_model`, `res_id`, `street1`, `street2`, `city_id`, `country_id`, `postal_code`, `state_province`, `geo_lat`, `geo_lng`, `is_default`).
-  - Service: Address validation, default address resolution, and polymorphic linking.
-  - REST API: Address CRUD and entity address listing endpoints.
+  - Model: `Address` (`address_type: billing|shipping|branch|warehouse|contact|headquarters|other`, `res_model`, `res_id`, `street1`, `street2`, `city_id`, `country_id`, `postal_code`, `state_province`, `geo_lat`, `geo_lng`, `is_default`, `formatted_address`).
+  - Service: `AddressService` providing polymorphic entity linkage, single-default address guarantee per type/entity, default address resolution, normalized relational city/country loading, and soft deletion.
+  - REST API: Full CRUD, entity address listing (`/entity/{res_model}/{res_id}`), and default address resolution (`/entity/{res_model}/{res_id}/default`).
+  - Automated tests: 3/3 passing in `test_addresses.py` (total test suite 108/108 passing in Docker).
 - [ ] **Sub-stage 43.1.5: Money, Multi-Currency & Historical FX Engine (`fx_engine`)**
   - Package: `backend/modules/base/fx_engine/`
   - Model: `ExchangeRate` (`from_currency_id`, `to_currency_id`, `rate`, `effective_date`, `source: manual|central_bank`).
@@ -2040,11 +2041,11 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Immediate focus: **Sub-stage 43.1.4: Composite Addresses & Geographic Locations (`addresses`)**.
-- Create `backend/modules/base/addresses/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
-- Implement `Address` polymorphic model (`address_type: billing|shipping|branch|warehouse|contact`, `res_model`, `res_id`, `street1`, `street2`, `city_id`, `country_id`, `postal_code`, `state_province`, `geo_lat`, `geo_lng`, `is_default`).
-- Implement `AddressService` with default address resolution and address validation.
-- Add unit tests in `backend/tests/test_addresses.py`.
+Immediate focus: **Sub-stage 43.1.5: Money, Multi-Currency & Historical FX Engine (`fx_engine`)**.
+- Create `backend/modules/base/fx_engine/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `ExchangeRate` model (`from_currency_id`, `to_currency_id`, `rate: Numeric(18,6)`, `effective_date`, `source: manual|central_bank`).
+- Implement `FXService.convert(amount, from_curr, to_curr, date)` and ISO currency rounding rules.
+- Add unit tests in `backend/tests/test_fx_engine.py`.
 
 
 
