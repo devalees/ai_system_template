@@ -337,6 +337,13 @@ The Orchestrator MCP server exposes two typed tools for the Chief of Staff:
 - **Dependency Inversion Guard**: A module cannot be deactivated if any currently active downstream modules declare it as a dependency in their `manifest.py`.
 - **Topological Order**: The Kernel dependency resolver verifies that deactivation follows reverse topological DAG order, preventing orphaned references and dead execution loops.
 
+#### 6.3.4 Hybrid Model Extension Standard (`@extend_model` & Dynamic Schema Evolution)
+To achieve full Odoo `_inherit` architectural parity while maintaining strict SQLAlchemy 2.0 type-safety and PostgreSQL performance, the platform implements a 4-Tier Extension Matrix:
+1. **Tier 1 (`custom_fields` JSONB)**: User-defined, ad-hoc metadata configured dynamically via UI/API without code changes.
+2. **Tier 2 (In-Place Extension `@extend_model`)**: Downstream modules declare `@extend_model("parties.Party")` in `extensions.py`. The Kernel dynamically injects typed SQL columns, relationships, and business methods into target models in topological order, and automatically executes idempotent DDL migrations (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`) during `Kernel.migrate()`.
+3. **Tier 3 (1-to-1 Domain Extension Tables)**: Dedicated relational tables linked via unique 1:1 foreign key (e.g. `party_accounting_profiles`) for heavy multi-attribute domain profiles.
+4. **Tier 4 (First-Class Relational Domain Tables)**: Independent operational business tables (`account_moves`, `stock_quants`, `mrp_boms`) inheriting from `BaseModel`.
+
 ---
 
 ### 6.4 Automated Model-Level Permission Harvester & Bidirectional Group Governance

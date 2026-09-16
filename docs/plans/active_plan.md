@@ -2065,7 +2065,36 @@ The following 13 base modules are already complete, tested, and active in the sy
 
 ### 4. Current Focus
 Stage 43 Composable Enterprise Foundation Base Modules & Sovereign AI Agent Bridge is **100% COMPLETED** across all sub-stages (43.1, 43.2, 43.3, 43.4, and 43.5).
-Full platform baseline: **154 / 154 unit tests passing** (100% pass rate in Docker). Ready for user review and next phase directives.
+Full platform baseline: **154 / 154 unit tests passing** (100% pass rate in Docker). Transitioning to Phase 44.
+
+---
+
+## Phase 44: Hybrid Model Extension Engine (`@extend_model` & Dynamic Schema Evolution)
+
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Active Branch**: `main`
+- **Last Updated**: 2026-09-16 19:45:00+03:00
+
+### 1. Objective & Scope
+Implement the ratified **Hybrid Model Extension Engine** in the Sovereign Micro-Kernel:
+- Provide an Odoo-style `@extend_model` decorator enabling downstream modules to extend existing base models in-place with typed SQL columns, relationships, and methods.
+- Integrate automatic PostgreSQL DDL migration generation into `Kernel.migrate()`, ensuring columns are created cleanly without manual migrations.
+- Support automatic serialization in `BaseModel.to_dict()`, field reflection in Automated Actions introspection, and Field-Level Access Control (FLAC) permission harvesting.
+
+### 2. Task Checklist & Progress
+- [x] **Sub-task 1: Core Extension Registry & `@extend_model` Decorator (`backend/core/extensions.py`)** - COMPLETED (Commit: `041fe50`)
+- [x] **Sub-task 2: Kernel Integration & Automated Migration Hook (`backend/core/kernel.py`)** - COMPLETED (Commit: `041fe50`)
+- [x] **Sub-task 3: Comprehensive Automated Testing & Empirical Verification (`backend/tests/test_model_extensions.py`)** - COMPLETED (Commit: `041fe50`)
+- [x] **Sub-task 4: Documentation Synchronization (`architecture.md` & `index.md`)** - COMPLETED
+
+### 3. Key Decisions & Deviations (Phase 44)
+- *2026-09-16*: Ratified Hybrid Standard: Tier 1 (`custom_fields` JSONB for ad-hoc fields), Tier 2 (`@extend_model` in-place columns for light-to-medium base extensions), Tier 3 (1:1 dedicated domain extension tables for heavy multi-attribute profiles), and Tier 4 (first-class domain tables for transaction suites).
+- *2026-09-16*: Implemented automatic type inference in `ExtensionDefinition._infer_sql_type()` resolving `Mapped[int]`, `Mapped[str]`, `Mapped[float]`, `Mapped[bool]`, `Mapped[UUID]`, and `Mapped[datetime]` annotations without requiring explicit redundant SQL type declarations on `mapped_column()`.
+- *2026-09-16*: Verified 160/160 unit tests passing (100% pass rate in Docker) with zero regressions across the entire platform.
+
+### 4. Current Focus
+Phase 44 is 100% COMPLETED. The Sovereign Micro-Kernel is fully equipped with the Hybrid Model Extension Engine. Ready for user review and next phase directives.
+
 
 
 
