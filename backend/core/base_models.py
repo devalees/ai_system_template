@@ -3,9 +3,9 @@
 import uuid
 from typing import Optional, Dict, Any
 from datetime import datetime, timezone
-from sqlalchemy import DateTime, Boolean, text, event, ForeignKey
+from sqlalchemy import DateTime, Boolean, Integer, text, event, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, declared_attr
 
 from core.context import get_active_company_id, get_current_user_id
 
@@ -13,6 +13,22 @@ from core.context import get_active_company_id, get_current_user_id
 class Base(DeclarativeBase):
     """Declarative Base class for all Sovereign Platform SQLAlchemy models."""
     pass
+
+
+class OptimisticLockingMixin:
+    """Provides automatic version tracking for optimistic concurrency control (OCC)."""
+    version_id: Mapped[int] = mapped_column(
+        Integer,
+        default=1,
+        server_default=text("1"),
+        nullable=False,
+    )
+
+    @declared_attr
+    def __mapper_args__(cls):
+        return {
+            "version_id_col": cls.version_id,
+        }
 
 
 class UUIDPrimaryKeyMixin:
@@ -148,6 +164,7 @@ class BaseModel(
     ExtensibleModelMixin,
     SoftDeleteMixin,
     ArchivableMixin,
+    OptimisticLockingMixin,
 ):
     """Canonical abstract base model for all multi-tenant enterprise business entities."""
 

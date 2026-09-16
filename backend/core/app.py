@@ -10,8 +10,11 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 import redis.asyncio as aioredis
 
+from sqlalchemy.orm.exc import StaleDataError
+
 from core.config import settings
 from core.context import MultiTenancyContextMiddleware
+from core.idempotency import IdempotencyMiddleware
 from core.database import engine
 from core.kernel import kernel
 from core.event_bus import event_bus
@@ -20,6 +23,7 @@ from core.exceptions import (
     platform_exception_handler,
     validation_exception_handler,
     global_exception_handler,
+    stale_data_exception_handler,
 )
 
 
@@ -44,10 +48,13 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # 1. Register Multi-Tenancy & Context Extraction Middleware
+    # 1. Register Idempotency Shield Middleware (inner: runs with active tenant context)
+    app.add_middleware(IdempotencyMiddleware)
+
+    # 2. Register Multi-Tenancy & Context Extraction Middleware (outer: sets ContextVar)
     app.add_middleware(MultiTenancyContextMiddleware)
 
-    # 2. Enable CORS
+    # 3. Enable CORS (outermost: handles pre-flight OPTIONS and CORS headers)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -56,8 +63,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 3. Register Global Standardized Error Envelope Handlers
+    # 4. Register Global Standardized Error Envelope Handlers
     app.add_exception_handler(PlatformException, platform_exception_handler)
+    app.add_exception_handler(StaleDataError, stale_data_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, global_exception_handler)
 

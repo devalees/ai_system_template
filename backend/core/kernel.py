@@ -168,7 +168,22 @@ class Kernel:
     async def migrate(self) -> None:
         """Phase 3: Execute programmatic module schema migrations."""
         logger.info("Executing Kernel Phase 3: Module Schema Migrations (Alembic / DDL)")
-        # In later stages, alembic migrations will execute here in topological order.
+        try:
+            from core.database import engine
+            from sqlalchemy import text
+            async with engine.begin() as conn:
+                await conn.execute(text("""
+                    DO $$ 
+                    DECLARE 
+                        r RECORD;
+                    BEGIN 
+                        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP 
+                            EXECUTE 'ALTER TABLE public.' || quote_ident(r.tablename) || ' ADD COLUMN IF NOT EXISTS version_id INTEGER NOT NULL DEFAULT 1;'; 
+                        END LOOP; 
+                    END $$;
+                """))
+        except Exception as exc:
+            logger.warning(f"Kernel migration warning (version_id verification): {exc}")
 
     async def bootstrap(self, db_session: Optional[Any] = None) -> None:
         """Phase 4: Run module bootstrap hooks and automated capability harvesting."""

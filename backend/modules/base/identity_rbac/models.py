@@ -14,6 +14,7 @@ from core.base_models import (
     ExtensibleModelMixin,
     SoftDeleteMixin,
     ArchivableMixin,
+    OptimisticLockingMixin,
     BaseModel,
 )
 
@@ -26,6 +27,7 @@ class Company(
     ExtensibleModelMixin,
     SoftDeleteMixin,
     ArchivableMixin,
+    OptimisticLockingMixin,
 ):
     """Tenant company/organization entity governing workspace boundaries and registration policy."""
     __tablename__ = "companies"

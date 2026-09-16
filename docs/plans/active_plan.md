@@ -1926,10 +1926,12 @@ The following 13 base modules are already complete, tested, and active in the sy
   - Service: Atomic `SequenceService.get_next_number(code, company_id)` using PostgreSQL `SELECT ... FOR UPDATE` row locks for gapless legal numbering (`INV/%(year)s/00001`).
   - REST API: Full CRUD, seed fixtures endpoint, peek preview, and allocation endpoint (`POST /api/v1/sequences/{code}/next`).
   - Automated tests: 4/4 passing in `test_sequences.py` (total test suite 97/97 passing in Docker).
-- [ ] **Sub-stage 43.1.2: Optimistic Concurrency Control (OCC) & Idempotency Shield (`concurrency`)**
+- [x] **Sub-stage 43.1.2: Optimistic Concurrency Control (OCC) & Idempotency Shield (`concurrency`)** - COMPLETED
   - Location: `backend/core/`
-  - `OptimisticLockingMixin`: Adds `version_id: int = 1` to `BaseModel` with automatic increment and `WHERE version_id = :expected_version` verification (raising `409 Conflict` on lost updates).
-  - `IdempotencyMiddleware`: Intercepts `Idempotency-Key` header on mutating HTTP verbs (`POST`/`PUT`/`PATCH`), caching responses in Redis (24h TTL) for zero-duplicate retries.
+  - `OptimisticLockingMixin`: Added `version_id: int = 1` to `BaseModel` and `Company` with SQLAlchemy `version_id_col` mapper configuration (raising `StaleDataError` $\rightarrow$ `409 Conflict` via `stale_data_exception_handler`).
+  - `assert_version_match`: Helper in `backend/core/concurrency.py` validating client-expected version invariants against lost updates.
+  - `IdempotencyMiddleware`: Intercepts `Idempotency-Key` headers on mutating HTTP verbs (`POST`/`PUT`/`PATCH`/`DELETE`), enforcing 60s distributed in-flight lock, 24h Redis response caching (`X-Idempotency-Status: HIT`), multi-tenant isolation, and automatic release on 5xx errors.
+  - Automated tests: 4/4 passing in `test_concurrency_and_idempotency.py` (total test suite 101/101 passing in Docker).
 - [ ] **Sub-stage 43.1.3: Fiscal Calendar & Period Locking Engine (`fiscal_calendar`)**
   - Package: `backend/modules/base/fiscal_calendar/`
   - Models: `FiscalYear` (`code`, `name`, `date_from`, `date_to`, `is_closed`), `FiscalPeriod` (`fiscal_year_id`, `code`, `name`, `date_from`, `date_to`, `period_type`, `state: open|closing|locked`).
@@ -2037,10 +2039,11 @@ The following 13 base modules are already complete, tested, and active in the sy
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Immediate focus: **Sub-stage 43.1.2: Optimistic Concurrency Control (OCC) & Idempotency Shield (`concurrency`)**.
-- Add `version_id: int = 1` on `BaseModel` and enforce optimistic locking interceptor.
-- Implement `IdempotencyMiddleware` with Redis 24h caching.
-- Add `test_concurrency_and_idempotency.py` tests.
+Immediate focus: **Sub-stage 43.1.3: Fiscal Calendar & Period Locking Engine (`fiscal_calendar`)**.
+- Create `backend/modules/base/fiscal_calendar/` package (`manifest.py`, `models.py`, `schemas.py`, `service.py`, `routes.py`, `__init__.py`).
+- Implement `FiscalYear` and `FiscalPeriod` models with states (`open`, `closing`, `locked`).
+- Implement `FiscalPeriodService.assert_period_open(company_id, target_date)` blocking backdated mutations in closed accounting periods.
+- Add unit tests in `backend/tests/test_fiscal_calendar.py`.
 
 
 

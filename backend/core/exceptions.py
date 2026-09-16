@@ -124,6 +124,35 @@ class MissingDependencyError(KernelBootException):
         )
 
 
+class ConcurrencyConflictException(PlatformException):
+    """Raised when an optimistic concurrency conflict (lost update) is detected."""
+
+    def __init__(
+        self,
+        resource: str = "",
+        expected_version: Optional[int] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        base_details = {"resource": resource, "expected_version": expected_version}
+        if details:
+            base_details.update(details)
+        super().__init__(
+            code="CONCURRENCY_CONFLICT",
+            message="The record was modified or deleted by another concurrent transaction.",
+            resolution_hint="Reload the latest version of the record, reapply your changes, and retry.",
+            details=base_details,
+            status_code=status.HTTP_409_CONFLICT,
+        )
+
+
+async def stale_data_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """FastAPI exception handler converting SQLAlchemy StaleDataError into 409 Conflict envelope."""
+    conflict = ConcurrencyConflictException(
+        details={"error": "Database row version mismatch; record was modified concurrently."}
+    )
+    return JSONResponse(status_code=conflict.status_code, content=conflict.to_envelope())
+
+
 async def platform_exception_handler(request: Request, exc: PlatformException) -> JSONResponse:
     """FastAPI exception handler for PlatformException hierarchy."""
     return JSONResponse(status_code=exc.status_code, content=exc.to_envelope())
