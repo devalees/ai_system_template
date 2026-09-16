@@ -1919,121 +1919,123 @@ The following 13 base modules are already complete, tested, and active in the sy
 
 ### 2. Task Checklist & Granular Stages
 
-#### **Stage 43.1: Transactional Infrastructure & Invariants (P1 Foundations)**
-- [ ] **Sub-stage 43.1.1: Universal Sequence & Legal Auto-Numbering Engine (`sequences`)**
+#### **Stage 43.1: Sovereign AI Agent Bridge & FastMCP Dynamic Tool Reflection (IN_PROGRESS)**
+- [ ] **Sub-stage 43.1.1: `invoke_ai_agent` TCA Action Executor (`automated_actions`)**
+  - Package: `backend/modules/base/automated_actions/engine/handlers/ai_handler.py`
+  - Asynchronous Celery task dispatching to Hermes Gateway (`POST http://hermes-template-agent:8643/v1/chat/completions`) with dynamic prompt interpolation (e.g. `{record.number}`, `{record.created_at}`).
+  - Pydantic configuration schema `InvokeAIAgentConfig` registered in `ActionRegistry`.
+- [ ] **Sub-stage 43.1.2: FastMCP Dynamic Tool Reflection Server (`backend/core/mcp_bridge/`)**
+  - Dynamic tool generator reflecting all active modules where `ai_enabled == True` in `manifest.py`.
+  - Exposes typed FastMCP tools for Hermes on Day 1:
+    - `query_records(model, filters)` (powered by Universal Query Engine)
+    - `generate_report(report_code, ...)` (Headless Reporting Engine)
+    - `post_chatter_message(res_model, res_id, body)` (Polymorphic Chatter)
+    - `execute_action(action_type, payload)` (TCA Engine)
+- [ ] **Sub-stage 43.1.3: Chatter Feedback Loop & Distributed Langfuse Tracing**
+  - Structured response parser publishing AI audit findings, summaries, and approvals directly into the target record's Chatter thread `(res_model, res_id)`.
+  - Distributed trace header propagation to Langfuse observability container (`:3100`).
+- [ ] **Sub-stage 43.1.4: Empirical End-to-End Verification & Automated Pytest Suite**
+  - End-to-end integration test: Trigger record mutation $\rightarrow$ TCA event $\rightarrow$ Celery worker $\rightarrow$ Hermes Gateway inference $\rightarrow$ Chatter comment verified $\rightarrow$ Langfuse trace verified.
+
+#### **Stage 43.2: Transactional Infrastructure & Invariants (P1 Foundations)**
+- [ ] **Sub-stage 43.2.1: Universal Sequence & Legal Auto-Numbering Engine (`sequences`)**
   - Package: `backend/modules/base/sequences/`
   - Model: `Sequence` (`code`, `name`, `prefix`, `suffix`, `padding`, `current_number`, `step`, `reset_period: never|yearly|monthly`, `last_reset_date`).
   - Service: Atomic `SequenceService.get_next_number(code, company_id)` using PostgreSQL `SELECT ... FOR UPDATE` row locks for gapless legal numbering (`INV/%(year)s/00001`).
   - REST API: Full CRUD and test allocation endpoint (`POST /api/v1/sequences/{code}/next`).
-- [ ] **Sub-stage 43.1.2: Optimistic Concurrency Control (OCC) & Idempotency Shield (`concurrency`)**
+- [ ] **Sub-stage 43.2.2: Optimistic Concurrency Control (OCC) & Idempotency Shield (`concurrency`)**
   - Location: `backend/core/`
   - `OptimisticLockingMixin`: Adds `version_id: int = 1` to `BaseModel` with automatic increment and `WHERE version_id = :expected_version` verification (raising `409 Conflict` on lost updates).
   - `IdempotencyMiddleware`: Intercepts `Idempotency-Key` header on mutating HTTP verbs (`POST`/`PUT`/`PATCH`), caching responses in Redis (24h TTL) for zero-duplicate retries.
-- [ ] **Sub-stage 43.1.3: Fiscal Calendar & Period Locking Engine (`fiscal_calendar`)**
+- [ ] **Sub-stage 43.2.3: Fiscal Calendar & Period Locking Engine (`fiscal_calendar`)**
   - Package: `backend/modules/base/fiscal_calendar/`
   - Models: `FiscalYear` (`code`, `name`, `date_from`, `date_to`, `is_closed`), `FiscalPeriod` (`fiscal_year_id`, `code`, `name`, `date_from`, `date_to`, `period_type`, `state: open|closing|locked`).
   - Service: `FiscalPeriodService.assert_period_open(company_id, target_date)` blocking backdated mutations in closed accounting periods (`400 Bad Request`).
   - REST API: Period management, year closing, and active period query endpoints.
-- [ ] **Sub-stage 43.1.4: Composite Addresses & Geographic Locations (`addresses`)**
+- [ ] **Sub-stage 43.2.4: Composite Addresses & Geographic Locations (`addresses`)**
   - Package: `backend/modules/base/addresses/`
   - Model: `Address` (`address_type: billing|shipping|branch|warehouse|contact`, `res_model`, `res_id`, `street1`, `street2`, `city_id`, `country_id`, `postal_code`, `state_province`, `geo_lat`, `geo_lng`, `is_default`).
   - Service: Address validation, default address resolution, and polymorphic linking.
   - REST API: Address CRUD and entity address listing endpoints.
-- [ ] **Sub-stage 43.1.5: Money, Multi-Currency & Historical FX Engine (`fx_engine`)**
+- [ ] **Sub-stage 43.2.5: Money, Multi-Currency & Historical FX Engine (`fx_engine`)**
   - Package: `backend/modules/base/fx_engine/`
   - Model: `ExchangeRate` (`from_currency_id`, `to_currency_id`, `rate`, `effective_date`, `source: manual|central_bank`).
   - Service: `CurrencyService.convert(amount, from_curr, to_curr, date)` and currency rounding rules respecting ISO decimal precision.
   - REST API: Rates CRUD, live conversion endpoint, and daily rate synchronization job.
 
-#### **Stage 43.2: Universal Parties, Workflows & Approvals (P1 Core)**
-- [ ] **Sub-stage 43.2.1: Universal Party & Contact Engine (`parties`)**
+#### **Stage 43.3: Universal Parties, Workflows & Approvals (P1 Core)**
+- [ ] **Sub-stage 43.3.1: Universal Party & Contact Engine (`parties`)**
   - Package: `backend/modules/base/parties/`
   - Models: `Party` (`name`, `legal_name`, `is_company: bool`, `parent_id` self-referential FK for corporate hierarchies, `is_customer: bool`, `is_vendor: bool`, `tax_id`, `commercial_reg_no`, `currency_id`, `credit_limit`), `PartyContact` (`party_id`, `name`, `job_title`, `email`, `phone`, `is_primary`).
   - Inter-Company Linkage: Connects internal `Company` records to corresponding `Partner` identities for automated inter-company transactions.
   - REST API: Unified Partner CRUD, hierarchy tree endpoint, customer/vendor filtered views, and child contacts management.
-- [ ] **Sub-stage 43.2.2: Declarative Workflow State Machine & Record Freeze (`workflows`)**
+- [ ] **Sub-stage 43.3.2: Declarative Workflow State Machine & Record Freeze (`workflows`)**
   - Package: `backend/modules/base/workflows/`
   - Models: `WorkflowDefinition` (`res_model`, `initial_state`, `states`), `WorkflowTransition` (`trigger_name`, `from_state`, `to_state`, `required_permission`, `guard_condition`, `freeze_record: bool`).
   - Engine: `WorkflowEngine.transition()` executing AST condition guards, verifying RBAC permissions, emitting TCA `on_state_change`, and setting `_is_locked = True` for frozen records.
   - `RecordLockInterceptor`: SQLAlchemy event interceptor rejecting `UPDATE` or `DELETE` on frozen/posted records at the database layer.
   - REST API: Workflow definition CRUD, available transitions query, and state execution endpoint.
-- [ ] **Sub-stage 43.2.3: Multi-Level Governance & Approval Engine (`approvals`)**
+- [ ] **Sub-stage 43.3.3: Multi-Level Governance & Approval Engine (`approvals`)**
   - Package: `backend/modules/base/approvals/`
   - Models: `ApprovalRule` (`res_model`, `condition` AST, `tier`, `approver_group_id`, `approver_user_id`), `ApprovalRequest` (`rule_id`, `res_model`, `res_id`, `state: pending|approved|rejected|cancelled`), `ApprovalAction` (`request_id`, `actor_id`, `action`, `comments`).
   - Engine: Integrates with `workflows` to gate state transitions on required approvals and dispatches alerts via `notification_engine`.
   - REST API: Approval rules CRUD, pending request inbox, and approve/reject decision endpoints.
-- [ ] **Sub-stage 43.2.4: Company-Wide Calendar & Recurring Events (`calendar`)**
+- [ ] **Sub-stage 43.3.4: Company-Wide Calendar & Recurring Events (`calendar`)**
   - Package: `backend/modules/base/calendar/`
   - Models: `CalendarEvent` (`title`, `description`, `start_time`, `end_time`, `is_all_day`, `recurrence_rule` RRULE, `res_model`, `res_id`), `EventAttendee` (`event_id`, `user_id`, `party_contact_id`, `status: accepted|declined|tentative`).
   - Engine: RFC 5545 iCalendar generation/parsing, recurrence calculation, and attendee invite notifications.
   - REST API: Event CRUD, date range query, and attendee RSVP endpoints.
 
-#### **Stage 43.3: Commercial Rules & Operational Engines (P2)**
-- [ ] **Sub-stage 43.3.1: UOM Conversion Ratio Matrix (`uom`)**
+#### **Stage 43.4: Commercial Rules & Operational Engines (P2)**
+- [ ] **Sub-stage 43.4.1: UOM Conversion Ratio Matrix (`uom`)**
   - Package: `backend/modules/base/uom/`
   - Models: `UOMCategory` (`name`: Weight, Volume, Length, Count, Time), extends `UnitOfMeasure` with `category_id`, `uom_type: reference|bigger|smaller`, and `ratio: float`.
   - Service: `UOMService.convert(quantity, from_uom, to_uom)` with category matching and ratio math.
   - REST API: UOM category CRUD, conversion matrix management, and unit conversion endpoint.
-- [ ] **Sub-stage 43.3.2: Pricing Engine & Price Lists (`pricing`)**
+- [ ] **Sub-stage 43.4.2: Pricing Engine & Price Lists (`pricing`)**
   - Package: `backend/modules/base/pricing/`
   - Models: `PriceList` (`name`, `currency_id`, `is_active`), `PriceListItem` (`price_list_id`, `res_model`, `res_id`, `min_quantity`, `pricing_mode: fixed|percentage_discount|formula`, `fixed_price`, `discount_percentage`, `valid_from`, `valid_to`).
   - Service: `PricingService.get_price(product_id, price_list_id, quantity, date)` calculating tiered and promotional prices.
   - REST API: Price list CRUD, item rules management, and price evaluation endpoint.
-- [ ] **Sub-stage 43.3.3: Tax Engine & Fiscal Positions (`taxes`)**
+- [ ] **Sub-stage 43.4.3: Tax Engine & Fiscal Positions (`taxes`)**
   - Package: `backend/modules/base/taxes/`
   - Models: `TaxFiscalPosition` (`name`, `company_id`), `TaxFiscalPositionRule` (`position_id`, `source_tax_id`, `dest_tax_id`).
   - Service: `TaxService.compute_taxes(line_items, fiscal_position_id)` calculating multi-line inclusive/exclusive taxes, subtotal, and tax breakdowns based on party jurisdiction.
   - REST API: Fiscal position CRUD, rule mapping, and tax calculation endpoint.
-- [ ] **Sub-stage 43.3.4: Payment Terms, Methods & Transactions (`payments`)**
+- [ ] **Sub-stage 43.4.4: Payment Terms, Methods & Transactions (`payments`)**
   - Package: `backend/modules/base/payments/`
   - Models: `PaymentMethod` (`code`, `name`, `is_active`), `PaymentTerms` (`code`, `name`, `description`), `PaymentTermsLine` (`terms_id`, `value_type`, `value`, `days`), `PaymentTransaction` (`company_id`, `res_model`, `res_id`, `payment_method_id`, `amount`, `currency_id`, `payment_date`, `status: draft|cleared|reconciled`).
   - Service: `PaymentTermsService.compute_due_dates(amount, terms_id, invoice_date)` generating cash flow installment schedules.
   - REST API: Terms/methods CRUD and installment calculation endpoint.
-- [ ] **Sub-stage 43.3.5: Resource Scheduling & Capacity Allocation (`resources`)**
+- [ ] **Sub-stage 43.4.5: Resource Scheduling & Capacity Allocation (`resources`)**
   - Package: `backend/modules/base/resources/`
   - Models: `Resource` (`name`, `resource_type: human|equipment|vehicle|space`, `capacity_per_day`, `user_id`), `ResourceAllocation` (`resource_id`, `res_model`, `res_id`, `start_time`, `end_time`, `hours_allocated`, `status`).
   - Service: Collision and double-booking detection against calendar availability.
   - REST API: Resource CRUD, allocation schedule, and collision check endpoint.
 
-#### **Stage 43.4: Execution, Commitments & Operations (P3)**
-- [ ] **Sub-stage 43.4.1: Universal Work Items & Tasks (`work_items`)**
+#### **Stage 43.5: Execution, Commitments & Operations (P3)**
+- [ ] **Sub-stage 43.5.1: Universal Work Items & Tasks (`work_items`)**
   - Package: `backend/modules/base/work_items/`
   - Models: `WorkItem` (`title`, `description`, `res_model`, `res_id`, `parent_id`, `priority`, `stage_id`, `assigned_to_id`, `estimated_hours`, `spent_hours`, `due_date`, `is_closed`), `WorkItemDependency` (`predecessor_id`, `successor_id`, `dependency_type`).
   - REST API: Task CRUD, sub-task hierarchy tree, and Kanban stage update endpoints.
-- [ ] **Sub-stage 43.4.2: Contracts, Agreements & Subscriptions (`contracts`)**
+- [ ] **Sub-stage 43.5.2: Contracts, Agreements & Subscriptions (`contracts`)**
   - Package: `backend/modules/base/contracts/`
   - Models: `Contract` (`sequence_number`, `title`, `party_id`, `contract_type: customer|vendor|employment|lease`, `start_date`, `end_date`, `billing_frequency: one_off|monthly|quarterly|annual`, `amount`, `currency_id`, `state`).
   - Engine: Recurring renewal terms, auto-renewal notices, and document attachments.
   - REST API: Contract CRUD, renewal/expiry tracking, and state transition endpoints.
 
-#### **Stage 43.5: Sovereign AI Agent Bridge & FastMCP Tool Reflection (Stage 7 Integration)**
-- [ ] **Sub-stage 43.5.1: `invoke_ai_agent` TCA Action Executor**
-  - Package: `backend/modules/base/automated_actions/engine/handlers/ai_handler.py`
-  - Asynchronous Celery dispatch to Hermes Gateway (`POST http://hermes-template-agent:8643/v1/chat/completions`) with dynamic prompt interpolation.
-- [ ] **Sub-stage 43.5.2: FastMCP Dynamic Tool Reflection Server**
-  - Package: `backend/core/mcp_bridge/` & `agent_service/mcp/`
-  - Introspects all `ai_enabled == True` modules and dynamically reflects typed tools:
-    - `query_records(model, filters)`
-    - `check_fiscal_period(date)`
-    - `get_party_profile(party_id)`
-    - `calculate_pricing(price_list_id, items)`
-    - `submit_approval_request(model, record_id, reason)`
-    - `transition_workflow_state(model, record_id, action)`
-    - `check_resource_availability(resource_id, start, end)`
-- [ ] **Sub-stage 43.5.3: Chatter Feedback Loop & Distributed Langfuse Tracing**
-  - Agent response parser publishing structured audit verdicts and findings directly into the record's Chatter thread.
-  - Distributed trace propagation to Langfuse on port `:3100`.
-
 ---
 
 ### 3. Key Decisions & Architecture Invariants (Phase 43)
 - *2026-09-16*: Formally ratified Composable Domain Kernel strategy. Separated all 15 capabilities into distinct, decoupled modular packages in `backend/modules/base/`.
+- *2026-09-16*: Promoted Sovereign AI Agent Bridge & FastMCP Tool Reflection to **Stage 43.1** per user directive to enable immediate AI agency across the existing 13 base modules, followed by continuous tool reflection as each new module is added.
 - *2026-09-16*: Explicitly excluded existing 13 operational base modules from new scope, building upon them without regression.
-- *2026-09-16*: Enforced strict dependency DAG: Stage 43.1 (Infrastructure/Invariants) $\rightarrow$ Stage 43.2 (Parties & Workflows) $\rightarrow$ Stage 43.3 (Commercial Rules) $\rightarrow$ Stage 43.4 (Execution & Contracts) $\rightarrow$ Stage 43.5 (AI Agent Bridge).
+- *2026-09-16*: Enforced strict dependency DAG: Stage 43.1 (AI Bridge) $\rightarrow$ Stage 43.2 (Infrastructure/Invariants) $\rightarrow$ Stage 43.3 (Parties & Workflows) $\rightarrow$ Stage 43.4 (Commercial Rules) $\rightarrow$ Stage 43.5 (Execution & Contracts).
 - *2026-09-16*: Standardized on the Unified `Partner` Model with Child Contacts (OASIS/Odoo standard) to solve Customer/Vendor dual identities, AR/AP netting, and inter-company transactions.
 
 ### 4. Current Focus
-Phase 43 initialized. Immediate focus: **Sub-stage 43.1.1 (Universal Sequence & Legal Auto-Numbering Engine - `sequences`)**.
+Phase 43 initialized. Immediate focus: **Sub-stage 43.1.1: `invoke_ai_agent` TCA Action Executor & Hermes Gateway Bridge**.
+
 
 
 
