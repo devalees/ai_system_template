@@ -2522,19 +2522,19 @@ Phase 51 frontend wireframe established. Transitioned temporarily to Phase 52 in
 Implement the **Hierarchical Navigation Menu Engine** in `backend/modules/base/ui_schema/` to eliminate hardcoded frontend navigation and provide a 100% metadata-driven, permission-pruned, and multi-tenant menu hierarchy (mirroring Odoo's `ir.ui.menu` and SAP Fiori Launchpad).
 
 ### 2. Task Checklist & Progress
-- [x] **Stage 52.1: Model & Schema Extensions (`backend/modules/base/ui_schema/`)** - COMPLETED
+- [x] **Stage 52.1: Model & Schema Extensions (`backend/modules/base/ui_schema/`)** - COMPLETED (Commit: `2e2d640`)
   - Added `MenuItem` model mapped to `ui_menus` table (`id`, `name`, `code`, `parent_id`, `sequence`, `icon`, `module_name`, `res_model`, `action_type`, `default_view`, `route_path`, `domain_filter`, `target_role_ids`, `company_id`, `is_system`, `is_active`).
   - Added Pydantic schemas: `MenuItemBase`, `MenuItemCreate`, `MenuItemUpdate`, `MenuItemRead`, and recursive `MenuItemNode` (`children: List['MenuItemNode']`).
-- [x] **Stage 52.2: Business Service & Recursive Tree Assembly (`service.py`)** - COMPLETED
+- [x] **Stage 52.2: Business Service & Recursive Tree Assembly (`service.py`)** - COMPLETED (Commit: `2e2d640`)
   - Implemented `UISchemaService.get_user_menu_tree(user, db, company_id)` with multi-tenant company overrides, target role gating, administrative module gating, and model read permission pruning.
   - Implemented Studio menu CRUD methods: `create_menu_item`, `update_menu_item`, `delete_menu_item`.
-- [x] **Stage 52.3: Built-In Enterprise System Fixtures (`fixtures.py`)** - COMPLETED
+- [x] **Stage 52.3: Built-In Enterprise System Fixtures (`fixtures.py`)** - COMPLETED (Commit: `2e2d640`)
   - Seeded complete 3-tier menu trees for Sales (`sales.root`), Accounting (`accounting.root`), Purchases (`purchases.root`), and Settings (`settings.root`) with 38 initial menu entities.
   - Wired `seed_system_default_menus` into `Kernel.bootstrap()` and `Kernel.migrate()`.
-- [x] **Stage 52.4: REST API Endpoints (`routes.py`)** - COMPLETED
+- [x] **Stage 52.4: REST API Endpoints (`routes.py`)** - COMPLETED (Commit: `2e2d640`)
   - Implemented `GET /api/v1/ui/menus` returning user-specific resolved menu tree.
   - Implemented Studio menu management endpoints (`POST`, `PUT`, `DELETE /api/v1/ui/menus/*`).
-- [x] **Stage 52.5: Database Migration & Automated Testing** - COMPLETED
+- [x] **Stage 52.5: Database Migration & Automated Testing** - COMPLETED (Commit: `2e2d640`)
   - Authored `tests/test_ui_menus.py` validating tree assembly, domain filters, RBAC pruning, tenant overrides, and REST API endpoints (5/5 tests passing).
   - Certified full UI schema and menu regression suite: 13/13 tests passing in Docker container.
   - Synchronized OpenAPI (`docs/api/openapi.json`) and Postman (`docs/api/postman_collection.json`).
