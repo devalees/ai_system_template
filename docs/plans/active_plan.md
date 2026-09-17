@@ -2435,29 +2435,34 @@ Construct the **Sovereign Frontend Platform** from the ground up as a zero-bloat
   - Verified live development server startup (`http://localhost:5173`) and TypeScript compilation (`tsc --noEmit`) with 0 errors.
 
 #### Milestone 51.2: The Invariant Master Shell (Wireframe-First & Theming)
-- [/] **Stage 51.2.1: Master Shell Structural Wireframe (Lines & Labels Agreement)** - IN PROGRESS
+- [x] **Stage 51.2.1: Master Shell Structural Wireframe (Lines & Labels Agreement)** - COMPLETED (Commit: `ca1ae10`, `b841ccf`)
   - Built pure HTML bordered skeleton (`border: 1.5px dashed`) in `MasterShellWireframe.tsx` for the outer application shell.
   - Explicitly demarcated and labeled structural zones:
     - Top 48px Header: `[1.1 App Launcher]`, `[1.2 Active Company: Acme Corp]`, `[1.3 Cmd+K Universal Command Bar]`, `[1.4 Notifications]`, `[1.5 User Profile]`.
     - Contextual Sub-Navigation: Horizontal module menu bar (`Orders`, `Quotations`, `Customers`, `To Invoice`, `Products`, `Reporting`, `Configuration`) dynamically switching between Sales, Accounting, Purchases, Settings.
     - Control Bar: `[3.1 Breadcrumbs]`, `[3.2 Primary Actions: + New, Confirm, Print]`, `[3.3 Universal Filter Hub]`, `[3.4 View Switcher: List Table, Form Sheet, Financial Report, Settings]`.
     - Polymorphic Viewport Canvases: Interactive switcher displaying wireframes for Canvas 1 (Data Grid), Canvas 2 (Document Sheet + Fluid Splitter + Docked Chatter), Canvas 3 (Financial Ledgers), and Canvas 4 (Typed Settings).
-  - Deployed live on `http://localhost:5173` and verified with browser subagent. Awaiting User Visual Sign-Off.
-- [ ] **Stage 51.2.2: Master Shell Styling, Theming & Interactive Navigation** - PENDING
-  - Apply pure Vanilla CSS design tokens supporting `sovereign-dark` and `enterprise-light` dynamically via `:root` attributes.
-  * Implement interactive App Launcher modal drawer switching between Sales, Accounting, Purchases, and Settings.
-  * Implement Company Switcher dropdown displaying active company badge.
-  * Implement instant Theme Switcher toggling CSS variables live with zero reload.
+  - Integrated dynamic backend menu engine (`GET /api/v1/ui/menus` via `menuApi.ts`):
+    - App Launcher popover dynamically populated with Root Apps (`Sales`, `Purchases`, `Accounting`, `Settings`).
+    - Sub-Navigation dynamically populated with categories and actions.
+    - 1-Click leaf action selection automatically updates breadcrumbs, active res_model, search filter tags, and viewport canvas.
+  - Deployed live on `http://localhost:5173`, signed off and verified.
+- [x] **Stage 51.2.2: Master Shell Styling, Theming & Interactive Navigation** - COMPLETED
+  - Applied pure Vanilla CSS design tokens supporting `sovereign-dark`, `enterprise-light`, `high-density-erp`, and `nordic-minimal` via `:root` attributes matching backend `UIThemeSettings`.
+  - Implemented interactive `AppLauncherModal` with sequence ordering, category counts, and direct module switching.
+  - Implemented `CompanySwitcherModal` supporting multi-tenant active company switching and aggregated report inclusion checkboxes.
+  - Implemented `CommandPalette` universal `Cmd+K` fuzzy searching across applications, categories, and actions.
+  - Implemented dual-mode toggle between polished high-fidelity view and wireframe skeleton mode (`wf-box`).
 
 #### Milestone 51.3: Kernel Core Services & Multi-Company Protocol
-- [ ] **Stage 51.3.1: Native Typed Fetch API Client (`src/kernel/api/`)** - PENDING
-  - Implement zero-dependency typed API client wrapping `window.fetch`.
-  - Automate `Authorization: Bearer <jwt>` injection.
-  - Enforce dual-header multi-company routing: `X-Company-ID` for state-changing mutations (`POST`, `PUT`, `DELETE`), `X-Company-IDs` for aggregated read queries (`GET`).
-  - Implement 401 interception with automated silent token refresh before session expiry.
-- [ ] **Stage 51.3.2: Authentication & 2FA State Machine (`src/kernel/auth/`)** - PENDING
-  - Build authentication state management using native React Context + `useSyncExternalStore`.
-  - Implement Login screen and intermediate 2FA challenge modal handling TOTP codes and emergency recovery codes.
+- [x] **Stage 51.3.1: Native Typed Fetch API Client (`src/kernel/api/`)** - COMPLETED
+  - Implemented zero-dependency typed API client (`client.ts`) wrapping `window.fetch`.
+  - Automated `Authorization: Bearer <jwt>` injection from local storage.
+  - Enforced dual-header multi-company routing: `X-Company-ID` for state-changing mutations (`POST`, `PUT`, `DELETE`), `X-Company-IDs` for aggregated read queries (`GET`).
+  - Implemented 401 interception with automated silent token refresh and session expiration events.
+- [x] **Stage 51.3.2: Authentication & 2FA State Machine (`src/kernel/auth/`)** - COMPLETED
+  - Built typed authentication state machine (`AuthContext.tsx`, `types.ts`) managing tokens, login, and 2FA challenge modal flows.
+  - Integrated `UIThemeProvider` and `CompanyProvider` into root application context (`App.tsx`).
 
 #### Milestone 51.4: Canvas 1 (Explorer Canvas — Data Grid & Kanban)
 - [ ] **Stage 51.4.1: Explorer Canvas Wireframe Skeleton (Lines & Labels Agreement)** - PENDING
@@ -2508,7 +2513,7 @@ Construct the **Sovereign Frontend Platform** from the ground up as a zero-bloat
 - *2026-09-17*: Real-Time Synchronization: `docs/plans/active_plan.md` and `docs/ai_wiki/frontend_architecture.md` must be updated continuously after each verified sub-task.
 
 ### 4. Current Focus
-Phase 51 frontend wireframe established. Transitioned temporarily to Phase 52 in backend to implement the `MenuItem` hierarchical navigation engine before completing frontend menu data binding.
+Milestone 51.2 (Master Shell Styling, Theming & Interactive Navigation) and Milestone 51.3 (Kernel Core Services & Multi-Company Protocol) completed and empirically verified in browser. Next focus: Milestone 51.4 (Explorer Canvas — Data Grid & Kanban) following the Wireframe-First protocol.
 
 ---
 

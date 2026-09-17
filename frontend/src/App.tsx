@@ -1,8 +1,19 @@
 import React from 'react';
-import { MasterShellWireframe } from './ui/layout/MasterShellWireframe';
+import { UIThemeProvider } from './kernel/theme/ThemeContext';
+import { CompanyProvider } from './kernel/company/CompanyContext';
+import { AuthProvider } from './kernel/auth/AuthContext';
+import { MasterShell } from './ui/layout/MasterShell';
 
 export const App: React.FC = () => {
-  return <MasterShellWireframe />;
+  return (
+    <UIThemeProvider>
+      <CompanyProvider>
+        <AuthProvider>
+          <MasterShell />
+        </AuthProvider>
+      </CompanyProvider>
+    </UIThemeProvider>
+  );
 };
 
 export default App;
