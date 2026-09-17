@@ -2,11 +2,11 @@
 
 import uuid
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from modules.base.ui_schema.models import ViewDefinition
+from modules.base.ui_schema.models import ViewDefinition, MenuItem
 from modules.base.ui_schema.schemas import (
     FieldWidgetSchema,
     FormRowSchema,
@@ -771,3 +771,474 @@ async def seed_system_default_views(db: AsyncSession) -> int:
         logger.info(f"Seeded {seeded_count} system default view definitions into ui_views.")
 
     return seeded_count
+
+
+# ============================================================================
+# Default System Menu Hierarchy
+# ============================================================================
+
+DEFAULT_SYSTEM_MENUS: List[Dict[str, Any]] = [
+    # ------------------------------------------------------------------------
+    # 1. Sales
+    # ------------------------------------------------------------------------
+    {
+        "code": "sales.root",
+        "name": "Sales",
+        "module_name": "sales",
+        "icon": "trending-up",
+        "sequence": 10,
+        "action_type": "folder",
+        "route_path": "/sales",
+        "children": [
+            {
+                "code": "sales.orders_cat",
+                "name": "Orders",
+                "module_name": "sales",
+                "sequence": 10,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "sales.quotations",
+                        "name": "Quotations",
+                        "module_name": "sales",
+                        "sequence": 10,
+                        "action_type": "window",
+                        "res_model": "SaleOrder",
+                        "default_view": "list",
+                        "domain_filter": {"state": "draft"},
+                        "route_path": "/sales/quotations",
+                    },
+                    {
+                        "code": "sales.orders",
+                        "name": "Orders",
+                        "module_name": "sales",
+                        "sequence": 20,
+                        "action_type": "window",
+                        "res_model": "SaleOrder",
+                        "default_view": "list",
+                        "domain_filter": {"state": "sale"},
+                        "route_path": "/sales/orders",
+                    },
+                    {
+                        "code": "sales.customers",
+                        "name": "Customers",
+                        "module_name": "sales",
+                        "sequence": 30,
+                        "action_type": "window",
+                        "res_model": "Party",
+                        "default_view": "list",
+                        "domain_filter": {"is_customer": True},
+                        "route_path": "/sales/customers",
+                    },
+                ],
+            },
+            {
+                "code": "sales.products_cat",
+                "name": "Products",
+                "module_name": "sales",
+                "sequence": 20,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "sales.products",
+                        "name": "Products",
+                        "module_name": "sales",
+                        "sequence": 10,
+                        "action_type": "window",
+                        "res_model": "Product",
+                        "default_view": "kanban",
+                        "route_path": "/sales/products",
+                    },
+                ],
+            },
+            {
+                "code": "sales.reporting_cat",
+                "name": "Reporting",
+                "module_name": "sales",
+                "sequence": 30,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "sales.report_sales",
+                        "name": "Sales Analysis",
+                        "module_name": "sales",
+                        "sequence": 10,
+                        "action_type": "report",
+                        "res_model": "SaleOrder",
+                        "default_view": "pivot",
+                        "route_path": "/sales/reporting",
+                    },
+                ],
+            },
+        ],
+    },
+
+    # ------------------------------------------------------------------------
+    # 2. Purchases
+    # ------------------------------------------------------------------------
+    {
+        "code": "purchases.root",
+        "name": "Purchases",
+        "module_name": "purchases",
+        "icon": "shopping-cart",
+        "sequence": 20,
+        "action_type": "folder",
+        "route_path": "/purchases",
+        "children": [
+            {
+                "code": "purchases.orders_cat",
+                "name": "Orders",
+                "module_name": "purchases",
+                "sequence": 10,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "purchases.rfq",
+                        "name": "Requests for Quotation",
+                        "module_name": "purchases",
+                        "sequence": 10,
+                        "action_type": "window",
+                        "res_model": "PurchaseOrder",
+                        "default_view": "list",
+                        "domain_filter": {"state": "draft"},
+                        "route_path": "/purchases/rfq",
+                    },
+                    {
+                        "code": "purchases.purchase_orders",
+                        "name": "Purchase Orders",
+                        "module_name": "purchases",
+                        "sequence": 20,
+                        "action_type": "window",
+                        "res_model": "PurchaseOrder",
+                        "default_view": "list",
+                        "domain_filter": {"state": "purchase"},
+                        "route_path": "/purchases/orders",
+                    },
+                    {
+                        "code": "purchases.vendors",
+                        "name": "Vendors",
+                        "module_name": "purchases",
+                        "sequence": 30,
+                        "action_type": "window",
+                        "res_model": "Party",
+                        "default_view": "list",
+                        "domain_filter": {"is_supplier": True},
+                        "route_path": "/purchases/vendors",
+                    },
+                ],
+            },
+            {
+                "code": "purchases.products_cat",
+                "name": "Products",
+                "module_name": "purchases",
+                "sequence": 20,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "purchases.products",
+                        "name": "Products",
+                        "module_name": "purchases",
+                        "sequence": 10,
+                        "action_type": "window",
+                        "res_model": "Product",
+                        "default_view": "list",
+                        "route_path": "/purchases/products",
+                    },
+                ],
+            },
+        ],
+    },
+
+    # ------------------------------------------------------------------------
+    # 3. Accounting
+    # ------------------------------------------------------------------------
+    {
+        "code": "accounting.root",
+        "name": "Accounting",
+        "module_name": "accounting",
+        "icon": "book-open",
+        "sequence": 30,
+        "action_type": "folder",
+        "route_path": "/accounting",
+        "children": [
+            {
+                "code": "accounting.customers_cat",
+                "name": "Customers",
+                "module_name": "accounting",
+                "sequence": 10,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "accounting.invoices",
+                        "name": "Invoices",
+                        "module_name": "accounting",
+                        "sequence": 10,
+                        "action_type": "window",
+                        "res_model": "AccountMove",
+                        "default_view": "list",
+                        "domain_filter": {"move_type": "out_invoice"},
+                        "route_path": "/accounting/invoices",
+                    },
+                    {
+                        "code": "accounting.credit_notes",
+                        "name": "Credit Notes",
+                        "module_name": "accounting",
+                        "sequence": 20,
+                        "action_type": "window",
+                        "res_model": "AccountMove",
+                        "default_view": "list",
+                        "domain_filter": {"move_type": "out_refund"},
+                        "route_path": "/accounting/credit-notes",
+                    },
+                ],
+            },
+            {
+                "code": "accounting.vendors_cat",
+                "name": "Vendors",
+                "module_name": "accounting",
+                "sequence": 20,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "accounting.bills",
+                        "name": "Bills",
+                        "module_name": "accounting",
+                        "sequence": 10,
+                        "action_type": "window",
+                        "res_model": "AccountMove",
+                        "default_view": "list",
+                        "domain_filter": {"move_type": "in_invoice"},
+                        "route_path": "/accounting/bills",
+                    },
+                    {
+                        "code": "accounting.refunds",
+                        "name": "Refunds",
+                        "module_name": "accounting",
+                        "sequence": 20,
+                        "action_type": "window",
+                        "res_model": "AccountMove",
+                        "default_view": "list",
+                        "domain_filter": {"move_type": "in_refund"},
+                        "route_path": "/accounting/refunds",
+                    },
+                ],
+            },
+            {
+                "code": "accounting.accounting_cat",
+                "name": "Accounting",
+                "module_name": "accounting",
+                "sequence": 30,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "accounting.journal_entries",
+                        "name": "Journal Entries",
+                        "module_name": "accounting",
+                        "sequence": 10,
+                        "action_type": "window",
+                        "res_model": "AccountMove",
+                        "default_view": "list",
+                        "domain_filter": {"move_type": "entry"},
+                        "route_path": "/accounting/journal-entries",
+                    },
+                    {
+                        "code": "accounting.chart_of_accounts",
+                        "name": "Chart of Accounts",
+                        "module_name": "accounting",
+                        "sequence": 20,
+                        "action_type": "window",
+                        "res_model": "Account",
+                        "default_view": "list",
+                        "route_path": "/accounting/chart-of-accounts",
+                    },
+                ],
+            },
+            {
+                "code": "accounting.reporting_cat",
+                "name": "Reporting",
+                "module_name": "accounting",
+                "sequence": 40,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "accounting.trial_balance",
+                        "name": "Trial Balance",
+                        "module_name": "accounting",
+                        "sequence": 10,
+                        "action_type": "report",
+                        "res_model": "AccountMove",
+                        "default_view": "pivot",
+                        "route_path": "/accounting/trial-balance",
+                    },
+                    {
+                        "code": "accounting.profit_and_loss",
+                        "name": "Profit and Loss",
+                        "module_name": "accounting",
+                        "sequence": 20,
+                        "action_type": "report",
+                        "res_model": "AccountMove",
+                        "default_view": "pivot",
+                        "route_path": "/accounting/profit-loss",
+                    },
+                    {
+                        "code": "accounting.balance_sheet",
+                        "name": "Balance Sheet",
+                        "module_name": "accounting",
+                        "sequence": 30,
+                        "action_type": "report",
+                        "res_model": "AccountMove",
+                        "default_view": "pivot",
+                        "route_path": "/accounting/balance-sheet",
+                    },
+                ],
+            },
+        ],
+    },
+
+    # ------------------------------------------------------------------------
+    # 4. Settings
+    # ------------------------------------------------------------------------
+    {
+        "code": "settings.root",
+        "name": "Settings",
+        "module_name": "settings",
+        "icon": "settings",
+        "sequence": 100,
+        "action_type": "folder",
+        "route_path": "/settings",
+        "children": [
+            {
+                "code": "settings.general_cat",
+                "name": "General",
+                "module_name": "settings",
+                "sequence": 10,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "settings.general",
+                        "name": "General Settings",
+                        "module_name": "settings",
+                        "sequence": 10,
+                        "action_type": "settings",
+                        "route_path": "/settings/general",
+                    },
+                    {
+                        "code": "settings.users",
+                        "name": "Users & Roles",
+                        "module_name": "settings",
+                        "sequence": 20,
+                        "action_type": "window",
+                        "res_model": "User",
+                        "default_view": "list",
+                        "route_path": "/settings/users",
+                    },
+                    {
+                        "code": "settings.companies",
+                        "name": "Companies",
+                        "module_name": "settings",
+                        "sequence": 30,
+                        "action_type": "window",
+                        "res_model": "Company",
+                        "default_view": "list",
+                        "route_path": "/settings/companies",
+                    },
+                ],
+            },
+            {
+                "code": "settings.customization_cat",
+                "name": "Customization",
+                "module_name": "settings",
+                "sequence": 20,
+                "action_type": "folder",
+                "children": [
+                    {
+                        "code": "settings.menus",
+                        "name": "Menu Editor",
+                        "module_name": "settings",
+                        "sequence": 10,
+                        "action_type": "window",
+                        "res_model": "MenuItem",
+                        "default_view": "list",
+                        "route_path": "/settings/menus",
+                    },
+                    {
+                        "code": "settings.views",
+                        "name": "Views Studio",
+                        "module_name": "settings",
+                        "sequence": 20,
+                        "action_type": "window",
+                        "res_model": "ViewDefinition",
+                        "default_view": "list",
+                        "route_path": "/settings/views",
+                    },
+                ],
+            },
+        ],
+    },
+]
+
+
+async def _seed_menu_nodes(db: AsyncSession, nodes: List[Dict[str, Any]], parent_id: Optional[uuid.UUID] = None) -> int:
+    """Recursively seed menu items and return total count seeded/updated."""
+    count = 0
+    for item in nodes:
+        stmt = select(MenuItem).where(
+            MenuItem.code == item["code"],
+            MenuItem.company_id.is_(None),
+            MenuItem.deleted_at.is_(None),
+        )
+        existing = (await db.execute(stmt)).scalar_one_or_none()
+        if existing:
+            existing.name = item.get("name", existing.name)
+            existing.module_name = item.get("module_name", existing.module_name)
+            existing.icon = item.get("icon", existing.icon)
+            existing.sequence = item.get("sequence", existing.sequence)
+            existing.action_type = item.get("action_type", existing.action_type)
+            existing.res_model = item.get("res_model", existing.res_model)
+            existing.default_view = item.get("default_view", existing.default_view)
+            existing.route_path = item.get("route_path", existing.route_path)
+            existing.domain_filter = item.get("domain_filter", existing.domain_filter)
+            existing.target_role_ids = item.get("target_role_ids", existing.target_role_ids)
+            existing.parent_id = parent_id
+            existing.is_system = True
+            current_id = existing.id
+        else:
+            menu = MenuItem(
+                company_id=None,
+                parent_id=parent_id,
+                code=item["code"],
+                name=item["name"],
+                module_name=item["module_name"],
+                icon=item.get("icon"),
+                sequence=item.get("sequence", 10),
+                action_type=item.get("action_type", "window"),
+                res_model=item.get("res_model"),
+                default_view=item.get("default_view", "list"),
+                route_path=item.get("route_path"),
+                domain_filter=item.get("domain_filter"),
+                target_role_ids=item.get("target_role_ids"),
+                is_system=True,
+                is_active=True,
+            )
+            db.add(menu)
+            await db.flush()
+            current_id = menu.id
+            count += 1
+
+        children = item.get("children", [])
+        if children:
+            count += await _seed_menu_nodes(db, children, parent_id=current_id)
+
+    return count
+
+
+async def seed_system_default_menus(db: AsyncSession) -> int:
+    """Idempotently seed default system MenuItem tree hierarchy."""
+    seeded_count = await _seed_menu_nodes(db, DEFAULT_SYSTEM_MENUS, parent_id=None)
+    if seeded_count > 0:
+        await db.commit()
+        logger.info(f"Seeded {seeded_count} system default menu items into ui_menus.")
+
+    return seeded_count
+
+

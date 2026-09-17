@@ -338,7 +338,82 @@ class ResolvedModelViewBundle(BaseModel):
     """Complete bundle returned to the frontend containing all available views and user preferences."""
     res_model: str
     model_title: str
-    default_view_type: str
-    available_view_types: List[str]
+    default_view_type: str = "form"
+    available_view_types: List[str] = Field(default_factory=list)
     views: Dict[str, Any] = Field(default_factory=dict, description="Map of view_type -> resolved schema dictionary")
     user_preferences: Optional[UserViewPreferenceRead] = None
+
+
+# ============================================================================
+# 8. Hierarchical Menu & Navigation Schemas
+# ============================================================================
+
+class MenuItemBase(BaseModel):
+    """Base attributes for hierarchical menu navigation items."""
+    name: str = Field(..., description="Human-readable translatable menu label (e.g. 'Quotations', 'Invoices')")
+    code: str = Field(..., description="Unique menu identifier (e.g. 'sales.root', 'sales.orders.quotations')")
+    parent_id: Optional[uuid.UUID] = Field(None, description="Parent menu item ID forming recursive navigation tree")
+    sequence: int = Field(10, description="Display order sequence (lower numbers appear first)")
+    icon: Optional[str] = Field(None, description="Lucide icon identifier (e.g. 'shopping-bag', 'receipt', 'settings')")
+    module_name: str = Field(..., description="Module namespace defining ownership (e.g. 'sales', 'accounting', 'purchases')")
+    res_model: Optional[str] = Field(None, description="Target resource model to open (e.g. 'SaleOrder', 'AccountMove', 'Product')")
+    action_type: str = Field("window", description="Action type: 'window', 'url', 'client'")
+    default_view: str = Field("list", description="Default landing view type: 'list', 'kanban', 'form', 'report', 'dashboard'")
+    route_path: Optional[str] = Field(None, description="Optional client-side route path (e.g. '/sales/quotations')")
+    domain_filter: Optional[Dict[str, Any]] = Field(None, description="Optional JSONB query filter applied upon opening (e.g. {'state': 'draft'})")
+    target_role_ids: Optional[List[uuid.UUID]] = Field(None, description="Optional list of role UUIDs required to access this menu item")
+    company_id: Optional[uuid.UUID] = Field(None, description="Tenant organization association (NULL for global platform defaults)")
+    is_system: bool = Field(True, description="Boolean identifying immutable platform fixtures vs tenant studio customizations")
+    is_active: bool = Field(True, description="Operational visibility toggle")
+
+
+class MenuItemCreate(MenuItemBase):
+    """Payload for creating a new menu item via Studio Mode."""
+    pass
+
+
+class MenuItemUpdate(BaseModel):
+    """Payload for updating an existing menu item via Studio Mode."""
+    name: Optional[str] = None
+    parent_id: Optional[uuid.UUID] = None
+    sequence: Optional[int] = None
+    icon: Optional[str] = None
+    res_model: Optional[str] = None
+    action_type: Optional[str] = None
+    default_view: Optional[str] = None
+    route_path: Optional[str] = None
+    domain_filter: Optional[Dict[str, Any]] = None
+    target_role_ids: Optional[List[uuid.UUID]] = None
+    is_active: Optional[bool] = None
+
+
+class MenuItemRead(MenuItemBase):
+    """Flat serialization of a menu item entity."""
+    id: uuid.UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MenuItemNode(BaseModel):
+    """Hierarchical recursive tree node delivered to frontend navigation bars."""
+    id: uuid.UUID
+    name: str
+    code: str
+    parent_id: Optional[uuid.UUID] = None
+    sequence: int = 10
+    icon: Optional[str] = None
+    module_name: str
+    res_model: Optional[str] = None
+    action_type: str = "window"
+    default_view: str = "list"
+    route_path: Optional[str] = None
+    domain_filter: Optional[Dict[str, Any]] = None
+    target_role_ids: Optional[List[uuid.UUID]] = None
+    company_id: Optional[uuid.UUID] = None
+    is_system: bool = True
+    is_active: bool = True
+    children: List['MenuItemNode'] = Field(default_factory=list, description="Nested child menu items sorted by sequence")
+    model_config = ConfigDict(from_attributes=True)
+
+

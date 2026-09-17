@@ -112,13 +112,41 @@ To maintain total visual harmony and eliminate ad-hoc layout fragmentation, all 
    * **Universal Command Bar** (`Cmd+K`): Instant fuzzy search across records, documents, partners, and settings.
    * **User & Utilities Hub** (Top-Right): Notification bell, Theme selector, and User Profile menu.
 2. **Module Sub-Navigation (Contextual Horizontal Menu Bar)**:
-   * Dynamically reflects the active module:
-     * **Sales**: `[ Quotations | Orders | Customers | To Invoice | Products | Reporting | Configuration ]`
-     * **Accounting**: `[ Dashboard | Customers | Vendors | Accounting Entries | Financial Reports | Configuration ]`
-     * **Purchases**: `[ Requests for Quotation | Purchase Orders | Vendors | Products | Reporting | Configuration ]`
+   * Dynamically delivered by the backend menu engine (`GET /api/v1/ui/menus`):
+     * Never hardcoded in the frontend.
+     * Top-level nodes (`sequence: 10, 20, 30...`) represent Root Apps in the Launcher.
+     * Second-level nodes (`action_type: 'folder'`) represent category dropdowns in the sub-nav.
+     * Leaf nodes (`action_type: 'window'`, `res_model`, `default_view`, `domain_filter`) trigger route changes and canvas view loading.
+     * Example hierarchy for Sales: `[ Orders (Quotations, Orders, Customers) | Products | Reporting ]`
 3. **Context & Action Control Bar**:
    * **Left (Context & Actions)**: Hierarchical breadcrumbs (`Sales / Orders / SO-0042`) and primary lifecycle action buttons (`New`, `Confirm`, `Print`, `Cancel`).
    * **Right (Filters & Views)**: Universal Search / Filter input with filter chips, Group By dropdown, and **View Switcher** icons (`List Table`, `Kanban`, `Pivot/Report`).
+
+---
+
+### 3.1.1 Hierarchical Menu Engine Data Contract (`GET /api/v1/ui/menus`)
+The frontend Shell consumes a recursive `MenuItemNode` payload:
+```typescript
+interface MenuItemNode {
+  id: string;
+  name: string;             // Human-readable translatable label ("Quotations")
+  code: string;             // Unique identifier ("sales.quotations")
+  parent_id?: string | null;
+  sequence: number;         // Sort order within parent
+  icon?: string | null;     // Lucide icon name ("trending-up")
+  module_name: string;      // Owning module ("sales")
+  res_model?: string | null;// Target model ("SaleOrder")
+  action_type: 'folder' | 'window' | 'report' | 'settings' | 'url' | 'client';
+  default_view: 'list' | 'kanban' | 'form' | 'report' | 'pivot';
+  route_path?: string | null; // e.g. "/sales/quotations"
+  domain_filter?: Record<string, any> | null; // e.g. { state: "draft" }
+  children: MenuItemNode[]; // Nested sub-items sorted by sequence
+}
+```
+RBAC and FLAC pruning are executed completely on the backend:
+* A non-superuser caller only receives menu items for which they have read permissions.
+* Empty category folders (where all children were pruned) are pruned automatically by the server.
+
 
 ---
 

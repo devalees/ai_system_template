@@ -15867,6 +15867,200 @@
         ]
       }
     },
+    "/api/v1/ui_schema/menus": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch user hierarchical navigation menu tree",
+        "description": "Fetch complete hierarchical navigation menu tree for the current user, pruned by FLAC and RBAC.",
+        "operationId": "get_user_menus_api_v1_ui_schema_menus_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MenuItemNode"
+                  },
+                  "type": "array",
+                  "title": "Response Get User Menus Api V1 Ui Schema Menus Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Create custom menu item (Studio Mode)",
+        "description": "Create a new custom menu item within the active tenant.",
+        "operationId": "create_menu_item_api_v1_ui_schema_menus_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuItemCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuItemRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ui_schema/menus/{menu_id}": {
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Update menu item or customize system menu (Studio Mode)",
+        "description": "Update custom menu item or clone a system menu item into a tenant override.",
+        "operationId": "update_menu_item_api_v1_ui_schema_menus__menu_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "menu_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target menu item UUID",
+              "title": "Menu Id"
+            },
+            "description": "Target menu item UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuItemUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuItemRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Delete custom menu item or revert override",
+        "description": "Soft-delete a custom menu item or revert tenant override.",
+        "operationId": "delete_menu_item_api_v1_ui_schema_menus__menu_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "menu_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target menu item UUID",
+              "title": "Menu Id"
+            },
+            "description": "Target menu item UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Delete Menu Item Api V1 Ui Schema Menus  Menu Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/workflows/definitions": {
       "post": {
         "tags": [
@@ -21446,6 +21640,200 @@
             "OAuth2PasswordBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/ui/menus": {
+      "get": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Fetch user hierarchical navigation menu tree",
+        "description": "Fetch complete hierarchical navigation menu tree for the current user, pruned by FLAC and RBAC.",
+        "operationId": "get_user_menus_api_v1_ui_menus_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MenuItemNode"
+                  },
+                  "type": "array",
+                  "title": "Response Get User Menus Api V1 Ui Menus Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Create custom menu item (Studio Mode)",
+        "description": "Create a new custom menu item within the active tenant.",
+        "operationId": "create_menu_item_api_v1_ui_menus_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuItemCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuItemRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ui/menus/{menu_id}": {
+      "put": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Update menu item or customize system menu (Studio Mode)",
+        "description": "Update custom menu item or clone a system menu item into a tenant override.",
+        "operationId": "update_menu_item_api_v1_ui_menus__menu_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "menu_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target menu item UUID",
+              "title": "Menu Id"
+            },
+            "description": "Target menu item UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuItemUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuItemRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Dynamic UI Schema & View Engine",
+          "Dynamic UI Schema & View Engine"
+        ],
+        "summary": "Delete custom menu item or revert override",
+        "description": "Soft-delete a custom menu item or revert tenant override.",
+        "operationId": "delete_menu_item_api_v1_ui_menus__menu_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "menu_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Target menu item UUID",
+              "title": "Menu Id"
+            },
+            "description": "Target menu item UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Delete Menu Item Api V1 Ui Menus  Menu Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/kernel/modules": {
@@ -32151,6 +32539,609 @@
           "subject": "Urgent: Invoice #{{ invoice_number }} Due Soon"
         }
       },
+      "MenuItemCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable translatable menu label (e.g. 'Quotations', 'Invoices')"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Unique menu identifier (e.g. 'sales.root', 'sales.orders.quotations')"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "Parent menu item ID forming recursive navigation tree"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Display order sequence (lower numbers appear first)",
+            "default": 10
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon",
+            "description": "Lucide icon identifier (e.g. 'shopping-bag', 'receipt', 'settings')"
+          },
+          "module_name": {
+            "type": "string",
+            "title": "Module Name",
+            "description": "Module namespace defining ownership (e.g. 'sales', 'accounting', 'purchases')"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target resource model to open (e.g. 'SaleOrder', 'AccountMove', 'Product')"
+          },
+          "action_type": {
+            "type": "string",
+            "title": "Action Type",
+            "description": "Action type: 'window', 'url', 'client'",
+            "default": "window"
+          },
+          "default_view": {
+            "type": "string",
+            "title": "Default View",
+            "description": "Default landing view type: 'list', 'kanban', 'form', 'report', 'dashboard'",
+            "default": "list"
+          },
+          "route_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Path",
+            "description": "Optional client-side route path (e.g. '/sales/quotations')"
+          },
+          "domain_filter": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Filter",
+            "description": "Optional JSONB query filter applied upon opening (e.g. {'state': 'draft'})"
+          },
+          "target_role_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role Ids",
+            "description": "Optional list of role UUIDs required to access this menu item"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id",
+            "description": "Tenant organization association (NULL for global platform defaults)"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System",
+            "description": "Boolean identifying immutable platform fixtures vs tenant studio customizations",
+            "default": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Operational visibility toggle",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "module_name"
+        ],
+        "title": "MenuItemCreate",
+        "description": "Payload for creating a new menu item via Studio Mode."
+      },
+      "MenuItemNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "default": 10
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "module_name": {
+            "type": "string",
+            "title": "Module Name"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "action_type": {
+            "type": "string",
+            "title": "Action Type",
+            "default": "window"
+          },
+          "default_view": {
+            "type": "string",
+            "title": "Default View",
+            "default": "list"
+          },
+          "route_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Path"
+          },
+          "domain_filter": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Filter"
+          },
+          "target_role_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role Ids"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System",
+            "default": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/MenuItemNode"
+            },
+            "type": "array",
+            "title": "Children",
+            "description": "Nested child menu items sorted by sequence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "code",
+          "module_name"
+        ],
+        "title": "MenuItemNode",
+        "description": "Hierarchical recursive tree node delivered to frontend navigation bars."
+      },
+      "MenuItemRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable translatable menu label (e.g. 'Quotations', 'Invoices')"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Unique menu identifier (e.g. 'sales.root', 'sales.orders.quotations')"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "Parent menu item ID forming recursive navigation tree"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence",
+            "description": "Display order sequence (lower numbers appear first)",
+            "default": 10
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon",
+            "description": "Lucide icon identifier (e.g. 'shopping-bag', 'receipt', 'settings')"
+          },
+          "module_name": {
+            "type": "string",
+            "title": "Module Name",
+            "description": "Module namespace defining ownership (e.g. 'sales', 'accounting', 'purchases')"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model",
+            "description": "Target resource model to open (e.g. 'SaleOrder', 'AccountMove', 'Product')"
+          },
+          "action_type": {
+            "type": "string",
+            "title": "Action Type",
+            "description": "Action type: 'window', 'url', 'client'",
+            "default": "window"
+          },
+          "default_view": {
+            "type": "string",
+            "title": "Default View",
+            "description": "Default landing view type: 'list', 'kanban', 'form', 'report', 'dashboard'",
+            "default": "list"
+          },
+          "route_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Path",
+            "description": "Optional client-side route path (e.g. '/sales/quotations')"
+          },
+          "domain_filter": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Filter",
+            "description": "Optional JSONB query filter applied upon opening (e.g. {'state': 'draft'})"
+          },
+          "target_role_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role Ids",
+            "description": "Optional list of role UUIDs required to access this menu item"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id",
+            "description": "Tenant organization association (NULL for global platform defaults)"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System",
+            "description": "Boolean identifying immutable platform fixtures vs tenant studio customizations",
+            "default": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Operational visibility toggle",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "module_name",
+          "id"
+        ],
+        "title": "MenuItemRead",
+        "description": "Flat serialization of a menu item entity."
+      },
+      "MenuItemUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "res_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Res Model"
+          },
+          "action_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Type"
+          },
+          "default_view": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default View"
+          },
+          "route_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Path"
+          },
+          "domain_filter": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Filter"
+          },
+          "target_role_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role Ids"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "MenuItemUpdate",
+        "description": "Payload for updating an existing menu item via Studio Mode."
+      },
       "ModelFieldsIntrospectionResponse": {
         "properties": {
           "model_name": {
@@ -37882,7 +38873,8 @@
           },
           "default_view_type": {
             "type": "string",
-            "title": "Default View Type"
+            "title": "Default View Type",
+            "default": "form"
           },
           "available_view_types": {
             "items": {
@@ -37910,9 +38902,7 @@
         "type": "object",
         "required": [
           "res_model",
-          "model_title",
-          "default_view_type",
-          "available_view_types"
+          "model_title"
         ],
         "title": "ResolvedModelViewBundle",
         "description": "Complete bundle returned to the frontend containing all available views and user preferences."

@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "cdc22627-6ae9-4eaf-a405-c38011bac761",
+    "_postman_id": "4463809f-9512-4ee6-a052-28abdd37893f",
     "name": "Sovereign Headless Backend Platform",
     "description": "High-performance async micro-kernel backend platform for sovereign enterprise apps.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2421,6 +2421,196 @@
           "response": []
         },
         {
+          "name": "Fetch user hierarchical navigation menu tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/menus",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "menus"
+              ],
+              "variable": []
+            },
+            "description": "## Fetch user hierarchical navigation menu tree\n\nFetch complete hierarchical navigation menu tree for the current user, pruned by FLAC and RBAC.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui_schema/menus`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create custom menu item (Studio Mode)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/menus",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "menus"
+              ],
+              "variable": []
+            },
+            "description": "## Create custom menu item (Studio Mode)\n\nCreate a new custom menu item within the active tenant.\n\n**Endpoint**: `POST {{base_url}}/api/v1/ui_schema/menus`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Human-readable translatable menu label (e.g. 'Quotations', 'Invoices') |\n| `code` | `string` | **Yes** | Any valid string | Unique menu identifier (e.g. 'sales.root', 'sales.orders.quotations') |\n| `parent_id` | `string` | No | Any valid string | Parent menu item ID forming recursive navigation tree |\n| `sequence` | `integer` | No | Any valid integer | Display order sequence (lower numbers appear first) |\n| `icon` | `string` | No | Any valid string | Lucide icon identifier (e.g. 'shopping-bag', 'receipt', 'settings') |\n| `module_name` | `string` | **Yes** | Any valid string | Module namespace defining ownership (e.g. 'sales', 'accounting', 'purchases') |\n| `res_model` | `string` | No | Any valid string | Target resource model to open (e.g. 'SaleOrder', 'AccountMove', 'Product') |\n| `action_type` | `string` | No | Any valid string | Action type: 'window', 'url', 'client' |\n| `default_view` | `string` | No | Any valid string | Default landing view type: 'list', 'kanban', 'form', 'report', 'dashboard' |\n| `route_path` | `string` | No | Any valid string | Optional client-side route path (e.g. '/sales/quotations') |\n| `domain_filter` | `object` | No | Any valid object | Optional JSONB query filter applied upon opening (e.g. {'state': 'draft'}) |\n| `target_role_ids` | `array` | No | Any valid array | Optional list of role UUIDs required to access this menu item |\n| `company_id` | `string` | No | Any valid string | Tenant organization association (NULL for global platform defaults) |\n| `is_system` | `boolean` | No | Any valid boolean | Boolean identifying immutable platform fixtures vs tenant studio customizations |\n| `is_active` | `boolean` | No | Any valid boolean | Operational visibility toggle |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\",\n  \"sequence\": 0,\n  \"module_name\": \"string\",\n  \"action_type\": \"string\",\n  \"default_view\": \"string\",\n  \"is_system\": true,\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_menu_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update menu item or customize system menu (Studio Mode)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/menus/:menu_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "menus",
+                ":menu_id"
+              ],
+              "variable": [
+                {
+                  "key": "menu_id",
+                  "value": "{{active_menu_id}}",
+                  "description": "Dynamic path parameter bound to {{active_menu_id}}"
+                }
+              ]
+            },
+            "description": "## Update menu item or customize system menu (Studio Mode)\n\nUpdate custom menu item or clone a system menu item into a tenant override.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/ui_schema/menus/{menu_id}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `menu_id` | `path` | `string` | **Yes** | Target menu item UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `parent_id` | `string` | No | Any valid string | parent_id attribute |\n| `sequence` | `integer` | No | Any valid integer | sequence attribute |\n| `icon` | `string` | No | Any valid string | icon attribute |\n| `res_model` | `string` | No | Any valid string | res_model attribute |\n| `action_type` | `string` | No | Any valid string | action_type attribute |\n| `default_view` | `string` | No | Any valid string | default_view attribute |\n| `route_path` | `string` | No | Any valid string | route_path attribute |\n| `domain_filter` | `object` | No | Any valid object | domain_filter attribute |\n| `target_role_ids` | `array` | No | Any valid array | target_role_ids attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete custom menu item or revert override",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui_schema/menus/:menu_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui_schema",
+                "menus",
+                ":menu_id"
+              ],
+              "variable": [
+                {
+                  "key": "menu_id",
+                  "value": "{{active_menu_id}}",
+                  "description": "Dynamic path parameter bound to {{active_menu_id}}"
+                }
+              ]
+            },
+            "description": "## Delete custom menu item or revert override\n\nSoft-delete a custom menu item or revert tenant override.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/ui_schema/menus/{menu_id}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `menu_id` | `path` | `string` | **Yes** | Target menu item UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
           "name": "List introspectable models with supported UI views",
           "request": {
             "method": "GET",
@@ -3084,6 +3274,196 @@
               "variable": []
             },
             "description": "## Save user personal visual theme or density override\n\nUpdate user personal visual theme mode (dark/light) or table density preference.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/ui/theme/preference`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `theme_override` | `string` | No | Any valid string | 'sovereign-dark', 'enterprise-light', 'high-density-erp' |\n| `density_override` | `string` | No | Any valid string | 'compact', 'comfortable' |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch user hierarchical navigation menu tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/menus",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "menus"
+              ],
+              "variable": []
+            },
+            "description": "## Fetch user hierarchical navigation menu tree\n\nFetch complete hierarchical navigation menu tree for the current user, pruned by FLAC and RBAC.\n\n**Endpoint**: `GET {{base_url}}/api/v1/ui/menus`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Create custom menu item (Studio Mode)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/menus",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "menus"
+              ],
+              "variable": []
+            },
+            "description": "## Create custom menu item (Studio Mode)\n\nCreate a new custom menu item within the active tenant.\n\n**Endpoint**: `POST {{base_url}}/api/v1/ui/menus`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | **Yes** | Any valid string | Human-readable translatable menu label (e.g. 'Quotations', 'Invoices') |\n| `code` | `string` | **Yes** | Any valid string | Unique menu identifier (e.g. 'sales.root', 'sales.orders.quotations') |\n| `parent_id` | `string` | No | Any valid string | Parent menu item ID forming recursive navigation tree |\n| `sequence` | `integer` | No | Any valid integer | Display order sequence (lower numbers appear first) |\n| `icon` | `string` | No | Any valid string | Lucide icon identifier (e.g. 'shopping-bag', 'receipt', 'settings') |\n| `module_name` | `string` | **Yes** | Any valid string | Module namespace defining ownership (e.g. 'sales', 'accounting', 'purchases') |\n| `res_model` | `string` | No | Any valid string | Target resource model to open (e.g. 'SaleOrder', 'AccountMove', 'Product') |\n| `action_type` | `string` | No | Any valid string | Action type: 'window', 'url', 'client' |\n| `default_view` | `string` | No | Any valid string | Default landing view type: 'list', 'kanban', 'form', 'report', 'dashboard' |\n| `route_path` | `string` | No | Any valid string | Optional client-side route path (e.g. '/sales/quotations') |\n| `domain_filter` | `object` | No | Any valid object | Optional JSONB query filter applied upon opening (e.g. {'state': 'draft'}) |\n| `target_role_ids` | `array` | No | Any valid array | Optional list of role UUIDs required to access this menu item |\n| `company_id` | `string` | No | Any valid string | Tenant organization association (NULL for global platform defaults) |\n| `is_system` | `boolean` | No | Any valid boolean | Boolean identifying immutable platform fixtures vs tenant studio customizations |\n| `is_active` | `boolean` | No | Any valid boolean | Operational visibility toggle |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `201` | Successful Response |\n| `422` | Validation Error |\n\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\",\n  \"sequence\": 0,\n  \"module_name\": \"string\",\n  \"action_type\": \"string\",\n  \"default_view\": \"string\",\n  \"is_system\": true,\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var json = pm.response.json();",
+                  "    if (json) {",
+                  "        var recId = json.id || json.queue_id || json.notification_id || json.job_id || json.backup_id || (json.data && json.data.id);",
+                  "        if (recId) {",
+                  "            pm.environment.set(\"active_menu_id\", recId);",
+                  "            pm.environment.set(\"active_record_id\", recId);",
+                  "            pm.environment.set(\"active_id\", recId);",
+                  "        }",
+                  "        if (json.queue_id) {",
+                  "            pm.environment.set(\"active_queue_id\", json.queue_id);",
+                  "        }",
+                  "        if (json.notification_id) {",
+                  "            pm.environment.set(\"active_notification_id\", json.notification_id);",
+                  "        }",
+                  "        if (json.job_id) {",
+                  "            pm.environment.set(\"active_job_id\", json.job_id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update menu item or customize system menu (Studio Mode)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/menus/:menu_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "menus",
+                ":menu_id"
+              ],
+              "variable": [
+                {
+                  "key": "menu_id",
+                  "value": "{{active_menu_id}}",
+                  "description": "Dynamic path parameter bound to {{active_menu_id}}"
+                }
+              ]
+            },
+            "description": "## Update menu item or customize system menu (Studio Mode)\n\nUpdate custom menu item or clone a system menu item into a tenant override.\n\n**Endpoint**: `PUT {{base_url}}/api/v1/ui/menus/{menu_id}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `menu_id` | `path` | `string` | **Yes** | Target menu item UUID |\n\n\n### Request Body Fields (JSON Payload)\n\n| Field | Type | Required | Allowed Values / Choices | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `name` | `string` | No | Any valid string | name attribute |\n| `parent_id` | `string` | No | Any valid string | parent_id attribute |\n| `sequence` | `integer` | No | Any valid integer | sequence attribute |\n| `icon` | `string` | No | Any valid string | icon attribute |\n| `res_model` | `string` | No | Any valid string | res_model attribute |\n| `action_type` | `string` | No | Any valid string | action_type attribute |\n| `default_view` | `string` | No | Any valid string | default_view attribute |\n| `route_path` | `string` | No | Any valid string | route_path attribute |\n| `domain_filter` | `object` | No | Any valid object | domain_filter attribute |\n| `target_role_ids` | `array` | No | Any valid array | target_role_ids attribute |\n| `is_active` | `boolean` | No | Any valid boolean | is_active attribute |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete custom menu item or revert override",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Company-ID",
+                "value": "{{active_company_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ui/menus/:menu_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ui",
+                "menus",
+                ":menu_id"
+              ],
+              "variable": [
+                {
+                  "key": "menu_id",
+                  "value": "{{active_menu_id}}",
+                  "description": "Dynamic path parameter bound to {{active_menu_id}}"
+                }
+              ]
+            },
+            "description": "## Delete custom menu item or revert override\n\nSoft-delete a custom menu item or revert tenant override.\n\n**Endpoint**: `DELETE {{base_url}}/api/v1/ui/menus/{menu_id}`  \n**Tags**: `Dynamic UI Schema & View Engine, Dynamic UI Schema & View Engine`\n\n### URL & Query Parameters\n\n| Parameter | In | Type | Required | Description |\n| :--- | :--- | :--- | :--- | :--- |\n| `menu_id` | `path` | `string` | **Yes** | Target menu item UUID |\n\n\n### Expected HTTP Responses\n\n| Status Code | Description |\n| :--- | :--- |\n| `200` | Successful Response |\n| `422` | Validation Error |\n\n"
           },
           "response": []
         }

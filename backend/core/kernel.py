@@ -249,17 +249,19 @@ class Kernel:
         except Exception as exc:
             logger.warning(f"Report templates seeding skipped during bootstrap: {exc}")
 
-        # Seed system default view definitions
+        # Seed system default view definitions and menu hierarchy
         try:
-            from modules.base.ui_schema.fixtures import seed_system_default_views
+            from modules.base.ui_schema.fixtures import seed_system_default_views, seed_system_default_menus
             from core.database import AsyncSessionLocal
             if db_session:
                 await seed_system_default_views(db_session)
+                await seed_system_default_menus(db_session)
             else:
                 async with AsyncSessionLocal() as session:
                     await seed_system_default_views(session)
+                    await seed_system_default_menus(session)
         except Exception as exc:
-            logger.warning(f"UI default views seeding skipped during bootstrap: {exc}")
+            logger.warning(f"UI default views/menus seeding skipped during bootstrap: {exc}")
 
         self._booted = True
 

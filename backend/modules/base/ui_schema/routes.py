@@ -24,6 +24,10 @@ from modules.base.ui_schema.schemas import (
     UserThemePreferencePayload,
     UserThemePreferenceRead,
     ResolvedModelViewBundle,
+    MenuItemCreate,
+    MenuItemUpdate,
+    MenuItemRead,
+    MenuItemNode,
 )
 
 router = APIRouter(prefix="", tags=["Dynamic UI Schema & View Engine"])
@@ -373,3 +377,88 @@ async def save_user_theme_preference(
         db=db,
         company_id=company_id,
     )
+
+
+# ============================================================================
+# 6. Hierarchical Navigation Menu Engine (Launcher & Sub-Nav)
+# ============================================================================
+
+@router.get(
+    "/menus",
+    summary="Fetch user hierarchical navigation menu tree",
+    response_model=List[MenuItemNode],
+)
+async def get_user_menus(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[MenuItemNode]:
+    """Fetch complete hierarchical navigation menu tree for the current user, pruned by FLAC and RBAC."""
+    company_id = _resolve_company_id(current_user)
+    return await UISchemaService.get_user_menu_tree(
+        user=current_user,
+        db=db,
+        company_id=company_id,
+    )
+
+
+@router.post(
+    "/menus",
+    summary="Create custom menu item (Studio Mode)",
+    response_model=MenuItemRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_menu_item(
+    payload: MenuItemCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> MenuItemRead:
+    """Create a new custom menu item within the active tenant."""
+    company_id = _resolve_company_id(current_user)
+    return await UISchemaService.create_menu_item(
+        payload=payload,
+        db=db,
+        company_id=company_id,
+    )
+
+
+@router.put(
+    "/menus/{menu_id}",
+    summary="Update menu item or customize system menu (Studio Mode)",
+    response_model=MenuItemRead,
+)
+async def update_menu_item(
+    menu_id: uuid.UUID = Path(..., description="Target menu item UUID"),
+    payload: MenuItemUpdate = ...,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> MenuItemRead:
+    """Update custom menu item or clone a system menu item into a tenant override."""
+    company_id = _resolve_company_id(current_user)
+    return await UISchemaService.update_menu_item(
+        menu_id=menu_id,
+        payload=payload,
+        db=db,
+        company_id=company_id,
+    )
+
+
+@router.delete(
+    "/menus/{menu_id}",
+    summary="Delete custom menu item or revert override",
+    response_model=Dict[str, bool],
+)
+async def delete_menu_item(
+    menu_id: uuid.UUID = Path(..., description="Target menu item UUID"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, bool]:
+    """Soft-delete a custom menu item or revert tenant override."""
+    company_id = _resolve_company_id(current_user)
+    success = await UISchemaService.delete_menu_item(
+        menu_id=menu_id,
+        db=db,
+        company_id=company_id,
+        is_superuser=current_user.is_superuser,
+    )
+    return {"success": success}
+

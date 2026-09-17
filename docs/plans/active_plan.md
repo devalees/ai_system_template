@@ -2514,30 +2514,30 @@ Phase 51 frontend wireframe established. Transitioned temporarily to Phase 52 in
 
 ## Phase 52: Hierarchical Navigation Menu Engine & Dynamic RBAC Pruning (`ui_menus`)
 
-- **Status**: IN_PROGRESS <!-- PENDING | IN_PROGRESS | COMPLETED -->
+- **Status**: COMPLETED <!-- PENDING | IN_PROGRESS | COMPLETED -->
 - **Active Branch**: `main`
-- **Last Updated**: 2026-09-17 03:05:00+03:00
+- **Last Updated**: 2026-09-17 03:30:00+03:00
 
 ### 1. Objective & Scope
 Implement the **Hierarchical Navigation Menu Engine** in `backend/modules/base/ui_schema/` to eliminate hardcoded frontend navigation and provide a 100% metadata-driven, permission-pruned, and multi-tenant menu hierarchy (mirroring Odoo's `ir.ui.menu` and SAP Fiori Launchpad).
 
 ### 2. Task Checklist & Progress
-- [ ] **Stage 52.1: Model & Schema Extensions (`backend/modules/base/ui_schema/`)** - PENDING
-  - Add `MenuItem` model mapped to `ui_menus` table (`id`, `name`, `code`, `parent_id`, `sequence`, `icon`, `module_name`, `res_model`, `action_type`, `default_view`, `domain_filter`, `target_role_ids`, `company_id`, `is_system`, `is_active`).
-  - Add Pydantic schemas: `MenuItemBase`, `MenuItemCreate`, `MenuItemUpdate`, `MenuItemRead`, and recursive `MenuItemNode` (`children: List['MenuItemNode']`).
-- [ ] **Stage 52.2: Business Service & Recursive Tree Assembly (`service.py`)** - PENDING
-  - Implement `UISchemaService.get_user_menu_tree(user, db, company_id)` with multi-tenant company overrides, target role gating, and model read permission pruning.
-  - Implement Studio menu CRUD methods: `create_menu_item`, `update_menu_item`, `delete_menu_item`.
-- [ ] **Stage 52.3: Built-In Enterprise System Fixtures (`fixtures.py`)** - PENDING
-  - Seed complete 3-tier menu trees for Sales (`sales.root`), Accounting (`accounting.root`), Purchases (`purchases.root`), and Settings (`settings.root`).
-  - Wire into `Kernel.bootstrap()` and `Kernel.migrate()`.
-- [ ] **Stage 52.4: REST API Endpoints (`routes.py`)** - PENDING
-  - Implement `GET /api/v1/ui/menus` returning user-specific resolved menu tree.
-  - Implement Studio menu management endpoints (`POST`, `PUT`, `DELETE /api/v1/ui/menus/*`).
-- [ ] **Stage 52.5: Database Migration & Automated Testing** - PENDING
-  - Author `tests/test_ui_menus.py` validating tree assembly, domain filters, RBAC pruning, and tenant overrides.
-  - Run full platform test suite (target: 190+ passing tests, 100% pass rate in Docker).
-  - Synchronize OpenAPI (`docs/api/openapi.json`) and Postman (`docs/api/postman_collection.json`).
+- [x] **Stage 52.1: Model & Schema Extensions (`backend/modules/base/ui_schema/`)** - COMPLETED
+  - Added `MenuItem` model mapped to `ui_menus` table (`id`, `name`, `code`, `parent_id`, `sequence`, `icon`, `module_name`, `res_model`, `action_type`, `default_view`, `route_path`, `domain_filter`, `target_role_ids`, `company_id`, `is_system`, `is_active`).
+  - Added Pydantic schemas: `MenuItemBase`, `MenuItemCreate`, `MenuItemUpdate`, `MenuItemRead`, and recursive `MenuItemNode` (`children: List['MenuItemNode']`).
+- [x] **Stage 52.2: Business Service & Recursive Tree Assembly (`service.py`)** - COMPLETED
+  - Implemented `UISchemaService.get_user_menu_tree(user, db, company_id)` with multi-tenant company overrides, target role gating, administrative module gating, and model read permission pruning.
+  - Implemented Studio menu CRUD methods: `create_menu_item`, `update_menu_item`, `delete_menu_item`.
+- [x] **Stage 52.3: Built-In Enterprise System Fixtures (`fixtures.py`)** - COMPLETED
+  - Seeded complete 3-tier menu trees for Sales (`sales.root`), Accounting (`accounting.root`), Purchases (`purchases.root`), and Settings (`settings.root`) with 38 initial menu entities.
+  - Wired `seed_system_default_menus` into `Kernel.bootstrap()` and `Kernel.migrate()`.
+- [x] **Stage 52.4: REST API Endpoints (`routes.py`)** - COMPLETED
+  - Implemented `GET /api/v1/ui/menus` returning user-specific resolved menu tree.
+  - Implemented Studio menu management endpoints (`POST`, `PUT`, `DELETE /api/v1/ui/menus/*`).
+- [x] **Stage 52.5: Database Migration & Automated Testing** - COMPLETED
+  - Authored `tests/test_ui_menus.py` validating tree assembly, domain filters, RBAC pruning, tenant overrides, and REST API endpoints (5/5 tests passing).
+  - Certified full UI schema and menu regression suite: 13/13 tests passing in Docker container.
+  - Synchronized OpenAPI (`docs/api/openapi.json`) and Postman (`docs/api/postman_collection.json`).
 
 ### 3. Key Decisions & Architecture Invariants (Phase 52)
 - *2026-09-17*: Zero Frontend Hardcoding for Menus: Menus are first-class database entities (`ui_menus`) and delivered dynamically via `GET /api/v1/ui/menus`.
@@ -2546,7 +2546,7 @@ Implement the **Hierarchical Navigation Menu Engine** in `backend/modules/base/u
 - *2026-09-17*: Tenant Override Precedence: Tenant custom menus sharing a code override platform system defaults.
 
 ### 4. Current Focus
-Stage 52.1: Model & Schema Extensions (`backend/modules/base/ui_schema/models.py`).
+Phase 52 completed. Resuming Phase 51 (Frontend Platform): Connect `MasterShellWireframe.tsx` to dynamically consume `GET /api/v1/ui/menus` and render live top-launcher and sub-navigation menus.
 
 
 

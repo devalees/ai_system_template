@@ -19,7 +19,7 @@ from modules.base.automated_actions.introspection import (
     AUTO_MANAGED_FIELDS,
     READ_ONLY_FIELDS,
 )
-from modules.base.ui_schema.models import ViewDefinition, UserViewPreference
+from modules.base.ui_schema.models import ViewDefinition, UserViewPreference, MenuItem
 from modules.base.ui_schema.schemas import (
     FieldWidgetSchema,
     FormRowSchema,
@@ -47,6 +47,10 @@ from modules.base.ui_schema.schemas import (
     UserThemePreferencePayload,
     UserThemePreferenceRead,
     ResolvedModelViewBundle,
+    MenuItemCreate,
+    MenuItemUpdate,
+    MenuItemRead,
+    MenuItemNode,
 )
 
 logger = logging.getLogger("sovereign.ui_schema.service")
@@ -1058,3 +1062,233 @@ class UISchemaService:
         user = (await db.execute(user_stmt)).scalar_one()
         return await cls.get_resolved_theme(user=user, db=db, company_id=company_id)
 
+    # ========================================================================
+    # 8. Hierarchical Menu & Navigation Service Methods
+    # ========================================================================
+
+    @classmethod
+    async def get_user_menu_tree(
+        cls,
+        user: User,
+        db: AsyncSession,
+        company_id: uuid.UUID,
+    ) -> List[MenuItemNode]:
+        """Fetch and assemble the permission-pruned hierarchical navigation tree for the caller."""
+        # 1. Fetch active menu items for tenant or global defaults
+        stmt = (
+            select(MenuItem)
+            .where(
+                MenuItem.is_active.is_(True),
+                MenuItem.deleted_at.is_(None),
+                or_(
+                    MenuItem.company_id.is_(None),
+                    MenuItem.company_id == company_id,
+                ),
+            )
+            .order_by(MenuItem.sequence)
+        )
+        all_items = list((await db.execute(stmt)).scalars().all())
+
+        # 2. Deduplicate: Tenant custom items override system seeds sharing the same code
+        code_map: Dict[str, MenuItem] = {}
+        for item in all_items:
+            if item.code not in code_map:
+                code_map[item.code] = item
+            elif item.company_id == company_id:
+                code_map[item.code] = item  # Tenant item takes precedence
+        candidate_items = list(code_map.values())
+
+        # 3. Security & RBAC Pruning
+        user_group_ids: Set[str] = set()
+        if hasattr(user, "group_links") and user.group_links:
+            user_group_ids = {str(link.group_id) for link in user.group_links}
+
+        permitted_items: List[MenuItem] = []
+        for item in candidate_items:
+            if user.is_superuser:
+                permitted_items.append(item)
+                continue
+
+            # A. Check target_role_ids gating
+            if item.target_role_ids:
+                target_ids = {str(r) for r in item.target_role_ids}
+                if not user_group_ids.intersection(target_ids):
+                    continue
+
+            # B. Check administrative settings gating
+            if item.module_name == "settings" or item.action_type == "settings" or (item.res_model and item.res_model in ("User", "Company", "MenuItem", "ViewDefinition")):
+                if not (user.is_superuser or getattr(user, "is_primary_admin", False)):
+                    continue
+
+            # C. Check model read permission gating
+            if item.res_model:
+                model_cls = find_model_class(item.res_model)
+                if model_cls:
+                    from modules.base.identity_rbac.harvester import _extract_module_and_resource
+                    mod_name, res_name = _extract_module_and_resource(model_cls)
+                    read_perm = f"{mod_name}.{res_name}.read"
+                    has_perm = await FLACService.has_permission(user, read_perm, db)
+                    if not has_perm:
+                        continue
+
+            permitted_items.append(item)
+
+        # 4. Assemble Recursive Node Tree
+        nodes: Dict[uuid.UUID, MenuItemNode] = {}
+        for item in permitted_items:
+            nodes[item.id] = MenuItemNode(
+                id=item.id,
+                name=item.name,
+                code=item.code,
+                parent_id=item.parent_id,
+                sequence=item.sequence,
+                icon=item.icon,
+                module_name=item.module_name,
+                res_model=item.res_model,
+                action_type=item.action_type,
+                default_view=item.default_view,
+                route_path=item.route_path,
+                domain_filter=item.domain_filter,
+                target_role_ids=item.target_role_ids,
+                company_id=item.company_id,
+                is_system=item.is_system,
+                is_active=item.is_active,
+                children=[],
+            )
+
+        root_nodes: List[MenuItemNode] = []
+        for item_id, node in nodes.items():
+            if node.parent_id and node.parent_id in nodes:
+                nodes[node.parent_id].children.append(node)
+            else:
+                root_nodes.append(node)
+
+        # 5. Recursive Sorting & Empty Folder Pruning
+        def prune_and_sort(node: MenuItemNode) -> bool:
+            # Sort children by sequence
+            node.children.sort(key=lambda x: x.sequence)
+            # Recursively prune children
+            valid_children = []
+            for child in node.children:
+                if prune_and_sort(child):
+                    valid_children.append(child)
+            node.children = valid_children
+
+            # If this is a category folder with no target res_model and no action,
+            # prune it if all children were pruned (non-superuser only)
+            if not user.is_superuser and not node.res_model and node.action_type == "folder" and len(node.children) == 0:
+                return False
+            return True
+
+        root_nodes.sort(key=lambda x: x.sequence)
+        final_roots = [r for r in root_nodes if prune_and_sort(r)]
+        return final_roots
+
+    @classmethod
+    async def create_menu_item(
+        cls,
+        payload: MenuItemCreate,
+        db: AsyncSession,
+        company_id: uuid.UUID,
+    ) -> MenuItemRead:
+        """Create a new custom menu item (Studio Mode)."""
+        menu = MenuItem(
+            name=payload.name,
+            code=payload.code,
+            parent_id=payload.parent_id,
+            sequence=payload.sequence,
+            icon=payload.icon,
+            module_name=payload.module_name,
+            res_model=payload.res_model,
+            action_type=payload.action_type,
+            default_view=payload.default_view,
+            route_path=payload.route_path,
+            domain_filter=payload.domain_filter,
+            target_role_ids=payload.target_role_ids,
+            company_id=company_id,
+            is_system=False,
+            is_active=payload.is_active,
+        )
+        db.add(menu)
+        await db.commit()
+        await db.refresh(menu)
+        return MenuItemRead.model_validate(menu)
+
+    @classmethod
+    async def update_menu_item(
+        cls,
+        menu_id: uuid.UUID,
+        payload: MenuItemUpdate,
+        db: AsyncSession,
+        company_id: uuid.UUID,
+    ) -> MenuItemRead:
+        """Update an existing menu item (Studio Mode)."""
+        stmt = select(MenuItem).where(
+            MenuItem.id == menu_id,
+            MenuItem.deleted_at.is_(None),
+            or_(MenuItem.company_id.is_(None), MenuItem.company_id == company_id),
+        )
+        menu = (await db.execute(stmt)).scalar_one_or_none()
+        if not menu:
+            from core.exceptions import EntityNotFoundException
+            raise EntityNotFoundException(f"Menu item '{menu_id}' not found.")
+
+        # If system menu is modified by tenant, clone it as tenant override
+        if menu.is_system and menu.company_id != company_id:
+            override_menu = MenuItem(
+                name=payload.name or menu.name,
+                code=menu.code,
+                parent_id=payload.parent_id if payload.parent_id is not None else menu.parent_id,
+                sequence=payload.sequence if payload.sequence is not None else menu.sequence,
+                icon=payload.icon if payload.icon is not None else menu.icon,
+                module_name=menu.module_name,
+                res_model=payload.res_model if payload.res_model is not None else menu.res_model,
+                action_type=payload.action_type if payload.action_type is not None else menu.action_type,
+                default_view=payload.default_view if payload.default_view is not None else menu.default_view,
+                route_path=payload.route_path if payload.route_path is not None else menu.route_path,
+                domain_filter=payload.domain_filter if payload.domain_filter is not None else menu.domain_filter,
+                target_role_ids=payload.target_role_ids if payload.target_role_ids is not None else menu.target_role_ids,
+                company_id=company_id,
+                is_system=False,
+                is_active=payload.is_active if payload.is_active is not None else menu.is_active,
+            )
+            db.add(override_menu)
+            await db.commit()
+            await db.refresh(override_menu)
+            return MenuItemRead.model_validate(override_menu)
+
+        # Update in-place
+        for field, val in payload.model_dump(exclude_unset=True).items():
+            setattr(menu, field, val)
+
+        await db.commit()
+        await db.refresh(menu)
+        return MenuItemRead.model_validate(menu)
+
+    @classmethod
+    async def delete_menu_item(
+        cls,
+        menu_id: uuid.UUID,
+        db: AsyncSession,
+        company_id: uuid.UUID,
+        is_superuser: bool = False,
+    ) -> bool:
+        """Soft-delete a custom menu item or revert tenant override."""
+        from core.exceptions import EntityNotFoundException, ValidationException
+        stmt = select(MenuItem).where(
+            MenuItem.id == menu_id,
+            MenuItem.deleted_at.is_(None),
+        )
+        if not is_superuser:
+            stmt = stmt.where(MenuItem.company_id == company_id)
+
+        menu = (await db.execute(stmt)).scalar_one_or_none()
+        if not menu:
+            raise EntityNotFoundException(f"Menu item '{menu_id}' not found.")
+
+        if menu.is_system and not is_superuser:
+            raise ValidationException("System default menu items cannot be deleted directly. You may deactivate them instead.")
+
+        menu.soft_delete()
+        await db.commit()
+        return True

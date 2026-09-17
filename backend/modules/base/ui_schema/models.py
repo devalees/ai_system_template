@@ -196,3 +196,119 @@ class UserViewPreference(BaseModel):
         nullable=True,
         doc="User table/form density preference ('compact', 'comfortable')",
     )
+
+
+class MenuItem(
+    Base,
+    UUIDPrimaryKeyMixin,
+    TimestampMixin,
+    AuditActorMixin,
+    ExtensibleModelMixin,
+    SoftDeleteMixin,
+    ArchivableMixin,
+    OptimisticLockingMixin,
+):
+    """Hierarchical navigation menu item for application launcher and module sub-navigation."""
+    __tablename__ = "ui_menus"
+    __table_args__ = (
+        Index("ix_ui_menus_company_code", "company_id", "code"),
+        Index("ix_ui_menus_parent", "company_id", "parent_id", "sequence"),
+        Index("ix_ui_menus_module", "company_id", "module_name"),
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(150),
+        nullable=False,
+        doc="Human-readable translatable menu label (e.g. 'Quotations', 'Invoices')",
+    )
+    code: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        index=True,
+        doc="Unique menu identifier (e.g. 'sales.root', 'sales.orders.quotations')",
+    )
+    parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("ui_menus.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+        doc="Parent menu item ID forming a recursive multi-level navigation tree",
+    )
+    sequence: Mapped[int] = mapped_column(
+        Integer,
+        default=10,
+        nullable=False,
+        doc="Display order sequence (lower numbers appear first)",
+    )
+    icon: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        nullable=True,
+        doc="Lucide icon identifier (e.g. 'shopping-bag', 'receipt', 'settings')",
+    )
+    module_name: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        index=True,
+        doc="Module namespace defining ownership (e.g. 'sales', 'accounting', 'purchases')",
+    )
+    res_model: Mapped[Optional[str]] = mapped_column(
+        String(128),
+        nullable=True,
+        index=True,
+        doc="Target resource model to open (e.g. 'SaleOrder', 'AccountMove', 'Product')",
+    )
+    action_type: Mapped[str] = mapped_column(
+        String(32),
+        default="window",
+        nullable=False,
+        doc="Action type: 'window' (standard model view), 'url' (external link), 'client' (custom view)",
+    )
+    default_view: Mapped[str] = mapped_column(
+        String(32),
+        default="list",
+        nullable=False,
+        doc="Default landing view type: 'list', 'kanban', 'form', 'report', 'dashboard'",
+    )
+    route_path: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        doc="Optional client-side route path (e.g. '/sales/quotations', '/settings/general')",
+    )
+    domain_filter: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+        JSONB,
+        default=None,
+        nullable=True,
+        doc="Optional JSONB query filter applied upon opening (e.g. {'state': 'draft'})",
+    )
+    target_role_ids: Mapped[Optional[List[uuid.UUID]]] = mapped_column(
+        JSONB,
+        default=None,
+        nullable=True,
+        doc="Optional list of role UUIDs required to access this menu item",
+    )
+    company_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+        doc="Tenant organization association (NULL for global platform defaults)",
+    )
+    is_system: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+        doc="Boolean identifying immutable platform fixtures vs tenant studio customizations",
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+        doc="Operational visibility toggle",
+    )
+
+    children = relationship(
+        "MenuItem",
+        cascade="all, delete-orphan",
+        order_by="MenuItem.sequence",
+    )
+
