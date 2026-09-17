@@ -1,15 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchUserMenus } from '../../api/menuApi';
+import { MenuItemNode } from '../../types/menus';
 
-type ModuleType = 'sales' | 'accounting' | 'purchases' | 'settings';
 type CanvasType = 'explorer' | 'document' | 'reporting' | 'settings';
 
 export const MasterShellWireframe: React.FC = () => {
   const [theme, setTheme] = useState<'sovereign-dark' | 'enterprise-light'>('sovereign-dark');
-  const [activeModule, setActiveModule] = useState<ModuleType>('sales');
   const [activeCanvas, setActiveCanvas] = useState<CanvasType>('explorer');
   const [companyName, setCompanyName] = useState('Acme Corp HQ (Primary)');
   const [activeTab, setActiveTab] = useState<'lines' | 'accounting' | 'notes'>('lines');
   const [splitterRatio, setSplitterRatio] = useState<number>(65);
+
+  // Dynamic Navigation Engine state
+  const [menuTree, setMenuTree] = useState<MenuItemNode[]>([]);
+  const [activeRootCode, setActiveRootCode] = useState<string>('sales.root');
+  const [activeMenuItem, setActiveMenuItem] = useState<MenuItemNode | null>(null);
+  const [isLiveBackend, setIsLiveBackend] = useState<boolean>(false);
+  const [isAppLauncherOpen, setIsAppLauncherOpen] = useState<boolean>(false);
+  const [openCategoryCode, setOpenCategoryCode] = useState<string | null>(null);
+  const [isLoadingMenus, setIsLoadingMenus] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadMenus() {
+      setIsLoadingMenus(true);
+      const res = await fetchUserMenus();
+      setMenuTree(res.data);
+      setIsLiveBackend(res.isLive);
+      if (res.data.length > 0) {
+        const root = res.data[0];
+        setActiveRootCode(root.code);
+        const firstCategory = root.children.find((c) => c.action_type === 'folder');
+        const firstLeaf = firstCategory?.children[0] || root.children[0] || null;
+        setActiveMenuItem(firstLeaf);
+      }
+      setIsLoadingMenus(false);
+    }
+    loadMenus();
+  }, []);
+
+  const activeRoot = menuTree.find((r) => r.code === activeRootCode) || menuTree[0];
+
+  const handleSelectRoot = (rootCode: string) => {
+    setActiveRootCode(rootCode);
+    const root = menuTree.find((r) => r.code === rootCode);
+    if (root) {
+      const firstCat = root.children.find((c) => c.action_type === 'folder');
+      const firstLeaf = firstCat?.children[0] || root.children[0] || null;
+      if (firstLeaf) {
+        handleSelectMenuItem(firstLeaf);
+      } else {
+        setActiveMenuItem(null);
+      }
+    }
+    setIsAppLauncherOpen(false);
+    setOpenCategoryCode(null);
+  };
+
+  const handleSelectMenuItem = (item: MenuItemNode) => {
+    setActiveMenuItem(item);
+    setOpenCategoryCode(null);
+    if (item.action_type === 'settings' || item.module_name === 'settings') {
+      setActiveCanvas('settings');
+    } else if (item.action_type === 'report' || item.default_view === 'pivot') {
+      setActiveCanvas('reporting');
+    } else if (item.default_view === 'form') {
+      setActiveCanvas('document');
+    } else {
+      setActiveCanvas('explorer');
+    }
+  };
+
+  // Helper to find category parent for active menu item
+  const findParentCategory = (root: MenuItemNode | undefined, item: MenuItemNode | null) => {
+    if (!root || !item) return null;
+    for (const cat of root.children) {
+      if (cat.children.some((child) => child.code === item.code)) {
+        return cat;
+      }
+    }
+    return null;
+  };
+
+  const activeCategory = findParentCategory(activeRoot, activeMenuItem);
 
   const toggleCompany = () => {
     setCompanyName((prev) =>
@@ -82,10 +154,33 @@ export const MasterShellWireframe: React.FC = () => {
           <span className="wf-badge">Zone 1: Global Header (48px)</span>
           
           {/* 1.1 App Launcher */}
-          <div className="wf-box" style={{ padding: '4px 10px', borderRadius: '4px' }}>
+          <div
+            onClick={() => setIsAppLauncherOpen(!isAppLauncherOpen)}
+            className="wf-box"
+            style={{
+              padding: '4px 10px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              background: isAppLauncherOpen ? 'var(--accent-subtle)' : 'transparent',
+              borderColor: isAppLauncherOpen ? 'var(--accent-primary)' : 'var(--border-subtle)',
+            }}
+            title="Open Application Launcher"
+          >
             <span className="wf-badge">1.1 App Launcher</span>
-            <span style={{ marginLeft: '6px', fontSize: '12px', fontWeight: 600 }}>▦ Apps</span>
+            <span style={{ marginLeft: '6px', fontSize: '12px', fontWeight: 600 }}>▦ Apps ▾</span>
           </div>
+
+          {/* Engine Status Badge */}
+          <span
+            className="wf-badge"
+            style={{
+              background: isLiveBackend ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+              color: isLiveBackend ? 'var(--success)' : '#f59e0b',
+              borderColor: isLiveBackend ? 'var(--success)' : '#f59e0b',
+            }}
+          >
+            {isLiveBackend ? '🟢 Live Menu Engine' : '🟡 System Fixtures'}
+          </span>
 
           {/* 1.2 Company Context Switcher */}
           <div
@@ -123,7 +218,74 @@ export const MasterShellWireframe: React.FC = () => {
       </header>
 
       {/* ====================================================================
-          ZONE 2: MODULE SUB-NAVIGATION (40px)
+          APP LAUNCHER MODAL / DRAWER (DYNAMIC ROOT APPS)
+          ==================================================================== */}
+      {isAppLauncherOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '86px',
+            left: '16px',
+            zIndex: 1000,
+            background: 'var(--bg-card)',
+            border: '2px solid var(--border-strong)',
+            borderRadius: '8px',
+            padding: '16px',
+            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)',
+            width: '380px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              ▦ Application Launcher
+            </span>
+            <button
+              onClick={() => setIsAppLauncherOpen(false)}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '14px' }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+            {menuTree.map((root) => {
+              const isSelected = root.code === activeRootCode;
+              return (
+                <div
+                  key={root.code}
+                  onClick={() => handleSelectRoot(root.code)}
+                  className="wf-box"
+                  style={{
+                    padding: '12px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    background: isSelected ? 'var(--accent-subtle)' : 'var(--bg-surface)',
+                    borderColor: isSelected ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '18px' }}>
+                      {root.icon === 'trending-up' ? '📈' : root.icon === 'shopping-cart' ? '🛒' : root.icon === 'book-open' ? '📚' : '⚙️'}
+                    </span>
+                    <span className="wf-badge" style={{ fontSize: '9px' }}>seq: {root.sequence}</span>
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                    {root.name}
+                  </span>
+                  <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                    {root.children.length} Categories
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================================
+          ZONE 2: MODULE SUB-NAVIGATION (40px) - DYNAMIC BACKEND ENGINE
           ==================================================================== */}
       <nav className="wf-box" style={{
         height: '40px',
@@ -134,75 +296,113 @@ export const MasterShellWireframe: React.FC = () => {
         borderLeft: 'none',
         borderRight: 'none',
         borderTop: 'none',
+        position: 'relative',
       }}>
-        <span className="wf-badge">Zone 2: Sub-Nav (40px)</span>
-        
-        {/* Module Switcher Buttons to test live */}
+        <span className="wf-badge">Zone 2: Dynamic Sub-Nav (40px)</span>
+
+        {/* Dynamic Root App Switcher Pills */}
         <div style={{ display: 'flex', gap: '4px', marginRight: '16px' }}>
-          {(['sales', 'accounting', 'purchases', 'settings'] as ModuleType[]).map((mod) => (
+          {menuTree.map((root) => (
             <button
-              key={mod}
-              onClick={() => setActiveModule(mod)}
+              key={root.code}
+              onClick={() => handleSelectRoot(root.code)}
               style={{
                 padding: '3px 8px',
                 fontSize: '11px',
                 textTransform: 'uppercase',
-                fontWeight: activeModule === mod ? 700 : 400,
-                color: activeModule === mod ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                background: activeModule === mod ? 'var(--accent-subtle)' : 'transparent',
-                border: activeModule === mod ? '1px solid var(--accent-primary)' : '1px solid transparent',
+                fontWeight: activeRootCode === root.code ? 700 : 400,
+                color: activeRootCode === root.code ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                background: activeRootCode === root.code ? 'var(--accent-subtle)' : 'transparent',
+                border: activeRootCode === root.code ? '1px solid var(--accent-primary)' : '1px solid transparent',
                 borderRadius: '4px',
                 cursor: 'pointer',
               }}
             >
-              {mod}
+              {root.name}
             </button>
           ))}
         </div>
 
-        {/* Dynamic Contextual Menus based on Active Module */}
+        {/* Dynamic Contextual Categories & Leaf Actions */}
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          {activeModule === 'sales' && (
-            <>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', fontWeight: 600, color: 'var(--accent-primary)' }}>[ Orders ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Quotations ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Customers ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ To Invoice ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Products ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Reporting ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Configuration ]</span>
-            </>
+          {isLoadingMenus && (
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Loading menu engine...</span>
           )}
 
-          {activeModule === 'accounting' && (
-            <>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', fontWeight: 600, color: 'var(--accent-primary)' }}>[ Dashboard ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Invoices (Customers) ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Bills (Vendors) ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Journal Entries ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Financial Reports ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Chart of Accounts ]</span>
-            </>
-          )}
+          {activeRoot?.children.map((cat) => {
+            const isCategoryOpen = openCategoryCode === cat.code;
+            const hasActiveChild = cat.children.some((child) => child.code === activeMenuItem?.code);
 
-          {activeModule === 'purchases' && (
-            <>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', fontWeight: 600, color: 'var(--accent-primary)' }}>[ Purchase Orders ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Requests for Quotation (RFQ) ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Vendors ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Products ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Approvals ]</span>
-            </>
-          )}
+            return (
+              <div key={cat.code} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setOpenCategoryCode(isCategoryOpen ? null : cat.code)}
+                  className="wf-box"
+                  style={{
+                    padding: '3px 8px',
+                    fontSize: '12px',
+                    fontWeight: hasActiveChild ? 700 : 500,
+                    color: hasActiveChild ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    background: hasActiveChild ? 'var(--accent-subtle)' : 'transparent',
+                    borderColor: hasActiveChild ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  {cat.name} <span style={{ fontSize: '9px' }}>▾</span>
+                </button>
 
-          {activeModule === 'settings' && (
-            <>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', fontWeight: 600, color: 'var(--accent-primary)' }}>[ General Settings ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Companies & Branches ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ Users & Permissions ]</span>
-              <span className="wf-box" style={{ padding: '2px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>[ UI Themes & Templates ]</span>
-            </>
-          )}
+                {/* Dropdown Menu for Category */}
+                {isCategoryOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '32px',
+                      left: 0,
+                      zIndex: 900,
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border-strong)',
+                      borderRadius: '6px',
+                      padding: '4px',
+                      minWidth: '180px',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    <div style={{ padding: '4px 8px', fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                      {cat.name} Actions
+                    </div>
+                    {cat.children.map((item) => {
+                      const isItemActive = activeMenuItem?.code === item.code;
+                      return (
+                        <div
+                          key={item.code}
+                          onClick={() => handleSelectMenuItem(item)}
+                          style={{
+                            padding: '6px 10px',
+                            fontSize: '12px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: isItemActive ? 'var(--accent-subtle)' : 'transparent',
+                            color: isItemActive ? 'var(--accent-primary)' : 'var(--text-primary)',
+                            fontWeight: isItemActive ? 600 : 400,
+                          }}
+                        >
+                          <span>{item.name}</span>
+                          <span className="wf-badge" style={{ fontSize: '9px' }}>{item.default_view}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </nav>
 
@@ -226,7 +426,7 @@ export const MasterShellWireframe: React.FC = () => {
           <div className="wf-box" style={{ padding: '4px 10px', borderRadius: '4px' }}>
             <span className="wf-badge">3.1 Breadcrumbs</span>
             <span style={{ marginLeft: '6px', fontSize: '12px', fontWeight: 600 }}>
-              {activeModule.toUpperCase()} / {activeCanvas === 'document' ? 'SO-0042' : 'Orders'}
+              {activeRoot?.name || 'Sales'} / {activeCategory ? `${activeCategory.name} / ` : ''}{activeMenuItem?.name || 'Quotations'}
             </span>
           </div>
 
@@ -247,9 +447,14 @@ export const MasterShellWireframe: React.FC = () => {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* 3.3 Universal Search & Filter */}
-          <div className="wf-box" style={{ padding: '4px 10px', borderRadius: '4px' }}>
+          <div className="wf-box" style={{ padding: '4px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span className="wf-badge">3.3 Universal Filter Hub</span>
-            <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+            {activeMenuItem?.domain_filter && (
+              <span className="wf-badge" style={{ background: 'var(--accent-subtle)', color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)', fontSize: '10px' }}>
+                ⚡ Filter: {JSON.stringify(activeMenuItem.domain_filter)}
+              </span>
+            )}
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
               🔍 Search... | Filters ▾ | Group By ▾
             </span>
           </div>
@@ -332,7 +537,7 @@ export const MasterShellWireframe: React.FC = () => {
                 CANVAS 1: Explorer Canvas (List Table / Data Grid)
               </span>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                [ Model: {activeModule.toUpperCase()} | Records: 24 | Selection: 0 ]
+                [ Model: {activeMenuItem?.res_model || activeRoot?.name || 'SaleOrder'} | Records: 24 | Selection: 0 ]
               </span>
             </div>
 
